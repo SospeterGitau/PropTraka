@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses } from '@/lib/data';
+import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses, calendarEvents as initialCalendarEvents } from '@/lib/data';
 import type { Property, Transaction, CalendarEvent } from '@/lib/types';
+import { formatCurrency } from '@/lib/utils';
 
 interface DataContextType {
   properties: Property[];
@@ -23,22 +24,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
-    const events: CalendarEvent[] = [];
+    const events: CalendarEvent[] = [...initialCalendarEvents];
 
     // Generate events from revenue data
     revenue.forEach(item => {
       if (item.tenancyStartDate) {
         events.push({
           date: item.tenancyStartDate,
-          title: `Tenancy Starts: ${item.tenant} (${item.propertyName})`,
+          title: `Start: ${item.tenant}`,
           type: 'tenancy-start',
+          details: {
+            Property: item.propertyName,
+            Tenant: item.tenant,
+          }
         });
       }
       if (item.tenancyEndDate) {
         events.push({
           date: item.tenancyEndDate,
-          title: `Tenancy Ends: ${item.tenant} (${item.propertyName})`,
+          title: `End: ${item.tenant}`,
           type: 'tenancy-end',
+          details: {
+            Property: item.propertyName,
+            Tenant: item.tenant,
+          }
         });
       }
     });
@@ -47,8 +56,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     expenses.forEach(item => {
       events.push({
         date: item.date,
-        title: `Expense: ${item.category} (${item.propertyName})`,
+        title: `Expense: ${item.category}`,
         type: 'expense',
+        details: {
+            Property: item.propertyName,
+            Category: item.category,
+            Vendor: item.vendor,
+            Amount: formatCurrency(item.amount),
+        }
       });
     });
 

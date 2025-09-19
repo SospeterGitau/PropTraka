@@ -17,6 +17,11 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CalendarEvent } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
@@ -96,12 +101,32 @@ export function CalendarView({ events }: CalendarViewProps) {
               </time>
               <div className="mt-1 space-y-1 overflow-y-auto">
                 {dayEvents.map((event, index) => (
-                  <Badge
-                    key={index}
-                    className={cn('w-full text-left block whitespace-normal text-xs font-normal', eventColors[event.type])}
-                  >
-                    {event.title}
-                  </Badge>
+                  <Popover key={index}>
+                    <PopoverTrigger asChild>
+                       <Badge
+                        className={cn('w-full text-left block whitespace-normal text-xs font-normal cursor-pointer', eventColors[event.type])}
+                      >
+                        {event.title}
+                      </Badge>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60 text-sm">
+                      <div className="space-y-2">
+                        <h4 className="font-medium leading-none">{event.title}</h4>
+                         {event.details ? (
+                          <div className="grid gap-2">
+                            {Object.entries(event.details).map(([key, value]) => (
+                              <div key={key} className="grid grid-cols-3 items-center gap-4">
+                                <span className="text-muted-foreground">{key}</span>
+                                <span className="col-span-2 font-semibold">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                           <p className="text-muted-foreground">No additional details.</p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 ))}
               </div>
             </div>

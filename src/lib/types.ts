@@ -36,4 +36,5 @@ export interface CalendarEvent {
   date: string;
   title: string;
   type: 'appointment' | 'tenancy-start' | 'tenancy-end' | 'expense';
+  details?: Record<string, string | number | undefined>;
 }
