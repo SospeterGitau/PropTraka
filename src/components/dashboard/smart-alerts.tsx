@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { AlertTriangle, Lightbulb, Loader2 } from 'lucide-react';
 import type { GenerateSmartAlertsOutput } from '@/ai/flows/generate-smart-alerts';
+import { useDataContext } from '@/context/data-context';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,10 +25,11 @@ const severityClasses = {
 export function SmartAlerts() {
   const [isPending, startTransition] = useTransition();
   const [alerts, setAlerts] = useState<GenerateSmartAlertsOutput['alerts'] | null>(null);
+  const { properties, revenue, expenses } = useDataContext();
 
   const handleGenerateAlerts = () => {
     startTransition(async () => {
-      const result = await getSmartAlerts();
+      const result = await getSmartAlerts({ properties, revenue, expenses });
       setAlerts(result.alerts);
     });
   };
