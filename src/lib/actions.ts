@@ -38,9 +38,9 @@ export async function getSmartAlerts(data: SmartAlertsData): Promise<GenerateSma
     dashboardData.totalProfit = dashboardData.totalRevenue - dashboardData.totalExpenses;
 
     const alerts = await generateSmartAlerts({
-      dashboardData: JSON.stringify(dashboardData),
-      weatherData: JSON.stringify(weatherData),
-      calendarEvents: JSON.stringify(calendarEvents),
+      dashboardData: dashboardData,
+      weatherData: weatherData,
+      calendarEvents: calendarEvents,
     });
     return alerts;
   } catch (error) {
