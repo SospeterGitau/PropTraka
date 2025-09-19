@@ -25,6 +25,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 // A simple form dialog for adding/editing revenue.
 function RevenueForm({
@@ -105,48 +108,103 @@ function RevenueForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-card p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Tenancy</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{transaction ? 'Edit' : 'Add'} Tenancy</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
            <div>
-            <label>Property</label>
-            <input name="propertyName" defaultValue={transaction?.propertyName} required className="w-full p-2 border rounded" />
+            <Label>Property</Label>
+            <Input name="propertyName" defaultValue={transaction?.propertyName} required />
           </div>
           <div>
-            <label>Tenant</label>
-            <input name="tenant" defaultValue={transaction?.tenant} required className="w-full p-2 border rounded" />
+            <Label>Tenant</Label>
+            <Input name="tenant" defaultValue={transaction?.tenant} required />
           </div>
            <div>
-            <label>Tenancy Start Date</label>
-            <input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate?.split('T')[0]} required className="w-full p-2 border rounded" />
+            <Label>Tenancy Start Date</Label>
+            <Input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate?.split('T')[0]} required />
           </div>
           <div>
-            <label>Tenancy End Date</label>
-            <input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate?.split('T')[0]} required className="w-full p-2 border rounded" />
+            <Label>Tenancy End Date</Label>
+            <Input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate?.split('T')[0]} required />
           </div>
           <div>
-            <label>Monthly Rent</label>
-            <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded" />
+            <Label>Monthly Rent</Label>
+            <Input name="amount" type="number" defaultValue={transaction?.amount} required />
           </div>
           <div>
-            <label>Deposit (due with first month's rent)</label>
-            <input name="deposit" type="number" defaultValue={transaction?.deposit} className="w-full p-2 border rounded" />
+            <Label>Deposit (due with first month's rent)</Label>
+            <Input name="deposit" type="number" defaultValue={transaction?.deposit} />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
             <Button type="submit">Save</Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PaymentForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  transaction,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (transactionId: string, amount: number) => void;
+  transaction: Transaction | null;
+}) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!transaction) return;
+    const formData = new FormData(event.currentTarget);
+    const amountPaid = Number(formData.get('amountPaid'));
+    onSubmit(transaction.id, amountPaid);
+    onClose();
+  };
+
+  if (!isOpen || !transaction) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Record Payment</DialogTitle>
+        </DialogHeader>
+        <div className="text-sm text-muted-foreground">
+          For {transaction.tenant} at {transaction.propertyName} (Due: {format(new Date(transaction.date), 'MMMM dd, yyyy')})
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amountPaid" className="text-right">Amount Paid</Label>
+              <Input id="amountPaid" name="amountPaid" type="number" step="0.01" defaultValue={transaction.amountPaid || ''} className="col-span-3" required />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button type="submit">Save Payment</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
 
 export default function RevenuePage() {
   const { revenue, setRevenue } = useDataContext();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
+  const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
@@ -160,17 +218,22 @@ export default function RevenuePage() {
     }
   };
 
-  const handleAdd = () => {
+  const handleAddTenancy = () => {
     setSelectedTransaction(null);
-    setIsFormOpen(true);
+    setIsTenancyFormOpen(true);
   };
 
-  const handleEdit = (transaction: Transaction) => {
+  const handleEditTenancy = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
-    setIsFormOpen(true);
+    setIsTenancyFormOpen(true);
+  };
+  
+  const handleRecordPayment = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsPaymentFormOpen(true);
   };
 
-  const handleDelete = (transaction: Transaction) => {
+  const handleDeleteTenancy = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsDeleteDialogOpen(true);
   };
@@ -184,7 +247,7 @@ export default function RevenuePage() {
     }
   };
 
-  const handleFormSubmit = (data: Transaction[]) => {
+  const handleTenancyFormSubmit = (data: Transaction[]) => {
     const tenancyId = data[0].tenancyId;
     // Remove existing transactions for this tenancy before adding/updating
     const otherTenancies = revenue.filter(r => r.tenancyId !== tenancyId);
@@ -196,14 +259,22 @@ export default function RevenuePage() {
     });
 
     setRevenue([...otherTenancies, ...updatedData]);
-    setIsFormOpen(false);
+    setIsTenancyFormOpen(false);
+    setSelectedTransaction(null);
+  };
+
+  const handlePaymentFormSubmit = (transactionId: string, amount: number) => {
+    setRevenue(revenue.map(tx => 
+      tx.id === transactionId ? { ...tx, amountPaid: amount } : tx
+    ));
+    setIsPaymentFormOpen(false);
     setSelectedTransaction(null);
   };
 
   return (
     <>
       <PageHeader title="Revenue">
-        <Button onClick={handleAdd}>Add Tenancy</Button>
+        <Button onClick={handleAddTenancy}>Add Tenancy</Button>
       </PageHeader>
       <Card>
         <CardHeader>
@@ -255,8 +326,9 @@ export default function RevenuePage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => handleEdit(item)}>Edit Tenancy</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleDelete(item)}>Delete Tenancy</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleRecordPayment(item)}>Record Payment</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleEditTenancy(item)}>Edit Tenancy</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDeleteTenancy(item)}>Delete Tenancy</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -269,9 +341,16 @@ export default function RevenuePage() {
       </Card>
       
       <RevenueForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSubmit={handleFormSubmit}
+        isOpen={isTenancyFormOpen}
+        onClose={() => setIsTenancyFormOpen(false)}
+        onSubmit={handleTenancyFormSubmit}
+        transaction={selectedTransaction}
+      />
+
+      <PaymentForm
+        isOpen={isPaymentFormOpen}
+        onClose={() => setIsPaymentFormOpen(false)}
+        onSubmit={handlePaymentFormSubmit}
         transaction={selectedTransaction}
       />
 
