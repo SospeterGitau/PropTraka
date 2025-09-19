@@ -1,7 +1,7 @@
 
 'use client';
 
-import { DollarSign, Building, TrendingUp, TrendingDown, CircleAlert } from 'lucide-react';
+import { DollarSign, Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
@@ -15,6 +15,9 @@ export default function DashboardPage() {
   const { properties, revenue, expenses } = useDataContext();
 
   const totalPropertyValue = properties.reduce((acc, p) => acc + p.currentValue, 0);
+  const totalMortgage = properties.reduce((acc, p) => acc + p.mortgage, 0);
+  const totalEquity = totalPropertyValue - totalMortgage;
+  
   const totalRevenue = revenue
     .filter(r => new Date(r.date).getMonth() === new Date().getMonth())
     .reduce((acc, r) => acc + (r.amountPaid ?? 0), 0);
@@ -48,12 +51,18 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           icon={Building}
           title="Total Property Value"
           value={formatCurrency(totalPropertyValue)}
           description="Current market value of all assets"
+        />
+        <KpiCard
+          icon={Banknote}
+          title="Total Portfolio Equity"
+          value={formatCurrency(totalEquity)}
+          description="Property value minus outstanding mortgage"
         />
         <KpiCard
           icon={TrendingUp}
