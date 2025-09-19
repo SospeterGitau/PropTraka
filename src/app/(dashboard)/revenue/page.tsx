@@ -27,7 +27,6 @@ import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 
 // A simple form dialog for adding/editing revenue.
-// In a real app, this would be a more robust form component.
 function RevenueForm({
   isOpen,
   onClose,
@@ -77,16 +76,16 @@ function RevenueForm({
             <input name="tenant" defaultValue={transaction?.tenant} required className="w-full p-2 border rounded" />
           </div>
           <div>
-            <label>Amount Due</label>
+            <label>Monthly Rent</label>
             <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label>Deposit</label>
+            <input name="deposit" type="number" defaultValue={transaction?.deposit} className="w-full p-2 border rounded" />
           </div>
           <div>
             <label>Amount Paid</label>
             <input name="amountPaid" type="number" defaultValue={transaction?.amountPaid} required className="w-full p-2 border rounded" />
-          </div>
-           <div>
-            <label>Deposit</label>
-            <input name="deposit" type="number" defaultValue={transaction?.deposit} className="w-full p-2 border rounded" />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -159,9 +158,10 @@ export default function RevenuePage() {
                 <TableHead>Date</TableHead>
                 <TableHead>Property</TableHead>
                 <TableHead>Tenant</TableHead>
+                <TableHead className="text-right">Monthly Rent</TableHead>
+                <TableHead className="text-right">Deposit</TableHead>
                 <TableHead className="text-right">Amount Due</TableHead>
                 <TableHead className="text-right">Amount Paid</TableHead>
-                <TableHead className="text-right">Deposit</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -170,7 +170,8 @@ export default function RevenuePage() {
             </TableHeader>
             <TableBody>
               {revenue.map((item) => {
-                const balance = item.amount - (item.amountPaid ?? 0);
+                const amountDue = item.amount + (item.deposit ?? 0);
+                const balance = amountDue - (item.amountPaid ?? 0);
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
@@ -179,8 +180,9 @@ export default function RevenuePage() {
                       <Badge variant="outline">{item.tenant}</Badge>
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amountPaid ?? 0)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.deposit ?? 0)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(amountDue)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amountPaid ?? 0)}</TableCell>
                     <TableCell className={`text-right font-semibold ${balance > 0 ? 'text-destructive' : ''}`}>
                       {formatCurrency(balance)}
                     </TableCell>

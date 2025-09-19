@@ -33,14 +33,15 @@ export default function ArrearsPage() {
 
     const calculatedArrears = revenue
       .filter(transaction => {
+        const amountDue = transaction.amount + (transaction.deposit ?? 0);
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
-        return amountPaid < transaction.amount && dueDate < today;
+        return amountPaid < amountDue && dueDate < today;
       })
       .map(transaction => ({
         tenant: transaction.tenant!,
         propertyAddress: transaction.propertyName,
-        amountOwed: transaction.amount - (transaction.amountPaid ?? 0),
+        amountOwed: (transaction.amount + (transaction.deposit ?? 0)) - (transaction.amountPaid ?? 0),
         dueDate: transaction.date,
       }));
     

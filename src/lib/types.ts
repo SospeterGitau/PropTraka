@@ -12,7 +12,7 @@ export interface Property {
 export interface Transaction {
   id: string;
   date: string;
-  amount: number;
+  amount: number; // Represents monthly rent for revenue type
   propertyId: string;
   propertyName: string;
   type: 'revenue' | 'expense';
