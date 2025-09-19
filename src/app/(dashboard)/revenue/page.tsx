@@ -51,6 +51,8 @@ function RevenueForm({
       propertyId: transaction?.propertyId || 'new',
       deposit: Number(formData.get('deposit')),
       amountPaid: Number(formData.get('amountPaid')),
+      tenancyStartDate: formData.get('tenancyStartDate') as string,
+      tenancyEndDate: formData.get('tenancyEndDate') as string,
     };
     onSubmit(data);
     onClose();
@@ -64,7 +66,7 @@ function RevenueForm({
         <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Revenue</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label>Date</label>
+            <label>Due Date</label>
             <input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required className="w-full p-2 border rounded" />
           </div>
           <div>
@@ -87,6 +89,14 @@ function RevenueForm({
             <label>Amount Paid</label>
             <input name="amountPaid" type="number" defaultValue={transaction?.amountPaid} required className="w-full p-2 border rounded" />
           </div>
+          <div>
+            <label>Tenancy Start Date</label>
+            <input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate?.split('T')[0]} className="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label>Tenancy End Date</label>
+            <input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate?.split('T')[0]} className="w-full p-2 border rounded" />
+          </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">Save</Button>
@@ -105,7 +115,14 @@ export default function RevenuePage() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  const formatDate = (dateString: string) => format(new Date(dateString), 'MMMM dd, yyyy');
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  };
 
   const handleAdd = () => {
     setSelectedTransaction(null);
@@ -155,9 +172,9 @@ export default function RevenuePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Property</TableHead>
                 <TableHead>Tenant</TableHead>
+                <TableHead>Tenancy Start</TableHead>
+                <TableHead>Tenancy End</TableHead>
                 <TableHead className="text-right">Monthly Rent</TableHead>
                 <TableHead className="text-right">Deposit</TableHead>
                 <TableHead className="text-right">Amount Due</TableHead>
@@ -174,11 +191,12 @@ export default function RevenuePage() {
                 const balance = amountDue - (item.amountPaid ?? 0);
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
-                    <TableCell>{item.propertyName}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{item.tenant}</Badge>
+                      <div className="font-medium">{item.tenant}</div>
+                      <div className="text-sm text-muted-foreground">{item.propertyName}</div>
                     </TableCell>
+                    <TableCell>{formatDate(item.tenancyStartDate)}</TableCell>
+                    <TableCell>{formatDate(item.tenancyEndDate)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.deposit ?? 0)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(amountDue)}</TableCell>

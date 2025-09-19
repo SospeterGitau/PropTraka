@@ -21,6 +21,8 @@ export interface Transaction {
   vendor?: string; // for expenses
   deposit?: number; // for revenue
   amountPaid?: number; // for revenue
+  tenancyStartDate?: string; // for revenue
+  tenancyEndDate?: string; // for revenue
 }
 
 export interface Arrear {
@@ -33,5 +35,5 @@ export interface Arrear {
 export interface CalendarEvent {
   date: string;
   title: string;
-  type: 'appointment' | 'tenancy-start' | 'tenancy-end';
+  type: 'appointment' | 'tenancy-start' | 'tenancy-end' | 'expense';
 }

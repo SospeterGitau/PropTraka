@@ -27,6 +27,7 @@ const eventColors = {
   appointment: 'bg-blue-200 text-blue-800',
   'tenancy-start': 'bg-green-200 text-green-800',
   'tenancy-end': 'bg-red-200 text-red-800',
+  expense: 'bg-yellow-200 text-yellow-800',
 };
 
 export function CalendarView({ events }: CalendarViewProps) {
