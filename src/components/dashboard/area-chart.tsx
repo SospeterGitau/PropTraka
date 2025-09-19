@@ -65,8 +65,8 @@ export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
               <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
               <Tooltip content={<ChartTooltipContent />} />
-              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-2))" fillOpacity={1} fill="url(#colorRevenue)" />
               <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorExpenses)" />
+              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-2))" fillOpacity={1} fill="url(#colorRevenue)" />
             </AreaChart>
           </ResponsiveContainer>
         </ChartContainer>
