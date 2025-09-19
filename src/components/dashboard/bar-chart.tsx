@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -48,7 +49,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 40 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 50 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis 
                 dataKey="property" 
@@ -57,7 +58,6 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 tickMargin={8}
                 angle={-45}
                 textAnchor="end"
-                height={1}
               />
               <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
               <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
