@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
@@ -22,6 +23,7 @@ import { getLocale } from '@/lib/locales';
 
 interface ArrearEntry {
   tenant: string;
+  tenantEmail: string;
   propertyAddress: string;
   amountOwed: number;
   dueDate: string;
@@ -60,6 +62,7 @@ export default function ArrearsPage() {
 
         return {
           tenant: transaction.tenant!,
+          tenantEmail: transaction.tenantEmail!,
           propertyAddress: transaction.propertyName,
           amountOwed,
           dueDate: transaction.date,
@@ -142,7 +145,11 @@ export default function ArrearsPage() {
                         </Tooltip>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button size="sm">Send Reminder</Button>
+                         <Button size="sm" asChild>
+                          <Link href={`mailto:${arrear.tenantEmail}?subject=Rent Arrears Reminder&body=Dear ${arrear.tenant},%0D%0A%0D%0AThis is a reminder that your rent payment of ${formatCurrency(arrear.amountOwed)} for the property at ${arrear.propertyAddress} is overdue since ${formattedDates[arrear.dueDate]}.%0D%0A%0D%0APlease make the payment as soon as possible.%0D%0A%0D%0AThank you,%0D%0A[Your Name/Company Name]`}>
+                            Send Reminder
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

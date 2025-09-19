@@ -53,6 +53,7 @@ function RevenueForm({
     const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
     const propertyName = formData.get('propertyName') as string;
     const tenant = formData.get('tenant') as string;
+    const tenantEmail = formData.get('tenantEmail') as string;
     const amount = Number(formData.get('amount'));
     const deposit = Number(formData.get('deposit'));
 
@@ -92,6 +93,7 @@ function RevenueForm({
         amount: amount,
         propertyName: propertyName,
         tenant: tenant,
+        tenantEmail: tenantEmail,
         type: 'revenue' as const,
         propertyId: transaction?.propertyId || 'new',
         // Deposit is only due on the first month
@@ -123,6 +125,10 @@ function RevenueForm({
           <div>
             <Label>Tenant</Label>
             <Input name="tenant" defaultValue={transaction?.tenant} required />
+          </div>
+           <div>
+            <Label>Tenant Email</Label>
+            <Input name="tenantEmail" type="email" defaultValue={transaction?.tenantEmail} required />
           </div>
            <div>
             <Label>Tenancy Start Date</Label>
