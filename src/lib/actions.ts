@@ -1,8 +1,6 @@
 'use server';
 
 import {generateReportSummary, type GenerateReportSummaryOutput} from '@/ai/flows/generate-report-summary';
-import type {Property, Transaction, CalendarEvent} from './types';
-import { format } from 'date-fns';
 import { formatCurrency } from './utils';
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
