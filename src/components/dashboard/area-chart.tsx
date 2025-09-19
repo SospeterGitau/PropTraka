@@ -1,7 +1,7 @@
 'use client';
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { subMonths, format, startOfMonth } from 'date-fns';
+import { subMonths, format, startOfMonth, isSameMonth } from 'date-fns';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
@@ -30,11 +30,11 @@ export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
     const monthStart = startOfMonth(d);
 
     const monthlyRevenue = revenue
-      .filter(t => format(new Date(t.date), 'yyyy-MM') === format(monthStart, 'yyyy-MM'))
+      .filter(t => isSameMonth(new Date(t.date), monthStart))
       .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0);
     
     const monthlyExpenses = expenses
-      .filter(t => format(new Date(t.date), 'yyyy-MM') === format(monthStart, 'yyyy-MM'))
+      .filter(t => isSameMonth(new Date(t.date), monthStart))
       .reduce((sum, t) => sum + t.amount, 0);
 
     return { month, revenue: monthlyRevenue, expenses: monthlyExpenses };

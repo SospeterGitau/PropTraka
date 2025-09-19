@@ -21,6 +21,7 @@ export interface Transaction {
   vendor?: string; // for expenses
   deposit?: number; // for revenue
   amountPaid?: number; // for revenue
+  tenancyId?: string; // for revenue, to group monthly payments
   tenancyStartDate?: string; // for revenue
   tenancyEndDate?: string; // for revenue
 }

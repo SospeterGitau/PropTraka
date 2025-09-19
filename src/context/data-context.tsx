@@ -26,30 +26,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const events: CalendarEvent[] = [];
 
+    // Use a Set to track which tenancies have already had start/end events created
+    const processedTenancies = new Set<string>();
+
     // Generate events from revenue data for tenancy dates
     revenue.forEach(item => {
-      if (item.tenancyStartDate) {
-        events.push({
-          date: item.tenancyStartDate,
-          title: `Start: ${item.tenant}`,
-          type: 'tenancy-start',
-          details: {
-            Property: item.propertyName,
-            Tenant: item.tenant,
-          }
-        });
-      }
-      if (item.tenancyEndDate) {
-        events.push({
-          date: item.tenancyEndDate,
-          title: `End: ${item.tenant}`,
-          type: 'tenancy-end',
-          details: {
-            Property: item.propertyName,
-            Tenant: item.tenant,
-          }
-        });
-      }
+       if (item.tenancyId && !processedTenancies.has(item.tenancyId)) {
+        if (item.tenancyStartDate) {
+          events.push({
+            date: item.tenancyStartDate,
+            title: `Start: ${item.tenant}`,
+            type: 'tenancy-start',
+            details: {
+              Property: item.propertyName,
+              Tenant: item.tenant,
+            }
+          });
+        }
+        if (item.tenancyEndDate) {
+          events.push({
+            date: item.tenancyEndDate,
+            title: `End: ${item.tenant}`,
+            type: 'tenancy-end',
+            details: {
+              Property: item.propertyName,
+              Tenant: item.tenant,
+            }
+          });
+        }
+        processedTenancies.add(item.tenancyId);
+       }
     });
 
     // Generate events from expenses data

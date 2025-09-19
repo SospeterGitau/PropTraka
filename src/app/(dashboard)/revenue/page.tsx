@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, eachMonthOfInterval, startOfMonth } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -23,8 +23,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 // A simple form dialog for adding/editing revenue.
 function RevenueForm({
@@ -35,26 +35,70 @@ function RevenueForm({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Transaction) => void;
+  onSubmit: (data: Transaction[]) => void;
   transaction?: Transaction | null;
 }) {
+  const { toast } = useToast();
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const data: Transaction = {
-      id: transaction?.id || `r${Date.now()}`,
-      date: formData.get('date') as string,
-      amount: Number(formData.get('amount')),
-      propertyName: formData.get('propertyName') as string,
-      tenant: formData.get('tenant') as string,
-      type: 'revenue',
-      propertyId: transaction?.propertyId || 'new',
-      deposit: Number(formData.get('deposit')),
-      amountPaid: Number(formData.get('amountPaid')),
-      tenancyStartDate: formData.get('tenancyStartDate') as string,
-      tenancyEndDate: formData.get('tenancyEndDate') as string,
-    };
-    onSubmit(data);
+
+    const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
+    const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
+    const propertyName = formData.get('propertyName') as string;
+    const tenant = formData.get('tenant') as string;
+    const amount = Number(formData.get('amount'));
+    const deposit = Number(formData.get('deposit'));
+
+    if (!tenancyStartDateStr || !tenancyEndDateStr) {
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Tenancy start and end dates are required.",
+      });
+      return;
+    }
+
+    const tenancyStartDate = new Date(tenancyStartDateStr);
+    const tenancyEndDate = new Date(tenancyEndDateStr);
+
+    if (tenancyStartDate > tenancyEndDate) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Tenancy start date cannot be after the end date.",
+      });
+      return;
+    }
+
+    const months = eachMonthOfInterval({
+      start: tenancyStartDate,
+      end: tenancyEndDate,
+    });
+
+    const newTransactions = months.map((monthStartDate, index) => {
+      // Use a consistent ID scheme for the tenancy
+      const tenancyId = transaction?.tenancyId || `t${Date.now()}`;
+      return {
+        id: `${tenancyId}-${index}`,
+        tenancyId: tenancyId,
+        date: format(monthStartDate, 'yyyy-MM-dd'),
+        amount: amount,
+        propertyName: propertyName,
+        tenant: tenant,
+        type: 'revenue' as const,
+        propertyId: transaction?.propertyId || 'new',
+        // Deposit is only due on the first month
+        deposit: index === 0 ? deposit : 0,
+        // For new entries, default amountPaid to 0. Editing preserves old values if they exist.
+        amountPaid: 0,
+        tenancyStartDate: tenancyStartDateStr,
+        tenancyEndDate: tenancyEndDateStr,
+      };
+    });
+
+    onSubmit(newTransactions);
     onClose();
   };
 
@@ -63,13 +107,9 @@ function RevenueForm({
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
       <div className="bg-card p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Revenue</h2>
+        <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Tenancy</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label>Due Date</label>
-            <input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required className="w-full p-2 border rounded" />
-          </div>
-          <div>
+           <div>
             <label>Property</label>
             <input name="propertyName" defaultValue={transaction?.propertyName} required className="w-full p-2 border rounded" />
           </div>
@@ -77,25 +117,21 @@ function RevenueForm({
             <label>Tenant</label>
             <input name="tenant" defaultValue={transaction?.tenant} required className="w-full p-2 border rounded" />
           </div>
+           <div>
+            <label>Tenancy Start Date</label>
+            <input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate?.split('T')[0]} required className="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label>Tenancy End Date</label>
+            <input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate?.split('T')[0]} required className="w-full p-2 border rounded" />
+          </div>
           <div>
             <label>Monthly Rent</label>
             <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded" />
           </div>
           <div>
-            <label>Deposit</label>
+            <label>Deposit (due with first month's rent)</label>
             <input name="deposit" type="number" defaultValue={transaction?.deposit} className="w-full p-2 border rounded" />
-          </div>
-          <div>
-            <label>Amount Paid</label>
-            <input name="amountPaid" type="number" defaultValue={transaction?.amountPaid} required className="w-full p-2 border rounded" />
-          </div>
-          <div>
-            <label>Tenancy Start Date</label>
-            <input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate?.split('T')[0]} className="w-full p-2 border rounded" />
-          </div>
-          <div>
-            <label>Tenancy End Date</label>
-            <input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate?.split('T')[0]} className="w-full p-2 border rounded" />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -141,20 +177,25 @@ export default function RevenuePage() {
 
   const confirmDelete = () => {
     if (selectedTransaction) {
-      setRevenue(revenue.filter((item) => item.id !== selectedTransaction.id));
+      // Delete all transactions related to the same tenancy
+      setRevenue(revenue.filter((item) => item.tenancyId !== selectedTransaction.tenancyId));
       setIsDeleteDialogOpen(false);
       setSelectedTransaction(null);
     }
   };
 
-  const handleFormSubmit = (data: Transaction) => {
-    if (data.id.startsWith('r') && !revenue.find(r => r.id === data.id)) {
-       // Add
-      setRevenue([data, ...revenue]);
-    } else {
-      // Update
-      setRevenue(revenue.map((item) => (item.id === data.id ? data : item)));
-    }
+  const handleFormSubmit = (data: Transaction[]) => {
+    const tenancyId = data[0].tenancyId;
+    // Remove existing transactions for this tenancy before adding/updating
+    const otherTenancies = revenue.filter(r => r.tenancyId !== tenancyId);
+    
+    // Attempt to preserve payment status on edit
+    const updatedData = data.map(newTx => {
+      const existingTx = revenue.find(oldTx => oldTx.id === newTx.id);
+      return existingTx ? { ...newTx, amountPaid: existingTx.amountPaid } : newTx;
+    });
+
+    setRevenue([...otherTenancies, ...updatedData]);
     setIsFormOpen(false);
     setSelectedTransaction(null);
   };
@@ -162,7 +203,7 @@ export default function RevenuePage() {
   return (
     <>
       <PageHeader title="Revenue">
-        <Button onClick={handleAdd}>Add Revenue</Button>
+        <Button onClick={handleAdd}>Add Tenancy</Button>
       </PageHeader>
       <Card>
         <CardHeader>
@@ -172,9 +213,9 @@ export default function RevenuePage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Due Date</TableHead>
                 <TableHead>Tenant</TableHead>
-                <TableHead>Tenancy Start</TableHead>
-                <TableHead>Tenancy End</TableHead>
+                <TableHead>Tenancy Period</TableHead>
                 <TableHead className="text-right">Monthly Rent</TableHead>
                 <TableHead className="text-right">Deposit</TableHead>
                 <TableHead className="text-right">Amount Due</TableHead>
@@ -186,17 +227,17 @@ export default function RevenuePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {revenue.map((item) => {
+              {revenue.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((item) => {
                 const amountDue = item.amount + (item.deposit ?? 0);
                 const balance = amountDue - (item.amountPaid ?? 0);
                 return (
                   <TableRow key={item.id}>
+                    <TableCell>{formatDate(item.date)}</TableCell>
                     <TableCell>
                       <div className="font-medium">{item.tenant}</div>
                       <div className="text-sm text-muted-foreground">{item.propertyName}</div>
                     </TableCell>
-                    <TableCell>{formatDate(item.tenancyStartDate)}</TableCell>
-                    <TableCell>{formatDate(item.tenancyEndDate)}</TableCell>
+                    <TableCell>{formatDate(item.tenancyStartDate)} - {formatDate(item.tenancyEndDate)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.deposit ?? 0)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(amountDue)}</TableCell>
@@ -214,8 +255,8 @@ export default function RevenuePage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => handleEdit(item)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleDelete(item)}>Delete</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleEdit(item)}>Edit Tenancy</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDelete(item)}>Delete Tenancy</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -238,7 +279,7 @@ export default function RevenuePage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
-        itemName={`revenue transaction for ${selectedTransaction?.propertyName}`}
+        itemName={`tenancy for ${selectedTransaction?.tenant} at ${selectedTransaction?.propertyName}`}
       />
     </>
   );
