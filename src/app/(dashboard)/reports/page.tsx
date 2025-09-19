@@ -2,8 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear } from 'date-fns';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, startOfMonth, endOfMonth } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -57,9 +57,29 @@ export default function ReportsPage() {
   const actualRevenue = filteredTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
   const totalArrears = projectedRevenue - actualRevenue;
   
-  const chartData = [
-    { name: 'Revenue', projected: projectedRevenue, actual: actualRevenue },
-  ];
+  let chartData;
+
+  if (viewMode === 'year') {
+    const yearStart = startOfYear(currentDate);
+    const yearEnd = endOfYear(currentDate);
+    const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
+    
+    chartData = months.map(month => {
+      const monthlyTransactions = revenue.filter(t => isSameMonth(new Date(t.date), month));
+      const projected = monthlyTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0);
+      const actual = monthlyTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
+      return {
+        name: format(month, 'MMM'),
+        projected,
+        actual,
+      };
+    });
+  } else {
+     chartData = [
+      { name: format(currentDate, 'MMMM'), projected: projectedRevenue, actual: actualRevenue },
+    ];
+  }
+
 
   const dateDisplayFormat = viewMode === 'month' ? 'MMMM yyyy' : 'yyyy';
 
@@ -114,15 +134,17 @@ export default function ReportsPage() {
             />
           </div>
            <ChartContainer config={{}} className="h-[350px] w-full">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
-              <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
-              <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} name="Projected" />
-              <Bar dataKey="actual" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Actual" />
-            </BarChart>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
+                <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
+                <Legend />
+                <Bar dataKey="projected" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} name="Projected" />
+                <Bar dataKey="actual" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Actual" />
+              </BarChart>
+            </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
