@@ -29,6 +29,7 @@ interface ArrearEntry {
   dueDate: string;
   rentOwed: number;
   depositOwed: number;
+  daysOverdue: number;
 }
 
 export default function ArrearsPage() {
@@ -50,6 +51,7 @@ export default function ArrearsPage() {
         const rentDue = transaction.amount;
         const depositDue = transaction.deposit ?? 0;
         const amountPaid = transaction.amountPaid ?? 0;
+        const dueDate = new Date(transaction.date);
 
         // Logic to determine how the paid amount is allocated
         const paidTowardsDeposit = Math.min(amountPaid, depositDue);
@@ -59,6 +61,8 @@ export default function ArrearsPage() {
         const depositOwed = depositDue - paidTowardsDeposit;
         const rentOwed = rentDue - paidTowardsRent;
         const amountOwed = depositOwed + rentOwed;
+        
+        const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
 
         return {
           tenant: transaction.tenant!,
@@ -68,6 +72,7 @@ export default function ArrearsPage() {
           dueDate: transaction.date,
           rentOwed,
           depositOwed,
+          daysOverdue,
         };
       });
     
@@ -112,6 +117,7 @@ export default function ArrearsPage() {
                   <TableHead>Tenant</TableHead>
                   <TableHead>Property</TableHead>
                   <TableHead>Due Date</TableHead>
+                  <TableHead>Days Overdue</TableHead>
                   <TableHead className="text-right">Amount Owed</TableHead>
                   <TableHead className="text-center">Action</TableHead>
                 </TableRow>
@@ -119,7 +125,7 @@ export default function ArrearsPage() {
               <TableBody>
                 {arrears.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       No tenants are currently in arrears.
                     </TableCell>
                   </TableRow>
@@ -131,6 +137,7 @@ export default function ArrearsPage() {
                       <TableCell>
                         <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
                       </TableCell>
+                      <TableCell>{arrear.daysOverdue} days</TableCell>
                       <TableCell className="text-right font-semibold text-destructive">
                         <Tooltip>
                           <TooltipTrigger asChild>
