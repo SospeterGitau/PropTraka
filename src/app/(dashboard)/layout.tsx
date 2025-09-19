@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="shrink-0 md:hidden">
+            <Button asChild variant="ghost" size="icon" className="shrink-0 md:hidden">
               <SidebarTrigger />
             </Button>
             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
