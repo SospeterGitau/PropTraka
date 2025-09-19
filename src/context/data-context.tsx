@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses, calendarEvents as initialCalendarEvents } from '@/lib/data';
+import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses } from '@/lib/data';
 import type { Property, Transaction, CalendarEvent } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 
@@ -24,9 +24,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   useEffect(() => {
-    const events: CalendarEvent[] = [...initialCalendarEvents];
+    const events: CalendarEvent[] = [];
 
-    // Generate events from revenue data
+    // Generate events from revenue data for tenancy dates
     revenue.forEach(item => {
       if (item.tenancyStartDate) {
         events.push({

@@ -11,13 +11,13 @@ export const properties: Property[] = [
 ];
 
 export const revenue: Transaction[] = [
-  { id: 'r1', date: '2024-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', deposit: 900, amountPaid: 1800 },
-  { id: 'r2', date: '2024-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', deposit: 1100, amountPaid: 2200 },
-  { id: 'r3', date: '2024-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln', type: 'revenue', tenant: 'Peter Jones', deposit: 700, amountPaid: 1400 },
-  { id: 'r4', date: '2024-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', deposit: 900, amountPaid: 1800 },
-  { id: 'r5', date: '2024-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', deposit: 1100, amountPaid: 2200 },
-  { id: 'r6', date: '2024-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct', type: 'revenue', tenant: 'Mike Johnson', deposit: 1500, amountPaid: 0 },
-  { id: 'r7', date: '2024-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd', type: 'revenue', tenant: 'Emily Williams', deposit: 2000, amountPaid: 3500 },
+  { id: 'r1', date: '2024-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', deposit: 900, amountPaid: 1800, tenancyStartDate: '2024-01-01', tenancyEndDate: '2024-12-31' },
+  { id: 'r2', date: '2024-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', deposit: 1100, amountPaid: 2200, tenancyStartDate: '2024-02-15', tenancyEndDate: '2025-02-14' },
+  { id: 'r3', date: '2024-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln', type: 'revenue', tenant: 'Peter Jones', deposit: 700, amountPaid: 1400, tenancyStartDate: '2023-08-10', tenancyEndDate: '2024-08-09' },
+  { id: 'r4', date: '2024-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', deposit: 900, amountPaid: 1800, tenancyStartDate: '2024-01-01', tenancyEndDate: '2024-12-31' },
+  { id: 'r5', date: '2024-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', deposit: 1100, amountPaid: 2200, tenancyStartDate: '2024-02-15', tenancyEndDate: '2025-02-14' },
+  { id: 'r6', date: '2024-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct', type: 'revenue', tenant: 'Mike Johnson', deposit: 1500, amountPaid: 0, tenancyStartDate: '2024-07-01', tenancyEndDate: '2025-06-30' },
+  { id: 'r7', date: '2024-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd', type: 'revenue', tenant: 'Emily Williams', deposit: 2000, amountPaid: 3500, tenancyStartDate: '2024-05-01', tenancyEndDate: '2025-04-30' },
 ];
 
 export const expenses: Transaction[] = [
@@ -30,18 +30,7 @@ export const expenses: Transaction[] = [
 // This is now derived from the revenue data, but we keep the type for structure.
 export const arrears: Arrear[] = [];
 
-
-const today = new Date();
-const currentYear = today.getFullYear();
-const currentMonth = today.getMonth();
-
-export const calendarEvents: CalendarEvent[] = [
-  { date: new Date(currentYear, currentMonth, 2).toISOString().split('T')[0], title: 'Gas safety check - 123 Maple St', type: 'appointment' },
-  { date: new Date(currentYear, currentMonth, 15).toISOString().split('T')[0], title: 'New tenancy starts - 789 Pine Ln', type: 'tenancy-start' },
-  { date: new Date(currentYear, currentMonth, 10).toISOString().split('T')[0], title: 'Viewing - 456 Oak Ave', type: 'appointment' },
-  { date: new Date(currentYear, currentMonth, 28).toISOString().split('T')[0], title: 'Tenancy ends - 101 Elm Ct', type: 'tenancy-end' },
-  { date: new Date(currentYear, currentMonth + 1, 1).toISOString().split('T')[0], title: 'Tenancy starts - 101 Elm Ct', type: 'tenancy-start' },
-];
+export const calendarEvents: CalendarEvent[] = [];
 
 export const weatherData = {
   city: 'Springfield',
