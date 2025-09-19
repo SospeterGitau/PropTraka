@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { MoreHorizontal } from 'lucide-react';
-import { properties as initialProperties } from '@/lib/data';
+import { useDataContext } from '@/context/data-context';
 import type { Property } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ import { PropertyForm } from '@/components/property-form';
 
 
 export default function PropertiesPage() {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const { properties, setProperties } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -59,12 +59,12 @@ export default function PropertiesPage() {
   };
 
   const handleFormSubmit = (data: Property) => {
-    if (selectedProperty) {
-      // Update
-      setProperties(properties.map((p) => (p.id === data.id ? data : p)));
-    } else {
+    if (data.id.startsWith('p') && !properties.find(p => p.id === data.id)) {
       // Add
       setProperties([data, ...properties]);
+    } else {
+      // Update
+      setProperties(properties.map((p) => (p.id === data.id ? data : p)));
     }
   };
 

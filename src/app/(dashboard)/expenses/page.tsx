@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
-import { expenses as initialExpenses } from '@/lib/data';
+import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -94,7 +94,7 @@ function ExpenseForm({
 
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState<Transaction[]>(initialExpenses);
+  const { expenses, setExpenses } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -126,10 +126,10 @@ export default function ExpensesPage() {
   };
 
   const handleFormSubmit = (data: Transaction) => {
-    if (selectedTransaction) {
-      setExpenses(expenses.map((item) => (item.id === data.id ? data : item)));
-    } else {
+    if (data.id.startsWith('e') && !expenses.find(e => e.id === data.id)) {
       setExpenses([data, ...expenses]);
+    } else {
+      setExpenses(expenses.map((item) => (item.id === data.id ? data : item)));
     }
   };
 

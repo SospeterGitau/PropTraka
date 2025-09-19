@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { revenue } from '@/lib/data';
-import type { Transaction } from '@/lib/types';
+import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +24,7 @@ interface ArrearEntry {
 }
 
 export default function ArrearsPage() {
+  const { revenue } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function ArrearsPage() {
       }));
     
     setArrears(calculatedArrears);
-  }, []);
+  }, [revenue]);
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   const formatDate = (dateString: string) => format(new Date(dateString), 'MMMM dd, yyyy');

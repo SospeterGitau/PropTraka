@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
-import { revenue as initialRevenue } from '@/lib/data';
+import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -100,7 +100,7 @@ function RevenueForm({
 
 
 export default function RevenuePage() {
-  const [revenue, setRevenue] = useState<Transaction[]>(initialRevenue);
+  const { revenue, setRevenue } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -132,12 +132,12 @@ export default function RevenuePage() {
   };
 
   const handleFormSubmit = (data: Transaction) => {
-    if (selectedTransaction) {
+    if (data.id.startsWith('r') && !revenue.find(r => r.id === data.id)) {
+       // Add
+      setRevenue([data, ...revenue]);
+    } else {
       // Update
       setRevenue(revenue.map((item) => (item.id === data.id ? data : item)));
-    } else {
-      // Add
-      setRevenue([data, ...revenue]);
     }
     setIsFormOpen(false);
     setSelectedTransaction(null);
