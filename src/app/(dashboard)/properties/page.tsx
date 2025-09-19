@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -28,12 +29,10 @@ import { PropertyForm } from '@/components/property-form';
 
 
 export default function PropertiesPage() {
-  const { properties, setProperties } = useDataContext();
+  const { properties, setProperties, formatCurrency } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
 
   const handleAdd = () => {
     setSelectedProperty(null);

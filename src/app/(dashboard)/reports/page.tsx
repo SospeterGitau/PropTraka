@@ -15,13 +15,10 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ReportSummary } from '@/components/report-summary';
 import { Skeleton } from '@/components/ui/skeleton';
 
-
 type ViewMode = 'month' | 'year';
 
-const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
-
 export default function ReportsPage() {
-  const { revenue } = useDataContext();
+  const { revenue, formatCurrency } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 

@@ -173,12 +173,11 @@ function ExpenseForm({
 }
 
 export default function ExpensesPage() {
-  const { properties, expenses, setExpenses } = useDataContext();
+  const { properties, expenses, setExpenses, formatCurrency } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   const formatDate = (dateString: string) => format(new Date(dateString), 'MMMM dd, yyyy');
   
   const handleAdd = () => {

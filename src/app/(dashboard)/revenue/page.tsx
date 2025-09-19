@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -202,13 +203,12 @@ function PaymentForm({
 
 
 export default function RevenuePage() {
-  const { revenue, setRevenue } = useDataContext();
+  const { revenue, setRevenue, formatCurrency } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     try {

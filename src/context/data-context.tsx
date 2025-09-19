@@ -1,9 +1,9 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses } from '@/lib/data';
 import type { Property, Transaction, CalendarEvent } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
 
 interface DataContextType {
   properties: Property[];
@@ -13,6 +13,9 @@ interface DataContextType {
   expenses: Transaction[];
   setExpenses: (expenses: Transaction[]) => void;
   calendarEvents: CalendarEvent[];
+  currency: string;
+  setCurrency: (currency: string) => void;
+  formatCurrency: (amount: number) => string;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -22,6 +25,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [revenue, setRevenue] = useState<Transaction[]>(initialRevenue);
   const [expenses, setExpenses] = useState<Transaction[]>(initialExpenses);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [currency, setCurrency] = useState('USD');
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+  
+  const formatCurrencyWithCents = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(amount);
+  };
 
   useEffect(() => {
     const events: CalendarEvent[] = [];
@@ -68,13 +87,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
             Property: item.propertyName,
             Category: item.category,
             Vendor: item.vendor,
-            Amount: formatCurrency(item.amount),
+            Amount: formatCurrencyWithCents(item.amount),
         }
       });
     });
 
     setCalendarEvents(events);
-  }, [revenue, expenses]);
+  }, [revenue, expenses, currency]);
 
   const value = {
     properties,
@@ -84,6 +103,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     expenses,
     setExpenses,
     calendarEvents,
+    currency,
+    setCurrency,
+    formatCurrency,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

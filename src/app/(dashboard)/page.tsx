@@ -12,7 +12,7 @@ const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-cha
 const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false });
 
 export default function DashboardPage() {
-  const { properties, revenue, expenses } = useDataContext();
+  const { properties, revenue, expenses, formatCurrency } = useDataContext();
 
   const totalPropertyValue = properties.reduce((acc, p) => acc + p.currentValue, 0);
   const totalMortgage = properties.reduce((acc, p) => acc + p.mortgage, 0);
@@ -38,15 +38,6 @@ export default function DashboardPage() {
     }, 0);
 
   const totalProfit = totalRevenue - totalExpenses;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
 
   return (
     <>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,7 +28,7 @@ interface ArrearEntry {
 }
 
 export default function ArrearsPage() {
-  const { revenue } = useDataContext();
+  const { revenue, formatCurrency } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
 
   useEffect(() => {
@@ -68,7 +69,6 @@ export default function ArrearsPage() {
     setArrears(calculatedArrears.filter(a => a.amountOwed > 0));
   }, [revenue]);
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   const formatDate = (dateString: string) => format(new Date(dateString), 'MMMM dd, yyyy');
 
   return (
