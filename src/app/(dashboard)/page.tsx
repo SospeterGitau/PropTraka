@@ -1,12 +1,15 @@
 'use client';
 
 import { DollarSign, Building, TrendingUp, TrendingDown, CircleAlert } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { AreaChartComponent } from '@/components/dashboard/area-chart';
-import { BarChartComponent } from '@/components/dashboard/bar-chart';
 import { SmartAlerts } from '@/components/dashboard/smart-alerts';
 import { PageHeader } from '@/components/page-header';
+
+// Dynamically import charts to prevent server-side rendering issues
+const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false });
+const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false });
 
 export default function DashboardPage() {
   const { properties, revenue, expenses } = useDataContext();
