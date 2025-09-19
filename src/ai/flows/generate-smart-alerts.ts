@@ -53,7 +53,7 @@ const smartAlertsPrompt = ai.definePrompt({
   },
   prompt: `You are an AI assistant designed to analyze property management data and generate smart alerts for property managers.
 
-  Analyze the following data to identify potential maintenance issues, payment arrears, and other relevant insights. Provide specific and actionable alerts with severity levels (high, medium, low).
+  Analyze the following JSON data to identify potential maintenance issues, payment arrears, and other relevant insights. Provide specific and actionable alerts with severity levels (high, medium, low).
 
   Dashboard Data: {{{dashboardData}}}
   Weather Data: {{{weatherData}}}
