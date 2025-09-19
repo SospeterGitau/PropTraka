@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -15,11 +16,11 @@ interface AreaChartProps {
 const chartConfig = {
   revenue: {
     label: 'Revenue',
-    color: 'hsl(var(--accent))',
+    color: 'hsl(var(--chart-2))',
   },
   expenses: {
     label: 'Expenses',
-    color: 'hsl(var(--primary))',
+    color: 'hsl(var(--chart-1))',
   },
 } satisfies ChartConfig;
 
@@ -52,20 +53,20 @@ export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
             <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
               <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
               <Tooltip content={<ChartTooltipContent />} />
-              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--accent))" fillOpacity={1} fill="url(#colorRevenue)" />
-              <Area type="monotone" dataKey="expenses" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorExpenses)" />
+              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-2))" fillOpacity={1} fill="url(#colorRevenue)" />
+              <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorExpenses)" />
             </AreaChart>
           </ResponsiveContainer>
         </ChartContainer>
