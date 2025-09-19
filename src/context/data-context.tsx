@@ -27,7 +27,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [revenue, setRevenue] = useState<Transaction[]>(initialRevenue);
   const [expenses, setExpenses] = useState<Transaction[]>(initialExpenses);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('GBP');
   const [locale, setLocale] = useState('en-GB');
 
   const formatCurrency = (amount: number) => {
