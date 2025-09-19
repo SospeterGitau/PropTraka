@@ -1,10 +1,10 @@
+
 'use client';
 
 import { DollarSign, Building, TrendingUp, TrendingDown, CircleAlert } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { SmartAlerts } from '@/components/dashboard/smart-alerts';
 import { PageHeader } from '@/components/page-header';
 
 // Dynamically import charts to prevent server-side rendering issues
@@ -83,7 +83,6 @@ export default function DashboardPage() {
       <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
         <AreaChartComponent revenue={revenue} expenses={expenses} />
         <BarChartComponent properties={properties} revenue={revenue} expenses={expenses} />
-        <SmartAlerts />
       </div>
     </>
   );
