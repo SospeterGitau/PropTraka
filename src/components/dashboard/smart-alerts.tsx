@@ -67,8 +67,8 @@ export function SmartAlerts() {
           {alerts?.map((alert, index) => (
             <Alert key={index} className={severityClasses[alert.severity]}>
                {severityIcons[alert.severity]}
-              <AlertTitle className="ml-8 capitalize">{alert.severity} Alert: {alert.propertyAddress}</AlertTitle>
-              <AlertDescription className="ml-8">{alert.message}</AlertDescription>
+              <AlertTitle className="capitalize">{alert.severity} Alert: {alert.propertyAddress}</AlertTitle>
+              <AlertDescription>{alert.message}</AlertDescription>
             </Alert>
           ))}
         </div>
