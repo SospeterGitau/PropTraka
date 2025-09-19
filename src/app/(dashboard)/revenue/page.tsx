@@ -50,6 +50,8 @@ function RevenueForm({
       tenant: formData.get('tenant') as string,
       type: 'revenue',
       propertyId: transaction?.propertyId || 'new',
+      deposit: Number(formData.get('deposit')),
+      amountPaid: Number(formData.get('amountPaid')),
     };
     onSubmit(data);
     onClose();
@@ -75,8 +77,16 @@ function RevenueForm({
             <input name="tenant" defaultValue={transaction?.tenant} required className="w-full p-2 border rounded" />
           </div>
           <div>
-            <label>Amount</label>
+            <label>Amount Due</label>
             <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label>Amount Paid</label>
+            <input name="amountPaid" type="number" defaultValue={transaction?.amountPaid} required className="w-full p-2 border rounded" />
+          </div>
+           <div>
+            <label>Deposit</label>
+            <input name="deposit" type="number" defaultValue={transaction?.deposit} className="w-full p-2 border rounded" />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
@@ -129,6 +139,8 @@ export default function RevenuePage() {
       // Add
       setRevenue([data, ...revenue]);
     }
+    setIsFormOpen(false);
+    setSelectedTransaction(null);
   };
 
   return (
@@ -147,38 +159,49 @@ export default function RevenuePage() {
                 <TableHead>Date</TableHead>
                 <TableHead>Property</TableHead>
                 <TableHead>Tenant</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Amount Due</TableHead>
+                <TableHead className="text-right">Amount Paid</TableHead>
+                <TableHead className="text-right">Deposit</TableHead>
+                <TableHead className="text-right">Balance</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {revenue.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
-                  <TableCell>{item.propertyName}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{item.tenant}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => handleEdit(item)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleDelete(item)}>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {revenue.map((item) => {
+                const balance = item.amount - (item.amountPaid ?? 0);
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
+                    <TableCell>{item.propertyName}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{item.tenant}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.amountPaid ?? 0)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.deposit ?? 0)}</TableCell>
+                    <TableCell className={`text-right font-semibold ${balance > 0 ? 'text-destructive' : ''}`}>
+                      {formatCurrency(balance)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => handleEdit(item)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDelete(item)}>Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

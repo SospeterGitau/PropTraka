@@ -11,11 +11,13 @@ export const properties: Property[] = [
 ];
 
 export const revenue: Transaction[] = [
-  { id: 'r1', date: '2024-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe' },
-  { id: 'r2', date: '2024-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith' },
-  { id: 'r3', date: '2024-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln', type: 'revenue', tenant: 'Peter Jones' },
-  { id: 'r4', date: '2024-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe' },
-  { id: 'r5', date: '2024-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith' },
+  { id: 'r1', date: '2024-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', deposit: 900, amountPaid: 1800 },
+  { id: 'r2', date: '2024-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', deposit: 1100, amountPaid: 2200 },
+  { id: 'r3', date: '2024-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln', type: 'revenue', tenant: 'Peter Jones', deposit: 700, amountPaid: 1400 },
+  { id: 'r4', date: '2024-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', deposit: 900, amountPaid: 1800 },
+  { id: 'r5', date: '2024-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', deposit: 1100, amountPaid: 2200 },
+  { id: 'r6', date: '2024-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct', type: 'revenue', tenant: 'Mike Johnson', deposit: 1500, amountPaid: 0 },
+  { id: 'r7', date: '2024-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd', type: 'revenue', tenant: 'Emily Williams', deposit: 2000, amountPaid: 3500 },
 ];
 
 export const expenses: Transaction[] = [
@@ -25,10 +27,9 @@ export const expenses: Transaction[] = [
   { id: 'e4', date: '2024-06-08', amount: 200, propertyId: 'p1', propertyName: '123 Maple St', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.'},
 ];
 
-export const arrears: Arrear[] = [
-  { tenant: 'Mike Johnson', propertyAddress: '101 Elm Ct', amount: 3000, dueDate: '2024-07-01' },
-  { tenant: 'Emily Williams', propertyAddress: '333 Cedar Blvd', amount: 500, dueDate: '2024-07-05' },
-];
+// This is now derived from the revenue data, but we keep the type for structure.
+export const arrears: Arrear[] = [];
+
 
 const today = new Date();
 const currentYear = today.getFullYear();
@@ -53,11 +54,16 @@ export const weatherData = {
   ]
 };
 
+const allArrears = revenue
+  .filter(r => (r.amountPaid ?? 0) < r.amount && new Date(r.date) < new Date())
+  .reduce((acc, r) => acc + (r.amount - (r.amountPaid ?? 0)), 0);
+
+
 export const dashboardData = {
     totalPropertyValue: properties.reduce((acc, p) => acc + p.currentValue, 0),
-    totalRevenue: revenue.filter(r => new Date(r.date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0),
+    totalRevenue: revenue.filter(r => new Date(r.date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + (r.amountPaid ?? 0), 0),
     totalExpenses: expenses.filter(e => new Date(e.date).getMonth() === new Date().getMonth()).reduce((acc, e) => acc + e.amount, 0),
-    totalArrears: arrears.reduce((acc, a) => acc + a.amount, 0),
+    totalArrears: allArrears,
     get totalProfit() {
       return this.totalRevenue - this.totalExpenses;
     },

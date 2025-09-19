@@ -19,6 +19,8 @@ export interface Transaction {
   category?: string; // e.g., maintenance, repairs, insurance for expenses
   tenant?: string; // for revenue
   vendor?: string; // for expenses
+  deposit?: number; // for revenue
+  amountPaid?: number; // for revenue
 }
 
 export interface Arrear {
