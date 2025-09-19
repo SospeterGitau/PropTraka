@@ -71,6 +71,7 @@ function ExpenseForm({
   properties: Property[];
 }) {
   const [category, setCategory] = useState(transaction?.category || '');
+  const [open, setOpen] = useState(false)
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -118,10 +119,10 @@ function ExpenseForm({
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium">Category</label>
-            <Popover>
+            <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full justify-between">
-                  {category || "Select a category..."}
+                <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
+                  {category ? defaultCategories.find((c) => c.toLowerCase() === category.toLowerCase()) || category : "Select a category..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -140,9 +141,10 @@ function ExpenseForm({
                           value={cat}
                           onSelect={(currentValue) => {
                             setCategory(currentValue === category ? "" : currentValue);
+                            setOpen(false);
                           }}
                         >
-                          <Check className={cn("mr-2 h-4 w-4", category === cat ? "opacity-100" : "opacity-0")} />
+                          <Check className={cn("mr-2 h-4 w-4", category.toLowerCase() === cat.toLowerCase() ? "opacity-100" : "opacity-0")} />
                           {cat}
                         </CommandItem>
                       ))}
