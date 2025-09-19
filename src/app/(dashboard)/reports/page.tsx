@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ReportSummary } from '@/components/report-summary';
 
 type ViewMode = 'month' | 'year';
 
@@ -19,7 +20,7 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { styl
 
 export default function ReportsPage() {
   const { revenue } = useDataContext();
-  const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const handlePrev = () => {
@@ -58,6 +59,7 @@ export default function ReportsPage() {
   const totalArrears = projectedRevenue - actualRevenue;
   
   let chartData;
+  const dateDisplayFormat = viewMode === 'month' ? 'MMMM yyyy' : 'yyyy';
 
   if (viewMode === 'year') {
     const yearStart = startOfYear(currentDate);
@@ -80,8 +82,15 @@ export default function ReportsPage() {
     ];
   }
 
+  const reportSummaryData = {
+    viewMode,
+    period: format(currentDate, dateDisplayFormat),
+    projectedRevenue,
+    actualRevenue,
+    totalArrears,
+    chartData,
+  };
 
-  const dateDisplayFormat = viewMode === 'month' ? 'MMMM yyyy' : 'yyyy';
 
   return (
     <>
@@ -94,7 +103,7 @@ export default function ReportsPage() {
               <CardDescription>Analyze revenue performance and the impact of arrears.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-               <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange}>
+               <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year">
                 <ToggleGroupItem value="month" aria-label="Toggle month">
                   Month
                 </ToggleGroupItem>
@@ -148,6 +157,7 @@ export default function ReportsPage() {
           </ChartContainer>
         </CardContent>
       </Card>
+      <ReportSummary data={reportSummaryData} />
     </>
   );
 }

@@ -1,6 +1,7 @@
 'use server';
 
 import {generateSmartAlerts, type GenerateSmartAlertsOutput} from '@/ai/flows/generate-smart-alerts';
+import {generateReportSummary, type GenerateReportSummaryOutput} from '@/ai/flows/generate-report-summary';
 import {weatherData} from '@/lib/data';
 import type {Property, Transaction, CalendarEvent} from './types';
 import { format } from 'date-fns';
@@ -40,23 +41,27 @@ export async function getSmartAlerts(data: SmartAlertsData): Promise<GenerateSma
     dashboardData.totalProfit = dashboardData.totalRevenue - dashboardData.totalExpenses;
 
     const calendarEvents: CalendarEvent[] = [];
+    const processedTenancies = new Set<string>();
 
     data.revenue.forEach(item => {
-      if (item.tenancyStartDate) {
-        calendarEvents.push({
-          date: item.tenancyStartDate,
-          title: `Start: ${item.tenant}`,
-          type: 'tenancy-start',
-          details: { Property: item.propertyName, Tenant: item.tenant }
-        });
-      }
-      if (item.tenancyEndDate) {
-        calendarEvents.push({
-          date: item.tenancyEndDate,
-          title: `End: ${item.tenant}`,
-          type: 'tenancy-end',
-          details: { Property: item.propertyName, Tenant: item.tenant }
-        });
+      if (item.tenancyId && !processedTenancies.has(item.tenancyId)) {
+        if (item.tenancyStartDate) {
+          calendarEvents.push({
+            date: item.tenancyStartDate,
+            title: `Start: ${item.tenant}`,
+            type: 'tenancy-start',
+            details: { Property: item.propertyName, Tenant: item.tenant }
+          });
+        }
+        if (item.tenancyEndDate) {
+          calendarEvents.push({
+            date: item.tenancyEndDate,
+            title: `End: ${item.tenant}`,
+            type: 'tenancy-end',
+            details: { Property: item.propertyName, Tenant: item.tenant }
+          });
+        }
+        processedTenancies.add(item.tenancyId);
       }
     });
 
@@ -106,6 +111,31 @@ export async function getSmartAlerts(data: SmartAlertsData): Promise<GenerateSma
           propertyAddress: 'System',
         },
       ],
+    };
+  }
+}
+
+export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
+  try {
+    const chartDataSummary = data.viewMode === 'year'
+      ? `The data is broken down by month: ${data.chartData.map((d: any) => `${d.name} (Projected: ${formatCurrency(d.projected)}, Actual: ${formatCurrency(d.actual)})`).join(', ')}.`
+      : '';
+
+    const summary = `
+- Report Period: ${data.period}
+- View Mode: ${data.viewMode}
+- Projected Revenue: ${formatCurrency(data.projectedRevenue)}
+- Actual Revenue: ${formatCurrency(data.actualRevenue)}
+- Total Arrears: ${formatCurrency(data.totalArrears)}
+- Breakdown: ${chartDataSummary}
+`;
+    const result = await generateReportSummary({ summary });
+    return result;
+
+  } catch (error) {
+    console.error('Error generating report summary:', error);
+    return {
+      summary: 'Failed to generate summary. Please try again later.',
     };
   }
 }
