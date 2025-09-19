@@ -1,6 +1,10 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import { MoreHorizontal } from 'lucide-react';
-import { properties } from '@/lib/data';
+import { properties as initialProperties } from '@/lib/data';
+import type { Property } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,14 +23,56 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import { PropertyForm } from '@/components/property-form';
+
 
 export default function PropertiesPage() {
+  const [properties, setProperties] = useState<Property[]>(initialProperties);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(amount);
+
+  const handleAdd = () => {
+    setSelectedProperty(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (property: Property) => {
+    setSelectedProperty(property);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = (property: Property) => {
+    setSelectedProperty(property);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedProperty) {
+      setProperties(properties.filter((p) => p.id !== selectedProperty.id));
+      setIsDeleteDialogOpen(false);
+      setSelectedProperty(null);
+    }
+  };
+
+  const handleFormSubmit = (data: Property) => {
+    if (selectedProperty) {
+      // Update
+      setProperties(properties.map((p) => (p.id === data.id ? data : p)));
+    } else {
+      // Add
+      setProperties([data, ...properties]);
+    }
+  };
+
 
   return (
     <>
       <PageHeader title="Properties">
-        <Button>Add Property</Button>
+        <Button onClick={handleAdd}>Add Property</Button>
       </PageHeader>
       <Card>
         <CardHeader>
@@ -73,8 +119,8 @@ export default function PropertiesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleEdit(property)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleDelete(property)}>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -84,6 +130,20 @@ export default function PropertiesPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <PropertyForm 
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleFormSubmit}
+        property={selectedProperty}
+      />
+
+      <DeleteConfirmationDialog 
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        itemName={`property at ${selectedProperty?.address}`}
+      />
     </>
   );
 }
