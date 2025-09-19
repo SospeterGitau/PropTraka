@@ -15,12 +15,15 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ArrearEntry {
   tenant: string;
   propertyAddress: string;
   amountOwed: number;
   dueDate: string;
+  rentOwed: number;
+  depositOwed: number;
 }
 
 export default function ArrearsPage() {
@@ -38,14 +41,31 @@ export default function ArrearsPage() {
         const dueDate = new Date(transaction.date);
         return amountPaid < amountDue && dueDate < today;
       })
-      .map(transaction => ({
-        tenant: transaction.tenant!,
-        propertyAddress: transaction.propertyName,
-        amountOwed: (transaction.amount + (transaction.deposit ?? 0)) - (transaction.amountPaid ?? 0),
-        dueDate: transaction.date,
-      }));
+      .map(transaction => {
+        const rentDue = transaction.amount;
+        const depositDue = transaction.deposit ?? 0;
+        const amountPaid = transaction.amountPaid ?? 0;
+
+        // Logic to determine how the paid amount is allocated
+        const paidTowardsDeposit = Math.min(amountPaid, depositDue);
+        const remainingPaid = amountPaid - paidTowardsDeposit;
+        const paidTowardsRent = Math.min(remainingPaid, rentDue);
+        
+        const depositOwed = depositDue - paidTowardsDeposit;
+        const rentOwed = rentDue - paidTowardsRent;
+        const amountOwed = depositOwed + rentOwed;
+
+        return {
+          tenant: transaction.tenant!,
+          propertyAddress: transaction.propertyName,
+          amountOwed,
+          dueDate: transaction.date,
+          rentOwed,
+          depositOwed,
+        };
+      });
     
-    setArrears(calculatedArrears);
+    setArrears(calculatedArrears.filter(a => a.amountOwed > 0));
   }, [revenue]);
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -59,40 +79,54 @@ export default function ArrearsPage() {
           <CardTitle>Tenants in Arrears</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead className="text-right">Amount Owed</TableHead>
-                <TableHead className="text-center">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {arrears.length === 0 ? (
+          <TooltipProvider>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No tenants are currently in arrears.
-                  </TableCell>
+                  <TableHead>Tenant</TableHead>
+                  <TableHead>Property</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead className="text-right">Amount Owed</TableHead>
+                  <TableHead className="text-center">Action</TableHead>
                 </TableRow>
-              ) : (
-                arrears.map((arrear, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{arrear.tenant}</TableCell>
-                    <TableCell>{arrear.propertyAddress}</TableCell>
-                    <TableCell>
-                      <Badge variant="destructive">{formatDate(arrear.dueDate)}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-destructive">{formatCurrency(arrear.amountOwed)}</TableCell>
-                    <TableCell className="text-center">
-                      <Button size="sm">Send Reminder</Button>
+              </TableHeader>
+              <TableBody>
+                {arrears.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No tenants are currently in arrears.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  arrears.map((arrear, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{arrear.tenant}</TableCell>
+                      <TableCell>{arrear.propertyAddress}</TableCell>
+                      <TableCell>
+                        <Badge variant="destructive">{formatDate(arrear.dueDate)}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-destructive">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>{formatCurrency(arrear.amountOwed)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-sm">
+                              {arrear.rentOwed > 0 && <div>Rent: {formatCurrency(arrear.rentOwed)}</div>}
+                              {arrear.depositOwed > 0 && <div>Deposit: {formatCurrency(arrear.depositOwed)}</div>}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button size="sm">Send Reminder</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TooltipProvider>
         </CardContent>
       </Card>
     </>
