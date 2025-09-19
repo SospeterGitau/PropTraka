@@ -30,8 +30,6 @@ export const expenses: Transaction[] = [
 // This is now derived from the revenue data, but we keep the type for structure.
 export const arrears: Arrear[] = [];
 
-export const calendarEvents: CalendarEvent[] = [];
-
 export const weatherData = {
   city: 'Springfield',
   temperature: '25°C',

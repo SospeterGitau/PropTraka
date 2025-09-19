@@ -1,9 +1,10 @@
 'use server';
 
 import {generateSmartAlerts, type GenerateSmartAlertsOutput} from '@/ai/flows/generate-smart-alerts';
-import {weatherData, calendarEvents} from '@/lib/data';
-import type {Property, Transaction} from './types';
+import {weatherData} from '@/lib/data';
+import type {Property, Transaction, CalendarEvent} from './types';
 import { format } from 'date-fns';
+import { formatCurrency } from './utils';
 
 interface SmartAlertsData {
   properties: Property[];
@@ -37,6 +38,41 @@ export async function getSmartAlerts(data: SmartAlertsData): Promise<GenerateSma
       totalProfit: 0,
     };
     dashboardData.totalProfit = dashboardData.totalRevenue - dashboardData.totalExpenses;
+
+    const calendarEvents: CalendarEvent[] = [];
+
+    data.revenue.forEach(item => {
+      if (item.tenancyStartDate) {
+        calendarEvents.push({
+          date: item.tenancyStartDate,
+          title: `Start: ${item.tenant}`,
+          type: 'tenancy-start',
+          details: { Property: item.propertyName, Tenant: item.tenant }
+        });
+      }
+      if (item.tenancyEndDate) {
+        calendarEvents.push({
+          date: item.tenancyEndDate,
+          title: `End: ${item.tenant}`,
+          type: 'tenancy-end',
+          details: { Property: item.propertyName, Tenant: item.tenant }
+        });
+      }
+    });
+
+    data.expenses.forEach(item => {
+      calendarEvents.push({
+        date: item.date,
+        title: `Expense: ${item.category}`,
+        type: 'expense',
+        details: {
+            Property: item.propertyName,
+            Category: item.category,
+            Vendor: item.vendor,
+            Amount: formatCurrency(item.amount),
+        }
+      });
+    });
 
     // Create a plain text summary for the AI
     const summary = `
