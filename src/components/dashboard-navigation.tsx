@@ -11,6 +11,7 @@ import {
   TrendingDown,
   TrendingUp,
   Wallet,
+  LineChart,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ const navItems = [
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/reports', label: 'Reports', icon: LineChart },
 ];
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
