@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
@@ -13,6 +13,8 @@ import { TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ReportSummary } from '@/components/report-summary';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 type ViewMode = 'month' | 'year';
 
@@ -21,21 +23,22 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', { styl
 export default function ReportsPage() {
   const { revenue } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
+
 
   const handlePrev = () => {
-    if (viewMode === 'month') {
-      setCurrentDate(subMonths(currentDate, 1));
-    } else {
-      setCurrentDate(subYears(currentDate, 1));
+    if (currentDate) {
+      setCurrentDate(viewMode === 'month' ? subMonths(currentDate, 1) : subYears(currentDate, 1));
     }
   };
 
   const handleNext = () => {
-    if (viewMode === 'month') {
-      setCurrentDate(addMonths(currentDate, 1));
-    } else {
-      setCurrentDate(addYears(currentDate, 1));
+     if (currentDate) {
+      setCurrentDate(viewMode === 'month' ? addMonths(currentDate, 1) : addYears(currentDate, 1));
     }
   };
   
@@ -44,6 +47,28 @@ export default function ReportsPage() {
       setViewMode(value);
     }
   };
+
+  if (!currentDate) {
+    return (
+       <>
+        <PageHeader title="Revenue Reports" />
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+            </div>
+            <Skeleton className="h-[350px] w-full" />
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
 
   const filteredTransactions = revenue.filter(t => {
     const transactionDate = new Date(t.date);
