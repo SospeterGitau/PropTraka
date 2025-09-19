@@ -18,10 +18,11 @@ import type { CalendarEvent } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface CalendarViewProps {
@@ -58,81 +59,83 @@ export function CalendarView({ events }: CalendarViewProps) {
   const goToToday = () => setCurrentDate(new Date());
 
   return (
-    <div className="bg-card p-4 rounded-lg shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-            <Button size="icon" variant="outline" onClick={prevMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-xl font-semibold w-40 text-center">{format(currentDate, 'MMMM yyyy')}</h2>
-            <Button size="icon" variant="outline" onClick={nextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-        </div>
-        <Button variant="outline" onClick={goToToday}>Today</Button>
-      </div>
-
-      <div className="grid grid-cols-7 gap-px border-t border-l border-border bg-border">
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-          <div key={day} className="py-2 text-center font-medium text-sm text-muted-foreground bg-card">
-            {day}
+    <TooltipProvider>
+      <div className="bg-card p-4 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+              <Button size="icon" variant="outline" onClick={prevMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-xl font-semibold w-40 text-center">{format(currentDate, 'MMMM yyyy')}</h2>
+              <Button size="icon" variant="outline" onClick={nextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
           </div>
-        ))}
+          <Button variant="outline" onClick={goToToday}>Today</Button>
+        </div>
 
-        {days.map((day) => {
-          const dayKey = format(day, 'yyyy-MM-dd');
-          const dayEvents = eventsByDate[dayKey] || [];
-          return (
-            <div
-              key={day.toString()}
-              className={cn(
-                'relative flex flex-col min-h-[120px] bg-card p-2',
-                !isSameMonth(day, currentDate) && 'bg-muted/50'
-              )}
-            >
-              <time
-                dateTime={format(day, 'yyyy-MM-dd')}
+        <div className="grid grid-cols-7 gap-px border-t border-l border-border bg-border">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+            <div key={day} className="py-2 text-center font-medium text-sm text-muted-foreground bg-card">
+              {day}
+            </div>
+          ))}
+
+          {days.map((day) => {
+            const dayKey = format(day, 'yyyy-MM-dd');
+            const dayEvents = eventsByDate[dayKey] || [];
+            return (
+              <div
+                key={day.toString()}
                 className={cn(
-                  'text-sm',
-                  isToday(day) && 'flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground'
+                  'relative flex flex-col min-h-[120px] bg-card p-2',
+                  !isSameMonth(day, currentDate) && 'bg-muted/50'
                 )}
               >
-                {format(day, 'd')}
-              </time>
-              <div className="mt-1 space-y-1 overflow-y-auto">
-                {dayEvents.map((event, index) => (
-                  <Popover key={index}>
-                    <PopoverTrigger asChild>
-                       <Badge
-                        className={cn('w-full text-left block whitespace-normal text-xs font-normal cursor-pointer', eventColors[event.type])}
-                      >
-                        {event.title}
-                      </Badge>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-60 text-sm">
-                      <div className="space-y-2">
-                        <h4 className="font-medium leading-none">{event.title}</h4>
-                         {event.details ? (
-                          <div className="grid gap-2">
-                            {Object.entries(event.details).map(([key, value]) => (
-                              <div key={key} className="grid grid-cols-3 items-center gap-4">
-                                <span className="text-muted-foreground">{key}</span>
-                                <span className="col-span-2 font-semibold">{value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                           <p className="text-muted-foreground">No additional details.</p>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ))}
+                <time
+                  dateTime={format(day, 'yyyy-MM-dd')}
+                  className={cn(
+                    'text-sm',
+                    isToday(day) && 'flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground'
+                  )}
+                >
+                  {format(day, 'd')}
+                </time>
+                <div className="mt-1 space-y-1 overflow-y-auto">
+                  {dayEvents.map((event, index) => (
+                    <Tooltip key={index} delayDuration={0}>
+                      <TooltipTrigger asChild>
+                         <Badge
+                          className={cn('w-full text-left block whitespace-normal text-xs font-normal cursor-default', eventColors[event.type])}
+                        >
+                          {event.title}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="w-60 text-sm">
+                        <div className="space-y-2">
+                          <h4 className="font-medium leading-none">{event.title}</h4>
+                           {event.details ? (
+                            <div className="grid gap-2">
+                              {Object.entries(event.details).map(([key, value]) => (
+                                <div key={key} className="grid grid-cols-3 items-center gap-4">
+                                  <span className="text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                  <span className="col-span-2 font-semibold">{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                             <p className="text-muted-foreground">No additional details.</p>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
