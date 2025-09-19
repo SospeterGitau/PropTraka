@@ -17,6 +17,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getLocale } from '@/lib/locales';
+
 
 interface ArrearEntry {
   tenant: string;
@@ -28,7 +30,7 @@ interface ArrearEntry {
 }
 
 export default function ArrearsPage() {
-  const { revenue, formatCurrency } = useDataContext();
+  const { revenue, formatCurrency, locale } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
 
   useEffect(() => {
@@ -69,7 +71,28 @@ export default function ArrearsPage() {
     setArrears(calculatedArrears.filter(a => a.amountOwed > 0));
   }, [revenue]);
 
-  const formatDate = (dateString: string) => format(new Date(dateString), 'MMMM dd, yyyy');
+  const formatDate = async (dateString: string) => {
+    const localeData = await getLocale(locale);
+    return format(new Date(dateString), 'MMMM dd, yyyy', { locale: localeData });
+  };
+  
+  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
+
+  useEffect(() => {
+    const datesToFormat = arrears.map(a => a.dueDate);
+    const uniqueDates = [...new Set(datesToFormat)];
+    const newFormattedDates: {[key: string]: string} = {};
+    
+    const formatAllDates = async () => {
+      for (const date of uniqueDates) {
+        newFormattedDates[date] = await formatDate(date);
+      }
+      setFormattedDates(newFormattedDates);
+    }
+    
+    formatAllDates();
+  }, [arrears, locale]);
+
 
   return (
     <>
@@ -103,7 +126,7 @@ export default function ArrearsPage() {
                       <TableCell className="font-medium">{arrear.tenant}</TableCell>
                       <TableCell>{arrear.propertyAddress}</TableCell>
                       <TableCell>
-                        <Badge variant="destructive">{formatDate(arrear.dueDate)}</Badge>
+                        <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-semibold text-destructive">
                         <Tooltip>

@@ -15,6 +15,8 @@ interface DataContextType {
   calendarEvents: CalendarEvent[];
   currency: string;
   setCurrency: (currency: string) => void;
+  locale: string;
+  setLocale: (locale: string) => void;
   formatCurrency: (amount: number) => string;
 }
 
@@ -26,9 +28,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Transaction[]>(initialExpenses);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [currency, setCurrency] = useState('USD');
+  const [locale, setLocale] = useState('en-US');
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 0,
@@ -36,7 +39,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
   
   const formatCurrencyWithCents = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currency,
     }).format(amount);
@@ -93,7 +96,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
 
     setCalendarEvents(events);
-  }, [revenue, expenses, currency]);
+  }, [revenue, expenses, currency, locale]);
 
   const value = {
     properties,
@@ -105,6 +108,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     calendarEvents,
     currency,
     setCurrency,
+    locale,
+    setLocale,
     formatCurrency,
   };
 

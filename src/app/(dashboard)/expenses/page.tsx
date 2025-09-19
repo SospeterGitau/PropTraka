@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, ChevronsUpDown, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { getLocale } from '@/lib/locales';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -173,12 +174,23 @@ function ExpenseForm({
 }
 
 export default function ExpensesPage() {
-  const { properties, expenses, setExpenses, formatCurrency } = useDataContext();
+  const { properties, expenses, setExpenses, formatCurrency, locale } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  
-  const formatDate = (dateString: string) => format(new Date(dateString), 'MMMM dd, yyyy');
+  const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    const formatAllDates = async () => {
+      const localeData = await getLocale(locale);
+      const newFormattedDates: { [key: string]: string } = {};
+      for (const item of expenses) {
+        newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy', { locale: localeData });
+      }
+      setFormattedDates(newFormattedDates);
+    };
+    formatAllDates();
+  }, [expenses, locale]);
   
   const handleAdd = () => {
     setSelectedTransaction(null);
@@ -236,7 +248,7 @@ export default function ExpensesPage() {
             <TableBody>
               {expenses.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">{formatDate(item.date)}</TableCell>
+                  <TableCell className="font-medium">{formattedDates[item.id]}</TableCell>
                   <TableCell>{item.propertyName}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{item.category}</Badge>

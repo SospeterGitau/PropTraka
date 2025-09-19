@@ -1,11 +1,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MoreHorizontal } from 'lucide-react';
-import { format, eachMonthOfInterval, startOfMonth } from 'date-fns';
+import { format, eachMonthOfInterval } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
+import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -156,12 +157,26 @@ function PaymentForm({
   onClose,
   onSubmit,
   transaction,
+  locale,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (transactionId: string, amount: number) => void;
   transaction: Transaction | null;
+  locale: string;
 }) {
+  const [formattedDate, setFormattedDate] = useState('');
+
+  useEffect(() => {
+    const formatDateAsync = async () => {
+      if (transaction) {
+        const localeData = await getLocale(locale);
+        setFormattedDate(format(new Date(transaction.date), 'MMMM dd, yyyy', { locale: localeData }));
+      }
+    };
+    formatDateAsync();
+  }, [transaction, locale]);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!transaction) return;
@@ -180,7 +195,7 @@ function PaymentForm({
           <DialogTitle>Record Payment</DialogTitle>
         </DialogHeader>
         <div className="text-sm text-muted-foreground">
-          For {transaction.tenant} at {transaction.propertyName} (Due: {format(new Date(transaction.date), 'MMMM dd, yyyy')})
+          For {transaction.tenant} at {transaction.propertyName} (Due: {formattedDate})
         </div>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -203,20 +218,30 @@ function PaymentForm({
 
 
 export default function RevenuePage() {
-  const { revenue, setRevenue, formatCurrency } = useDataContext();
+  const { revenue, setRevenue, formatCurrency, locale } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'N/A';
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch (error) {
-      return 'Invalid Date';
-    }
-  };
+  useEffect(() => {
+    const formatAllDates = async () => {
+      const localeData = await getLocale(locale);
+      const newFormattedDates: { [key: string]: string } = {};
+      for (const item of revenue) {
+        newFormattedDates[`${item.id}-due`] = format(new Date(item.date), 'MMM dd, yyyy', { locale: localeData });
+        if(item.tenancyStartDate) {
+          newFormattedDates[`${item.id}-start`] = format(new Date(item.tenancyStartDate), 'MMM dd, yyyy', { locale: localeData });
+        }
+        if(item.tenancyEndDate) {
+          newFormattedDates[`${item.id}-end`] = format(new Date(item.tenancyEndDate), 'MMM dd, yyyy', { locale: localeData });
+        }
+      }
+      setFormattedDates(newFormattedDates);
+    };
+    formatAllDates();
+  }, [revenue, locale]);
 
   const handleAddTenancy = () => {
     setSelectedTransaction(null);
@@ -303,12 +328,12 @@ export default function RevenuePage() {
                 const balance = amountDue - (item.amountPaid ?? 0);
                 return (
                   <TableRow key={item.id}>
-                    <TableCell>{formatDate(item.date)}</TableCell>
+                    <TableCell>{formattedDates[`${item.id}-due`] || '...'}</TableCell>
                     <TableCell>
                       <div className="font-medium">{item.tenant}</div>
                       <div className="text-sm text-muted-foreground">{item.propertyName}</div>
                     </TableCell>
-                    <TableCell>{formatDate(item.tenancyStartDate)} - {formatDate(item.tenancyEndDate)}</TableCell>
+                    <TableCell>{formattedDates[`${item.id}-start`] || '...'} - {formattedDates[`${item.id}-end`] || '...'}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.deposit ?? 0)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(amountDue)}</TableCell>
@@ -352,6 +377,7 @@ export default function RevenuePage() {
         onClose={() => setIsPaymentFormOpen(false)}
         onSubmit={handlePaymentFormSubmit}
         transaction={selectedTransaction}
+        locale={locale}
       />
 
       <DeleteConfirmationDialog
