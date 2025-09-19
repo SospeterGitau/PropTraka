@@ -65,15 +65,20 @@ function RevenueForm({
       });
       return;
     }
+    
+    // Explicitly parse date parts to avoid timezone issues during comparison
+    const [startYear, startMonth, startDay] = tenancyStartDateStr.split('-').map(Number);
+    const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
 
-    const tenancyStartDate = new Date(tenancyStartDateStr);
-    const tenancyEndDate = new Date(tenancyEndDateStr);
+    const tenancyStartDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
+    const tenancyEndDate = new Date(Date.UTC(endYear, endMonth - 1, endDay));
 
-    if (tenancyStartDate > tenancyEndDate) {
+
+    if (tenancyEndDate < tenancyStartDate) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Tenancy start date cannot be after the end date.",
+        title: "Invalid Date Range",
+        description: "Tenancy end date cannot be before the start date.",
       });
       return;
     }
