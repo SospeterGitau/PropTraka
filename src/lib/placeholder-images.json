@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "p1",
+      "description": "A suburban house with a two-car garage.",
+      "imageUrl": "https://picsum.photos/seed/p1/600/400",
+      "imageHint": "suburban house"
+    },
+    {
+      "id": "p2",
+      "description": "A modern apartment building in a city.",
+      "imageUrl": "https://picsum.photos/seed/p2/600/400",
+      "imageHint": "modern apartment"
+    },
+    {
+      "id": "p3",
+      "description": "A cozy cottage with a small garden.",
+      "imageUrl": "https://picsum.photos/seed/p3/600/400",
+      "imageHint": "cozy cottage"
+    },
+    {
+      "id": "p4",
+      "description": "A large two-story house with a big front yard.",
+      "imageUrl": "https://picsum.photos/seed/p4/600/400",
+      "imageHint": "large house"
+    },
+    {
+      "id": "p5",
+      "description": "A modern townhouse property with a balcony.",
+      "imageUrl": "https://picsum.photos/seed/p5/600/400",
+      "imageHint": "townhouse property"
+    },
+    {
+      "id": "p6",
+      "description": "A luxury condominium with large windows.",
+      "imageUrl": "https://picsum.photos/seed/p6/600/400",
+      "imageHint": "luxury condo"
+    },
+    {
+      "id": "p7",
+      "description": "A classic family home with a red door.",
+      "imageUrl": "https://picsum.photos/seed/p7/600/400",
+      "imageHint": "family home"
+    }
+  ]
 }
