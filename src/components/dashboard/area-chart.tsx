@@ -1,18 +1,16 @@
 'use client';
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { subMonths, format, startOfMonth } from 'date-fns';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import type { Transaction } from '@/lib/types';
 
-const chartData = [
-  { month: 'January', revenue: 18600, expenses: 8000 },
-  { month: 'February', revenue: 30500, expenses: 12000 },
-  { month: 'March', revenue: 23700, expenses: 9000 },
-  { month: 'April', revenue: 27800, expenses: 11000 },
-  { month: 'May', revenue: 18900, expenses: 8500 },
-  { month: 'June', revenue: 23900, expenses: 10000 },
-];
+interface AreaChartProps {
+  revenue: Transaction[];
+  expenses: Transaction[];
+}
 
 const chartConfig = {
   revenue: {
@@ -25,7 +23,23 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function AreaChartComponent() {
+export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
+  const chartData = Array.from({ length: 6 }).map((_, i) => {
+    const d = subMonths(new Date(), 5 - i);
+    const month = format(d, 'MMMM');
+    const monthStart = startOfMonth(d);
+
+    const monthlyRevenue = revenue
+      .filter(t => format(new Date(t.date), 'yyyy-MM') === format(monthStart, 'yyyy-MM'))
+      .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0);
+    
+    const monthlyExpenses = expenses
+      .filter(t => format(new Date(t.date), 'yyyy-MM') === format(monthStart, 'yyyy-MM'))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    return { month, revenue: monthlyRevenue, expenses: monthlyExpenses };
+  });
+
   return (
     <Card>
       <CardHeader>

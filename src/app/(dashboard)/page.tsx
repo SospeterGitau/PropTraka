@@ -78,8 +78,8 @@ export default function DashboardPage() {
         />
       </div>
       <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
-        <AreaChartComponent />
-        <BarChartComponent />
+        <AreaChartComponent revenue={revenue} expenses={expenses} />
+        <BarChartComponent properties={properties} revenue={revenue} expenses={expenses} />
         <SmartAlerts />
       </div>
     </>
