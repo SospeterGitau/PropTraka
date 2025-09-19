@@ -8,7 +8,7 @@
  * plan ahead and mitigate risks.
  *
  * @interface GenerateSmartAlertsInput - Defines the input schema for the flow.
- * @interface GenerateSmart-AlertsOutput - Defines the output schema for the flow.
+ * @interface GenerateSmartAlertsOutput - Defines the output schema for the flow.
  * @function generateSmartAlerts - The main function that triggers the smart alert generation flow.
  */
 
