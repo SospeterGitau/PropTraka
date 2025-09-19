@@ -14,6 +14,7 @@ import {
   Wallet,
   LineChart,
   Settings,
+  LogOut,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { logout } from '@/app/login/actions';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -78,8 +80,21 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="group-data-[collapsible=icon]:hidden">
-          {/* Footer content can go here */}
+        <SidebarFooter>
+          <form action={logout}>
+             <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    type="submit"
+                    className="justify-start w-full"
+                    tooltip="Logout"
+                  >
+                    <LogOut />
+                    <span>Logout</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+          </form>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
