@@ -3,6 +3,7 @@
 import {generateSmartAlerts, type GenerateSmartAlertsOutput} from '@/ai/flows/generate-smart-alerts';
 import {weatherData, calendarEvents} from '@/lib/data';
 import type {Property, Transaction} from './types';
+import { format } from 'date-fns';
 
 interface SmartAlertsData {
   properties: Property[];
@@ -37,11 +38,26 @@ export async function getSmartAlerts(data: SmartAlertsData): Promise<GenerateSma
     };
     dashboardData.totalProfit = dashboardData.totalRevenue - dashboardData.totalExpenses;
 
-    const alerts = await generateSmartAlerts({
-      dashboardData: dashboardData,
-      weatherData: weatherData,
-      calendarEvents: calendarEvents,
-    });
+    // Create a plain text summary for the AI
+    const summary = `
+- Dashboard Data:
+  - Total Property Value: $${dashboardData.totalPropertyValue.toLocaleString()}
+  - Total Revenue this month: $${dashboardData.totalRevenue.toLocaleString()}
+  - Total Expenses this month: $${dashboardData.totalExpenses.toLocaleString()}
+  - Total Arrears: $${dashboardData.totalArrears.toLocaleString()}
+  - Total Profit this month: $${dashboardData.totalProfit.toLocaleString()}
+
+- Weather Data for ${weatherData.city}:
+  - Current Temperature: ${weatherData.temperature}
+  - Current Condition: ${weatherData.condition}
+  - Forecast:
+    ${weatherData.forecast.map(f => `- ${f.day}: ${f.condition}, ${f.temp}${f.precipitation_chance ? ` (${f.precipitation_chance} chance of precipitation)` : ''}`).join('\n    ')}
+
+- Upcoming Calendar Events:
+  ${calendarEvents.map(e => `- ${format(new Date(e.date), 'MMMM dd, yyyy')}: ${e.title} (${e.type})`).join('\n  ')}
+`;
+
+    const alerts = await generateSmartAlerts({ summary });
     return alerts;
   } catch (error) {
     console.error('Error generating smart alerts:', error);
