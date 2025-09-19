@@ -4,18 +4,35 @@ import {generateReportSummary, type GenerateReportSummaryOutput} from '@/ai/flow
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
   try {
-    const chartDataSummary = data.viewMode === 'year'
-      ? `The data is broken down by month: ${data.chartData.map((d: any) => `${d.name} (Projected: ${d.projected}, Actual: ${d.actual})`).join(', ')}.`
-      : '';
+    let summary = '';
 
-    const summary = `
-- Report Period: ${data.period}
-- View Mode: ${data.viewMode}
-- Projected Revenue: ${data.projectedRevenue}
-- Actual Revenue: ${data.actualRevenue}
-- Total Arrears: ${data.totalArrears}
-- Breakdown: ${chartDataSummary}
+    if (data.viewMode === 'year') {
+      const breakdown = data.chartData
+        .map((d: any) => `- ${d.name}: Projected ${d.projected}, Actual ${d.actual}`)
+        .join('\n');
+      
+      summary = `
+Analyze the financial report for the year ${data.period}.
+Overall Projected Revenue: ${data.projectedRevenue}
+Overall Actual Revenue: ${data.actualRevenue}
+Overall Arrears: ${data.totalArrears}
+
+Here is the month-over-month breakdown:
+${breakdown}
+
+Comment on the overall performance for the year and highlight any months that stand out as particularly good or bad.
 `;
+    } else { // month view
+      summary = `
+Analyze the financial report for the month of ${data.period}.
+Projected Revenue: ${data.projectedRevenue}
+Actual Revenue: ${data.actualRevenue}
+Arrears (unpaid): ${data.totalArrears}
+
+Provide a concise analysis of this month's performance, focusing on the difference between projected and actual revenue and the significance of any arrears.
+`;
+    }
+
     const result = await generateReportSummary({ summary });
     return result;
 
