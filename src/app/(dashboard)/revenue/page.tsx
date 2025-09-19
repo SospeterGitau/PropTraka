@@ -132,11 +132,11 @@ function RevenueForm({
           </div>
            <div>
             <Label>Tenancy Start Date</Label>
-            <Input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate?.split('T')[0]} required />
+            <Input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate ? format(new Date(transaction.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
           </div>
           <div>
             <Label>Tenancy End Date</Label>
-            <Input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate?.split('T')[0]} required />
+            <Input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate ? format(new Date(transaction.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
           </div>
           <div>
             <Label>Monthly Rent</Label>
