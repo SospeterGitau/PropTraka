@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { FileText, Loader2, Calendar as CalendarIcon } from 'lucide-react';
+import { FileText, Loader2, Calendar as CalendarIcon, AlertTriangle } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import type { Transaction } from '@/lib/types';
@@ -23,6 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
 interface GenerateReportDialogProps {
@@ -34,6 +35,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [report, setReport] = useState<string | null>(null);
+  const [error, setError] = useState<{ code: string; hint: string } | null>(null);
   const [date, setDate] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
     to: new Date(),
@@ -44,6 +46,8 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
 
     startTransition(async () => {
       setReport(null);
+      setError(null);
+      
       const startDate = format(date.from!, 'yyyy-MM-dd');
       const endDate = format(date.to!, 'yyyy-MM-dd');
 
@@ -62,7 +66,12 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         revenueTransactions: JSON.stringify(filteredRevenue),
         expenseTransactions: JSON.stringify(filteredExpenses),
       });
-      setReport(result.report);
+
+      if (result.error) {
+        setError({ code: result.error, hint: result.hint || 'An unexpected error occurred.' });
+      } else {
+        setReport(result.report);
+      }
     });
   };
   
@@ -77,7 +86,13 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     setIsOpen(open);
     if (!open) {
       setReport(null); // Reset report when closing
+      setError(null);
     }
+  };
+
+  const handleGenerateNew = () => {
+    setReport(null);
+    setError(null);
   };
 
   return (
@@ -99,12 +114,20 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
             <pre className="whitespace-pre-wrap font-sans text-sm">{report}</pre>
           </div>
         ) : (
-          <div className="py-8 flex flex-col items-center justify-center">
+          <div className="py-8 flex flex-col items-center justify-center min-h-[300px]">
             {isPending ? (
               <>
                 <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                 <p className="mt-4 text-muted-foreground">Generating your report, please wait...</p>
               </>
+            ) : error ? (
+                <Alert variant="destructive" className="w-full">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Error: {error.code}</AlertTitle>
+                  <AlertDescription>
+                    {error.hint}
+                  </AlertDescription>
+                </Alert>
             ) : (
               <>
                  <p className="mb-4 text-sm font-medium">Select Date Range:</p>
@@ -151,16 +174,19 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         
         <DialogFooter>
           {report && (
-             <Button onClick={handleCopyToClipboard}>Copy to Clipboard</Button>
+             <Button variant="secondary" onClick={handleCopyToClipboard}>Copy to Clipboard</Button>
           )}
-          <Button onClick={handleGenerateReport} disabled={isPending || !!report}>
-            {isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <FileText className="mr-2 h-4 w-4" />
-            )}
-            {report ? 'Generate New Report' : 'Generate Report'}
-          </Button>
+          {report || error ? (
+            <Button onClick={handleGenerateNew}>
+                <FileText className="mr-2 h-4 w-4" />
+                Generate New Report
+            </Button>
+          ) : (
+             <Button onClick={handleGenerateReport} disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Generate Report
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -20,10 +20,15 @@ const GeneratePnlReportInputSchema = z.object({
 export type GeneratePnlReportInput = z.infer<typeof GeneratePnlReportInputSchema>;
 
 // Define the output schema for the structured report
+export type GeneratePnlReportOutput = {
+  report: string | null;
+  error?: string | null;
+  hint?: string | null;
+};
+
 const GeneratePnlReportOutputSchema = z.object({
   report: z.string().describe('The full, formatted P&L report as a single string.'),
 });
-export type GeneratePnlReportOutput = z.infer<typeof GeneratePnlReportOutputSchema>;
 
 // Define the main function that triggers the flow
 export async function generatePnlReport(input: GeneratePnlReportInput): Promise<GeneratePnlReportOutput> {
@@ -80,8 +85,8 @@ This is the final layer of the pyramid, offering deeper analysis.
 const generatePnlReportFlow = ai.defineFlow({
   name: 'generatePnlReportFlow',
   inputSchema: GeneratePnlReportInputSchema,
-  outputSchema: GeneratePnlReportOutputSchema,
+  outputSchema: z.custom<GeneratePnlReportOutput>(),
 }, async (input) => {
   const { output } = await pnlReportPrompt(input);
-  return output!;
+  return { report: output!.report };
 });

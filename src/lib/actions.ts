@@ -50,11 +50,22 @@ Provide a concise analysis of this month's performance, focusing on the differen
 export async function getPnlReport(input: GeneratePnlReportInput): Promise<GeneratePnlReportOutput> {
     try {
         const result = await generatePnlReport(input);
-        return result;
-    } catch (error) {
-        console.error('Error generating P&L report:', error);
+        return { report: result.report, error: null };
+    } catch (e: any) {
+        const msg = String(e?.message || e);
+        console.error('Error generating P&L report:', msg);
+
+        const code =
+            /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ? "RATE_LIMITED_OR_QUOTA" :
+            /SAFETY|blocked/i.test(msg) ? "SAFETY_BLOCKED" :
+            /deadline|timeout|504|UNAVAILABLE|503/i.test(msg) ? "MODEL_UNAVAILABLE_OR_TIMEOUT" :
+            /invalid|400|content too long|tokens/i.test(msg) ? "INVALID_REQUEST" :
+            "UNEXPECTED_ERROR";
+        
         return {
-            report: 'Failed to generate report. Please try again later.',
+            report: null,
+            error: code,
+            hint: msg,
         };
     }
 }
