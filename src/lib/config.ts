@@ -1,4 +1,13 @@
 import 'dotenv/config';
 
-export const APP_USER_EMAIL = process.env.APP_USER_EMAIL;
-export const APP_PASSWORD = process.env.APP_PASSWORD;
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+export const APP_USER_EMAIL = requireEnv('APP_USER_EMAIL');
+export const APP_PASSWORD = requireEnv('APP_PASSWORD');
+export const SESSION_PASSWORD = requireEnv('SESSION_PASSWORD');

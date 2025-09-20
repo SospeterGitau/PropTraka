@@ -1,5 +1,10 @@
 
-import type { IronSessionOptions } from 'iron-session';
+'use server';
+
+import { cookies } from 'next/headers';
+import type { IronSessionOptions, IronSession } from 'iron-session';
+import { getIronSession } from 'iron-session';
+import { SESSION_PASSWORD } from '@/lib/config';
 
 export interface SessionData {
   isLoggedIn: boolean;
@@ -7,11 +12,12 @@ export interface SessionData {
 
 export const sessionOptions: IronSessionOptions = {
   cookieName: 'rentvision_session',
-  password: process.env.SESSION_PASSWORD || 'complex_password_for_session_encryption_at_least_32_characters_long',
+  password: SESSION_PASSWORD,
   cookieOptions: {
-    // Set secure to true to allow cross-site cookies.
-    secure: true,
-    // SameSite=None is required for cross-site cookie handling (e.g., in iframes).
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
   },
 };
+
+export async function getSession(): Promise<IronSession<SessionData>> {
+  return getIronSession<SessionData>(cookies(), sessionOptions);
+}

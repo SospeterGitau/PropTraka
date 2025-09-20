@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { DataProvider } from '@/context/data-context';
-import { logout, getSession } from '@/app/login/actions';
+import { logout } from '@/app/login/actions';
+import { getSession } from '@/lib/session';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
