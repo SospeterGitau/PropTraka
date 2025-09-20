@@ -1,6 +1,8 @@
+
 'use server';
 
 import {generateReportSummary, type GenerateReportSummaryOutput} from '@/ai/flows/generate-report-summary';
+import {generatePnlReport, type GeneratePnlReportOutput, type GeneratePnlReportInput} from '@/ai/flows/generate-pnl-report';
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
   try {
@@ -42,4 +44,17 @@ Provide a concise analysis of this month's performance, focusing on the differen
       summary: 'Failed to generate summary. Please try again later.',
     };
   }
+}
+
+
+export async function getPnlReport(input: GeneratePnlReportInput): Promise<GeneratePnlReportOutput> {
+    try {
+        const result = await generatePnlReport(input);
+        return result;
+    } catch (error) {
+        console.error('Error generating P&L report:', error);
+        return {
+            report: 'Failed to generate report. Please try again later.',
+        };
+    }
 }

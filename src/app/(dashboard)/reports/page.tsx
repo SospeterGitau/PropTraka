@@ -12,13 +12,13 @@ import { KpiCard } from '@/components/dashboard/kpi-card';
 import { TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ReportSummary } from '@/components/report-summary';
 import { Skeleton } from '@/components/ui/skeleton';
+import { GenerateReportDialog } from '@/components/generate-report-dialog';
 
 type ViewMode = 'month' | 'year';
 
 export default function ReportsPage() {
-  const { revenue, formatCurrency } = useDataContext();
+  const { revenue, expenses, formatCurrency } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -104,19 +104,12 @@ export default function ReportsPage() {
     ];
   }
 
-  const reportSummaryData = {
-    viewMode,
-    period: format(currentDate, dateDisplayFormat),
-    projectedRevenue,
-    actualRevenue,
-    totalArrears,
-    chartData,
-  };
-
 
   return (
     <>
-      <PageHeader title="Revenue Reports" />
+      <PageHeader title="Revenue Reports">
+        <GenerateReportDialog revenue={revenue} expenses={expenses} />
+      </PageHeader>
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -179,7 +172,6 @@ export default function ReportsPage() {
           </ChartContainer>
         </CardContent>
       </Card>
-      <ReportSummary data={reportSummaryData} />
     </>
   );
 }
