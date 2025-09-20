@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import type { GeneratePnlReportInput, GeneratePnlReportOutput } from '@/lib/types';
 
 // Define the input schema for the P&L report
 const GeneratePnlReportInputSchema = z.object({
@@ -17,15 +18,8 @@ const GeneratePnlReportInputSchema = z.object({
   revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions. "amount" is the rent due, "amountPaid" is the rent collected.'),
   expenseTransactions: z.string().describe('A JSON string representing an array of expense transactions.'),
 });
-export type GeneratePnlReportInput = z.infer<typeof GeneratePnlReportInputSchema>;
 
 // Define the output schema for the structured report
-export type GeneratePnlReportOutput = {
-  report: string | null;
-  error?: string | null;
-  hint?: string | null;
-};
-
 const GeneratePnlReportOutputSchema = z.object({
   report: z.string().describe('The full, formatted P&L report as a single string.'),
 });

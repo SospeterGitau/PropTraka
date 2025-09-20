@@ -6,27 +6,22 @@
  * The flow takes a pre-formatted summary of report data and uses it to generate a
  * human-readable analysis.
  *
- * @interface GenerateReportSummaryInput - Defines the input schema for the flow.
- * @interface GenerateReportSummaryOutput - Defines the output schema for the flow.
  * @function generateReportSummary - The main function that triggers the report summary generation flow.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import type { GenerateReportSummaryInput, GenerateReportSummaryOutput } from '@/lib/types';
 
 // Define the input schema for a simple summary string
 const GenerateReportSummaryInputSchema = z.object({
   summary: z.string().describe('A plain text summary of all relevant report data.'),
 });
 
-export type GenerateReportSummaryInput = z.infer<typeof GenerateReportSummaryInputSchema>;
-
 // Define the output schema
 const GenerateReportSummaryOutputSchema = z.object({
   summary: z.string().describe('A narrative summary of the report.'),
 });
-
-export type GenerateReportSummaryOutput = z.infer<typeof GenerateReportSummaryOutputSchema>;
 
 // Define the main function that triggers the flow
 export async function generateReportSummary(input: GenerateReportSummaryInput): Promise<GenerateReportSummaryOutput> {

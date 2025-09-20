@@ -1,8 +1,10 @@
 
 'use server';
 
-import {generateReportSummary, type GenerateReportSummaryOutput} from '@/ai/flows/generate-report-summary';
-import {generatePnlReport, type GeneratePnlReportOutput, type GeneratePnlReportInput} from '@/ai/flows/generate-pnl-report';
+import {generateReportSummary} from '@/ai/flows/generate-report-summary';
+import {generatePnlReport} from '@/ai/flows/generate-pnl-report';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput } from '@/lib/types';
+
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
   try {

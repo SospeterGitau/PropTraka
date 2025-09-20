@@ -52,3 +52,25 @@ export interface CalendarEvent {
   type: 'appointment' | 'tenancy-start' | 'tenancy-end' | 'expense';
   details?: Record<string, string | number | undefined>;
 }
+
+// AI Flow Types
+export interface GenerateReportSummaryInput {
+  summary: string;
+}
+
+export interface GenerateReportSummaryOutput {
+  summary: string;
+}
+
+export interface GeneratePnlReportInput {
+  startDate: string;
+  endDate: string;
+  revenueTransactions: string;
+  expenseTransactions: string;
+}
+
+export interface GeneratePnlReportOutput {
+  report: string | null;
+  error?: string | null;
+  hint?: string | null;
+}
