@@ -46,12 +46,14 @@ function RevenueForm({
   onSubmit,
   transaction,
   properties,
+  revenue,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Transaction[]) => void;
   transaction?: Transaction | null;
   properties: Property[],
+  revenue: Transaction[],
 }) {
   const { toast } = useToast();
 
@@ -67,6 +69,25 @@ function RevenueForm({
     const tenantEmail = formData.get('tenantEmail') as string;
     const amount = Number(formData.get('amount'));
     const deposit = Number(formData.get('deposit'));
+    
+    // Check for existing tenant at the same property
+    const isEditing = !!transaction;
+    const existingTenancy = revenue.find(
+      (t) =>
+        t.tenant?.toLowerCase() === tenant.toLowerCase() &&
+        t.propertyId === propertyId &&
+        (!isEditing || t.tenancyId !== transaction.tenancyId)
+    );
+
+    if (existingTenancy) {
+      toast({
+        variant: "destructive",
+        title: "Duplicate Tenancy",
+        description: `A tenancy for "${tenant}" already exists at this property.`,
+      });
+      return;
+    }
+
 
     if (!tenancyStartDateStr || !tenancyEndDateStr) {
        toast({
@@ -463,6 +484,7 @@ export default function RevenuePage() {
         onSubmit={handleTenancyFormSubmit}
         transaction={selectedTransaction}
         properties={properties}
+        revenue={revenue}
       />
 
       <PaymentForm
@@ -482,4 +504,5 @@ export default function RevenuePage() {
     </>
   );
 }
+
 
