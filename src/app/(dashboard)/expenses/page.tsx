@@ -58,6 +58,10 @@ const defaultCategories = [
   'Management Fees',
 ];
 
+function formatAddress(property: Property) {
+  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+}
+
 function ExpenseForm({
   isOpen,
   onClose,
@@ -84,7 +88,7 @@ function ExpenseForm({
       id: transaction?.id || `e${Date.now()}`,
       date: formData.get('date') as string,
       amount: Number(formData.get('amount')),
-      propertyName: selectedProperty?.address || 'N/A',
+      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
       propertyId: propertyId,
       category: category,
       vendor: formData.get('vendor') as string,
@@ -113,7 +117,7 @@ function ExpenseForm({
               </SelectTrigger>
               <SelectContent>
                 {properties.map(property => (
-                  <SelectItem key={property.id} value={property.id}>{property.address}</SelectItem>
+                  <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
