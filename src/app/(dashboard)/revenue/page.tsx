@@ -391,7 +391,7 @@ export default function RevenuePage() {
                 const totalBalance = totalDue - totalPaid;
                 
                 return (
-                  <Collapsible asChild key={tenancy.tenancyId}>
+                  <Collapsible asChild key={tenancy.tenancyId} tag="tbody">
                     <>
                       <TableRow className="font-semibold">
                         <TableCell>
@@ -506,3 +506,5 @@ export default function RevenuePage() {
     </>
   );
 }
+
+    
