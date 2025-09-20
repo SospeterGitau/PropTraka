@@ -82,18 +82,12 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter>
           <form action={logout}>
-             <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    type="submit"
-                    className="justify-start w-full text-base h-12"
-                    tooltip="Logout"
-                  >
-                    <LogOut />
-                    <span>Logout</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
+            <div className="p-2">
+               <Button type="submit" className="justify-start w-full text-base h-12" variant="ghost">
+                  <LogOut />
+                  <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+                </Button>
+            </div>
           </form>
         </SidebarFooter>
       </Sidebar>
