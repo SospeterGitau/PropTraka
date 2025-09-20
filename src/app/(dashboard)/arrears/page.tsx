@@ -35,6 +35,7 @@ interface ArrearEntry {
 export default function ArrearsPage() {
   const { revenue, formatCurrency, locale } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
+  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     const today = new Date();
@@ -78,27 +79,20 @@ export default function ArrearsPage() {
     
     setArrears(calculatedArrears.filter(a => a.amountOwed > 0));
   }, [revenue]);
-
-  const formatDate = async (dateString: string) => {
-    const localeData = await getLocale(locale);
-    return format(new Date(dateString), 'MMMM dd, yyyy', { locale: localeData });
-  };
   
-  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
-
   useEffect(() => {
-    const datesToFormat = arrears.map(a => a.dueDate);
-    const uniqueDates = [...new Set(datesToFormat)];
-    const newFormattedDates: {[key: string]: string} = {};
-    
     const formatAllDates = async () => {
-      for (const date of uniqueDates) {
-        newFormattedDates[date] = await formatDate(date);
+      const localeData = await getLocale(locale);
+      const newFormattedDates: {[key: string]: string} = {};
+      for (const arrear of arrears) {
+        newFormattedDates[arrear.dueDate] = format(new Date(arrear.dueDate), 'MMMM dd, yyyy', { locale: localeData });
       }
       setFormattedDates(newFormattedDates);
-    }
+    };
     
-    formatAllDates();
+    if (arrears.length > 0) {
+      formatAllDates();
+    }
   }, [arrears, locale]);
 
 
@@ -153,7 +147,7 @@ export default function ArrearsPage() {
                       </TableCell>
                       <TableCell className="text-center">
                          <Button size="sm" asChild>
-                          <Link href={`mailto:${arrear.tenantEmail}?subject=Rent Arrears Reminder&body=Dear ${arrear.tenant},%0D%0A%0D%0AThis is a reminder that your rent payment of ${formatCurrency(arrear.amountOwed)} for the property at ${arrear.propertyAddress} is overdue since ${formattedDates[arrear.dueDate]}.%0D%0A%0D%0APlease make the payment as soon as possible.%0D%0A%0D%0AThank you,%0D%0A[Your Name/Company Name]`}>
+                          <Link href={`mailto:${arrear.tenantEmail}?subject=Rent Arrears Reminder&body=Dear ${arrear.tenant},%0D%0A%0D%0AThis is a reminder that your payment of ${formatCurrency(arrear.amountOwed)} for the property at ${arrear.propertyAddress} is overdue since ${formattedDates[arrear.dueDate]}.%0D%0A%0D%0APlease make the payment as soon as possible.%0D%0A%0D%0AThank you,%0D%0A[Your Name/Company Name]`}>
                             Send Reminder
                           </Link>
                         </Button>
