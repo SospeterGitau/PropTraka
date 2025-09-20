@@ -366,7 +366,7 @@ export default function ExpensesPage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="one-off">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList>
               <TabsTrigger value="one-off">One-off Expenses</TabsTrigger>
               <TabsTrigger value="recurring">Recurring Expenses</TabsTrigger>
             </TabsList>
