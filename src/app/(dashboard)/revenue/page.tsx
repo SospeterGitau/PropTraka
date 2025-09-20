@@ -376,7 +376,7 @@ export default function RevenuePage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[60px]"></TableHead>
-                <TableHead>Tenant & Property</TableHead>
+                <TableHead>Tenant &amp; Property</TableHead>
                 <TableHead>Tenancy Period</TableHead>
                 <TableHead className="text-right">Total Due</TableHead>
                 <TableHead className="text-right">Total Paid</TableHead>
@@ -384,98 +384,96 @@ export default function RevenuePage() {
                 <TableHead className="w-[100px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {Object.values(tenancies).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
+            {Object.values(tenancies).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
                 const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
                 const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                 const totalBalance = totalDue - totalPaid;
                 
                 return (
                   <Collapsible asChild key={tenancy.tenancyId} tag="tbody">
-                    <>
-                      <TableRow className="font-semibold bg-transparent hover:bg-muted/50">
-                        <TableCell>
-                           <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <ChevronRight className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-90" />
-                              </Button>
-                           </CollapsibleTrigger>
-                        </TableCell>
-                        <TableCell>
-                          <div>{tenancy.tenant}</div>
-                          <div className="text-sm text-muted-foreground font-normal">{tenancy.propertyName}</div>
-                        </TableCell>
-                        <TableCell className="font-normal">{formattedDates[`${tenancy.id}-start`]} - {formattedDates[`${tenancy.id}-end`]}</TableCell>
-                        <TableCell className="text-right font-normal">{formatCurrency(totalDue)}</TableCell>
-                        <TableCell className="text-right font-normal">{formatCurrency(totalPaid)}</TableCell>
-                        <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
-                          {formatCurrency(totalBalance)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button aria-haspopup="true" size="icon" variant="ghost">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={() => handleEditTenancy(tenancy)}>Edit Tenancy</DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                      <CollapsibleContent asChild>
-                        <tr>
-                          <TableCell colSpan={7} className="p-0">
-                             <div className="p-4 bg-muted/50">
-                               <h4 className="font-semibold mb-2">Monthly Breakdown</h4>
-                               <Table>
-                                 <TableHeader>
-                                   <TableRow>
-                                     <TableHead>Due Date</TableHead>
-                                     <TableHead>Rent</TableHead>
-                                     <TableHead>Deposit</TableHead>
-                                     <TableHead className="text-right">Amount Paid</TableHead>
-                                     <TableHead className="text-right">Balance</TableHead>
-                                     <TableHead className="text-center">Action</TableHead>
-                                   </TableRow>
-                                 </TableHeader>
-                                 <TableBody>
-                                   {tenancy.transactions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(tx => {
-                                     const due = tx.amount + (tx.deposit ?? 0);
-                                     const paid = tx.amountPaid ?? 0;
-                                     const balance = due - paid;
-                                     return (
-                                        <TableRow key={tx.id}>
-                                          <TableCell>{formattedDates[`${tx.id}-due`]}</TableCell>
-                                          <TableCell>{formatCurrency(tx.amount)}</TableCell>
-                                          <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
-                                          <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
-                                           <TableCell className={cn("text-right", balance > 0 && 'text-destructive', balance === 0 && 'text-green-600')}>
-                                            {formatCurrency(balance)}
-                                          </TableCell>
-                                          <TableCell className="text-center">
-                                            <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
-                                              Record Payment
-                                            </Button>
-                                          </TableCell>
-                                        </TableRow>
-                                     )
-                                   })}
-                                 </TableBody>
-                               </Table>
-                             </div>
+                      <>
+                        <TableRow className="font-semibold bg-transparent hover:bg-muted/50">
+                          <TableCell>
+                            <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <ChevronRight className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-90" />
+                                </Button>
+                            </CollapsibleTrigger>
                           </TableCell>
-                        </tr>
-                      </CollapsibleContent>
-                    </>
+                          <TableCell>
+                            <div>{tenancy.tenant}</div>
+                            <div className="text-sm text-muted-foreground font-normal">{tenancy.propertyName}</div>
+                          </TableCell>
+                          <TableCell className="font-normal">{formattedDates[`${tenancy.id}-start`]} - {formattedDates[`${tenancy.id}-end`]}</TableCell>
+                          <TableCell className="text-right font-normal">{formatCurrency(totalDue)}</TableCell>
+                          <TableCell className="text-right font-normal">{formatCurrency(totalPaid)}</TableCell>
+                          <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
+                            {formatCurrency(totalBalance)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Toggle menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onSelect={() => handleEditTenancy(tenancy)}>Edit Tenancy</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                        <CollapsibleContent asChild>
+                          <tr>
+                            <TableCell colSpan={7} className="p-0">
+                              <div className="p-4 bg-muted/50">
+                                <h4 className="font-semibold mb-2">Monthly Breakdown</h4>
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Due Date</TableHead>
+                                      <TableHead>Rent</TableHead>
+                                      <TableHead>Deposit</TableHead>
+                                      <TableHead className="text-right">Amount Paid</TableHead>
+                                      <TableHead className="text-right">Balance</TableHead>
+                                      <TableHead className="text-center">Action</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {tenancy.transactions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(tx => {
+                                      const due = tx.amount + (tx.deposit ?? 0);
+                                      const paid = tx.amountPaid ?? 0;
+                                      const balance = due - paid;
+                                      return (
+                                          <TableRow key={tx.id}>
+                                            <TableCell>{formattedDates[`${tx.id}-due`]}</TableCell>
+                                            <TableCell>{formatCurrency(tx.amount)}</TableCell>
+                                            <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
+                                              <TableCell className={cn("text-right", balance > 0 && 'text-destructive', balance === 0 && 'text-green-600')}>
+                                              {formatCurrency(balance)}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                              <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
+                                                Record Payment
+                                              </Button>
+                                            </TableCell>
+                                          </TableRow>
+                                      )
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </TableCell>
+                          </tr>
+                        </CollapsibleContent>
+                      </>
                   </Collapsible>
                 );
-              })}
-            </TableBody>
+            })}
           </Table>
         </CardContent>
       </Card>
@@ -506,7 +504,3 @@ export default function RevenuePage() {
     </>
   );
 }
-
-    
-
-    
