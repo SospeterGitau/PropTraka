@@ -29,6 +29,12 @@ export async function generatePnlReport(input: GeneratePnlReportInput): Promise<
   return generatePnlReportFlow(input);
 }
 
+const PnlReportFlowOutputSchema = z.object({
+  report: z.string().nullable(),
+  error: z.string().nullable().optional(),
+  hint: z.string().nullable().optional(),
+});
+
 // Define the prompt
 const pnlReportPrompt = ai.definePrompt({
   name: 'pnlReportPrompt',
@@ -70,7 +76,7 @@ List and sum all operating expenses, grouped by category (e.g., Maintenance, Rep
 ## 3. Net Operating Income (NOI)
 Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of the property portfolio's profitability from its core operations.
 
-- **Net Operating Income:** [Net Rental Income - Total Operating Expenses]
+- **Net Operating Income:** [Net Operating Income - Total Operating Expenses]
 
 ## 4. Net Profit / Loss
 For this report, since we are not including non-operating items like mortgage interest, depreciation, or taxes, the Net Profit will be the same as the Net Operating Income. State this clearly.
@@ -86,11 +92,7 @@ Provide a brief, insightful narrative (2-3 sentences) on the overall financial p
 const generatePnlReportFlow = ai.defineFlow({
   name: 'generatePnlReportFlow',
   inputSchema: GeneratePnlReportInputSchema,
-  outputSchema: z.object({
-    report: z.string().nullable(),
-    error: z.string().nullable().optional(),
-    hint: z.string().nullable().optional(),
-  }),
+  outputSchema: PnlReportFlowOutputSchema,
 }, async (input) => {
   const { output } = await pnlReportPrompt(input);
   return { report: output!.report };
