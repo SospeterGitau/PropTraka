@@ -1,10 +1,10 @@
-
 'use server';
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { IronSession, getIronSession } from 'iron-session';
 import { SessionData, sessionOptions } from '@/lib/session';
+import { APP_USER_EMAIL, APP_PASSWORD } from '@/lib/config';
 
 
 export async function getSession(): Promise<IronSession<SessionData>> {
@@ -21,11 +21,11 @@ export async function authenticate(
     const email = formData.get('email');
     const password = formData.get('password');
 
-    if (email !== process.env.APP_USER_EMAIL) {
+    if (email !== APP_USER_EMAIL) {
       return 'Invalid email address.';
     }
 
-    if (password !== process.env.APP_PASSWORD) {
+    if (password !== APP_PASSWORD) {
       return 'Invalid password.';
     }
 
