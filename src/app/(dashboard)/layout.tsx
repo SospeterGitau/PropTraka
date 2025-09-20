@@ -6,6 +6,8 @@ import { logout } from '@/app/login/actions';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <DataProvider>
