@@ -1,22 +1,12 @@
 
 import type { ReactNode } from 'react';
-import { redirect } from 'next/navigation';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { DataProvider } from '@/context/data-context';
 import { logout } from '@/app/login/actions';
-import { getSession } from '@/lib/session';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const session = await getSession();
-
-  if (!session.isLoggedIn) {
-    redirect('/login');
-  }
-  
   return (
     <DataProvider>
       <DashboardNavigation>
