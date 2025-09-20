@@ -90,7 +90,8 @@ export default function PropertiesPage() {
                   <span className="sr-only">Image</span>
                 </TableHead>
                 <TableHead>Property Details</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>Property Type</TableHead>
+                <TableHead>Building Type</TableHead>
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
                 <TableHead>
@@ -134,7 +135,9 @@ export default function PropertiesPage() {
                     </TableCell>
                     <TableCell>
                        <Badge variant="outline">{property.propertyType}</Badge>
-                       <div className="text-sm text-muted-foreground mt-1">{property.buildingType}</div>
+                    </TableCell>
+                    <TableCell>
+                       <div className="text-sm text-muted-foreground">{property.buildingType}</div>
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(property.currentValue)}</TableCell>
                     <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue)}/month</TableCell>
