@@ -391,7 +391,6 @@ export default function RevenuePage() {
                 
                 return (
                   <Collapsible asChild key={tenancy.tenancyId}>
-                    <>
                       <TableRow className="font-semibold">
                         <TableCell>
                            <CollapsibleTrigger asChild>
@@ -426,50 +425,6 @@ export default function RevenuePage() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                      <CollapsibleContent asChild>
-                        <tr className="bg-muted/50 hover:bg-muted/50">
-                          <td colSpan={7} className="p-0">
-                             <div className="p-4">
-                              <h4 className="font-semibold text-sm mb-2">Monthly Breakdown</h4>
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Due Date</TableHead>
-                                    <TableHead className="text-right">Rent</TableHead>
-                                    <TableHead className="text-right">Deposit</TableHead>
-                                    <TableHead className="text-right">Amount Paid</TableHead>
-                                    <TableHead className="text-right">Balance</TableHead>
-                                    <TableHead className="w-[120px] text-center">Payment</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {tenancy.transactions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(tx => {
-                                      const amountDue = tx.amount + (tx.deposit ?? 0);
-                                      const balance = amountDue - (tx.amountPaid ?? 0);
-                                      return (
-                                        <TableRow key={tx.id}>
-                                          <TableCell>{formattedDates[`${tx.id}-due`]}</TableCell>
-                                          <TableCell className="text-right">{formatCurrency(tx.amount)}</TableCell>
-                                          <TableCell className="text-right">{formatCurrency(tx.deposit ?? 0)}</TableCell>
-                                          <TableCell className="text-right">{formatCurrency(tx.amountPaid ?? 0)}</TableCell>
-                                           <TableCell className={`text-right font-medium ${balance > 0 ? 'text-destructive' : ''}`}>
-                                            {formatCurrency(balance)}
-                                          </TableCell>
-                                          <TableCell className="text-center">
-                                            <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
-                                              Record Payment
-                                            </Button>
-                                          </TableCell>
-                                        </TableRow>
-                                      );
-                                  })}
-                                </TableBody>
-                              </Table>
-                            </div>
-                          </td>
-                        </tr>
-                      </CollapsibleContent>
-                    </>
                   </Collapsible>
                 );
               })}
@@ -504,5 +459,6 @@ export default function RevenuePage() {
     </>
   );
 }
+
 
 
