@@ -18,7 +18,12 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
+    const email = formData.get('email');
     const password = formData.get('password');
+
+    if (email !== process.env.APP_USER_EMAIL) {
+      return 'Invalid email address.';
+    }
 
     if (password !== process.env.APP_PASSWORD) {
       return 'Invalid password.';
@@ -29,7 +34,7 @@ export async function authenticate(
     await session.save();
     
   } catch (error) {
-    if ((error as Error).message.includes('CredentialsSignin')) {
+    if (error instanceof Error && error.message.includes('CredentialsSignin')) {
       return 'Invalid credentials.';
     }
     return 'An error occurred.';
