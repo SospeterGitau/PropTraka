@@ -54,12 +54,18 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const defaultCategories = [
-  'Maintenance',
-  'Repairs',
+  'Accounting',
   'Insurance',
-  'Utilities',
+  'Legal Fees',
+  'Maintenance',
   'Management Fees',
+  'Marketing',
+  'Office Supplies',
+  'Repairs',
   'Salaries',
+  'Subscriptions',
+  'Travel',
+  'Utilities',
 ];
 
 const frequencies = [
