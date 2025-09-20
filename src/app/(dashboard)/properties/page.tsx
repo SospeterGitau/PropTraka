@@ -86,14 +86,14 @@ export default function PropertiesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell text-right">
+                <TableHead className="hidden w-[100px] sm:table-cell">
                   <span className="sr-only">Image</span>
                 </TableHead>
-                <TableHead className="text-right">Property Details</TableHead>
-                <TableHead className="text-right">Type</TableHead>
+                <TableHead>Property Details</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
-                <TableHead className="text-right">
+                <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
@@ -136,8 +136,8 @@ export default function PropertiesPage() {
                        <Badge variant="outline">{property.propertyType}</Badge>
                        <div className="text-sm text-muted-foreground mt-1">{property.buildingType}</div>
                     </TableCell>
-                    <TableCell className="text-left">{formatCurrency(property.currentValue)}</TableCell>
-                    <TableCell className="hidden md:table-cell text-left">{formatCurrency(property.rentalValue)}/month</TableCell>
+                    <TableCell className="text-right">{formatCurrency(property.currentValue)}</TableCell>
+                    <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue)}/month</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
