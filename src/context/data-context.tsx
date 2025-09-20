@@ -6,11 +6,11 @@ import { properties as initialProperties, revenue as initialRevenue, expenses as
 import type { Property, Transaction, CalendarEvent } from '@/lib/types';
 
 interface DataContextType {
-  properties: Property[];
+  properties: Property[] | null;
   setProperties: (properties: Property[]) => void;
-  revenue: Transaction[];
+  revenue: Transaction[] | null;
   setRevenue: (revenue: Transaction[]) => void;
-  expenses: Transaction[];
+  expenses: Transaction[] | null;
   setExpenses: (expenses: Transaction[]) => void;
   calendarEvents: CalendarEvent[];
   currency: string;
@@ -23,12 +23,19 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [properties, setProperties] = useState<Property[]>(initialProperties);
-  const [revenue, setRevenue] = useState<Transaction[]>(initialRevenue);
-  const [expenses, setExpenses] = useState<Transaction[]>(initialExpenses);
+  const [properties, setProperties] = useState<Property[] | null>(null);
+  const [revenue, setRevenue] = useState<Transaction[] | null>(null);
+  const [expenses, setExpenses] = useState<Transaction[] | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [currency, setCurrency] = useState('GBP');
   const [locale, setLocale] = useState('en-GB');
+
+  // Simulate loading data on component mount
+  useEffect(() => {
+    setProperties(initialProperties);
+    setRevenue(initialRevenue);
+    setExpenses(initialExpenses);
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, {
@@ -46,6 +53,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!revenue || !expenses) return;
+
     const events: CalendarEvent[] = [];
 
     // Use a Set to track which tenancies have already had start/end events created
@@ -100,11 +109,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = {
     properties,
-    setProperties,
+    setProperties: setProperties as (properties: Property[]) => void,
     revenue,
-    setRevenue,
+    setRevenue: setRevenue as (revenue: Transaction[]) => void,
     expenses,
-    setExpenses,
+    setExpenses: setExpenses as (expenses: Transaction[]) => void,
     calendarEvents,
     currency,
     setCurrency,

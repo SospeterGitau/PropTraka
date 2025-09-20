@@ -1,4 +1,7 @@
-import 'dotenv/config';
+// Only run dotenv/config in a node environment
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  require('dotenv/config');
+}
 
 function requireEnv(name: string): string {
   const value = process.env[name];

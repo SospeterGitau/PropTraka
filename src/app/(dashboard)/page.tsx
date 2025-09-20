@@ -7,6 +7,7 @@ import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
 import { CurrencyIcon } from '@/components/currency-icon';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false });
@@ -14,6 +15,33 @@ const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart
 
 export default function DashboardPage() {
   const { properties, revenue, expenses, formatCurrency } = useDataContext();
+
+  // Data might not be available on the first render, so we add a loading state.
+  if (!properties || !revenue || !expenses) {
+    return (
+      <>
+        <PageHeader title="Dashboard" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-1/2 mb-2" />
+                <Skeleton className="h-3 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
+            <Skeleton className="h-[380px]" />
+            <Skeleton className="h-[380px]" />
+        </div>
+      </>
+    )
+  }
 
   const totalPropertyValue = properties.reduce((acc, p) => acc + p.currentValue, 0);
   const totalMortgage = properties.reduce((acc, p) => acc + p.mortgage, 0);
