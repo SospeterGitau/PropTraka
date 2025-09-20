@@ -11,7 +11,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 // Define the input schema for the P&L report
-export const GeneratePnlReportInputSchema = z.object({
+const GeneratePnlReportInputSchema = z.object({
   startDate: z.string().describe('The start date for the report period (YYYY-MM-DD).'),
   endDate: z.string().describe('The end date for the report period (YYYY-MM-DD).'),
   revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions.'),
@@ -20,7 +20,7 @@ export const GeneratePnlReportInputSchema = z.object({
 export type GeneratePnlReportInput = z.infer<typeof GeneratePnlReportInputSchema>;
 
 // Define the output schema for the structured report
-export const GeneratePnlReportOutputSchema = z.object({
+const GeneratePnlReportOutputSchema = z.object({
   report: z.string().describe('The full, formatted P&L report as a single string.'),
 });
 export type GeneratePnlReportOutput = z.infer<typeof GeneratePnlReportOutputSchema>;
