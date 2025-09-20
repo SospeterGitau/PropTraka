@@ -33,6 +33,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -391,6 +392,7 @@ export default function RevenuePage() {
                 
                 return (
                   <Collapsible asChild key={tenancy.tenancyId}>
+                    <>
                       <TableRow className="font-semibold">
                         <TableCell>
                            <CollapsibleTrigger asChild>
@@ -425,6 +427,52 @@ export default function RevenuePage() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
+                      <CollapsibleContent asChild>
+                        <TableRow>
+                          <TableCell colSpan={7} className="p-0">
+                             <div className="p-4 bg-muted/50">
+                               <h4 className="font-semibold mb-2">Monthly Breakdown</h4>
+                               <Table>
+                                 <TableHeader>
+                                   <TableRow>
+                                     <TableHead>Due Date</TableHead>
+                                     <TableHead>Rent</TableHead>
+                                     <TableHead>Deposit</TableHead>
+                                     <TableHead className="text-right">Amount Paid</TableHead>
+                                     <TableHead className="text-right">Balance</TableHead>
+                                     <TableHead className="text-center">Action</TableHead>
+                                   </TableRow>
+                                 </TableHeader>
+                                 <TableBody>
+                                   {tenancy.transactions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(tx => {
+                                     const due = tx.amount + (tx.deposit ?? 0);
+                                     const paid = tx.amountPaid ?? 0;
+                                     const balance = due - paid;
+                                     const status = paid === 0 ? 'unpaid' : paid < due ? 'partial' : 'paid';
+                                     return (
+                                        <TableRow key={tx.id}>
+                                          <TableCell>{formattedDates[`${tx.id}-due`]}</TableCell>
+                                          <TableCell>{formatCurrency(tx.amount)}</TableCell>
+                                          <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
+                                          <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
+                                           <TableCell className={cn("text-right", balance > 0 && 'text-destructive', balance === 0 && 'text-green-600')}>
+                                            {formatCurrency(balance)}
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
+                                              Record Payment
+                                            </Button>
+                                          </TableCell>
+                                        </TableRow>
+                                     )
+                                   })}
+                                 </TableBody>
+                               </Table>
+                             </div>
+                          </TableCell>
+                        </TableRow>
+                      </CollapsibleContent>
+                    </>
                   </Collapsible>
                 );
               })}
@@ -459,6 +507,3 @@ export default function RevenuePage() {
     </>
   );
 }
-
-
-
