@@ -51,6 +51,7 @@ import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const defaultCategories = [
   'Maintenance',
@@ -62,7 +63,6 @@ const defaultCategories = [
 ];
 
 const frequencies = [
-  { value: 'one-off', label: 'One-off' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'bi-weekly', label: 'Bi-weekly' },
   { value: 'monthly', label: 'Monthly' },
@@ -88,7 +88,14 @@ function ExpenseForm({
   properties: Property[];
 }) {
   const [category, setCategory] = useState(transaction?.category || '');
+  const [expenseType, setExpenseType] = useState<Transaction['expenseType']>(transaction?.expenseType || 'one-off');
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    // Sync state if the transaction prop changes (e.g., when opening the modal for a different item)
+    setCategory(transaction?.category || '');
+    setExpenseType(transaction?.expenseType || 'one-off');
+  }, [transaction]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -105,7 +112,8 @@ function ExpenseForm({
       category: category,
       vendor: formData.get('vendor') as string,
       type: 'expense',
-      frequency: formData.get('frequency') as Transaction['frequency'],
+      expenseType: expenseType,
+      frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
     };
     onSubmit(data);
     onClose();
@@ -172,19 +180,40 @@ function ExpenseForm({
               </PopoverContent>
             </Popover>
           </div>
-           <div>
-            <Label className="block mb-1 text-sm font-medium">Frequency</Label>
-            <Select name="frequency" defaultValue={transaction?.frequency || 'one-off'} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                {frequencies.map(f => (
-                  <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div>
+              <Label className="block mb-2 text-sm font-medium">Expense Type</Label>
+              <RadioGroup
+                defaultValue={expenseType}
+                onValueChange={(value: Transaction['expenseType']) => setExpenseType(value)}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="one-off" id="r1" />
+                  <Label htmlFor="r1">One-off</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="recurring" id="r2" />
+                  <Label htmlFor="r2">Recurring</Label>
+                </div>
+              </RadioGroup>
           </div>
+          
+          {expenseType === 'recurring' && (
+            <div>
+              <Label className="block mb-1 text-sm font-medium">Frequency</Label>
+              <Select name="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {frequencies.map(f => (
+                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
             <Label className="block mb-1 text-sm font-medium">Vendor</Label>
             <input name="vendor" defaultValue={transaction?.vendor} className="w-full p-2 border rounded bg-transparent" />
@@ -316,8 +345,8 @@ export default function ExpensesPage() {
     }
   };
 
-  const oneOffExpenses = expenses.filter(e => e.frequency === 'one-off' || !e.frequency);
-  const recurringExpenses = expenses.filter(e => e.frequency !== 'one-off');
+  const oneOffExpenses = expenses.filter(e => e.expenseType === 'one-off' || !e.expenseType);
+  const recurringExpenses = expenses.filter(e => e.expenseType === 'recurring');
 
   return (
     <>

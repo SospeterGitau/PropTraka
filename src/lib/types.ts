@@ -32,7 +32,8 @@ export interface Transaction {
   tenancyId?: string; // for revenue, to group monthly payments
   tenancyStartDate?: string; // for revenue
   tenancyEndDate?: string; // for revenue
-  frequency?: 'one-off' | 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly'; // for expenses
+  expenseType?: 'one-off' | 'recurring'; // for expenses
+  frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly'; // for recurring expenses
   // The following are not part of the core data but can be added for UI purposes
   transactions?: Transaction[]; 
   nextDueDate?: string;
