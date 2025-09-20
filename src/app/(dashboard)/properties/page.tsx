@@ -99,60 +99,63 @@ export default function PropertiesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {properties.map((property) => (
-                <TableRow key={property.id}>
-                  <TableCell className="hidden sm:table-cell">
-                    {property.imageUrl ? (
-                       <Image
-                        alt="Property image"
-                        className="aspect-square rounded-md object-cover"
-                        height="64"
-                        src={property.imageUrl}
-                        width="64"
-                        data-ai-hint={property.imageHint}
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
-                        <PropertyIcon type={property.buildingType} className="h-8 w-8 text-muted-foreground" />
+              {properties.map((property) => {
+                const isPlaceholder = property.imageUrl?.includes('picsum.photos');
+                return (
+                  <TableRow key={property.id}>
+                    <TableCell className="hidden sm:table-cell">
+                      {property.imageUrl && !isPlaceholder ? (
+                         <Image
+                          alt="Property image"
+                          className="aspect-square rounded-md object-cover"
+                          height="64"
+                          src={property.imageUrl}
+                          width="64"
+                          data-ai-hint={property.imageHint}
+                        />
+                      ) : (
+                        <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
+                          <PropertyIcon type={property.buildingType} className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{formatAddress(property)}</div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
+                         <div className="flex items-center gap-1">
+                          <Bed className="h-4 w-4" />
+                          <span>{property.bedrooms}</span>
+                         </div>
+                         <div className="flex items-center gap-1">
+                          <Bath className="h-4 w-4" />
+                          <span>{property.bathrooms}</span>
+                         </div>
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{formatAddress(property)}</div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
-                       <div className="flex items-center gap-1">
-                        <Bed className="h-4 w-4" />
-                        <span>{property.bedrooms}</span>
-                       </div>
-                       <div className="flex items-center gap-1">
-                        <Bath className="h-4 w-4" />
-                        <span>{property.bathrooms}</span>
-                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                     <Badge variant="outline">{property.propertyType}</Badge>
-                     <div className="text-sm text-muted-foreground mt-1">{property.buildingType}</div>
-                  </TableCell>
-                  <TableCell>{formatCurrency(property.currentValue)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatCurrency(property.rentalValue)}/month</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => handleEdit(property)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleDelete(property)}>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                       <Badge variant="outline">{property.propertyType}</Badge>
+                       <div className="text-sm text-muted-foreground mt-1">{property.buildingType}</div>
+                    </TableCell>
+                    <TableCell>{formatCurrency(property.currentValue)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatCurrency(property.rentalValue)}/month</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => handleEdit(property)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDelete(property)}>Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
