@@ -68,7 +68,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === item.href}
-                  className="justify-start"
+                  className="justify-start text-base h-12"
                   tooltip={item.label}
                 >
                   <Link href={item.href}>
@@ -86,7 +86,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     type="submit"
-                    className="justify-start w-full"
+                    className="justify-start w-full text-base h-12"
                     tooltip="Logout"
                   >
                     <LogOut />
