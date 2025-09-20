@@ -38,9 +38,9 @@ const navItems = [
   { href: '/properties', label: 'Properties', icon: Building2 },
   { href: '/revenue', label: 'Revenue', icon: TrendingUp },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+  { href: '/reports', label: 'Financial Reports', icon: LineChart },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/reports', label: 'Financial Reports', icon: LineChart },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
