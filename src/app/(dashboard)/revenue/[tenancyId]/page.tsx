@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format, startOfToday } from 'date-fns';
@@ -93,6 +93,7 @@ function PaymentForm({
 
 
 export default function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
+  const resolvedParams = use(params);
   const { revenue, setRevenue, formatCurrency, locale } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
@@ -100,7 +101,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
   
   useEffect(() => {
-    const allTransactionsForTenancy = revenue.filter(tx => tx.tenancyId === params.tenancyId);
+    const allTransactionsForTenancy = revenue.filter(tx => tx.tenancyId === resolvedParams.tenancyId);
     if (allTransactionsForTenancy.length > 0) {
       const representativeTx = allTransactionsForTenancy[0];
       setTenancy({
@@ -108,7 +109,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
         transactions: allTransactionsForTenancy.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
       });
     }
-  }, [revenue, params.tenancyId]);
+  }, [revenue, resolvedParams.tenancyId]);
 
   useEffect(() => {
     const formatAllDates = async () => {
