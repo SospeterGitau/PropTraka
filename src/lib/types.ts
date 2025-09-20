@@ -1,6 +1,9 @@
 export interface Property {
   id: string;
-  address: string;
+  addressLine1: string;
+  city: string;
+  state: string;
+  postalCode: string;
   purchasePrice: number;
   mortgage: number;
   currentValue: number;

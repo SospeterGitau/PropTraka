@@ -27,6 +27,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
 
+function formatAddress(property: Property) {
+  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+}
 
 export default function PropertiesPage() {
   const { properties, setProperties, formatCurrency } = useDataContext();
@@ -105,7 +108,7 @@ export default function PropertiesPage() {
                       data-ai-hint={property.imageHint}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{property.address}</TableCell>
+                  <TableCell className="font-medium">{formatAddress(property)}</TableCell>
                   <TableCell>{formatCurrency(property.currentValue)}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatCurrency(property.rentalValue)}/month</TableCell>
                   <TableCell>
@@ -141,7 +144,7 @@ export default function PropertiesPage() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
-        itemName={`property at ${selectedProperty?.address}`}
+        itemName={`property at ${selectedProperty ? formatAddress(selectedProperty) : ''}`}
       />
     </>
   );

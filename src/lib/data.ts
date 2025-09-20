@@ -1,13 +1,13 @@
 import type { Property, Transaction, Arrear, CalendarEvent } from './types';
 
 export const properties: Property[] = [
-  { id: 'p1', address: '123 Maple St, Springfield', purchasePrice: 250000, mortgage: 200000, currentValue: 300000, rentalValue: 1800, imageUrl: 'https://picsum.photos/seed/p1/600/400', imageHint: 'suburban house' },
-  { id: 'p2', address: '456 Oak Ave, Shelbyville', purchasePrice: 320000, mortgage: 250000, currentValue: 350000, rentalValue: 2200, imageUrl: 'https://picsum.photos/seed/p2/600/400', imageHint: 'modern apartment' },
-  { id: 'p3', address: '789 Pine Ln, Capital City', purchasePrice: 180000, mortgage: 150000, currentValue: 210000, rentalValue: 1400, imageUrl: 'https://picsum.photos/seed/p3/600/400', imageHint: 'cozy cottage' },
-  { id: 'p4', address: '101 Elm Ct, Ogdenville', purchasePrice: 450000, mortgage: 400000, currentValue: 500000, rentalValue: 3000, imageUrl: 'https://picsum.photos/seed/p4/600/400', imageHint: 'large house' },
-  { id: 'p5', address: '212 Birch Rd, North Haverbrook', purchasePrice: 210000, mortgage: 180000, currentValue: 240000, rentalValue: 1650, imageUrl: 'https://picsum.photos/seed/p5/600/400', imageHint: 'townhouse property' },
-  { id: 'p6', address: '333 Cedar Blvd, Brockway', purchasePrice: 600000, mortgage: 500000, currentValue: 650000, rentalValue: 4000, imageUrl: 'https://picsum.photos/seed/p6/600/400', imageHint: 'luxury condo' },
-  { id: 'p7', address: '444 Spruce Way, Cypress Creek', purchasePrice: 280000, mortgage: 220000, currentValue: 310000, rentalValue: 2000, imageUrl: 'https://picsum.photos/seed/p7/600/400', imageHint: 'family home' },
+  { id: 'p1', addressLine1: '123 Maple St', city: 'Springfield', state: 'IL', postalCode: '62704', purchasePrice: 250000, mortgage: 200000, currentValue: 300000, rentalValue: 1800, imageUrl: 'https://picsum.photos/seed/p1/600/400', imageHint: 'suburban house' },
+  { id: 'p2', addressLine1: '456 Oak Ave', city: 'Shelbyville', state: 'IL', postalCode: '62565', purchasePrice: 320000, mortgage: 250000, currentValue: 350000, rentalValue: 2200, imageUrl: 'https://picsum.photos/seed/p2/600/400', imageHint: 'modern apartment' },
+  { id: 'p3', addressLine1: '789 Pine Ln', city: 'Capital City', state: 'IL', postalCode: '62701', purchasePrice: 180000, mortgage: 150000, currentValue: 210000, rentalValue: 1400, imageUrl: 'https://picsum.photos/seed/p3/600/400', imageHint: 'cozy cottage' },
+  { id: 'p4', addressLine1: '101 Elm Ct', city: 'Ogdenville', state: 'IL', postalCode: '61859', purchasePrice: 450000, mortgage: 400000, currentValue: 500000, rentalValue: 3000, imageUrl: 'https://picsum.photos/seed/p4/600/400', imageHint: 'large house' },
+  { id: 'p5', addressLine1: '212 Birch Rd', city: 'North Haverbrook', state: 'IL', postalCode: '61761', purchasePrice: 210000, mortgage: 180000, currentValue: 240000, rentalValue: 1650, imageUrl: 'https://picsum.photos/seed/p5/600/400', imageHint: 'townhouse property' },
+  { id: 'p6', addressLine1: '333 Cedar Blvd', city: 'Brockway', state: 'IL', postalCode: '62223', purchasePrice: 600000, mortgage: 500000, currentValue: 650000, rentalValue: 4000, imageUrl: 'https://picsum.photos/seed/p6/600/400', imageHint: 'luxury condo' },
+  { id: 'p7', addressLine1: '444 Spruce Way', city: 'Cypress Creek', state: 'FL', postalCode: '33544', purchasePrice: 280000, mortgage: 220000, currentValue: 310000, rentalValue: 2000, imageUrl: 'https://picsum.photos/seed/p7/600/400', imageHint: 'family home' },
 ];
 
 export const revenue: Transaction[] = [
