@@ -11,20 +11,29 @@ export const properties: Property[] = [
 ];
 
 export const revenue: Transaction[] = [
-  { id: 'r1', date: '2025-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 900, amountPaid: 1800, tenancyStartDate: '2025-01-01', tenancyEndDate: '2025-12-31' },
-  { id: 'r2', date: '2025-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 1100, amountPaid: 2200, tenancyStartDate: '2025-02-15', tenancyEndDate: '2026-02-14' },
-  { id: 'r3', date: '2025-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 700, amountPaid: 1400, tenancyStartDate: '2025-08-10', tenancyEndDate: '2026-08-09' },
-  { id: 'r4', date: '2025-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 900, amountPaid: 1800, tenancyStartDate: '2025-01-01', tenancyEndDate: '2025-12-31' },
-  { id: 'r5', date: '2025-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 1100, amountPaid: 2200, tenancyStartDate: '2025-02-15', tenancyEndDate: '2026-02-14' },
-  { id: 'r6', date: '2025-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 1500, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
-  { id: 'r7', date: '2025-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 2000, amountPaid: 3500, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
+  // Tenancy 1: John Doe
+  { id: 't1-1', tenancyId: 't1', date: '2025-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 900, amountPaid: 2700, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't1-2', tenancyId: 't1', date: '2025-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 0, amountPaid: 1800, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  
+  // Tenancy 2: Jane Smith
+  { id: 't2-1', tenancyId: 't2', date: '2025-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 1100, amountPaid: 3300, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 0, amountPaid: 2200, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+
+  // Tenancy 3: Peter Jones (Single Entry)
+  { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 700, amountPaid: 1400, tenancyStartDate: '2025-08-10', tenancyEndDate: '2026-08-09' },
+  
+  // Tenancy 4: Mike Johnson (Arrears)
+  { id: 't4-1', tenancyId: 't4', date: '2025-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct, Ogdenville, IL 61859', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 1500, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
+  
+  // Tenancy 5: Emily Williams (Partial Payment)
+  { id: 't5-1', tenancyId: 't5', date: '2025-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd, Brockway, IL 62223', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 2000, amountPaid: 3500, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
 ];
 
 export const expenses: Transaction[] = [
-  { id: 'e1', date: '2025-07-05', amount: 150, propertyId: 'p1', propertyName: '123 Maple St', type: 'expense', category: 'Maintenance', vendor: 'Springfield Plumbing' },
-  { id: 'e2', date: '2025-07-10', amount: 300, propertyId: 'p2', propertyName: '456 Oak Ave', type: 'expense', category: 'Repairs', vendor: 'Shelbyville Roofers' },
-  { id: 'e3', date: '2025-07-15', amount: 80, propertyId: 'p3', propertyName: '789 Pine Ln', type: 'expense', category: 'Insurance', vendor: 'Capital City Insurance' },
-  { id: 'e4', date: '2025-06-08', amount: 200, propertyId: 'p1', propertyName: '123 Maple St', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.'},
+  { id: 'e1', date: '2025-07-05', amount: 150, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Maintenance', vendor: 'Springfield Plumbing' },
+  { id: 'e2', date: '2025-07-10', amount: 300, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'expense', category: 'Repairs', vendor: 'Shelbyville Roofers' },
+  { id: 'e3', date: '2025-07-15', amount: 80, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'expense', category: 'Insurance', vendor: 'Capital City Insurance' },
+  { id: 'e4', date: '2025-06-08', amount: 200, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.'},
 ];
 
 // This is now derived from the revenue data, but we keep the type for structure.
