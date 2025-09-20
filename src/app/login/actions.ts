@@ -3,7 +3,6 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import { IronSession, getIronSession } from 'iron-session';
 import { SessionData, sessionOptions } from '@/lib/session';
 
@@ -41,7 +40,6 @@ export async function authenticate(
     return 'An error occurred.';
   }
 
-  revalidatePath('/');
   redirect('/');
 }
 
