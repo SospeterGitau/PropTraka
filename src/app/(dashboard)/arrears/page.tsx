@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getLocale } from '@/lib/locales';
 
+export const dynamic = 'force-dynamic';
 
 interface ArrearEntry {
   tenant: string;
