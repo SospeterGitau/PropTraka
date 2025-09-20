@@ -393,7 +393,7 @@ export default function RevenuePage() {
                 return (
                   <Collapsible asChild key={tenancy.tenancyId} tag="tbody">
                     <>
-                      <TableRow className="font-semibold">
+                      <TableRow className="font-semibold bg-transparent hover:bg-muted/50">
                         <TableCell>
                            <CollapsibleTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -428,7 +428,7 @@ export default function RevenuePage() {
                         </TableCell>
                       </TableRow>
                       <CollapsibleContent asChild>
-                        <TableRow>
+                        <tr>
                           <TableCell colSpan={7} className="p-0">
                              <div className="p-4 bg-muted/50">
                                <h4 className="font-semibold mb-2">Monthly Breakdown</h4>
@@ -469,7 +469,7 @@ export default function RevenuePage() {
                                </Table>
                              </div>
                           </TableCell>
-                        </TableRow>
+                        </tr>
                       </CollapsibleContent>
                     </>
                   </Collapsible>
