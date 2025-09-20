@@ -33,12 +33,14 @@ function PaymentForm({
   onSubmit,
   transaction,
   locale,
+  formatCurrency,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (transactionId: string, amount: number) => void;
   transaction: Transaction | null;
   locale: string;
+  formatCurrency: (amount: number) => string;
 }) {
   const [formattedDate, setFormattedDate] = useState('');
 
@@ -63,6 +65,10 @@ function PaymentForm({
 
   if (!isOpen || !transaction) return null;
 
+  const totalDueForPeriod = (transaction.amount || 0) + (transaction.deposit || 0);
+  const alreadyPaid = transaction.amountPaid || 0;
+  const balanceDue = totalDueForPeriod - alreadyPaid;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -74,9 +80,15 @@ function PaymentForm({
         </div>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
+             <div className="text-sm space-y-1 bg-muted p-3 rounded-md">
+                <div className="flex justify-between"><span>Total Due for Period:</span> <span className="font-medium">{formatCurrency(totalDueForPeriod)}</span></div>
+                <div className="flex justify-between"><span>Already Paid:</span> <span className="font-medium">{formatCurrency(alreadyPaid)}</span></div>
+                <hr className="my-1 border-border" />
+                <div className="flex justify-between font-semibold"><span>Balance Due:</span> <span>{formatCurrency(balanceDue)}</span></div>
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amountPaid" className="text-right">Amount Paid</Label>
-              <Input id="amountPaid" name="amountPaid" type="number" step="0.01" defaultValue={transaction.amountPaid || ''} className="col-span-3" required />
+              <Label htmlFor="amountPaid" className="text-right">Amount to Record</Label>
+              <Input id="amountPaid" name="amountPaid" type="number" step="0.01" defaultValue={balanceDue > 0 ? balanceDue : ''} className="col-span-3" required />
             </div>
           </div>
           <DialogFooter>
@@ -136,9 +148,14 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
   };
   
   const handlePaymentFormSubmit = (transactionId: string, amount: number) => {
-    setRevenue(revenue.map(tx => 
-      tx.id === transactionId ? { ...tx, amountPaid: amount } : tx
-    ));
+    setRevenue(revenue.map(tx => {
+      if (tx.id === transactionId) {
+        // Add the new payment to the existing amount paid
+        const newAmountPaid = (tx.amountPaid || 0) + amount;
+        return { ...tx, amountPaid: newAmountPaid };
+      }
+      return tx;
+    }));
     setIsPaymentFormOpen(false);
     setSelectedTransaction(null);
   };
@@ -258,6 +275,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
         onSubmit={handlePaymentFormSubmit}
         transaction={selectedTransaction}
         locale={locale}
+        formatCurrency={formatCurrency}
       />
     </>
   );
