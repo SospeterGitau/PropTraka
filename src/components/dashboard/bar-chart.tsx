@@ -35,7 +35,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
     const profit = propertyRevenue - propertyExpenses;
 
     return { 
-      property: property.address.split(',')[0], // Use a shorter name for the label
+      property: property.addressLine1, // Use a shorter name for the label
       profit: profit > 0 ? profit : 0, // Don't show negative profit on this chart for clarity
     };
   });
