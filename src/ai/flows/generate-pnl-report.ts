@@ -3,8 +3,8 @@
 /**
  * @fileOverview This file defines a Genkit flow for generating a comprehensive Profit and Loss (P&L) report.
  * The flow accepts financial data for a specified date range and structures the output
- * according to the pyramid principle, starting with a summary and progressively detailing
- * revenue, expenses, and key insights.
+ * according to standard accounting principles, including Gross Income, Operating Expenses,
+ * Net Operating Income (NOI), and Net Profit.
  */
 
 import {ai} from '@/ai/genkit';
@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const GeneratePnlReportInputSchema = z.object({
   startDate: z.string().describe('The start date for the report period (YYYY-MM-DD).'),
   endDate: z.string().describe('The end date for the report period (YYYY-MM-DD).'),
-  revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions.'),
+  revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions. "amount" is the rent due, "amountPaid" is the rent collected.'),
   expenseTransactions: z.string().describe('A JSON string representing an array of expense transactions.'),
 });
 export type GeneratePnlReportInput = z.infer<typeof GeneratePnlReportInputSchema>;
@@ -40,11 +40,9 @@ const pnlReportPrompt = ai.definePrompt({
   name: 'pnlReportPrompt',
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
-  prompt: `You are a professional financial analyst AI for a property management company. Your task is to generate a comprehensive Profit and Loss (P&L) report for the period from {{startDate}} to {{endDate}}.
+  prompt: `You are a professional financial analyst AI for a property management company. Your task is to generate a comprehensive Profit and Loss (P&L) Statement for the period from {{startDate}} to {{endDate}}.
 
-The report must be structured using the pyramid principle: start with the answer/summary first, then provide supporting details.
-
-The final output should be a single, well-formatted string, suitable for copying into a document. Use markdown for headings and lists.
+The report must be structured according to standard accounting principles. The final output should be a single, well-formatted string, suitable for copying into a document. Use markdown for headings, bold for totals, and lists where appropriate.
 
 Here is the data for the period:
 - Revenue Transactions (JSON): {{{revenueTransactions}}}
@@ -52,32 +50,41 @@ Here is the data for the period:
 
 Please structure the report as follows:
 
-# Profit & Loss Statement: {{startDate}} to {{endDate}}
+# Profit & Loss Statement
+For the period: {{startDate}} to {{endDate}}
 
-## 1. Executive Summary
-Start with a high-level summary. This is the "answer first" part of the pyramid.
-- State the Total Revenue, Total Expenses, and Net Profit (or Loss).
-- Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Mention any significant trends or standout results.
+## 1. Income
+Calculate the Gross Rental Income by summing the 'amount' and 'deposit' from all revenue transactions.
+Calculate Vacancy & Credit Losses by finding the difference between the total amount due (amount + deposit) and the total amount paid ('amountPaid').
+Calculate the Net Rental Income by subtracting Vacancy & Credit Losses from the Gross Rental Income.
 
-## 2. Revenue Breakdown
-Provide the next layer of detail supporting the summary.
-- List each revenue-generating property.
-- For each property, show the total revenue generated during the period.
-- Calculate and display the sub-total for all revenue.
+- **Gross Rental Income:** [Total of all 'amount' + 'deposit' fields]
+- **Less: Vacancy & Credit Losses:** [Total Due - Total Paid]
+- **Net Rental Income:** [Gross Rental Income - Vacancy & Credit Losses]
 
-## 3. Expense Breakdown
-Provide the next layer of detail for expenses.
-- Group expenses by category (e.g., Maintenance, Repairs, Insurance, Management Fees, etc.).
-- For each category, list the individual expense transactions with their amount.
-- Calculate and display the sub-total for each category.
-- Calculate and display the total for all expenses.
+## 2. Operating Expenses
+List and sum all operating expenses, grouped by category (e.g., Maintenance, Repairs, Insurance, Management Fees, Utilities, etc.).
 
-## 4. Key Insights & Observations
-This is the final layer of the pyramid, offering deeper analysis.
-- Identify the most profitable property and the one with the highest expenses.
-- Highlight the largest expense category and comment on its impact.
-- Point out any potential areas for cost savings or revenue optimization based on the data provided.
-- Conclude with a forward-looking statement.
+- **Maintenance & Repairs:** [Sum of maintenance & repairs]
+- **Property Management Fees:** [Sum of management fees]
+- **Insurance:** [Sum of insurance costs]
+- **Utilities:** [Sum of utilities]
+- **Legal & Professional Fees:** [Sum of legal fees]
+- [Add other categories as found in the data]
+- **Total Operating Expenses:** [Sum of all expense categories]
+
+## 3. Net Operating Income (NOI)
+Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of the property portfolio's profitability from its core operations.
+
+- **Net Operating Income:** [Net Rental Income - Total Operating Expenses]
+
+## 4. Net Profit / Loss
+For this report, since we are not including non-operating items like mortgage interest, depreciation, or taxes, the Net Profit will be the same as the Net Operating Income. State this clearly.
+
+- **Net Profit / Loss:** [Value from Net Operating Income]
+
+## 5. Executive Summary
+Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Mention the Net Operating Income and comment on the significance of any credit losses or major expense categories.
 `,
 });
 
