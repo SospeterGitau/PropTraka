@@ -19,14 +19,18 @@ export const revenue: Transaction[] = [
   { id: 't2-1', tenancyId: 't2', date: '2025-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 1100, amountPaid: 3300, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
   { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
 
-  // Tenancy 3: Peter Jones (Single Entry)
-  { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 700, amountPaid: 1400, tenancyStartDate: '2025-08-10', tenancyEndDate: '2026-08-09' },
+  // Tenancy 3: Peter Jones
+  { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 700, amountPaid: 2100, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
+  { id: 't3-2', tenancyId: 't3', date: '2025-08-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
+
   
   // Tenancy 4: Mike Johnson (Arrears)
   { id: 't4-1', tenancyId: 't4', date: '2025-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct, Ogdenville, IL 61859', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 1500, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
+  { id: 't4-2', tenancyId: 't4', date: '2025-08-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct, Ogdenville, IL 61859', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
   
   // Tenancy 5: Emily Williams (Partial Payment)
   { id: 't5-1', tenancyId: 't5', date: '2025-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd, Brockway, IL 62223', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 2000, amountPaid: 3500, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
+  { id: 't5-2', tenancyId: 't5', date: '2025-08-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd, Brockway, IL 62223', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
 ];
 
 export const expenses: Transaction[] = [
