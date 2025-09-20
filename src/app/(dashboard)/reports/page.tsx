@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -177,35 +178,69 @@ function RevenueAnalysisTab() {
 
 function PnlStatementTab() {
   const { revenue, expenses, formatCurrency } = useDataContext();
-  const [currentYear, setCurrentYear] = useState(() => new Date());
-  
-  const [filteredRevenue, setFilteredRevenue] = useState<Transaction[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<Transaction[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>('year');
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    setFilteredRevenue(
-      revenue.filter(t => {
-        const tDate = new Date(t.date);
-        const hasBeenPaid = (t.amountPaid ?? 0) > 0;
-        return isSameYear(tDate, currentYear) && hasBeenPaid;
-      })
-    );
-    setFilteredExpenses(
-      expenses.filter(e => {
-        const eDate = new Date(e.date);
-        return isSameYear(eDate, currentYear);
-      })
-    );
-  }, [currentYear, revenue, expenses]);
+    setCurrentDate(new Date());
+  }, []);
+
+  const handlePrev = () => {
+    if (currentDate) {
+      setCurrentDate(viewMode === 'month' ? subMonths(currentDate, 1) : subYears(currentDate, 1));
+    }
+  };
+
+  const handleNext = () => {
+    if (currentDate) {
+      setCurrentDate(viewMode === 'month' ? addMonths(currentDate, 1) : addYears(currentDate, 1));
+    }
+  };
+
+  const handleViewChange = (value: ViewMode | null) => {
+    if (value) {
+      setViewMode(value);
+    }
+  };
   
-  const handlePrevYear = () => {
-    setCurrentYear(prev => subYears(prev, 1));
-  };
+  if (!currentDate) {
+    // Show skeleton loader while waiting for client-side mount
+    return (
+       <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
+            </div>
+          </CardContent>
+        </Card>
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-48 w-full" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-48 w-full" /></CardContent></Card>
+         </div>
+      </div>
+    );
+  }
 
-  const handleNextYear = () => {
-    setCurrentYear(prev => addYears(prev, 1));
-  };
+  const filteredRevenue = revenue.filter(t => {
+    const tDate = new Date(t.date);
+    const hasBeenPaid = (t.amountPaid ?? 0) > 0;
+    const isInPeriod = viewMode === 'month' ? isSameMonth(tDate, currentDate) : isSameYear(tDate, currentDate);
+    return isInPeriod && hasBeenPaid;
+  });
 
+  const filteredExpenses = expenses.filter(e => {
+    const eDate = new Date(e.date);
+    return viewMode === 'month' ? isSameMonth(eDate, currentDate) : isSameYear(eDate, currentDate);
+  });
+  
+  const dateDisplayFormat = viewMode === 'month' ? 'MMMM yyyy' : 'yyyy';
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
   const netProfit = totalRevenue - totalExpenses;
@@ -227,15 +262,19 @@ function PnlStatementTab() {
               <div>
                 <CardTitle>Financial Summary</CardTitle>
                 <CardDescription>
-                  Summary for the year {format(currentYear, "yyyy")}
+                  Summary for {format(currentDate, dateDisplayFormat)}
                 </CardDescription>
               </div>
                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="icon" onClick={handlePrevYear}>
+                  <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year">
+                    <ToggleGroupItem value="month" aria-label="Toggle month">Month</ToggleGroupItem>
+                    <ToggleGroupItem value="year" aria-label="Toggle year">Year</ToggleGroupItem>
+                  </ToggleGroup>
+                  <Button variant="outline" size="icon" onClick={handlePrev}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="font-semibold text-center w-24">{format(currentYear, "yyyy")}</span>
-                  <Button variant="outline" size="icon" onClick={handleNextYear}>
+                  <span className="font-semibold text-center w-32">{format(currentDate, dateDisplayFormat)}</span>
+                  <Button variant="outline" size="icon" onClick={handleNext}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                </div>
