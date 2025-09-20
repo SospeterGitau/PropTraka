@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getLocale } from '@/lib/locales';
 
 
@@ -104,7 +103,6 @@ export default function ArrearsPage() {
           <CardTitle>Tenants in Arrears</CardTitle>
         </CardHeader>
         <CardContent>
-          <TooltipProvider>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -112,6 +110,7 @@ export default function ArrearsPage() {
                   <TableHead>Property</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Days Overdue</TableHead>
+                  <TableHead>Owed For</TableHead>
                   <TableHead className="text-right">Amount Owed</TableHead>
                   <TableHead className="text-center">Action</TableHead>
                 </TableRow>
@@ -119,7 +118,7 @@ export default function ArrearsPage() {
               <TableBody>
                 {arrears.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       No tenants are currently in arrears.
                     </TableCell>
                   </TableRow>
@@ -132,18 +131,17 @@ export default function ArrearsPage() {
                         <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
                       </TableCell>
                       <TableCell>{arrear.daysOverdue} days</TableCell>
+                      <TableCell>
+                        {arrear.rentOwed > 0 && arrear.depositOwed > 0 ? (
+                          <Badge variant="outline">Rent & Deposit</Badge>
+                        ) : arrear.rentOwed > 0 ? (
+                          <Badge variant="outline">Rent</Badge>
+                        ) : (
+                          <Badge variant="outline">Deposit</Badge>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right font-semibold text-destructive">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>{formatCurrency(arrear.amountOwed)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-sm">
-                              {arrear.rentOwed > 0 && <div>Rent: {formatCurrency(arrear.rentOwed)}</div>}
-                              {arrear.depositOwed > 0 && <div>Deposit: {formatCurrency(arrear.depositOwed)}</div>}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
+                        {formatCurrency(arrear.amountOwed)}
                       </TableCell>
                       <TableCell className="text-center">
                          <Button size="sm" asChild>
@@ -157,7 +155,6 @@ export default function ArrearsPage() {
                 )}
               </TableBody>
             </Table>
-          </TooltipProvider>
         </CardContent>
       </Card>
     </>
