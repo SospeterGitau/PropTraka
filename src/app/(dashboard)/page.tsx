@@ -1,11 +1,12 @@
 
 'use client';
 
-import { DollarSign, Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
+import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
+import { CurrencyIcon } from '@/components/currency-icon';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false });
@@ -68,7 +69,7 @@ export default function DashboardPage() {
           description="This month"
         />
         <KpiCard
-          icon={DollarSign}
+          icon={CurrencyIcon}
           title="Profit"
           value={formatCurrency(totalProfit)}
           description="This month"

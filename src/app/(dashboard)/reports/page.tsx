@@ -18,11 +18,12 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CurrencyIcon } from '@/components/currency-icon';
 
 type ViewMode = 'month' | 'year';
 
@@ -145,7 +146,7 @@ function RevenueAnalysisTab() {
             description={`Due in ${format(currentDate, dateDisplayFormat)}`}
           />
           <KpiCard
-            icon={DollarSign}
+            icon={CurrencyIcon}
             title="Actual Revenue"
             value={formatCurrency(actualRevenue)}
             description={`Paid in ${format(currentDate, dateDisplayFormat)}`}
@@ -295,7 +296,7 @@ function PnlStatementTab() {
               description="Sum of all costs incurred"
             />
             <KpiCard
-              icon={DollarSign}
+              icon={CurrencyIcon}
               title="Net Profit / Loss"
               value={formatCurrency(netProfit)}
               description="Revenue minus Expenses"
