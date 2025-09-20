@@ -90,7 +90,7 @@ export default function PropertiesPage() {
                   <span className="sr-only">Image</span>
                 </TableHead>
                 <TableHead>Property Details</TableHead>
-                <TableHead className="text-center">Type</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
                 <TableHead>
@@ -132,7 +132,7 @@ export default function PropertiesPage() {
                          </div>
                       </div>
                     </TableCell>
-                    <TableCell className="align-middle text-center">
+                    <TableCell>
                        <Badge variant="outline">{property.propertyType}</Badge>
                        <div className="text-sm text-muted-foreground mt-1">{property.buildingType}</div>
                     </TableCell>
