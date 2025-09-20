@@ -448,7 +448,6 @@ export default function RevenuePage() {
                                      const due = tx.amount + (tx.deposit ?? 0);
                                      const paid = tx.amountPaid ?? 0;
                                      const balance = due - paid;
-                                     const status = paid === 0 ? 'unpaid' : paid < due ? 'partial' : 'paid';
                                      return (
                                         <TableRow key={tx.id}>
                                           <TableCell>{formattedDates[`${tx.id}-due`]}</TableCell>
