@@ -107,8 +107,8 @@ function ExpenseForm({
       id: transaction?.id || `e${Date.now()}`,
       date: formData.get('date') as string,
       amount: Number(formData.get('amount')),
-      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-      propertyId: propertyId,
+      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Expense',
+      propertyId: propertyId !== 'none' ? propertyId : undefined,
       category: category,
       vendor: formData.get('vendor') as string,
       type: 'expense',
@@ -131,12 +131,13 @@ function ExpenseForm({
             <input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required className="w-full p-2 border rounded bg-transparent" />
           </div>
           <div>
-            <Label className="block mb-1 text-sm font-medium">Property</Label>
-            <Select name="propertyId" defaultValue={transaction?.propertyId} required>
+            <Label className="block mb-1 text-sm font-medium">Property (optional)</Label>
+            <Select name="propertyId" defaultValue={transaction?.propertyId || 'none'}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a property" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">None (General Business Expense)</SelectItem>
                 {properties.map(property => (
                   <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
                 ))}

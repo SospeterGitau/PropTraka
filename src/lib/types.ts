@@ -20,7 +20,7 @@ export interface Transaction {
   id: string;
   date: string;
   amount: number; // Represents monthly rent for revenue type
-  propertyId: string;
+  propertyId?: string;
   propertyName: string;
   type: 'revenue' | 'expense';
   category?: string; // e.g., maintenance, repairs, insurance for expenses
