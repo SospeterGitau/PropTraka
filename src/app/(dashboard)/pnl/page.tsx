@@ -46,7 +46,9 @@ export default function PnlPage() {
       setFilteredRevenue(
         revenue.filter(t => {
           const tDate = new Date(t.date);
-          return tDate >= fromDate && tDate <= toDate;
+          const isWithinRange = tDate >= fromDate && tDate <= toDate;
+          const hasBeenPaid = (t.amountPaid ?? 0) > 0;
+          return isWithinRange && hasBeenPaid;
         })
       );
       setFilteredExpenses(
