@@ -85,7 +85,4 @@ body {
   body {
     @apply bg-background text-foreground;
   }
-  a {
-    @apply underline;
-  }
 }

@@ -331,7 +331,7 @@ export default function RevenuePage() {
                     return (
                         <TableRow key={tenancy.tenancyId}>
                           <TableCell>
-                            <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary hover:underline">
+                            <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary underline">
                                 {tenancy.tenant}
                             </Link>
                             <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
