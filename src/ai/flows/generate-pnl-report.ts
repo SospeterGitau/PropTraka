@@ -88,6 +88,8 @@ const generatePnlReportFlow = ai.defineFlow({
   inputSchema: GeneratePnlReportInputSchema,
   outputSchema: z.object({
     report: z.string().nullable(),
+    error: z.string().nullable().optional(),
+    hint: z.string().nullable().optional(),
   }),
 }, async (input) => {
   const { output } = await pnlReportPrompt(input);
