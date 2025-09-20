@@ -34,11 +34,11 @@ export const revenue: Transaction[] = [
 ];
 
 export const expenses: Transaction[] = [
-  { id: 'e1', date: '2025-07-05', amount: 150, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Maintenance', vendor: 'Springfield Plumbing', frequency: 'one-off' },
-  { id: 'e2', date: '2025-07-10', amount: 300, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'expense', category: 'Repairs', vendor: 'Shelbyville Roofers', frequency: 'one-off' },
-  { id: 'e3', date: '2025-07-15', amount: 80, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'expense', category: 'Insurance', vendor: 'Capital City Insurance', frequency: 'one-off' },
-  { id: 'e4', date: '2025-06-08', amount: 200, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.', frequency: 'one-off' },
-  { id: 'e5', date: '2025-07-01', amount: 500, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Management Fees', vendor: 'Property Management LLC', frequency: 'monthly' },
+  { id: 'e1', date: '2025-07-05', amount: 150, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Maintenance', vendor: 'Springfield Plumbing', expenseType: 'one-off' },
+  { id: 'e2', date: '2025-07-10', amount: 300, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'expense', category: 'Repairs', vendor: 'Shelbyville Roofers', expenseType: 'one-off' },
+  { id: 'e3', date: '2025-07-15', amount: 80, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'expense', category: 'Insurance', vendor: 'Capital City Insurance', expenseType: 'one-off' },
+  { id: 'e4', date: '2025-06-08', amount: 200, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.', expenseType: 'one-off' },
+  { id: 'e5', date: '2025-07-01', amount: 500, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Management Fees', vendor: 'Property Management LLC', expenseType: 'recurring', frequency: 'monthly' },
 ];
 
 // This is now derived from the revenue data, but we keep the type for structure.
