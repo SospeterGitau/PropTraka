@@ -85,7 +85,9 @@ This is the final layer of the pyramid, offering deeper analysis.
 const generatePnlReportFlow = ai.defineFlow({
   name: 'generatePnlReportFlow',
   inputSchema: GeneratePnlReportInputSchema,
-  outputSchema: z.custom<GeneratePnlReportOutput>(),
+  outputSchema: z.object({
+    report: z.string().nullable(),
+  }),
 }, async (input) => {
   const { output } = await pnlReportPrompt(input);
   return { report: output!.report };
