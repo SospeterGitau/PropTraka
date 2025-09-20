@@ -21,11 +21,11 @@ export async function authenticate(
     const email = formData.get('email');
     const password = formData.get('password');
 
-    if (email !== process.env.NEXT_PUBLIC_APP_USER_EMAIL) {
+    if (email !== process.env.APP_USER_EMAIL) {
       return 'Invalid email address.';
     }
 
-    if (password !== process.env.NEXT_PUBLIC_APP_PASSWORD) {
+    if (password !== process.env.APP_PASSWORD) {
       return 'Invalid password.';
     }
 
