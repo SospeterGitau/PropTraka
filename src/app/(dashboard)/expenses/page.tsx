@@ -360,17 +360,17 @@ export default function ExpensesPage() {
       <PageHeader title="Expenses">
         <Button onClick={handleAdd}>Add Expense</Button>
       </PageHeader>
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense Transactions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="one-off">
-            <TabsList>
-              <TabsTrigger value="one-off">One-off Expenses</TabsTrigger>
-              <TabsTrigger value="recurring">Recurring Expenses</TabsTrigger>
-            </TabsList>
-            <TabsContent value="one-off">
+      <Tabs defaultValue="one-off">
+        <TabsList>
+          <TabsTrigger value="one-off">One-off Expenses</TabsTrigger>
+          <TabsTrigger value="recurring">Recurring Expenses</TabsTrigger>
+        </TabsList>
+        <TabsContent value="one-off" className="pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>One-off Expense Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
               <ExpensesTable
                 expenses={oneOffExpenses}
                 formattedDates={formattedDates}
@@ -378,8 +378,15 @@ export default function ExpensesPage() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />
-            </TabsContent>
-            <TabsContent value="recurring">
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="recurring" className="pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recurring Expense Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
               <ExpensesTable
                 expenses={recurringExpenses}
                 formattedDates={formattedDates}
@@ -388,10 +395,10 @@ export default function ExpensesPage() {
                 onDelete={handleDelete}
                 showFrequency={true}
               />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       
       <ExpenseForm
         isOpen={isFormOpen}
