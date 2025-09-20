@@ -2,8 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
-import { format, eachMonthOfInterval } from 'date-fns';
+import Link from 'next/link';
+import { MoreHorizontal } from 'lucide-react';
+import { format, eachMonthOfInterval, isBefore, startOfToday } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -32,7 +33,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 
 function formatAddress(property: Property) {
@@ -205,75 +205,10 @@ function RevenueForm({
   );
 }
 
-function PaymentForm({
-  isOpen,
-  onClose,
-  onSubmit,
-  transaction,
-  locale,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (transactionId: string, amount: number) => void;
-  transaction: Transaction | null;
-  locale: string;
-}) {
-  const [formattedDate, setFormattedDate] = useState('');
-
-  useEffect(() => {
-    const formatDateAsync = async () => {
-      if (transaction) {
-        const localeData = await getLocale(locale);
-        setFormattedDate(format(new Date(transaction.date), 'MMMM dd, yyyy', { locale: localeData }));
-      }
-    };
-    formatDateAsync();
-  }, [transaction, locale]);
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!transaction) return;
-    const formData = new FormData(event.currentTarget);
-    const amountPaid = Number(formData.get('amountPaid'));
-    onSubmit(transaction.id, amountPaid);
-    onClose();
-  };
-
-  if (!isOpen || !transaction) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Record Payment</DialogTitle>
-        </DialogHeader>
-        <div className="text-sm text-muted-foreground">
-          For {transaction.tenant} at {transaction.propertyName} (Due: {formattedDate})
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amountPaid" className="text-right">Amount Paid</Label>
-              <Input id="amountPaid" name="amountPaid" type="number" step="0.01" defaultValue={transaction.amountPaid || ''} className="col-span-3" required />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit">Save Payment</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 
 export default function RevenuePage() {
   const { properties, revenue, setRevenue, formatCurrency, locale } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
-  const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
@@ -283,12 +218,14 @@ export default function RevenuePage() {
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
       for (const item of revenue) {
-        newFormattedDates[`${item.id}-due`] = format(new Date(item.date), 'MMM dd, yyyy', { locale: localeData });
         if(item.tenancyStartDate) {
-          newFormattedDates[`${item.id}-start`] = format(new Date(item.tenancyStartDate), 'MMM dd, yyyy', { locale: localeData });
+          newFormattedDates[`${item.tenancyId}-start`] = format(new Date(item.tenancyStartDate), 'MMM dd, yyyy', { locale: localeData });
         }
         if(item.tenancyEndDate) {
-          newFormattedDates[`${item.id}-end`] = format(new Date(item.tenancyEndDate), 'MMM dd, yyyy', { locale: localeData });
+          newFormattedDates[`${item.tenancyId}-end`] = format(new Date(item.tenancyEndDate), 'MMM dd, yyyy', { locale: localeData });
+        }
+        if(item.nextDueDate) {
+            newFormattedDates[`${item.tenancyId}-nextDue`] = format(new Date(item.nextDueDate), 'MMM dd, yyyy', { locale: localeData });
         }
       }
       setFormattedDates(newFormattedDates);
@@ -306,11 +243,6 @@ export default function RevenuePage() {
     setIsTenancyFormOpen(true);
   };
   
-  const handleRecordPayment = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setIsPaymentFormOpen(true);
-  };
-
   const handleDeleteTenancy = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsDeleteDialogOpen(true);
@@ -341,26 +273,32 @@ export default function RevenuePage() {
     setSelectedTransaction(null);
   };
 
-  const handlePaymentFormSubmit = (transactionId: string, amount: number) => {
-    setRevenue(revenue.map(tx => 
-      tx.id === transactionId ? { ...tx, amountPaid: amount } : tx
-    ));
-    setIsPaymentFormOpen(false);
-    setSelectedTransaction(null);
-  };
 
   // Group transactions by tenancyId
-  const tenancies = revenue.reduce((acc, tx) => {
-    const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
-    if (!acc[tenancyId]) {
-      acc[tenancyId] = {
-        ...tx, // Use first transaction as representative
-        transactions: [],
+  const tenancies = Object.values(
+    revenue.reduce((acc, tx) => {
+      const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
+      if (!acc[tenancyId]) {
+        acc[tenancyId] = {
+          ...tx, // Use first transaction as representative
+          transactions: [],
+        };
+      }
+      acc[tenancyId].transactions.push(tx);
+      return acc;
+    }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
+  ).map(tenancy => {
+      const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const nextDueTransaction = sortedTransactions.find(tx => {
+          const due = tx.amount + (tx.deposit ?? 0);
+          const paid = tx.amountPaid ?? 0;
+          return paid < due && isBefore(new Date(tx.date), new Date('2025-08-01'));
+      });
+      return {
+          ...tenancy,
+          nextDueDate: nextDueTransaction?.date,
       };
-    }
-    acc[tenancyId].transactions.push(tx);
-    return acc;
-  }, {} as Record<string, Transaction & { transactions: Transaction[] }>);
+  });
 
   return (
     <>
@@ -375,38 +313,41 @@ export default function RevenuePage() {
            <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[60px]"></TableHead>
                 <TableHead>Tenant &amp; Property</TableHead>
                 <TableHead>Tenancy Period</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total Due</TableHead>
                 <TableHead className="text-right">Total Paid</TableHead>
                 <TableHead className="text-right">Total Balance</TableHead>
                 <TableHead className="w-[100px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            {Object.values(tenancies).sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
-                const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
-                const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
-                const totalBalance = totalDue - totalPaid;
-                
-                return (
-                  <Collapsible asChild key={tenancy.tenancyId} tag="tbody">
-                      <>
-                        <TableRow className="font-semibold bg-transparent hover:bg-muted/50">
+            <TableBody>
+                {tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
+                    const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
+                    const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
+                    const totalBalance = totalDue - totalPaid;
+                    
+                    return (
+                        <TableRow key={tenancy.tenancyId}>
                           <TableCell>
-                            <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <ChevronRight className="h-4 w-4 transition-transform [&[data-state=open]]:rotate-90" />
-                                </Button>
-                            </CollapsibleTrigger>
+                            <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary hover:underline">
+                                {tenancy.tenant}
+                            </Link>
+                            <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
                           </TableCell>
+                          <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
                           <TableCell>
-                            <div>{tenancy.tenant}</div>
-                            <div className="text-sm text-muted-foreground font-normal">{tenancy.propertyName}</div>
+                             {tenancy.nextDueDate ? (
+                                <Badge variant="destructive">
+                                    Due {formattedDates[`${tenancy.tenancyId}-nextDue`]}
+                                </Badge>
+                             ) : (
+                                <Badge variant="secondary">Paid Up</Badge>
+                             )}
                           </TableCell>
-                          <TableCell className="font-normal">{formattedDates[`${tenancy.id}-start`]} - {formattedDates[`${tenancy.id}-end`]}</TableCell>
-                          <TableCell className="text-right font-normal">{formatCurrency(totalDue)}</TableCell>
-                          <TableCell className="text-right font-normal">{formatCurrency(totalPaid)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
                           <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
                             {formatCurrency(totalBalance)}
                           </TableCell>
@@ -426,54 +367,9 @@ export default function RevenuePage() {
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                        <CollapsibleContent asChild>
-                          <tr>
-                            <TableCell colSpan={7} className="p-0">
-                              <div className="p-4 bg-muted/50">
-                                <h4 className="font-semibold mb-2">Monthly Breakdown</h4>
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Due Date</TableHead>
-                                      <TableHead>Rent</TableHead>
-                                      <TableHead>Deposit</TableHead>
-                                      <TableHead className="text-right">Amount Paid</TableHead>
-                                      <TableHead className="text-right">Balance</TableHead>
-                                      <TableHead className="text-center">Action</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {tenancy.transactions.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(tx => {
-                                      const due = tx.amount + (tx.deposit ?? 0);
-                                      const paid = tx.amountPaid ?? 0;
-                                      const balance = due - paid;
-                                      return (
-                                          <TableRow key={tx.id}>
-                                            <TableCell>{formattedDates[`${tx.id}-due`]}</TableCell>
-                                            <TableCell>{formatCurrency(tx.amount)}</TableCell>
-                                            <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
-                                            <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
-                                              <TableCell className={cn("text-right", balance > 0 && 'text-destructive', balance === 0 && 'text-green-600')}>
-                                              {formatCurrency(balance)}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                              <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
-                                                Record Payment
-                                              </Button>
-                                            </TableCell>
-                                          </TableRow>
-                                      )
-                                    })}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                            </TableCell>
-                          </tr>
-                        </CollapsibleContent>
-                      </>
-                  </Collapsible>
-                );
-            })}
+                    );
+                })}
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
@@ -487,14 +383,6 @@ export default function RevenuePage() {
         revenue={revenue}
       />
 
-      <PaymentForm
-        isOpen={isPaymentFormOpen}
-        onClose={() => setIsPaymentFormOpen(false)}
-        onSubmit={handlePaymentFormSubmit}
-        transaction={selectedTransaction}
-        locale={locale}
-      />
-
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
@@ -504,3 +392,4 @@ export default function RevenuePage() {
     </>
   );
 }
+
