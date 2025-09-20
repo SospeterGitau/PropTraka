@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
+import { PropertyIcon } from '@/components/property-icon';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -101,14 +102,20 @@ export default function PropertiesPage() {
               {properties.map((property) => (
                 <TableRow key={property.id}>
                   <TableCell className="hidden sm:table-cell">
-                    <Image
-                      alt="Property image"
-                      className="aspect-square rounded-md object-cover"
-                      height="64"
-                      src={property.imageUrl}
-                      width="64"
-                      data-ai-hint={property.imageHint}
-                    />
+                    {property.imageUrl ? (
+                       <Image
+                        alt="Property image"
+                        className="aspect-square rounded-md object-cover"
+                        height="64"
+                        src={property.imageUrl}
+                        width="64"
+                        data-ai-hint={property.imageHint}
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
+                        <PropertyIcon type={property.buildingType} className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{formatAddress(property)}</div>

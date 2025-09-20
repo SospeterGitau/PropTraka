@@ -12,7 +12,7 @@ export interface Property {
   mortgage: number;
   currentValue: number;
   rentalValue: number;
-  imageUrl: string;
+  imageUrl: string | null;
   imageHint: string;
 }
 
