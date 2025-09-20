@@ -15,7 +15,6 @@ import {
   LineChart,
   Settings,
   LogOut,
-  BookUser,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -41,8 +40,7 @@ const navItems = [
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/reports', label: 'Reports', icon: LineChart },
-  { href: '/pnl', label: 'P&L Statement', icon: BookUser },
+  { href: '/reports', label: 'Financial Reports', icon: LineChart },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
