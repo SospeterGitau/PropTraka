@@ -186,7 +186,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
                 </div>
                  <div className="p-4 bg-muted rounded-lg">
                     <div className="text-sm text-muted-foreground">Balance</div>
-                    <div className={cn("text-2xl font-bold", totalBalance > 0 && 'text-destructive')}>
+                    <div className={cn("text-2xl font-bold", totalBalance > 0 ? 'text-destructive' : 'text-green-600')}>
                         {formatCurrency(totalBalance)}
                     </div>
                 </div>
@@ -215,7 +215,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
                         <TableCell>{formatCurrency(tx.amount)}</TableCell>
                         <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
-                          <TableCell className={cn("text-right", balance > 0 && 'text-destructive', balance === 0 && 'text-green-600')}>
+                          <TableCell className={cn("text-right", balance > 0 ? 'text-destructive' : 'text-green-600')}>
                           {formatCurrency(balance)}
                         </TableCell>
                         <TableCell className="text-center">

@@ -13,11 +13,11 @@ export const properties: Property[] = [
 export const revenue: Transaction[] = [
   // Tenancy 1: John Doe
   { id: 't1-1', tenancyId: 't1', date: '2025-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 900, amountPaid: 2700, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  { id: 't1-2', tenancyId: 't1', date: '2025-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't1-2', tenancyId: 't1', date: '2025-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 0, amountPaid: 1800, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
   
   // Tenancy 2: Jane Smith
   { id: 't2-1', tenancyId: 't2', date: '2025-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 1100, amountPaid: 3300, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 0, amountPaid: 2200, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
 
   // Tenancy 3: Peter Jones
   { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 700, amountPaid: 2100, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },

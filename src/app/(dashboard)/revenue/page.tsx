@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
-import { format, eachMonthOfInterval, isBefore, startOfToday } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -292,7 +292,7 @@ export default function RevenuePage() {
       const nextDueTransaction = sortedTransactions.find(tx => {
           const due = tx.amount + (tx.deposit ?? 0);
           const paid = tx.amountPaid ?? 0;
-          return paid < due && isBefore(new Date(tx.date), new Date('2025-08-01'));
+          return paid < due;
       });
       return {
           ...tenancy,
@@ -339,7 +339,7 @@ export default function RevenuePage() {
                           <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
                           <TableCell>
                              {tenancy.nextDueDate ? (
-                                <Badge variant="destructive">
+                                <Badge variant={new Date(tenancy.nextDueDate) < startOfToday() ? "destructive" : "outline"}>
                                     Due {formattedDates[`${tenancy.tenancyId}-nextDue`]}
                                 </Badge>
                              ) : (
@@ -392,4 +392,5 @@ export default function RevenuePage() {
     </>
   );
 }
+
 
