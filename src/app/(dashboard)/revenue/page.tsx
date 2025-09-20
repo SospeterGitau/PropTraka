@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, eachMonthOfInterval } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -392,5 +392,3 @@ export default function RevenuePage() {
     </>
   );
 }
-
-
