@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 
 function PaymentForm({
@@ -154,6 +155,8 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
   const totalBalance = totalDue - totalPaid;
 
+  const today = startOfToday();
+
   return (
     <>
       <PageHeader title={`Tenancy Details`}>
@@ -186,7 +189,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
                 </div>
                  <div className="p-4 bg-muted rounded-lg">
                     <div className="text-sm text-muted-foreground">Balance</div>
-                    <div className={cn("text-2xl font-bold", totalBalance > 0 ? 'text-destructive' : 'text-green-600')}>
+                    <div className={cn("text-2xl font-bold", totalBalance > 0 ? 'text-destructive' : 'text-primary')}>
                         {formatCurrency(totalBalance)}
                     </div>
                 </div>
@@ -201,22 +204,36 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
                   <TableHead>Deposit</TableHead>
                   <TableHead className="text-right">Amount Paid</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-center">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tenancy.transactions.map(tx => {
+                  const dueDate = new Date(tx.date);
                   const due = tx.amount + (tx.deposit ?? 0);
                   const paid = tx.amountPaid ?? 0;
                   const balance = due - paid;
+                  const isOverdue = dueDate < today && balance > 0;
+                  const daysOverdue = isOverdue 
+                    ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
+                    : 0;
+
                   return (
                       <TableRow key={tx.id}>
                         <TableCell>{formattedDates[tx.id]}</TableCell>
                         <TableCell>{formatCurrency(tx.amount)}</TableCell>
                         <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
-                          <TableCell className={cn("text-right", balance > 0 ? 'text-destructive' : 'text-green-600')}>
+                        <TableCell className={cn("text-right font-medium", balance > 0 ? 'text-destructive' : 'text-primary')}>
                           {formatCurrency(balance)}
+                        </TableCell>
+                        <TableCell>
+                          {isOverdue ? (
+                            <Badge variant="destructive">{daysOverdue} days overdue</Badge>
+                          ) : balance <= 0 ? (
+                            <Badge variant="secondary">Paid</Badge>
+                          ) : null}
                         </TableCell>
                         <TableCell className="text-center">
                           <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
