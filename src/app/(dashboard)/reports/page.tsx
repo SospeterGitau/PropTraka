@@ -13,7 +13,6 @@ import { TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from '@/components/ui/skeleton';
-import { GenerateReportDialog } from '@/components/generate-report-dialog';
 
 type ViewMode = 'month' | 'year';
 
@@ -107,9 +106,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader title="Revenue Reports">
-        <GenerateReportDialog revenue={revenue} expenses={expenses} />
-      </PageHeader>
+      <PageHeader title="Revenue Reports" />
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
