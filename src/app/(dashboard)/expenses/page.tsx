@@ -51,7 +51,6 @@ import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const defaultCategories = [
   'Maintenance',
@@ -60,6 +59,15 @@ const defaultCategories = [
   'Utilities',
   'Management Fees',
   'Salaries',
+];
+
+const frequencies = [
+  { value: 'one-off', label: 'One-off' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'bi-weekly', label: 'Bi-weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+  { value: 'yearly', label: 'Yearly' },
 ];
 
 function formatAddress(property: Property) {
@@ -97,7 +105,7 @@ function ExpenseForm({
       category: category,
       vendor: formData.get('vendor') as string,
       type: 'expense',
-      frequency: formData.get('frequency') as 'one-off' | 'monthly',
+      frequency: formData.get('frequency') as Transaction['frequency'],
     };
     onSubmit(data);
     onClose();
@@ -166,16 +174,16 @@ function ExpenseForm({
           </div>
            <div>
             <Label className="block mb-1 text-sm font-medium">Frequency</Label>
-            <RadioGroup name="frequency" defaultValue={transaction?.frequency || 'one-off'} className="flex gap-4">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="one-off" id="one-off" />
-                <Label htmlFor="one-off">One-off</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="monthly" id="monthly" />
-                <Label htmlFor="monthly">Monthly</Label>
-              </div>
-            </RadioGroup>
+            <Select name="frequency" defaultValue={transaction?.frequency || 'one-off'} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                {frequencies.map(f => (
+                  <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="block mb-1 text-sm font-medium">Vendor</Label>
@@ -200,13 +208,15 @@ function ExpensesTable({
   formattedDates,
   formatCurrency,
   onEdit,
-  onDelete 
+  onDelete,
+  showFrequency = false,
 }: {
   expenses: Transaction[];
   formattedDates: { [key: string]: string };
   formatCurrency: (amount: number) => string;
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
+  showFrequency?: boolean;
 }) {
   return (
     <Table>
@@ -215,6 +225,7 @@ function ExpensesTable({
           <TableHead>Date</TableHead>
           <TableHead>Property</TableHead>
           <TableHead>Category</TableHead>
+          {showFrequency && <TableHead>Frequency</TableHead>}
           <TableHead className="text-right">Amount</TableHead>
           <TableHead>
             <span className="sr-only">Actions</span>
@@ -229,6 +240,9 @@ function ExpensesTable({
             <TableCell>
               <Badge variant="secondary">{item.category}</Badge>
             </TableCell>
+             {showFrequency && (
+              <TableCell className="capitalize">{item.frequency}</TableCell>
+            )}
             <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
             <TableCell>
               <DropdownMenu>
@@ -303,7 +317,7 @@ export default function ExpensesPage() {
   };
 
   const oneOffExpenses = expenses.filter(e => e.frequency === 'one-off' || !e.frequency);
-  const recurringExpenses = expenses.filter(e => e.frequency === 'monthly');
+  const recurringExpenses = expenses.filter(e => e.frequency !== 'one-off');
 
   return (
     <>
@@ -336,6 +350,7 @@ export default function ExpensesPage() {
                 formatCurrency={formatCurrency}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                showFrequency={true}
               />
             </TabsContent>
           </Tabs>
