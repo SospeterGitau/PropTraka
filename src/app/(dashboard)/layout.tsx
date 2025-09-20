@@ -8,6 +8,8 @@ import { getSession } from '@/lib/session';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
 
