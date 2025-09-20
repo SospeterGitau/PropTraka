@@ -152,11 +152,14 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
     return notFound();
   }
 
-  const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
-  const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
-  const totalBalance = totalDue - totalPaid;
-
   const today = startOfToday();
+
+  // Calculate KPIs based on transactions due up to today
+  const dueTransactions = tenancy.transactions.filter(tx => new Date(tx.date) <= today);
+  const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
+  const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
+  const currentBalance = totalDueToDate - totalPaid;
+
 
   return (
     <>
@@ -181,17 +184,17 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
         <CardContent>
             <div className="grid grid-cols-3 gap-4 mb-6 text-center">
                 <div className="p-4 bg-muted rounded-lg">
-                    <div className="text-sm text-muted-foreground">Total Due</div>
-                    <div className="text-2xl font-bold">{formatCurrency(totalDue)}</div>
+                    <div className="text-sm text-muted-foreground">Total Due to Date</div>
+                    <div className="text-2xl font-bold">{formatCurrency(totalDueToDate)}</div>
                 </div>
                  <div className="p-4 bg-muted rounded-lg">
                     <div className="text-sm text-muted-foreground">Total Paid</div>
                     <div className="text-2xl font-bold">{formatCurrency(totalPaid)}</div>
                 </div>
                  <div className="p-4 bg-muted rounded-lg">
-                    <div className="text-sm text-muted-foreground">Balance</div>
-                    <div className={cn("text-2xl font-bold", totalBalance > 0 ? 'text-destructive' : 'text-primary')}>
-                        {formatCurrency(totalBalance)}
+                    <div className="text-sm text-muted-foreground">Current Balance</div>
+                    <div className={cn("text-2xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-primary')}>
+                        {formatCurrency(currentBalance)}
                     </div>
                 </div>
             </div>
