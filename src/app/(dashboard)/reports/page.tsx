@@ -1,20 +1,12 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, subDays } from 'date-fns';
-import { DateRange } from 'react-day-picker';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -25,12 +17,11 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { Calendar as CalendarIcon, TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 
 type ViewMode = 'month' | 'year';
 
@@ -186,35 +177,34 @@ function RevenueAnalysisTab() {
 
 function PnlStatementTab() {
   const { revenue, expenses, formatCurrency } = useDataContext();
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 29),
-    to: new Date(),
-  });
+  const [currentYear, setCurrentYear] = useState(() => new Date());
   
   const [filteredRevenue, setFilteredRevenue] = useState<Transaction[]>([]);
   const [filteredExpenses, setFilteredExpenses] = useState<Transaction[]>([]);
 
   useEffect(() => {
-    if (date?.from && date?.to) {
-      const fromDate = date.from;
-      const toDate = date.to;
+    setFilteredRevenue(
+      revenue.filter(t => {
+        const tDate = new Date(t.date);
+        const hasBeenPaid = (t.amountPaid ?? 0) > 0;
+        return isSameYear(tDate, currentYear) && hasBeenPaid;
+      })
+    );
+    setFilteredExpenses(
+      expenses.filter(e => {
+        const eDate = new Date(e.date);
+        return isSameYear(eDate, currentYear);
+      })
+    );
+  }, [currentYear, revenue, expenses]);
+  
+  const handlePrevYear = () => {
+    setCurrentYear(prev => subYears(prev, 1));
+  };
 
-      setFilteredRevenue(
-        revenue.filter(t => {
-          const tDate = new Date(t.date);
-          const isWithinRange = tDate >= fromDate && tDate <= toDate;
-          const hasBeenPaid = (t.amountPaid ?? 0) > 0;
-          return isWithinRange && hasBeenPaid;
-        })
-      );
-      setFilteredExpenses(
-        expenses.filter(e => {
-          const eDate = new Date(e.date);
-          return eDate >= fromDate && eDate <= toDate;
-        })
-      );
-    }
-  }, [date, revenue, expenses]);
+  const handleNextYear = () => {
+    setCurrentYear(prev => addYears(prev, 1));
+  };
 
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
@@ -231,50 +221,25 @@ function PnlStatementTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                id="date"
-                variant={"outline"}
-                className={cn(
-                  "w-[300px] justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date?.from ? (
-                  date.to ? (
-                    <>
-                      {format(date.from, "LLL dd, y")} -{" "}
-                      {format(date.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(date.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Pick a date</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={date?.from}
-                selected={date}
-                onSelect={setDate}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
-      </div>
       <Card>
         <CardHeader>
-            <CardTitle>Financial Summary</CardTitle>
-            <CardDescription>
-              Summary for the period {date?.from ? format(date.from, "LLL dd, y") : ''} to {date?.to ? format(date.to, "LLL dd, y") : ''}
-            </CardDescription>
+           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle>Financial Summary</CardTitle>
+                <CardDescription>
+                  Summary for the year {format(currentYear, "yyyy")}
+                </CardDescription>
+              </div>
+               <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" onClick={handlePrevYear}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="font-semibold text-center w-24">{format(currentYear, "yyyy")}</span>
+                  <Button variant="outline" size="icon" onClick={handleNextYear}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+               </div>
+            </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
