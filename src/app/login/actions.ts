@@ -5,7 +5,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { IronSession, getIronSession } from 'iron-session';
 import { SessionData, sessionOptions } from '@/lib/session';
-import { APP_USER_EMAIL, APP_PASSWORD } from '@/lib/config';
 
 
 export async function getSession(): Promise<IronSession<SessionData>> {
@@ -22,11 +21,11 @@ export async function authenticate(
     const email = formData.get('email');
     const password = formData.get('password');
 
-    if (email !== APP_USER_EMAIL) {
+    if (email !== process.env.APP_USER_EMAIL) {
       return 'Invalid email address.';
     }
 
-    if (password !== APP_PASSWORD) {
+    if (password !== process.env.APP_PASSWORD) {
       return 'Invalid password.';
     }
 
@@ -38,7 +37,8 @@ export async function authenticate(
     if (error instanceof Error && error.message.includes('CredentialsSignin')) {
       return 'Invalid credentials.';
     }
-    return 'An error occurred.';
+    console.error(error);
+    return 'An unexpected error occurred.';
   }
 
   redirect('/');
