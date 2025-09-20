@@ -4,6 +4,10 @@ export interface Property {
   city: string;
   state: string;
   postalCode: string;
+  propertyType: 'Domestic' | 'Commercial';
+  buildingType: 'House' | 'Apartment' | 'Condo' | 'Townhouse' | 'Bungalow' | 'Villa' | 'Other';
+  bedrooms: number;
+  bathrooms: number;
   purchasePrice: number;
   mortgage: number;
   currentValue: number;

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface PropertyFormProps {
   isOpen: boolean;
@@ -31,6 +32,10 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       city: formData.get('city') as string,
       state: formData.get('state') as string,
       postalCode: formData.get('postalCode') as string,
+      propertyType: formData.get('propertyType') as Property['propertyType'],
+      buildingType: formData.get('buildingType') as Property['buildingType'],
+      bedrooms: Number(formData.get('bedrooms')),
+      bathrooms: Number(formData.get('bathrooms')),
       purchasePrice: Number(formData.get('purchasePrice')),
       mortgage: Number(formData.get('mortgage')),
       currentValue: Number(formData.get('currentValue')),
@@ -67,6 +72,43 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="postalCode" className="text-right">Postal Code</Label>
               <Input id="postalCode" name="postalCode" defaultValue={property?.postalCode} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="propertyType" className="text-right">Prop. Type</Label>
+               <Select name="propertyType" defaultValue={property?.propertyType}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Domestic">Domestic</SelectItem>
+                    <SelectItem value="Commercial">Commercial</SelectItem>
+                  </SelectContent>
+                </Select>
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="buildingType" className="text-right">Bldg. Type</Label>
+               <Select name="buildingType" defaultValue={property?.buildingType}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="House">House</SelectItem>
+                    <SelectItem value="Apartment">Apartment</SelectItem>
+                    <SelectItem value="Condo">Condo</SelectItem>
+                    <SelectItem value="Townhouse">Townhouse</SelectItem>
+                    <SelectItem value="Bungalow">Bungalow</SelectItem>
+                    <SelectItem value="Villa">Villa</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="bedrooms" className="text-right">Bedrooms</Label>
+              <Input id="bedrooms" name="bedrooms" type="number" defaultValue={property?.bedrooms} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="bathrooms" className="text-right">Bathrooms</Label>
+              <Input id="bathrooms" name="bathrooms" type="number" defaultValue={property?.bathrooms} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="currentValue" className="text-right">Current Value</Label>

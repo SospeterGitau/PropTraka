@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Bed, Bath } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
 import type { Property } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -26,6 +26,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
+import { Badge } from '@/components/ui/badge';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -87,8 +88,9 @@ export default function PropertiesPage() {
                 <TableHead className="hidden w-[100px] sm:table-cell">
                   <span className="sr-only">Image</span>
                 </TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Current Value</TableHead>
+                <TableHead>Property Details</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Value</TableHead>
                 <TableHead className="hidden md:table-cell">Rental Value</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
@@ -108,7 +110,23 @@ export default function PropertiesPage() {
                       data-ai-hint={property.imageHint}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{formatAddress(property)}</TableCell>
+                  <TableCell>
+                    <div className="font-medium">{formatAddress(property)}</div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
+                       <div className="flex items-center gap-1">
+                        <Bed className="h-4 w-4" />
+                        <span>{property.bedrooms}</span>
+                       </div>
+                       <div className="flex items-center gap-1">
+                        <Bath className="h-4 w-4" />
+                        <span>{property.bathrooms}</span>
+                       </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                     <Badge variant="outline">{property.propertyType}</Badge>
+                     <div className="text-sm text-muted-foreground mt-1">{property.buildingType}</div>
+                  </TableCell>
                   <TableCell>{formatCurrency(property.currentValue)}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatCurrency(property.rentalValue)}/month</TableCell>
                   <TableCell>
