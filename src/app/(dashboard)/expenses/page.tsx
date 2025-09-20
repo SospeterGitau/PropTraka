@@ -49,6 +49,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const defaultCategories = [
   'Maintenance',
@@ -56,6 +59,7 @@ const defaultCategories = [
   'Insurance',
   'Utilities',
   'Management Fees',
+  'Salaries',
 ];
 
 function formatAddress(property: Property) {
@@ -93,6 +97,7 @@ function ExpenseForm({
       category: category,
       vendor: formData.get('vendor') as string,
       type: 'expense',
+      frequency: formData.get('frequency') as 'one-off' | 'monthly',
     };
     onSubmit(data);
     onClose();
@@ -106,11 +111,11 @@ function ExpenseForm({
         <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Expense</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 text-sm font-medium">Date</label>
+            <Label className="block mb-1 text-sm font-medium">Date</Label>
             <input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required className="w-full p-2 border rounded bg-transparent" />
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Property</label>
+            <Label className="block mb-1 text-sm font-medium">Property</Label>
             <Select name="propertyId" defaultValue={transaction?.propertyId} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a property" />
@@ -123,7 +128,7 @@ function ExpenseForm({
             </Select>
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Category</label>
+            <Label className="block mb-1 text-sm font-medium">Category</Label>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
@@ -159,12 +164,25 @@ function ExpenseForm({
               </PopoverContent>
             </Popover>
           </div>
+           <div>
+            <Label className="block mb-1 text-sm font-medium">Frequency</Label>
+            <RadioGroup name="frequency" defaultValue={transaction?.frequency || 'one-off'} className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="one-off" id="one-off" />
+                <Label htmlFor="one-off">One-off</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="monthly" id="monthly" />
+                <Label htmlFor="monthly">Monthly</Label>
+              </div>
+            </RadioGroup>
+          </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Vendor</label>
+            <Label className="block mb-1 text-sm font-medium">Vendor</Label>
             <input name="vendor" defaultValue={transaction?.vendor} className="w-full p-2 border rounded bg-transparent" />
           </div>
           <div>
-            <label className="block mb-1 text-sm font-medium">Amount</label>
+            <Label className="block mb-1 text-sm font-medium">Amount</Label>
             <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded bg-transparent" />
           </div>
           <div className="flex justify-end gap-2 pt-4">
@@ -175,6 +193,63 @@ function ExpenseForm({
       </div>
     </div>
   );
+}
+
+function ExpensesTable({ 
+  expenses,
+  formattedDates,
+  formatCurrency,
+  onEdit,
+  onDelete 
+}: {
+  expenses: Transaction[];
+  formattedDates: { [key: string]: string };
+  formatCurrency: (amount: number) => string;
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transaction: Transaction) => void;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Date</TableHead>
+          <TableHead>Property</TableHead>
+          <TableHead>Category</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+          <TableHead>
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {expenses.map((item) => (
+          <TableRow key={item.id}>
+            <TableCell className="font-medium">{formattedDates[item.id]}</TableCell>
+            <TableCell>{item.propertyName}</TableCell>
+            <TableCell>
+              <Badge variant="secondary">{item.category}</Badge>
+            </TableCell>
+            <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+            <TableCell>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button aria-haspopup="true" size="icon" variant="ghost">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Toggle menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={() => onEdit(item)}>Edit</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => onDelete(item)}>Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
 }
 
 export default function ExpensesPage() {
@@ -227,6 +302,9 @@ export default function ExpensesPage() {
     }
   };
 
+  const oneOffExpenses = expenses.filter(e => e.frequency === 'one-off' || !e.frequency);
+  const recurringExpenses = expenses.filter(e => e.frequency === 'monthly');
+
   return (
     <>
       <PageHeader title="Expenses">
@@ -237,46 +315,30 @@ export default function ExpensesPage() {
           <CardTitle>Expense Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenses.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{formattedDates[item.id]}</TableCell>
-                  <TableCell>{item.propertyName}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{item.category}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Toggle menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => handleEdit(item)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleDelete(item)}>Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <Tabs defaultValue="one-off">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="one-off">One-off Expenses</TabsTrigger>
+              <TabsTrigger value="recurring">Recurring Expenses</TabsTrigger>
+            </TabsList>
+            <TabsContent value="one-off">
+              <ExpensesTable
+                expenses={oneOffExpenses}
+                formattedDates={formattedDates}
+                formatCurrency={formatCurrency}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            </TabsContent>
+            <TabsContent value="recurring">
+              <ExpensesTable
+                expenses={recurringExpenses}
+                formattedDates={formattedDates}
+                formatCurrency={formatCurrency}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
       

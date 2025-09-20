@@ -32,6 +32,7 @@ export interface Transaction {
   tenancyId?: string; // for revenue, to group monthly payments
   tenancyStartDate?: string; // for revenue
   tenancyEndDate?: string; // for revenue
+  frequency?: 'one-off' | 'monthly'; // for expenses
   // The following are not part of the core data but can be added for UI purposes
   transactions?: Transaction[]; 
   nextDueDate?: string;
