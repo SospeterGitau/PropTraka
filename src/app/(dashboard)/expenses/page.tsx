@@ -279,7 +279,7 @@ function ExpensesTable({
       <TableBody>
         {expenses.map((item) => (
           <Collapsible key={item.id} asChild>
-            <tbody>
+            <>
               <TableRow>
                 <TableCell className="font-medium">
                   {item.notes ? (
@@ -327,7 +327,7 @@ function ExpensesTable({
                   </TableRow>
                 </CollapsibleContent>
               )}
-            </tbody>
+            </>
           </Collapsible>
         ))}
       </TableBody>
