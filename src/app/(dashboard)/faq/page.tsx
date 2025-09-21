@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import {
@@ -58,11 +59,11 @@ export default function FaqPage() {
           <AccordionItem value="item-6">
             <AccordionTrigger className="text-lg font-semibold">What kind of reports can I generate?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              The <Link href="/reports" className="text-primary underline">Financial Reports</Link> page provides two main views:
+              The <Link href="/reports" className="text-primary underline">Financial Reports</Link> page provides powerful tools to understand your business's performance.
               <br /><br />
-              - **Revenue Analysis:** This tab lets you compare projected revenue (what was due) versus actual revenue (what was paid) for any given month or year. It's a great tool for understanding the impact of late or missed payments.
-              <br />
-              - **P&L Statement:** This tab provides a simple Profit and Loss statement, summarizing your total income and breaking down your expenses by category for the selected period.
+              - **Interactive Dashboards:** You can switch between a "Revenue Analysis" view to compare projected vs. actual income, and a "P&L Statement" view that summarizes your income and expenses for any period you choose using the date filters.
+              <br /><br />
+              - **AI-Powered P&L Statements:** For a more formal report, click the "Generate Report" button at the top of the page. This feature uses AI to create a comprehensive Profit and Loss statement, structured professionally with an executive summary, making it suitable for sharing with banks, investors, or financial institutions. You can select precise date ranges or use convenient presets like financial quarters.
             </AccordionContent>
           </AccordionItem>
 
