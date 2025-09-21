@@ -66,7 +66,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
       });
       const filteredExpenses = expenses.filter(e => {
         const eDate = new Date(e.date);
-        return eDate >= date.from! && tDate <= date.to!;
+        return eDate >= date.from! && eDate <= date.to!;
       });
 
       const result = await getPnlReport({
