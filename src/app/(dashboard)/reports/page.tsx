@@ -372,6 +372,34 @@ function PnlStatementTab() {
 
 
 export default function ReportsPage() {
+  const { revenue, expenses } = useDataContext();
+
+  if (!revenue || !expenses) {
+    // Render a loading state or skeleton
+    return (
+      <>
+        <PageHeader title="Financial Reports" />
+        <Skeleton className="h-10 w-48 mb-4" />
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-3">
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+                <Skeleton className="h-24" />
+              </div>
+              <Skeleton className="h-[350px] w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader title="Financial Reports" />

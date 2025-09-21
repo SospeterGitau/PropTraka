@@ -5,7 +5,7 @@ export interface Property {
   state: string;
   postalCode: string;
   propertyType: 'Domestic' | 'Commercial';
-  buildingType: 'Terraced House' | 'Semi-Detached House' | 'Detached House' | 'Bungalow' | 'Flat' | 'Maisonette' | 'Office' | 'Retail' | 'Industrial' | 'Other';
+  buildingType: | 'Terraced House' | 'Semi-Detached House' | 'Detached House' | 'Bungalow' | 'Flat' | 'Maisonette' | 'Office' | 'Retail' | 'Industrial' | 'Warehouse' | 'Land' | 'Other';
   bedrooms: number;
   bathrooms: number;
   purchasePrice: number;
@@ -69,6 +69,7 @@ export interface GeneratePnlReportInput {
   endDate: string;
   revenueTransactions: string;
   expenseTransactions: string;
+  currency: string;
 }
 
 export interface GeneratePnlReportOutput {

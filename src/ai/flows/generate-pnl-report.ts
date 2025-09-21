@@ -17,6 +17,7 @@ const GeneratePnlReportInputSchema = z.object({
   endDate: z.string().describe('The end date for the report period (YYYY-MM-DD).'),
   revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions. "amount" is the rent due, "amountPaid" is the rent collected.'),
   expenseTransactions: z.string().describe('A JSON string representing an array of expense transactions.'),
+  currency: z.string().describe('The currency code (e.g., USD, GBP, EUR) to use for all financial figures in the report.'),
 });
 
 // Define the output schema for the structured report
@@ -41,6 +42,8 @@ const pnlReportPrompt = ai.definePrompt({
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
   prompt: `You are a professional financial analyst AI for a property management company. Your task is to generate a comprehensive Profit and Loss (P&L) Statement suitable for presentation to banks, financial institutions, or investors for the period from {{startDate}} to {{endDate}}.
+
+IMPORTANT: All financial figures in the final report must be formatted using the specified currency: {{currency}}.
 
 The report must be structured according to the Pyramid Principle: start with the conclusion (Executive Summary) first, followed by the supporting details. The final output should be a single, well-formatted string, suitable for copying into a formal document. Use markdown for headings, bold for totals, and lists where appropriate.
 

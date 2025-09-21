@@ -7,6 +7,7 @@ import { format, sub, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfY
 import { DateRange } from 'react-day-picker';
 import type { Transaction } from '@/lib/types';
 import { getPnlReport } from '@/lib/actions';
+import { useDataContext } from '@/context/data-context';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,7 @@ interface GenerateReportDialogProps {
 }
 
 export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialogProps) {
+  const { currency } = useDataContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [report, setReport] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
       });
       const filteredExpenses = expenses.filter(e => {
         const eDate = new Date(e.date);
-        return eDate >= date.from! && eDate <= date.to!;
+        return eDate >= date.from! && tDate <= date.to!;
       });
 
       const result = await getPnlReport({
@@ -72,6 +74,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         endDate,
         revenueTransactions: JSON.stringify(filteredRevenue),
         expenseTransactions: JSON.stringify(filteredExpenses),
+        currency: currency,
       });
 
       if (result.error) {
