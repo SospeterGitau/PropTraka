@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronDown } from 'lucide-react';
+import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
@@ -282,15 +282,14 @@ function ExpensesTable({
             <>
               <TableRow>
                 <TableCell className="font-medium">
-                  {item.notes && (
+                  {item.notes ? (
                      <CollapsibleTrigger asChild>
-                      <button className="flex items-center gap-2">
+                      <button className="flex items-center gap-2 group">
                         {formattedDates[item.id]}
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 transform transition-transform duration-200 group-data-[state=open]:rotate-90" />
                       </button>
                     </CollapsibleTrigger>
-                  )}
-                   {!item.notes && formattedDates[item.id]}
+                  ) : formattedDates[item.id]}
                 </TableCell>
                 <TableCell>{item.propertyName}</TableCell>
                 <TableCell>
