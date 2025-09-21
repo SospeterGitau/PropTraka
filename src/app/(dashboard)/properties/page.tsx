@@ -28,6 +28,7 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -55,7 +56,7 @@ export default function PropertiesPage() {
   };
 
   const confirmDelete = () => {
-    if (selectedProperty) {
+    if (selectedProperty && properties) {
       setProperties(properties.filter((p) => p.id !== selectedProperty.id));
       setIsDeleteDialogOpen(false);
       setSelectedProperty(null);
@@ -63,6 +64,7 @@ export default function PropertiesPage() {
   };
 
   const handleFormSubmit = (data: Property) => {
+    if (!properties) return;
     if (data.id.startsWith('p') && !properties.find(p => p.id === data.id)) {
       // Add
       setProperties([data, ...properties]);
@@ -72,6 +74,35 @@ export default function PropertiesPage() {
     }
   };
 
+  if (!properties) {
+    return (
+       <>
+        <PageHeader title="Properties">
+          <Button disabled>Add Property</Button>
+        </PageHeader>
+        <Card>
+          <CardHeader>
+            <CardTitle>Property Portfolio</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-16 w-16 rounded-md" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-8" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </>
+    )
+  }
 
   return (
     <>
