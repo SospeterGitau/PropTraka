@@ -42,7 +42,7 @@ const pnlReportPrompt = ai.definePrompt({
   output: { schema: GeneratePnlReportOutputSchema },
   prompt: `You are a professional financial analyst AI for a property management company. Your task is to generate a comprehensive Profit and Loss (P&L) Statement for the period from {{startDate}} to {{endDate}}.
 
-The report must be structured according to standard accounting principles. The final output should be a single, well-formatted string, suitable for copying into a document. Use markdown for headings, bold for totals, and lists where appropriate.
+The report must be structured according to the Pyramid Principle: start with the conclusion (Executive Summary) first, followed by the supporting details. The final output should be a single, well-formatted string, suitable for copying into a document. Use markdown for headings, bold for totals, and lists where appropriate.
 
 Here is the data for the period:
 - Revenue Transactions (JSON): {{{revenueTransactions}}}
@@ -53,16 +53,21 @@ Please structure the report as follows:
 # Profit & Loss Statement
 For the period: {{startDate}} to {{endDate}}
 
-## 1. Income
+## 1. Executive Summary
+Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Start with the most important figure, the Net Operating Income. Comment on the significance of any credit losses or major expense categories and what they imply for the business's health.
+
+## 2. Detailed Financial Breakdown
+
+### Income
 Calculate the Gross Rental Income by summing the 'amount' and 'deposit' from all revenue transactions.
 Calculate Vacancy & Credit Losses by finding the difference between the total amount due (amount + deposit) and the total amount paid ('amountPaid').
 Calculate the Net Rental Income by subtracting Vacancy & Credit Losses from the Gross Rental Income.
 
-- **Gross Rental Income:** [Total of all 'amount' + 'deposit' fields]
+- **Gross Potential Income:** [Total of all 'amount' + 'deposit' fields]
 - **Less: Vacancy & Credit Losses:** [Total Due - Total Paid]
-- **Net Rental Income:** [Gross Rental Income - Vacancy & Credit Losses]
+- **Net Rental Income:** [Gross Potential Income - Vacancy & Credit Losses]
 
-## 2. Operating Expenses
+### Operating Expenses
 List and sum all operating expenses, grouped by category (e.g., Maintenance, Repairs, Insurance, Management Fees, Utilities, etc.).
 
 - **Maintenance & Repairs:** [Sum of maintenance & repairs]
@@ -73,18 +78,15 @@ List and sum all operating expenses, grouped by category (e.g., Maintenance, Rep
 - [Add other categories as found in the data]
 - **Total Operating Expenses:** [Sum of all expense categories]
 
-## 3. Net Operating Income (NOI)
+### Net Operating Income (NOI)
 Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of the property portfolio's profitability from its core operations.
 
-- **Net Operating Income:** [Net Operating Income - Total Operating Expenses]
+- **Net Operating Income:** [Net Rental Income - Total Operating Expenses]
 
-## 4. Net Profit / Loss
+### Net Profit / Loss
 For this report, since we are not including non-operating items like mortgage interest, depreciation, or taxes, the Net Profit will be the same as the Net Operating Income. State this clearly.
 
 - **Net Profit / Loss:** [Value from Net Operating Income]
-
-## 5. Executive Summary
-Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Mention the Net Operating Income and comment on the significance of any credit losses or major expense categories.
 `,
 });
 
