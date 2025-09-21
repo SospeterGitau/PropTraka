@@ -1,3 +1,4 @@
+
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
@@ -5,6 +6,8 @@ import { sessionOptions, type SessionData } from '@/lib/session';
 import { cookies } from 'next/headers';
 
 export async function middleware(request: NextRequest) {
+  // Await cookies to ensure they are available before use.
+  await cookies();
   const session = await getIronSession<SessionData>(cookies(), sessionOptions);
 
   if (!session.isLoggedIn) {
