@@ -40,9 +40,9 @@ const pnlReportPrompt = ai.definePrompt({
   name: 'pnlReportPrompt',
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
-  prompt: `You are a professional financial analyst AI for a property management company. Your task is to generate a comprehensive Profit and Loss (P&L) Statement for the period from {{startDate}} to {{endDate}}.
+  prompt: `You are a professional financial analyst AI for a property management company. Your task is to generate a comprehensive Profit and Loss (P&L) Statement suitable for presentation to banks, financial institutions, or investors for the period from {{startDate}} to {{endDate}}.
 
-The report must be structured according to the Pyramid Principle: start with the conclusion (Executive Summary) first, followed by the supporting details. The final output should be a single, well-formatted string, suitable for copying into a document. Use markdown for headings, bold for totals, and lists where appropriate.
+The report must be structured according to the Pyramid Principle: start with the conclusion (Executive Summary) first, followed by the supporting details. The final output should be a single, well-formatted string, suitable for copying into a formal document. Use markdown for headings, bold for totals, and lists where appropriate.
 
 Here is the data for the period:
 - Revenue Transactions (JSON): {{{revenueTransactions}}}
@@ -54,37 +54,37 @@ Please structure the report as follows:
 For the period: {{startDate}} to {{endDate}}
 
 ## 1. Executive Summary
-Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Start with the most important figure, the Net Operating Income. Comment on the significance of any credit losses or major expense categories and what they imply for the business's health.
+Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Start with the most important figure, the Net Operating Income. Comment on the significance of any credit losses or major expense categories and what they imply for the business's health and investment potential.
 
 ## 2. Detailed Financial Breakdown
 
 ### Income
-Calculate the Gross Rental Income by summing the 'amount' and 'deposit' from all revenue transactions.
-Calculate Vacancy & Credit Losses by finding the difference between the total amount due (amount + deposit) and the total amount paid ('amountPaid').
-Calculate the Net Rental Income by subtracting Vacancy & Credit Losses from the Gross Rental Income.
+Calculate the Gross Potential Income by summing the 'amount' and 'deposit' fields from all revenue transactions. This represents the total possible income.
+Calculate Vacancy & Credit Losses by finding the difference between the Gross Potential Income and the total amount paid ('amountPaid'). This shows revenue lost due to non-payment.
+Calculate the Net Rental Income (also known as Effective Gross Income) by subtracting Vacancy & Credit Losses from the Gross Potential Income.
 
 - **Gross Potential Income:** [Total of all 'amount' + 'deposit' fields]
-- **Less: Vacancy & Credit Losses:** [Total Due - Total Paid]
+- **Less: Vacancy & Credit Losses:** [Gross Potential Income - Total of all 'amountPaid' fields]
 - **Net Rental Income:** [Gross Potential Income - Vacancy & Credit Losses]
 
 ### Operating Expenses
 List and sum all operating expenses, grouped by category (e.g., Maintenance, Repairs, Insurance, Management Fees, Utilities, etc.).
 
-- **Maintenance & Repairs:** [Sum of maintenance & repairs]
-- **Property Management Fees:** [Sum of management fees]
-- **Insurance:** [Sum of insurance costs]
-- **Utilities:** [Sum of utilities]
-- **Legal & Professional Fees:** [Sum of legal fees]
+- **Maintenance & Repairs:** [Sum of all expenses in 'Maintenance' and 'Repairs' categories]
+- **Property Management Fees:** [Sum of all expenses in 'Management Fees' category]
+- **Insurance:** [Sum of all expenses in 'Insurance' category]
+- **Utilities:** [Sum of all expenses in 'Utilities' category]
+- **Legal & Professional Fees:** [Sum of all expenses in 'Legal Fees' category]
 - [Add other categories as found in the data]
 - **Total Operating Expenses:** [Sum of all expense categories]
 
 ### Net Operating Income (NOI)
-Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of the property portfolio's profitability from its core operations.
+Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of the property portfolio's profitability from its core operations, before financing and taxes.
 
 - **Net Operating Income:** [Net Rental Income - Total Operating Expenses]
 
 ### Net Profit / Loss
-For this report, since we are not including non-operating items like mortgage interest, depreciation, or taxes, the Net Profit will be the same as the Net Operating Income. State this clearly.
+For this report, since we are not including non-operating items like mortgage interest, depreciation, or taxes, the Net Profit will be the same as the Net Operating Income. State this clearly for transparency.
 
 - **Net Profit / Loss:** [Value from Net Operating Income]
 `,
