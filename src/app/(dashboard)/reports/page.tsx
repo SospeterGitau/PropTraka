@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
-import type { Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrencyIcon } from '@/components/currency-icon';
+import { GenerateReportDialog } from '@/components/generate-report-dialog';
 
 type ViewMode = 'month' | 'year';
 
@@ -204,7 +204,7 @@ function PnlStatementTab() {
     }
   };
   
-  if (!currentDate) {
+  if (!currentDate || !revenue || !expenses) {
     // Show skeleton loader while waiting for client-side mount
     return (
        <div className="space-y-6">
@@ -267,6 +267,7 @@ function PnlStatementTab() {
                 </CardDescription>
               </div>
                <div className="flex items-center gap-2">
+                  <GenerateReportDialog revenue={revenue} expenses={expenses} />
                   <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year">
                     <ToggleGroupItem value="month" aria-label="Toggle month">Month</ToggleGroupItem>
                     <ToggleGroupItem value="year" aria-label="Toggle year">Year</ToggleGroupItem>
