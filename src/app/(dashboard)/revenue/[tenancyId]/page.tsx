@@ -113,6 +113,9 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
   
   useEffect(() => {
+    // Wait until revenue data is loaded
+    if (!revenue) return;
+
     const allTransactionsForTenancy = revenue.filter(tx => tx.tenancyId === resolvedParams.tenancyId);
     if (allTransactionsForTenancy.length > 0) {
       const representativeTx = allTransactionsForTenancy[0];
@@ -120,6 +123,8 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
         ...representativeTx,
         transactions: allTransactionsForTenancy.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
       });
+    } else if (revenue) { // If revenue is loaded but no transactions found, it's a 404
+       notFound();
     }
   }, [revenue, resolvedParams.tenancyId]);
 
@@ -148,6 +153,7 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
   };
   
   const handlePaymentFormSubmit = (transactionId: string, amount: number) => {
+    if (!revenue) return;
     setRevenue(revenue.map(tx => {
       if (tx.id === transactionId) {
         // Add the new payment to the existing amount paid
@@ -165,10 +171,6 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
     return <div>Loading...</div>;
   }
   
-  if (tenancy.transactions.length === 0) {
-    return notFound();
-  }
-
   const today = startOfToday();
 
   // Calculate KPIs based on transactions due up to today
