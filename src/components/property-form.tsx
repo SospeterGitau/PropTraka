@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Property } from '@/lib/types';
@@ -37,7 +36,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       bedrooms: Number(formData.get('bedrooms')),
       bathrooms: Number(formData.get('bathrooms')),
       purchasePrice: Number(formData.get('purchasePrice')),
-      stampDuty: Number(formData.get('stampDuty')) || 0,
+      purchaseTaxes: Number(formData.get('purchaseTaxes')) || 0,
       mortgage: Number(formData.get('mortgage')),
       currentValue: Number(formData.get('currentValue')),
       rentalValue: Number(formData.get('rentalValue')),
@@ -127,8 +126,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
               <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stampDuty" className="text-right">Stamp Duty</Label>
-              <Input id="stampDuty" name="stampDuty" type="number" defaultValue={property?.stampDuty} className="col-span-3" />
+              <Label htmlFor="purchaseTaxes" className="text-right">Purchase Taxes/Fees</Label>
+              <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} className="col-span-3" />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="mortgage" className="text-right">Mortgage</Label>
