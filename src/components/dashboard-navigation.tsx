@@ -101,7 +101,9 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             </Button>
           </form>
         </header>
-        {children}
+        <main className="p-4 sm:p-6 lg:p-8">
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );
