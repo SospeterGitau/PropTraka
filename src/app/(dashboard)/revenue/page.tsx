@@ -70,6 +70,7 @@ function RevenueForm({
     const tenantEmail = formData.get('tenantEmail') as string;
     const amount = Number(formData.get('amount'));
     const deposit = Number(formData.get('deposit'));
+    const contractUrl = formData.get('contractUrl') as string;
     
     // Check for existing tenant at the same property
     const isEditing = !!transaction;
@@ -140,6 +141,7 @@ function RevenueForm({
         amountPaid: 0,
         tenancyStartDate: tenancyStartDateStr,
         tenancyEndDate: tenancyEndDateStr,
+        contractUrl: contractUrl,
       };
     });
 
@@ -192,6 +194,10 @@ function RevenueForm({
           <div>
             <Label>Deposit (due with first month's rent)</Label>
             <Input name="deposit" type="number" defaultValue={transaction?.deposit} />
+          </div>
+          <div>
+            <Label>Contract Link (optional)</Label>
+            <Input name="contractUrl" type="url" defaultValue={transaction?.contractUrl} placeholder="https://docs.google.com/..." />
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -265,7 +271,7 @@ export default function RevenuePage() {
     // Attempt to preserve payment status on edit
     const updatedData = data.map(newTx => {
       const existingTx = revenue.find(oldTx => oldTx.id === newTx.id);
-      return existingTx ? { ...newTx, amountPaid: existingTx.amountPaid } : newTx;
+      return existingTx ? { ...newTx, amountPaid: existingTx.amountPaid, contractUrl: data[0].contractUrl } : newTx;
     });
 
     setRevenue([...otherTenancies, ...updatedData]);

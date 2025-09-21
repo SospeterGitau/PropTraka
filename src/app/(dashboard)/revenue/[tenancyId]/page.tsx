@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 
@@ -181,12 +181,22 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
   return (
     <>
       <PageHeader title={`Tenancy Details`}>
-        <Button asChild variant="outline">
-            <Link href="/revenue">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Revenue
-            </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+            {tenancy.contractUrl && (
+              <Button asChild variant="secondary">
+                <Link href={tenancy.contractUrl} target="_blank">
+                  <FileText className="mr-2 h-4 w-4" />
+                  View Contract
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="outline">
+                <Link href="/revenue">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Revenue
+                </Link>
+            </Button>
+        </div>
       </PageHeader>
 
       <Card>
