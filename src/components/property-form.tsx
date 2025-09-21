@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 
 interface PropertyFormProps {
   isOpen: boolean;
@@ -66,11 +66,11 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
               <Input id="city" name="city" defaultValue={property?.city} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="state" className="text-right">State</Label>
+              <Label htmlFor="state" className="text-right">County/State</Label>
               <Input id="state" name="state" defaultValue={property?.state} className="col-span-3" required />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="postalCode" className="text-right">Postal Code</Label>
+              <Label htmlFor="postalCode" className="text-right">Postcode</Label>
               <Input id="postalCode" name="postalCode" defaultValue={property?.postalCode} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -92,13 +92,24 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                     <SelectValue placeholder="Select a type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="House">House</SelectItem>
-                    <SelectItem value="Apartment">Apartment</SelectItem>
-                    <SelectItem value="Condo">Condo</SelectItem>
-                    <SelectItem value="Townhouse">Townhouse</SelectItem>
-                    <SelectItem value="Bungalow">Bungalow</SelectItem>
-                    <SelectItem value="Villa">Villa</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectGroup>
+                      <SelectLabel>Domestic</SelectLabel>
+                      <SelectItem value="Terraced House">Terraced House</SelectItem>
+                      <SelectItem value="Semi-Detached House">Semi-Detached House</SelectItem>
+                      <SelectItem value="Detached House">Detached House</SelectItem>
+                      <SelectItem value="Bungalow">Bungalow</SelectItem>
+                      <SelectItem value="Flat">Flat</SelectItem>
+                      <SelectItem value="Maisonette">Maisonette</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>Commercial</SelectLabel>
+                      <SelectItem value="Office">Office</SelectItem>
+                      <SelectItem value="Retail">Retail</SelectItem>
+                      <SelectItem value="Industrial">Industrial</SelectItem>
+                    </SelectGroup>
+                     <SelectGroup>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
             </div>

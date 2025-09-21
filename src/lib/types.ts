@@ -5,7 +5,7 @@ export interface Property {
   state: string;
   postalCode: string;
   propertyType: 'Domestic' | 'Commercial';
-  buildingType: 'House' | 'Apartment' | 'Condo' | 'Townhouse' | 'Bungalow' | 'Villa' | 'Other';
+  buildingType: 'Terraced House' | 'Semi-Detached House' | 'Detached House' | 'Bungalow' | 'Flat' | 'Maisonette' | 'Office' | 'Retail' | 'Industrial' | 'Other';
   bedrooms: number;
   bathrooms: number;
   purchasePrice: number;
