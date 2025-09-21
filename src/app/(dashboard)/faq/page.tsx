@@ -35,7 +35,7 @@ export default function FaqPage() {
           <AccordionItem value="item-3">
             <AccordionTrigger className="text-lg font-semibold">How do I manage my properties?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              The <Link href="/properties" className="text-primary underline">Properties</Link> page is where you can add, view, and edit all the properties in your portfolio. Click the "Add Property" button to open a form where you can input details like address, property type, number of bedrooms/bathrooms, and financial information such as purchase price and current value.
+              The <Link href="/properties" className="text-primary underline">Properties</Link> page is where you can add, view, and edit all the properties in your portfolio. Click the "Add Property" button to open a form where you can input details like address, property type, number of bedrooms/bathrooms, and financial information such as purchase price, purchase taxes/fees, and current value.
             </AccordionContent>
           </AccordionItem>
 
