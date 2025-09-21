@@ -278,7 +278,7 @@ function ExpensesTable({
       </TableHeader>
       <TableBody>
         {expenses.map((item) => (
-          <Collapsible key={item.id} asChild>
+          <Collapsible asChild key={item.id}>
             <>
               <TableRow>
                 <TableCell className="font-medium">
