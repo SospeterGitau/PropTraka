@@ -158,8 +158,8 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         </DialogHeader>
 
         {report ? (
-          <div className="prose prose-sm max-w-none h-[60vh] overflow-y-auto border rounded-md p-4 bg-muted/50">
-            <pre className="whitespace-pre-wrap font-sans text-sm">{report}</pre>
+          <div className="prose prose-sm max-w-none h-[60vh] overflow-y-auto border rounded-md p-4 bg-muted/50 whitespace-pre-wrap font-sans text-sm">
+            {report}
           </div>
         ) : (
           <div className="py-8 flex flex-col items-center justify-center min-h-[300px]">
