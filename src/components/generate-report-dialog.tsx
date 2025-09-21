@@ -107,6 +107,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
   
   const handlePresetChange = (value: string) => {
     const now = new Date();
+    const currentYear = now.getFullYear();
     switch (value) {
       case 'last-7-days':
         setDate({ from: sub(now, { days: 6 }), to: now });
@@ -124,6 +125,18 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
       case 'last-year':
         const lastYear = sub(now, { years: 1 });
         setDate({ from: startOfYear(lastYear), to: endOfYear(lastYear) });
+        break;
+      case 'q1':
+        setDate({ from: new Date(currentYear, 0, 1), to: new Date(currentYear, 2, 31) });
+        break;
+      case 'q2':
+        setDate({ from: new Date(currentYear, 3, 1), to: new Date(currentYear, 5, 30) });
+        break;
+      case 'q3':
+        setDate({ from: new Date(currentYear, 6, 1), to: new Date(currentYear, 8, 30) });
+        break;
+      case 'q4':
+        setDate({ from: new Date(currentYear, 9, 1), to: new Date(currentYear, 11, 31) });
         break;
       default:
         break;
@@ -213,6 +226,10 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                       <SelectItem value="last-month">Last Month</SelectItem>
                       <SelectItem value="this-year">This Year</SelectItem>
                       <SelectItem value="last-year">Last Year</SelectItem>
+                      <SelectItem value="q1">Q1 {new Date().getFullYear()}</SelectItem>
+                      <SelectItem value="q2">Q2 {new Date().getFullYear()}</SelectItem>
+                      <SelectItem value="q3">Q3 {new Date().getFullYear()}</SelectItem>
+                      <SelectItem value="q4">Q4 {new Date().getFullYear()}</SelectItem>
                     </SelectContent>
                   </Select>
                  </div>
