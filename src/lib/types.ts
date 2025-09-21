@@ -12,6 +12,7 @@ export interface Property {
   mortgage: number;
   currentValue: number;
   rentalValue: number;
+  stampDuty?: number;
   imageUrl: string | null;
   imageHint: string;
 }

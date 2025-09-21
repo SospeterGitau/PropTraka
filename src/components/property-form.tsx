@@ -37,6 +37,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       bedrooms: Number(formData.get('bedrooms')),
       bathrooms: Number(formData.get('bathrooms')),
       purchasePrice: Number(formData.get('purchasePrice')),
+      stampDuty: Number(formData.get('stampDuty')) || 0,
       mortgage: Number(formData.get('mortgage')),
       currentValue: Number(formData.get('currentValue')),
       rentalValue: Number(formData.get('rentalValue')),
@@ -55,8 +56,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
         <DialogHeader>
           <DialogTitle>{property ? 'Edit Property' : 'Add Property'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4">
+          <div className="grid gap-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="addressLine1" className="text-right">Address</Label>
               <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} className="col-span-3" required />
@@ -121,6 +122,18 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
               <Label htmlFor="bathrooms" className="text-right">Bathrooms</Label>
               <Input id="bathrooms" name="bathrooms" type="number" defaultValue={property?.bathrooms} className="col-span-3" required />
             </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="purchasePrice" className="text-right">Purchase Price</Label>
+              <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="stampDuty" className="text-right">Stamp Duty</Label>
+              <Input id="stampDuty" name="stampDuty" type="number" defaultValue={property?.stampDuty} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="mortgage" className="text-right">Mortgage</Label>
+              <Input id="mortgage" name="mortgage" type="number" defaultValue={property?.mortgage} className="col-span-3" required />
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="currentValue" className="text-right">Current Value</Label>
               <Input id="currentValue" name="currentValue" type="number" defaultValue={property?.currentValue} className="col-span-3" required />
@@ -129,16 +142,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
               <Label htmlFor="rentalValue" className="text-right">Rental Value</Label>
               <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} className="col-span-3" required />
             </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="purchasePrice" className="text-right">Purchase Price</Label>
-              <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} className="col-span-3" required />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="mortgage" className="text-right">Mortgage</Label>
-              <Input id="mortgage" name="mortgage" type="number" defaultValue={property?.mortgage} className="col-span-3" required />
-            </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-6">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>

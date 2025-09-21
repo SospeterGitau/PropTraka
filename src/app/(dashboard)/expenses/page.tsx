@@ -132,10 +132,10 @@ function ExpenseForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-card p-6 rounded-lg w-full max-w-md">
         <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Expense</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
           <div>
             <Label className="block mb-1 text-sm font-medium">Date</Label>
             <input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required className="w-full p-2 border rounded bg-transparent" />

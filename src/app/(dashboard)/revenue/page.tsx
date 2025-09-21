@@ -161,7 +161,7 @@ function RevenueForm({
         <DialogHeader>
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Tenancy</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-2">
            <div>
             <Label>Property</Label>
              <Select name="propertyId" defaultValue={transaction?.propertyId} required>
@@ -207,7 +207,7 @@ function RevenueForm({
             <Label>Notes (optional)</Label>
             <Textarea name="notes" defaultValue={transaction?.notes} />
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
