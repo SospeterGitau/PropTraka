@@ -3,7 +3,7 @@
 
 import { useState, useTransition } from 'react';
 import { FileText, Loader2, Calendar as CalendarIcon, AlertTriangle } from 'lucide-react';
-import { format, subDays } from 'date-fns';
+import { format, sub, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import type { Transaction } from '@/lib/types';
 import { getPnlReport } from '@/lib/actions';
@@ -23,6 +23,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 
@@ -37,7 +44,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
   const [report, setReport] = useState<string | null>(null);
   const [error, setError] = useState<{ code: string; hint: string } | null>(null);
   const [date, setDate] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 29),
+    from: sub(new Date(), {days: 29}),
     to: new Date(),
   });
 
@@ -94,6 +101,31 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     setReport(null);
     setError(null);
   };
+  
+  const handlePresetChange = (value: string) => {
+    const now = new Date();
+    switch (value) {
+      case 'last-7-days':
+        setDate({ from: sub(now, { days: 6 }), to: now });
+        break;
+      case 'this-month':
+        setDate({ from: startOfMonth(now), to: endOfMonth(now) });
+        break;
+      case 'last-month':
+        const lastMonth = sub(now, { months: 1 });
+        setDate({ from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) });
+        break;
+      case 'this-year':
+        setDate({ from: startOfYear(now), to: endOfYear(now) });
+        break;
+      case 'last-year':
+        const lastYear = sub(now, { years: 1 });
+        setDate({ from: startOfYear(lastYear), to: endOfYear(lastYear) });
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -129,45 +161,59 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                   </AlertDescription>
                 </Alert>
             ) : (
-              <>
-                 <p className="mb-4 text-sm font-medium">Select Date Range:</p>
-                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date"
-                      variant={"outline"}
-                      className={cn(
-                        "w-[300px] justify-start text-left font-normal",
-                        !date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date?.from ? (
-                        date.to ? (
-                          <>
-                            {format(date.from, "LLL dd, y")} -{" "}
-                            {format(date.to, "LLL dd, y")}
-                          </>
+              <div className="flex flex-col items-center gap-4">
+                 <p className="text-sm font-medium">Select Date Range:</p>
+                 <div className="flex gap-2 items-center">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                          "w-[300px] justify-start text-left font-normal",
+                          !date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date?.from ? (
+                          date.to ? (
+                            <>
+                              {format(date.from, "LLL dd, y")} -{" "}
+                              {format(date.to, "LLL dd, y")}
+                            </>
+                          ) : (
+                            format(date.from, "LLL dd, y")
+                          )
                         ) : (
-                          format(date.from, "LLL dd, y")
-                        )
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={date?.from}
-                      selected={date}
-                      onSelect={setDate}
-                      numberOfMonths={2}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </>
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="center">
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={date?.from}
+                        selected={date}
+                        onSelect={setDate}
+                        numberOfMonths={2}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Select onValueChange={handlePresetChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select a preset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="last-7-days">Last 7 Days</SelectItem>
+                      <SelectItem value="this-month">This Month</SelectItem>
+                      <SelectItem value="last-month">Last Month</SelectItem>
+                      <SelectItem value="this-year">This Year</SelectItem>
+                      <SelectItem value="last-year">Last Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                 </div>
+              </div>
             )}
           </div>
         )}
