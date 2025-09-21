@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, MoreHorizontal } from 'lucide-react';
+import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
@@ -52,6 +52,9 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
 
 const defaultCategories = [
   'Accounting',
@@ -117,6 +120,7 @@ function ExpenseForm({
       propertyId: propertyId !== 'none' ? propertyId : undefined,
       category: category,
       vendor: formData.get('vendor') as string,
+      notes: formData.get('notes') as string,
       type: 'expense',
       expenseType: expenseType,
       frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
@@ -229,6 +233,10 @@ function ExpenseForm({
             <Label className="block mb-1 text-sm font-medium">Amount</Label>
             <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded bg-transparent" />
           </div>
+          <div>
+            <Label className="block mb-1 text-sm font-medium">Notes (optional)</Label>
+            <Textarea name="notes" defaultValue={transaction?.notes} className="w-full p-2 border rounded bg-transparent" />
+          </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">Save</Button>
@@ -270,32 +278,58 @@ function ExpensesTable({
       </TableHeader>
       <TableBody>
         {expenses.map((item) => (
-          <TableRow key={item.id}>
-            <TableCell className="font-medium">{formattedDates[item.id]}</TableCell>
-            <TableCell>{item.propertyName}</TableCell>
-            <TableCell>
-              <Badge variant="secondary">{item.category}</Badge>
-            </TableCell>
-             {showFrequency && (
-              <TableCell className="capitalize">{item.frequency}</TableCell>
-            )}
-            <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-            <TableCell>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button aria-haspopup="true" size="icon" variant="ghost">
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">Toggle menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onSelect={() => onEdit(item)}>Edit</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => onDelete(item)}>Delete</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
+          <Collapsible asChild key={item.id}>
+            <>
+              <TableRow>
+                <TableCell className="font-medium">
+                  {item.notes && (
+                     <CollapsibleTrigger asChild>
+                      <button className="flex items-center gap-2">
+                        {formattedDates[item.id]}
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </CollapsibleTrigger>
+                  )}
+                   {!item.notes && formattedDates[item.id]}
+                </TableCell>
+                <TableCell>{item.propertyName}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{item.category}</Badge>
+                </TableCell>
+                {showFrequency && (
+                  <TableCell className="capitalize">{item.frequency}</TableCell>
+                )}
+                <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onSelect={() => onEdit(item)}>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onDelete(item)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+              {item.notes && (
+                <CollapsibleContent asChild>
+                  <TableRow>
+                    <TableCell colSpan={showFrequency ? 6 : 5} className="py-2 px-4 bg-muted/50">
+                      <div className="flex items-start gap-2">
+                        <MessageSquare className="h-4 w-4 mt-1 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{item.notes}</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </CollapsibleContent>
+              )}
+            </>
+          </Collapsible>
         ))}
       </TableBody>
     </Table>
@@ -311,6 +345,7 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     const formatAllDates = async () => {
+      if (!expenses) return;
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
       for (const item of expenses) {
@@ -337,7 +372,7 @@ export default function ExpensesPage() {
   };
 
   const confirmDelete = () => {
-    if (selectedTransaction) {
+    if (selectedTransaction && expenses) {
       setExpenses(expenses.filter((item) => item.id !== selectedTransaction.id));
       setIsDeleteDialogOpen(false);
       setSelectedTransaction(null);
@@ -345,12 +380,17 @@ export default function ExpensesPage() {
   };
 
   const handleFormSubmit = (data: Transaction) => {
+    if (!expenses) return;
     if (data.id.startsWith('e') && !expenses.find(e => e.id === data.id)) {
       setExpenses([data, ...expenses]);
     } else {
       setExpenses(expenses.map((item) => (item.id === data.id ? data : item)));
     }
   };
+  
+  if (!expenses || !properties) {
+    return <div>Loading...</div>; // Or a proper skeleton loader
+  }
 
   const oneOffExpenses = expenses.filter(e => e.expenseType === 'one-off' || !e.expenseType);
   const recurringExpenses = expenses.filter(e => e.expenseType === 'recurring');

@@ -23,8 +23,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft, FileText, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 
 function PaymentForm({
@@ -254,7 +255,21 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
 
                   return (
                       <TableRow key={tx.id}>
-                        <TableCell>{formattedDates[tx.id]}</TableCell>
+                        <TableCell className="flex items-center gap-2">
+                          {formattedDates[tx.id]}
+                          {tx.notes && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button>
+                                  <MessageSquare className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80">
+                                <p className="text-sm">{tx.notes}</p>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </TableCell>
                         <TableCell>{formatCurrency(tx.amount)}</TableCell>
                         <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(paid)}</TableCell>

@@ -34,6 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -71,6 +72,7 @@ function RevenueForm({
     const amount = Number(formData.get('amount'));
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
+    const notes = formData.get('notes') as string;
     
     // Check for existing tenant at the same property
     const isEditing = !!transaction;
@@ -142,6 +144,8 @@ function RevenueForm({
         tenancyStartDate: tenancyStartDateStr,
         tenancyEndDate: tenancyEndDateStr,
         contractUrl: contractUrl,
+        // Only the first month's transaction gets the note
+        notes: index === 0 ? notes : undefined,
       };
     });
 
@@ -199,6 +203,10 @@ function RevenueForm({
             <Label>Contract Link (optional)</Label>
             <Input name="contractUrl" type="url" defaultValue={transaction?.contractUrl} placeholder="https://docs.google.com/..." />
           </div>
+          <div>
+            <Label>Notes (optional)</Label>
+            <Textarea name="notes" defaultValue={transaction?.notes} />
+          </div>
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
@@ -220,6 +228,7 @@ export default function RevenuePage() {
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
+    if (!revenue || !properties) return;
     const formatAllDates = async () => {
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
@@ -237,7 +246,7 @@ export default function RevenuePage() {
       setFormattedDates(newFormattedDates);
     };
     formatAllDates();
-  }, [revenue, locale]);
+  }, [revenue, properties, locale]);
 
   const handleAddTenancy = () => {
     setSelectedTransaction(null);
@@ -255,7 +264,7 @@ export default function RevenuePage() {
   };
 
   const confirmDelete = () => {
-    if (selectedTransaction) {
+    if (selectedTransaction && revenue) {
       // Delete all transactions related to the same tenancy
       setRevenue(revenue.filter((item) => item.tenancyId !== selectedTransaction.tenancyId));
       setIsDeleteDialogOpen(false);
@@ -264,6 +273,7 @@ export default function RevenuePage() {
   };
 
   const handleTenancyFormSubmit = (data: Transaction[]) => {
+    if (!revenue) return;
     const tenancyId = data[0].tenancyId;
     // Remove existing transactions for this tenancy before adding/updating
     const otherTenancies = revenue.filter(r => r.tenancyId !== tenancyId);
@@ -271,13 +281,22 @@ export default function RevenuePage() {
     // Attempt to preserve payment status on edit
     const updatedData = data.map(newTx => {
       const existingTx = revenue.find(oldTx => oldTx.id === newTx.id);
-      return existingTx ? { ...newTx, amountPaid: existingTx.amountPaid, contractUrl: data[0].contractUrl } : newTx;
+      return existingTx ? { 
+        ...newTx, 
+        amountPaid: existingTx.amountPaid, 
+        contractUrl: data[0].contractUrl,
+        notes: data[0].notes, // Ensure notes are carried over
+      } : newTx;
     });
 
     setRevenue([...otherTenancies, ...updatedData]);
     setIsTenancyFormOpen(false);
     setSelectedTransaction(null);
   };
+  
+  if (!revenue || !properties) {
+    return <div>Loading...</div>; // Or a proper skeleton loader
+  }
 
 
   // Group transactions by tenancyId

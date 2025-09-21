@@ -35,6 +35,7 @@ export interface Transaction {
   contractUrl?: string; // Link to the tenancy agreement
   expenseType?: 'one-off' | 'recurring'; // for expenses
   frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly'; // for recurring expenses
+  notes?: string; // Optional notes field
   // The following are not part of the core data but can be added for UI purposes
   transactions?: Transaction[]; 
   nextDueDate?: string;
