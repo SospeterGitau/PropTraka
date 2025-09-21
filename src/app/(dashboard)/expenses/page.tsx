@@ -278,44 +278,42 @@ function ExpensesTable({
       </TableHeader>
       <TableBody>
         {expenses.map((item) => (
-          <Collapsible asChild key={item.id}>
-            <>
-              <TableRow>
-                <TableCell className="font-medium">
-                  {item.notes ? (
-                     <CollapsibleTrigger asChild>
+          item.notes ? (
+            <Collapsible key={item.id} asChild>
+              <>
+                <TableRow>
+                  <TableCell className="font-medium">
+                    <CollapsibleTrigger asChild>
                       <button className="flex items-center gap-2 group">
                         {formattedDates[item.id]}
                         <ChevronRight className="h-4 w-4 transform transition-transform duration-200 group-data-[state=open]:rotate-90" />
                       </button>
                     </CollapsibleTrigger>
-                  ) : formattedDates[item.id]}
-                </TableCell>
-                <TableCell>{item.propertyName}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{item.category}</Badge>
-                </TableCell>
-                {showFrequency && (
-                  <TableCell className="capitalize">{item.frequency}</TableCell>
-                )}
-                <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onSelect={() => onEdit(item)}>Edit</DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => onDelete(item)}>Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-              {item.notes && (
+                  </TableCell>
+                  <TableCell>{item.propertyName}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{item.category}</Badge>
+                  </TableCell>
+                  {showFrequency && (
+                    <TableCell className="capitalize">{item.frequency}</TableCell>
+                  )}
+                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => onEdit(item)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onDelete(item)}>Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
                 <CollapsibleContent asChild>
                   <TableRow>
                     <TableCell colSpan={showFrequency ? 6 : 5} className="py-2 px-4 bg-muted/50">
@@ -326,9 +324,36 @@ function ExpensesTable({
                     </TableCell>
                   </TableRow>
                 </CollapsibleContent>
+              </>
+            </Collapsible>
+          ) : (
+            <TableRow key={item.id}>
+              <TableCell className="font-medium">{formattedDates[item.id]}</TableCell>
+              <TableCell>{item.propertyName}</TableCell>
+              <TableCell>
+                <Badge variant="secondary">{item.category}</Badge>
+              </TableCell>
+              {showFrequency && (
+                <TableCell className="capitalize">{item.frequency}</TableCell>
               )}
-            </>
-          </Collapsible>
+              <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem onSelect={() => onEdit(item)}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onDelete(item)}>Delete</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          )
         ))}
       </TableBody>
     </Table>
