@@ -5,3 +5,10 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+
+# Defines secret environment variables.
+# You will be prompted to set the values for these secrets
+# in the Firebase console after the next deployment.
+secretEnvironmentVariables:
+  - secret: APP_PASSWORD
+  - secret: SESSION_PASSWORD
