@@ -1,4 +1,3 @@
-import 'dotenv/config';
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -8,6 +7,5 @@ function requireEnv(name: string): string {
   return value;
 }
 
-export const APP_USER_EMAIL = requireEnv('APP_USER_EMAIL');
 export const APP_PASSWORD = requireEnv('APP_PASSWORD');
 export const SESSION_PASSWORD = requireEnv('SESSION_PASSWORD');
