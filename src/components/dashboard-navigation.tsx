@@ -15,6 +15,7 @@ import {
   LineChart,
   Settings,
   LogOut,
+  HelpCircle,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -42,6 +43,7 @@ const navItems = [
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/faq', label: 'FAQ', icon: HelpCircle },
 ];
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
