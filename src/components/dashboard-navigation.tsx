@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -32,7 +31,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { logout } from '@/app/login/actions';
+import { logout } from '@/app/(dashboard)/actions';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -94,9 +93,13 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex items-center h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
-          <SidebarTrigger />
-          <h2 className="ml-4 text-lg font-semibold font-headline">RentVision</h2>
+        <header className="sticky top-0 z-10 flex items-center justify-end h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
+          <form action={logout}>
+            <Button type="submit" variant="ghost" size="icon">
+              <LogOut />
+              <span className="sr-only">Logout</span>
+            </Button>
+          </form>
         </header>
         {children}
       </SidebarInset>
