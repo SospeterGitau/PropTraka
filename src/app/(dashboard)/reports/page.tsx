@@ -166,7 +166,7 @@ function RevenueAnalysisTab() {
               <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
               <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
               <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Projected" />
+              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Projected" />
               <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Actual" />
             </BarChart>
           </ResponsiveContainer>
