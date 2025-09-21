@@ -8,7 +8,14 @@ export async function middleware(request: NextRequest) {
   const session = await getIronSession<SessionData>(cookies(), sessionOptions);
 
   if (!session.isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    // Avoid redirecting for static assets and API routes
+    if (
+      !request.nextUrl.pathname.startsWith('/_next') &&
+      !request.nextUrl.pathname.startsWith('/api') &&
+      request.nextUrl.pathname !== '/favicon.ico'
+    ) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
   return NextResponse.next();
