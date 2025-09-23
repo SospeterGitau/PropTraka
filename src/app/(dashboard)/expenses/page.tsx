@@ -139,12 +139,12 @@ function ExpenseForm({
       <div className="bg-card p-6 rounded-lg w-full max-w-md">
         <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Expense</h2>
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Date</Label>
-            <input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required className="w-full p-2 border rounded bg-transparent" />
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required />
           </div>
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Property (optional)</Label>
+          <div className="space-y-2">
+            <Label>Property (optional)</Label>
             <Select name="propertyId" defaultValue={transaction?.propertyId || 'none'}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a property" />
@@ -157,8 +157,8 @@ function ExpenseForm({
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Category</Label>
+          <div className="space-y-2">
+            <Label>Category</Label>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
@@ -166,7 +166,7 @@ function ExpenseForm({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[350px] p-0">
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                 <Command>
                   <CommandInput 
                     placeholder="Select or create category..." 
@@ -194,12 +194,12 @@ function ExpenseForm({
               </PopoverContent>
             </Popover>
           </div>
-          <div>
-              <Label className="block mb-2 text-sm font-medium">Expense Type</Label>
+          <div className="space-y-2">
+              <Label>Expense Type</Label>
               <RadioGroup
                 defaultValue={expenseType}
                 onValueChange={(value: Transaction['expenseType']) => setExpenseType(value)}
-                className="flex gap-4"
+                className="flex gap-4 pt-2"
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="one-off" id="r1" />
@@ -213,8 +213,8 @@ function ExpenseForm({
           </div>
           
           {expenseType === 'recurring' && (
-            <div>
-              <Label className="block mb-1 text-sm font-medium">Frequency</Label>
+            <div className="space-y-2">
+              <Label>Frequency</Label>
               <Select name="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a frequency" />
@@ -228,21 +228,21 @@ function ExpenseForm({
             </div>
           )}
 
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Vendor</Label>
-            <input name="vendor" defaultValue={transaction?.vendor} className="w-full p-2 border rounded bg-transparent" />
+          <div className="space-y-2">
+            <Label>Vendor</Label>
+            <Input name="vendor" defaultValue={transaction?.vendor} />
           </div>
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Amount</Label>
-            <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded bg-transparent" />
+          <div className="space-y-2">
+            <Label>Amount</Label>
+            <Input name="amount" type="number" defaultValue={transaction?.amount} required />
           </div>
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Receipt/File Link (optional)</Label>
+          <div className="space-y-2">
+            <Label>Receipt/File Link (optional)</Label>
             <Input name="receiptUrl" type="url" defaultValue={transaction?.receiptUrl} placeholder="https://example.com/receipt.pdf" />
           </div>
-          <div>
-            <Label className="block mb-1 text-sm font-medium">Notes (optional)</Label>
-            <Textarea name="notes" defaultValue={transaction?.notes} className="w-full p-2 border rounded bg-transparent" />
+          <div className="space-y-2">
+            <Label>Notes (optional)</Label>
+            <Textarea name="notes" defaultValue={transaction?.notes} />
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

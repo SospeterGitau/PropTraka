@@ -162,7 +162,7 @@ function RevenueForm({
           <DialogTitle>{transaction ? 'Edit' : 'Add'} Tenancy</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-2">
-           <div>
+           <div className="space-y-2">
             <Label>Property</Label>
              <Select name="propertyId" defaultValue={transaction?.propertyId} required>
               <SelectTrigger>
@@ -175,35 +175,35 @@ function RevenueForm({
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Tenant</Label>
             <Input name="tenant" defaultValue={transaction?.tenant} required />
           </div>
-           <div>
+           <div className="space-y-2">
             <Label>Tenant Email</Label>
             <Input name="tenantEmail" type="email" defaultValue={transaction?.tenantEmail} required />
           </div>
-           <div>
+           <div className="space-y-2">
             <Label>Tenancy Start Date</Label>
             <Input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate ? format(new Date(transaction.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Tenancy End Date</Label>
             <Input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate ? format(new Date(transaction.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Monthly Rent</Label>
             <Input name="amount" type="number" defaultValue={transaction?.amount} required />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Deposit (due with first month's rent)</Label>
             <Input name="deposit" type="number" defaultValue={transaction?.deposit} />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Contract Link (optional)</Label>
             <Input name="contractUrl" type="url" defaultValue={transaction?.contractUrl} placeholder="https://docs.google.com/..." />
           </div>
-          <div>
+          <div className="space-y-2">
             <Label>Notes (optional)</Label>
             <Textarea name="notes" defaultValue={transaction?.notes} />
           </div>

@@ -118,22 +118,20 @@ function RevenueAnalysisTab() {
             <CardTitle>Actual vs. Projected Revenue</CardTitle>
             <CardDescription>Analyze revenue performance and the impact of arrears.</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-             <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year">
-              <ToggleGroupItem value="month" aria-label="Toggle month">
-                Month
-              </ToggleGroupItem>
-              <ToggleGroupItem value="year" aria-label="Toggle year">
-                Year
-              </ToggleGroupItem>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+             <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
+              <ToggleGroupItem value="month" aria-label="Toggle month" className="flex-1">Month</ToggleGroupItem>
+              <ToggleGroupItem value="year" aria-label="Toggle year" className="flex-1">Year</ToggleGroupItem>
             </ToggleGroup>
-            <Button variant="outline" size="icon" onClick={handlePrev}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="font-semibold text-center w-32">{format(currentDate, dateDisplayFormat)}</span>
-            <Button variant="outline" size="icon" onClick={handleNext}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-center gap-2">
+              <Button variant="outline" size="icon" onClick={handlePrev}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="font-semibold text-center w-32 shrink-0">{format(currentDate, dateDisplayFormat)}</span>
+              <Button variant="outline" size="icon" onClick={handleNext}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -266,18 +264,20 @@ function PnlStatementTab() {
                   Summary for {format(currentDate, dateDisplayFormat)}
                 </CardDescription>
               </div>
-               <div className="flex items-center gap-2">
-                  <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year">
-                    <ToggleGroupItem value="month" aria-label="Toggle month">Month</ToggleGroupItem>
-                    <ToggleGroupItem value="year" aria-label="Toggle year">Year</ToggleGroupItem>
+               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
+                    <ToggleGroupItem value="month" aria-label="Toggle month" className="flex-1">Month</ToggleGroupItem>
+                    <ToggleGroupItem value="year" aria-label="Toggle year" className="flex-1">Year</ToggleGroupItem>
                   </ToggleGroup>
-                  <Button variant="outline" size="icon" onClick={handlePrev}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="font-semibold text-center w-32">{format(currentDate, dateDisplayFormat)}</span>
-                  <Button variant="outline" size="icon" onClick={handleNext}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button variant="outline" size="icon" onClick={handlePrev}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="font-semibold text-center w-32 shrink-0">{format(currentDate, dateDisplayFormat)}</span>
+                    <Button variant="outline" size="icon" onClick={handleNext}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                </div>
             </div>
         </CardHeader>

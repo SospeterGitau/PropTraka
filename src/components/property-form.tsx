@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Property } from '@/lib/types';
@@ -126,7 +127,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
               <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} className="col-span-3" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="purchaseTaxes" className="text-right">Purchase Taxes/Fees</Label>
+              <Label htmlFor="purchaseTaxes" className="text-right">Purchase Taxes &amp; Fees</Label>
               <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} className="col-span-3" />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
