@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -73,7 +74,9 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                   tooltip={item.label}
                 >
                   <Link href={item.href}>
-                    <item.icon />
+                    <span className="inline-flex items-center justify-center w-6 h-6">
+                      <item.icon />
+                    </span>
                     <span>{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -93,7 +96,8 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex items-center justify-end h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
+        <header className="sticky top-0 z-10 flex items-center justify-between h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
+          <SidebarTrigger />
           <form action={logout}>
             <Button type="submit" variant="ghost" size="icon">
               <LogOut />
