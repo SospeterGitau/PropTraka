@@ -2,7 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronRight, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
@@ -54,6 +55,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
 
 
 const defaultCategories = [
@@ -124,6 +126,7 @@ function ExpenseForm({
       type: 'expense',
       expenseType: expenseType,
       frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
+      receiptUrl: formData.get('receiptUrl') as string,
     };
     onSubmit(data);
     onClose();
@@ -234,6 +237,10 @@ function ExpenseForm({
             <input name="amount" type="number" defaultValue={transaction?.amount} required className="w-full p-2 border rounded bg-transparent" />
           </div>
           <div>
+            <Label className="block mb-1 text-sm font-medium">Receipt/File Link (optional)</Label>
+            <Input name="receiptUrl" type="url" defaultValue={transaction?.receiptUrl} placeholder="https://example.com/receipt.pdf" />
+          </div>
+          <div>
             <Label className="block mb-1 text-sm font-medium">Notes (optional)</Label>
             <Textarea name="notes" defaultValue={transaction?.notes} className="w-full p-2 border rounded bg-transparent" />
           </div>
@@ -283,12 +290,19 @@ function ExpensesTable({
               <>
                 <TableRow>
                   <TableCell className="font-medium">
-                    <CollapsibleTrigger asChild>
-                      <button className="flex items-center gap-2 group">
-                        {formattedDates[item.id]}
-                        <ChevronRight className="h-4 w-4 transform transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                      </button>
-                    </CollapsibleTrigger>
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger asChild>
+                        <button className="flex items-center gap-2 group">
+                          {formattedDates[item.id]}
+                          <ChevronRight className="h-4 w-4 transform transition-transform duration-200 group-data-[state=open]:rotate-90" />
+                        </button>
+                      </CollapsibleTrigger>
+                      {item.receiptUrl && (
+                        <Link href={item.receiptUrl} target="_blank" rel="noopener noreferrer">
+                          <FileText className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                        </Link>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>{item.propertyName}</TableCell>
                   <TableCell>
@@ -328,7 +342,16 @@ function ExpensesTable({
             </Collapsible>
           ) : (
             <TableRow key={item.id}>
-              <TableCell className="font-medium">{formattedDates[item.id]}</TableCell>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  {formattedDates[item.id]}
+                  {item.receiptUrl && (
+                    <Link href={item.receiptUrl} target="_blank" rel="noopener noreferrer">
+                      <FileText className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                    </Link>
+                  )}
+                </div>
+              </TableCell>
               <TableCell>{item.propertyName}</TableCell>
               <TableCell>
                 <Badge variant="secondary">{item.category}</Badge>

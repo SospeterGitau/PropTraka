@@ -37,6 +37,7 @@ export interface Transaction {
   expenseType?: 'one-off' | 'recurring'; // for expenses
   frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly'; // for recurring expenses
   notes?: string; // Optional notes field
+  receiptUrl?: string; // Optional link to a receipt/file for expenses
   // The following are not part of the core data but can be added for UI purposes
   transactions?: Transaction[]; 
   nextDueDate?: string;
