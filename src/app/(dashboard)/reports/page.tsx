@@ -180,9 +180,7 @@ function RevenueAnalysisTab() {
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
-                 <Label value={`Revenue (${currency})`} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12}/>
-              </YAxis>
+              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
                  content={<ChartTooltipContent 
                     formatter={(value, name) => (
