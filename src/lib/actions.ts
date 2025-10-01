@@ -3,7 +3,8 @@
 
 import {generateReportSummary} from '@/ai/flows/generate-report-summary';
 import {generatePnlReport} from '@/ai/flows/generate-pnl-report';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput } from '@/lib/types';
+import {generateMarketResearchPrompt} from '@/ai/flows/generate-market-research-prompt';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchPromptInput, GenerateMarketResearchPromptOutput } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -68,6 +69,18 @@ export async function getPnlReport(input: GeneratePnlReportInput): Promise<Gener
             report: null,
             error: code,
             hint: msg,
+        };
+    }
+}
+
+export async function getMarketResearchPrompt(input: GenerateMarketResearchPromptInput): Promise<GenerateMarketResearchPromptOutput> {
+    try {
+        const result = await generateMarketResearchPrompt(input);
+        return result;
+    } catch (error) {
+        console.error('Error generating market research prompt:', error);
+        return {
+            prompt: 'Failed to generate prompt. Please try again later.',
         };
     }
 }

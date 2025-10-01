@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
+import { MarketResearchDialog } from '@/components/market-research-dialog';
 
 type ViewMode = 'month' | 'year';
 
@@ -54,7 +55,7 @@ function RevenueAnalysisTab() {
     }
   };
 
-  if (!currentDate) {
+  if (!currentDate || !revenue) {
     return (
       <Card>
         <CardHeader>
@@ -371,9 +372,9 @@ function PnlStatementTab() {
 
 
 export default function ReportsPage() {
-  const { revenue, expenses } = useDataContext();
+  const { revenue, expenses, properties } = useDataContext();
 
-  if (!revenue || !expenses) {
+  if (!revenue || !expenses || !properties) {
     // Render a loading state or skeleton
     return (
       <>
@@ -402,6 +403,7 @@ export default function ReportsPage() {
   return (
     <>
       <PageHeader title="Financial Reports">
+        <MarketResearchDialog properties={properties} />
         <GenerateReportDialog revenue={revenue} expenses={expenses} />
       </PageHeader>
        <Tabs defaultValue="revenue-analysis">

@@ -1,4 +1,5 @@
 
+
 export interface Property {
   id: string;
   addressLine1: string;
@@ -80,4 +81,13 @@ export interface GeneratePnlReportOutput {
   report: string | null;
   error?: string | null;
   hint?: string | null;
+}
+
+export interface GenerateMarketResearchPromptInput {
+  properties: string; // JSON string of Property[]
+  currency: string;
+}
+
+export interface GenerateMarketResearchPromptOutput {
+  prompt: string;
 }
