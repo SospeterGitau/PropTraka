@@ -21,6 +21,12 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+// Helper to create a shorter, more readable address label
+function getShortAddress(property: Property) {
+    const streetName = property.addressLine1.split(' ')[1] || property.addressLine1;
+    return `${streetName}, ${property.city}`;
+}
+
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
   const { formatCurrency, formatCurrencyForAxis } = useDataContext();
   const currentYear = new Date().getFullYear();
@@ -37,7 +43,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
     const profit = propertyRevenue - propertyExpenses;
 
     return { 
-      property: property.addressLine1, // Use a shorter name for the label
+      property: getShortAddress(property), // Use a shorter name for the label
       profit: profit > 0 ? profit : 0, // Don't show negative profit on this chart for clarity
     };
   });
@@ -60,6 +66,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 tickMargin={8}
                 angle={-45}
                 textAnchor="end"
+                interval={0}
               />
               <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
