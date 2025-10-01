@@ -40,7 +40,7 @@ function getFinancialYear(date: Date) {
 }
 
 function RevenueAnalysisTab() {
-  const { revenue, formatCurrency } = useDataContext();
+  const { revenue, formatCurrency, formatCurrencyForAxis } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -175,7 +175,7 @@ function RevenueAnalysisTab() {
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis tickFormatter={(value) => formatCurrency(Number(value)).replace(/\.00$/, '')} tickLine={false} axisLine={false} />
+              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
                  content={<ChartTooltipContent 
                     formatter={(value, name) => (
@@ -456,5 +456,3 @@ function ReportsPage() {
 }
 
 export default memo(ReportsPage);
-
-    

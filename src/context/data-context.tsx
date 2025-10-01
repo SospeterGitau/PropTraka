@@ -20,6 +20,7 @@ interface DataContextType {
   companyName: string;
   setCompanyName: (companyName: string) => void;
   formatCurrency: (amount: number) => string;
+  formatCurrencyForAxis: (amount: number) => string;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -46,6 +47,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
       currency: currency,
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+  
+  const formatCurrencyForAxis = (amount: number) => {
+    const numberFormat = new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1,
+    });
+    
+    if (amount >= 1000000) {
+        const value = amount / 1000000;
+        return numberFormat.format(value).replace(/[\d,.]+/g, value.toFixed(1)) + 'm';
+    }
+    if (amount >= 1000) {
+        const value = amount / 1000;
+        return numberFormat.format(value).replace(/[\d,.]+/g, value.toFixed(0)) + 'k';
+    }
+
+    return numberFormat.format(amount).replace(/\.00$/, '');
   };
   
   const formatCurrencyWithCents = (amount: number) => {
@@ -125,6 +146,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     companyName,
     setCompanyName,
     formatCurrency,
+    formatCurrencyForAxis,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

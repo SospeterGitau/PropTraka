@@ -22,7 +22,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
-  const { formatCurrency } = useDataContext();
+  const { formatCurrency, formatCurrencyForAxis } = useDataContext();
   const currentYear = new Date().getFullYear();
 
   const chartData = properties.map(property => {
@@ -61,7 +61,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 angle={-45}
                 textAnchor="end"
               />
-              <YAxis tickFormatter={(value) => formatCurrency(Number(value)).replace(/\.00$/, '')} tickLine={false} axisLine={false} />
+              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
                 content={<ChartTooltipContent 
                     formatter={(value, name) => (

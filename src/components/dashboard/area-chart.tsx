@@ -26,7 +26,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
-  const { formatCurrency } = useDataContext();
+  const { formatCurrency, formatCurrencyForAxis } = useDataContext();
   const chartData = Array.from({ length: 6 }).map((_, i) => {
     const d = subMonths(new Date(), 5 - i);
     const month = format(d, 'MMMM');
@@ -65,7 +65,7 @@ export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis tickFormatter={(value) => formatCurrency(Number(value)).replace(/\.00$/, '')} tickLine={false} axisLine={false} />
+              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
                 content={<ChartTooltipContent 
                     formatter={(value, name) => (
