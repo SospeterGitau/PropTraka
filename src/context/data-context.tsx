@@ -50,23 +50,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
   
   const formatCurrencyForAxis = (amount: number) => {
-    const numberFormat = new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1,
-    });
-    
+    const symbol = new Intl.NumberFormat(locale, { style: 'currency', currency: currency, minimumFractionDigits: 0, maximumFractionDigits: 0 }).formatToParts(0).find(p => p.type === 'currency')?.value || '';
+
     if (amount >= 1000000) {
-        const value = amount / 1000000;
-        return numberFormat.format(value).replace(/[\d,.]+/g, value.toFixed(1)) + 'm';
+      return `${symbol}${(amount / 1000000).toFixed(1)}m`;
     }
     if (amount >= 1000) {
-        const value = amount / 1000;
-        return numberFormat.format(value).replace(/[\d,.]+/g, value.toFixed(0)) + 'k';
+      return `${symbol}${(amount / 1000).toFixed(0)}k`;
     }
-
-    return numberFormat.format(amount).replace(/\.00$/, '');
+    return formatCurrency(amount);
   };
   
   const formatCurrencyWithCents = (amount: number) => {
