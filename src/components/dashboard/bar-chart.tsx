@@ -25,11 +25,14 @@ const chartConfig = {
 function getShortAddress(property: Property) {
     const address = property.addressLine1 || '';
     const parts = address.split(' ');
+    
     if (parts.length < 2) {
-        return address;
+        return address; // Not enough parts to shorten
     }
 
-    const streetType = parts[parts.length - 1].toLowerCase();
+    const lastWord = parts[parts.length - 1];
+    const streetType = lastWord.toLowerCase();
+    
     const abbreviations: { [key: string]: string } = {
         road: 'Rd',
         avenue: 'Ave',
@@ -39,15 +42,19 @@ function getShortAddress(property: Property) {
         court: 'Ct',
         place: 'Pl',
         boulevard: 'Blvd',
+        close: 'Cl',
     };
     
-    const lastWord = parts[parts.length - 1];
-    const abbreviatedType = abbreviations[streetType] || lastWord;
+    // Check if the last word is a known street type to abbreviate
+    if (abbreviations[streetType]) {
+        const abbreviatedType = abbreviations[streetType];
+        // Join all parts except the last one, and add the abbreviation
+        const shortAddress = [...parts.slice(0, -1), abbreviatedType].join(' ');
+        return shortAddress;
+    }
     
-    // Join first 2 words (e.g., "123 Main") and the abbreviated type
-    const shortAddress = [...parts.slice(0, 2), abbreviatedType].join(' ');
-
-    return shortAddress;
+    // Fallback if no abbreviation is found: return the address as is, or a simpler version
+    return address;
 }
 
 
@@ -101,12 +108,18 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
               <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
                 content={<ChartTooltipContent 
-                    formatter={(value, name) => (
-                    <div className="flex flex-col">
-                        <span className="text-muted-foreground">{name}</span>
-                        <span>{formatCurrency(Number(value))}</span>
-                    </div>
-                )}
+                    formatter={(value, name, props) => {
+                      const fullAddress = properties.find(p => getShortAddress(p) === props.payload.property)?.addressLine1;
+                      return (
+                        <div className="flex flex-col">
+                            <span className="font-bold">{fullAddress}</span>
+                            <div className="flex justify-between">
+                               <span className="text-muted-foreground capitalize">{name}: &nbsp;</span>
+                               <span>{formatCurrency(Number(value))}</span>
+                            </div>
+                        </div>
+                    )
+                }}
                 />} 
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} 
               />
