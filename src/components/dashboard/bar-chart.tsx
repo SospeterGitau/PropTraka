@@ -30,22 +30,21 @@ function getShortAddress(property: Property) {
     }
 
     const lastWord = parts[parts.length - 1];
-    const streetType = lastWord.toLowerCase();
     
     const abbreviations: { [key: string]: string } = {
-        road: 'Rd',
-        avenue: 'Ave',
-        street: 'St',
-        lane: 'Ln',
-        drive: 'Dr',
-        court: 'Ct',
-        place: 'Pl',
-        boulevard: 'Blvd',
-        close: 'Cl',
+        Road: 'Rd',
+        Avenue: 'Ave',
+        Street: 'St',
+        Lane: 'Ln',
+        Drive: 'Dr',
+        Court: 'Ct',
+        Place: 'Pl',
+        Boulevard: 'Blvd',
+        Close: 'Cl',
     };
     
-    if (abbreviations[streetType]) {
-        const abbreviatedType = abbreviations[streetType];
+    if (abbreviations[lastWord]) {
+        const abbreviatedType = abbreviations[lastWord];
         const shortAddress = [...parts.slice(0, -1), abbreviatedType].join(' ');
         return shortAddress;
     }
@@ -93,7 +92,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
             <BarChart 
               data={chartData} 
               layout={isHorizontal ? 'vertical' : 'horizontal'}
-              margin={ isHorizontal ? { top: 10, right: 30, left: 20, bottom: 20 } : { top: 10, right: 30, left: 0, bottom: 60 } }
+              margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={isHorizontal} vertical={!isHorizontal} />
               {isHorizontal ? (
