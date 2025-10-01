@@ -68,7 +68,8 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
       .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
       .reduce((sum, t) => sum + t.amount, 0);
       
-    const profit = propertyRevenue - propertyExpenses;
+    const taxOnRevenue = propertyRevenue * 0.075;
+    const profit = propertyRevenue - propertyExpenses - taxOnRevenue;
 
     return { 
       property: getShortAddress(property),
@@ -77,13 +78,13 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
     };
   }).sort((a, b) => a.profit - b.profit); // Sort ascending for horizontal chart
 
-  const dynamicHeight = `${chartData.length * 40 + 80}px`; // 40px per bar + margins
+  const dynamicHeight = `${Math.max(chartData.length * 40 + 80, 250)}px`;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Profit by Property</CardTitle>
-        <CardDescription>Year-to-date profit for each property</CardDescription>
+        <CardDescription>Year-to-date after-tax profit for each property</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} style={{ height: dynamicHeight }} className="w-full">
