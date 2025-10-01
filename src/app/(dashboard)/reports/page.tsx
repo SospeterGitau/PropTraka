@@ -116,7 +116,7 @@ function RevenueAnalysisTab() {
         projected,
         actual,
       };
-    }).reverse(); // Reverse for horizontal chart to show latest month on top
+    });
   } else {
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
@@ -124,8 +124,7 @@ function RevenueAnalysisTab() {
     ];
   }
   
-  const isHorizontalLayout = viewMode === 'year';
-  const chartHeight = isHorizontalLayout ? `${chartData.length * 50 + 80}px` : '350px';
+  const chartHeight = '350px';
 
   return (
     <Card>
@@ -177,27 +176,13 @@ function RevenueAnalysisTab() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={chartData} 
-              layout={isHorizontalLayout ? 'vertical' : 'horizontal'} 
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={isHorizontalLayout} vertical={!isHorizontalLayout} />
-              {isHorizontalLayout ? (
-                <>
-                  <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
-                     <Label value={`Revenue (${currency})`} position="bottom" offset={10} fontSize={12} />
-                  </XAxis>
-                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80}>
-                    <Label value="Month" angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12} />
-                  </YAxis>
-                </>
-              ) : (
-                <>
-                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                  <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
-                     <Label value={`Revenue (${currency})`} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12}/>
-                  </YAxis>
-                </>
-              )}
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="name" tickLine={false} axisLine={false} />
+              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
+                 <Label value={`Revenue (${currency})`} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12}/>
+              </YAxis>
               <Tooltip 
                  content={<ChartTooltipContent 
                     formatter={(value, name) => (
@@ -210,8 +195,8 @@ function RevenueAnalysisTab() {
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
               <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={isHorizontalLayout ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Projected" />
-              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={isHorizontalLayout ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Actual" />
+              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Projected" />
+              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Actual" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
