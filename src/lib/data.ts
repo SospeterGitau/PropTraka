@@ -1,44 +1,45 @@
+
 import type { Property, Transaction, Arrear, CalendarEvent } from './types';
 
 export const properties: Property[] = [
-  { id: 'p1', addressLine1: '123 Maple St', city: 'Springfield', state: 'IL', postalCode: '62704', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 3, bathrooms: 2, purchasePrice: 250000, mortgage: 200000, currentValue: 300000, rentalValue: 1800, imageUrl: 'https://picsum.photos/seed/p1/600/400', imageHint: 'suburban house' },
-  { id: 'p2', addressLine1: '456 Oak Ave', city: 'Shelbyville', state: 'IL', postalCode: '62565', propertyType: 'Domestic', buildingType: 'Flat', bedrooms: 2, bathrooms: 1, purchasePrice: 320000, mortgage: 250000, currentValue: 350000, rentalValue: 2200, imageUrl: 'https://picsum.photos/seed/p2/600/400', imageHint: 'modern apartment' },
-  { id: 'p3', addressLine1: '789 Pine Ln', city: 'Capital City', state: 'IL', postalCode: '62701', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 2, bathrooms: 1, purchasePrice: 180000, mortgage: 150000, currentValue: 210000, rentalValue: 1400, imageUrl: 'https://picsum.photos/seed/p3/600/400', imageHint: 'cozy cottage' },
-  { id: 'p4', addressLine1: '101 Elm Ct', city: 'Ogdenville', state: 'IL', postalCode: '61859', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 5, bathrooms: 4, purchasePrice: 450000, mortgage: 400000, currentValue: 500000, rentalValue: 3000, imageUrl: 'https://picsum.photos/seed/p4/600/400', imageHint: 'large house' },
-  { id: 'p5', addressLine1: '212 Birch Rd', city: 'North Haverbrook', state: 'IL', postalCode: '61761', propertyType: 'Domestic', buildingType: 'Terraced House', bedrooms: 3, bathrooms: 3, purchasePrice: 210000, mortgage: 180000, currentValue: 240000, rentalValue: 1650, imageUrl: 'https://picsum.photos/seed/p5/600/400', imageHint: 'townhouse property' },
-  { id: 'p6', addressLine1: '333 Cedar Blvd', city: 'Brockway', state: 'IL', postalCode: '62223', propertyType: 'Commercial', buildingType: 'Office', bedrooms: 4, bathrooms: 4, purchasePrice: 600000, mortgage: 500000, currentValue: 650000, rentalValue: 4000, imageUrl: 'https://picsum.photos/seed/p6/600/400', imageHint: 'luxury condo' },
-  { id: 'p7', addressLine1: '444 Spruce Way', city: 'Cypress Creek', state: 'FL', postalCode: '33544', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 3, bathrooms: 2, purchasePrice: 280000, mortgage: 220000, currentValue: 310000, rentalValue: 2000, imageUrl: 'https://picsum.photos/seed/p7/600/400', imageHint: 'family home' },
+  { id: 'p1', addressLine1: '123 Riara Road', city: 'Nairobi', state: 'Nairobi County', postalCode: '00100', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 4, bathrooms: 3, size: 300, sizeUnit: 'sqm', purchasePrice: 45000000, mortgage: 30000000, currentValue: 55000000, rentalValue: 250000, imageUrl: 'https://picsum.photos/seed/p1/600/400', imageHint: 'suburban house' },
+  { id: 'p2', addressLine1: '456 Westlands Ave', city: 'Nairobi', state: 'Nairobi County', postalCode: '00800', propertyType: 'Domestic', buildingType: 'Flat', bedrooms: 2, bathrooms: 2, size: 120, sizeUnit: 'sqm', purchasePrice: 18000000, mortgage: 12000000, currentValue: 22000000, rentalValue: 150000, imageUrl: 'https://picsum.photos/seed/p2/600/400', imageHint: 'modern apartment' },
+  { id: 'p3', addressLine1: '789 Ngong Road', city: 'Nairobi', state: 'Nairobi County', postalCode: '00505', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 3, bathrooms: 2, size: 200, sizeUnit: 'sqm', purchasePrice: 25000000, mortgage: 18000000, currentValue: 30000000, rentalValue: 180000, imageUrl: 'https://picsum.photos/seed/p3/600/400', imageHint: 'cozy cottage' },
+  { id: 'p4', addressLine1: '101 Muthaiga Rd', city: 'Nairobi', state: 'Nairobi County', postalCode: '00600', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 5, bathrooms: 5, size: 500, sizeUnit: 'sqm', purchasePrice: 90000000, mortgage: 70000000, currentValue: 110000000, rentalValue: 600000, imageUrl: 'https://picsum.photos/seed/p4/600/400', imageHint: 'large house' },
+  { id: 'p5', addressLine1: '212 Lavington Green', city: 'Nairobi', state: 'Nairobi County', postalCode: '00603', propertyType: 'Domestic', buildingType: 'Terraced House', bedrooms: 3, bathrooms: 4, size: 250, sizeUnit: 'sqm', purchasePrice: 35000000, mortgage: 25000000, currentValue: 42000000, rentalValue: 220000, imageUrl: 'https://picsum.photos/seed/p5/600/400', imageHint: 'townhouse property' },
+  { id: 'p6', addressLine1: '333 Upper Hill', city: 'Nairobi', state: 'Nairobi County', postalCode: '00200', propertyType: 'Commercial', buildingType: 'Office', bedrooms: 0, bathrooms: 4, size: 400, sizeUnit: 'sqm', purchasePrice: 75000000, mortgage: 50000000, currentValue: 85000000, rentalValue: 500000, imageUrl: 'https://picsum.photos/seed/p6/600/400', imageHint: 'luxury condo' },
+  { id: 'p7', addressLine1: '444 Karen Lane', city: 'Nairobi', state: 'Nairobi County', postalCode: '00502', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 4, bathrooms: 4, size: 350, sizeUnit: 'sqm', purchasePrice: 65000000, mortgage: 45000000, currentValue: 75000000, rentalValue: 350000, imageUrl: 'https://picsum.photos/seed/p7/600/400', imageHint: 'family home' },
 ];
 
 export const revenue: Transaction[] = [
   // Tenancy 1: John Doe
-  { id: 't1-1', tenancyId: 't1', date: '2025-06-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 900, amountPaid: 2700, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  { id: 't1-2', tenancyId: 't1', date: '2025-07-01', amount: 1800, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't1-1', tenancyId: 't1', date: '2025-06-01', amount: 250000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 250000, amountPaid: 500000, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't1-2', tenancyId: 't1', date: '2025-07-01', amount: 250000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
   
   // Tenancy 2: Jane Smith
-  { id: 't2-1', tenancyId: 't2', date: '2025-06-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 1100, amountPaid: 3300, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 2200, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't2-1', tenancyId: 't2', date: '2025-06-01', amount: 150000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 150000, amountPaid: 300000, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
+  { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 150000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
 
   // Tenancy 3: Peter Jones
-  { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 700, amountPaid: 2100, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
-  { id: 't3-2', tenancyId: 't3', date: '2025-08-02', amount: 1400, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
+  { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 180000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 180000, amountPaid: 360000, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
+  { id: 't3-2', tenancyId: 't3', date: '2025-08-02', amount: 180000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
 
   
   // Tenancy 4: Mike Johnson (Arrears)
-  { id: 't4-1', tenancyId: 't4', date: '2025-07-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct, Ogdenville, IL 61859', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 1500, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
-  { id: 't4-2', tenancyId: 't4', date: '2025-08-01', amount: 3000, propertyId: 'p4', propertyName: '101 Elm Ct, Ogdenville, IL 61859', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
+  { id: 't4-1', tenancyId: 't4', date: '2025-07-01', amount: 600000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 600000, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
+  { id: 't4-2', tenancyId: 't4', date: '2025-08-01', amount: 600000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
   
   // Tenancy 5: Emily Williams (Partial Payment)
-  { id: 't5-1', tenancyId: 't5', date: '2025-07-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd, Brockway, IL 62223', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 2000, amountPaid: 3500, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
-  { id: 't5-2', tenancyId: 't5', date: '2025-08-05', amount: 4000, propertyId: 'p6', propertyName: '333 Cedar Blvd, Brockway, IL 62223', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
+  { id: 't5-1', tenancyId: 't5', date: '2025-07-05', amount: 500000, propertyId: 'p6', propertyName: '333 Upper Hill, Nairobi, Nairobi County 00200', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 500000, amountPaid: 750000, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
+  { id: 't5-2', tenancyId: 't5', date: '2025-08-05', amount: 500000, propertyId: 'p6', propertyName: '333 Upper Hill, Nairobi, Nairobi County 00200', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
 ];
 
 export const expenses: Transaction[] = [
-  { id: 'e1', date: '2025-07-05', amount: 150, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Maintenance', vendor: 'Springfield Plumbing', expenseType: 'one-off' },
-  { id: 'e2', date: '2025-07-10', amount: 300, propertyId: 'p2', propertyName: '456 Oak Ave, Shelbyville, IL 62565', type: 'expense', category: 'Repairs', vendor: 'Shelbyville Roofers', expenseType: 'one-off' },
-  { id: 'e3', date: '2025-07-15', amount: 80, propertyId: 'p3', propertyName: '789 Pine Ln, Capital City, IL 62701', type: 'expense', category: 'Insurance', vendor: 'Capital City Insurance', expenseType: 'one-off' },
-  { id: 'e4', date: '2025-06-08', amount: 200, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.', expenseType: 'one-off' },
-  { id: 'e5', date: '2025-07-01', amount: 500, propertyId: 'p1', propertyName: '123 Maple St, Springfield, IL 62704', type: 'expense', category: 'Management Fees', vendor: 'Property Management LLC', expenseType: 'recurring', frequency: 'monthly' },
+  { id: 'e1', date: '2025-07-05', amount: 25000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Maintenance', vendor: 'Nairobi Plumbing Services', expenseType: 'one-off' },
+  { id: 'e2', date: '2025-07-10', amount: 50000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'expense', category: 'Repairs', vendor: 'Westlands Roof Repairs', expenseType: 'one-off' },
+  { id: 'e3', date: '2025-07-15', amount: 150000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'expense', category: 'Insurance', vendor: 'Jubilee Insurance', expenseType: 'one-off' },
+  { id: 'e4', date: '2025-06-08', amount: 30000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.', expenseType: 'one-off' },
+  { id: 'e5', date: '2025-07-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
 ];
 
 // This is now derived from the revenue data, but we keep the type for structure.
@@ -69,3 +70,5 @@ export const dashboardData = {
       return this.totalRevenue - this.totalExpenses;
     },
 };
+
+    
