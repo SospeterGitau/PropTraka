@@ -199,8 +199,8 @@ function RevenueAnalysisTab() {
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
               <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[0, 4, 4, 0]} name="Projected" />
-              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} name="Actual" />
+              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={viewMode === 'year' ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Projected" />
+              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={viewMode === 'year' ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Actual" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
