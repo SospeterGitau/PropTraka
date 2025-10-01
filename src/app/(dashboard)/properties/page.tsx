@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { MoreHorizontal, Bed, Bath } from 'lucide-react';
+import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
 import type { Property } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -162,6 +162,12 @@ export default function PropertiesPage() {
                           <Bath className="h-4 w-4" />
                           <span>{property.bathrooms}</span>
                          </div>
+                         {property.size && (
+                          <div className="flex items-center gap-1">
+                            <Square className="h-4 w-4" />
+                            <span>{property.size} {property.sizeUnit}</span>
+                          </div>
+                         )}
                       </div>
                     </TableCell>
                     <TableCell>

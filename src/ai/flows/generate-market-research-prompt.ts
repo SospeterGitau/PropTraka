@@ -31,33 +31,37 @@ const researchPromptGenerator = ai.definePrompt({
   name: 'researchPromptGenerator',
   input: { schema: GenerateMarketResearchPromptInputSchema },
   output: { schema: GenerateMarketResearchPromptOutputSchema },
-  prompt: `You are an expert real estate market analyst AI. Your task is to generate a comprehensive, structured research prompt for another AI model. This prompt will be used to conduct a deep-dive analysis of a user's rental property portfolio to determine if their pricing is competitive.
+  prompt: `You are an expert real estate market analyst specializing in competitive rental pricing. Your goal is to conduct a deep-dive analysis of the provided rental property portfolio to determine if their current pricing is competitive within their respective local markets.
 
-The user has provided their property data in JSON format. Use this data to construct the final research prompt.
+**Context:**
+The user's rental property portfolio data is provided below. This data will serve as the baseline for your analysis. All financial figures, including current rents, market averages, and recommendations, must be presented in {{currency}}.
 
-User's Property Portfolio (JSON):
+**User's Property Portfolio:**
 {{{properties}}}
 
-User's Currency: {{currency}}
+**Core Task - For each property provided:**
+For each property in the portfolio, perform the following steps:
 
-Generate a research prompt that includes the following sections:
+a) **Location Identification:** 
+Accurately identify the city, state/province, and if possible, the specific submarket or neighborhood for each property.
 
-1.  **Role and Goal:** Instruct the AI to act as an expert real estate analyst for a specific geographic area. The goal is to provide a competitive analysis of the user's rental prices.
+b) **Market Rent Research:** 
+Research and determine the current average market rent for comparable properties. 'Comparable' means properties with the same property type (e.g., Domestic, Commercial), building type (e.g., Detached House, Flat, Office), similar number of bedrooms, bathrooms, and size (e.g., sq ft or sq m). Account for general property condition and amenities if sufficient data is available or can be reasonably inferred.
 
-2.  **Context:** State that the user's portfolio data is provided and should be used as the basis for comparison. Mention the currency to be used for all financial figures.
+c) **Price Comparison:** 
+Directly compare the user's 'currentRent' with the researched market average.
 
-3.  **Core Task - For each property provided:**
-    *   Identify the city and specific submarket/neighborhood.
-    *   Research the current average market rent for similar properties (same type, size, bedroom/bathroom count).
-    *   Provide a direct comparison between the user's current rent and the market average.
-    *   Conclude with a "Verdict": Is the property priced competitively, underpriced, or overpriced?
-    *   Provide a "Recommendation": Suggest a specific new rental price or a percentage adjustment.
+d) **Verdict:** 
+Conclude whether the property is 'Competitively Priced', 'Underpriced', or 'Overpriced' based on your comparison.
 
-4.  **Data Sources:** Instruct the AI to use data from the last 3-6 months from reputable sources like major property listing websites (e.g., Zillow, Rightmove, Property24), official government statistics, and established real estate market analysis reports.
+e) **Recommendation:** 
+Provide a specific new rental price recommendation (e.g., '{{currency}} 1950') or a percentage adjustment (e.g., 'Increase by 8%') to align it with competitive market rates. Justify your recommendation briefly.
 
-5.  **Output Format:** Specify that the final output should be a clean, well-structured report using Markdown for formatting. It should start with a high-level executive summary and then provide a detailed, property-by-property breakdown.
+**Data Sources:**
+Utilize robust market data from the last 3-6 months. Prioritize reputable sources such as major national/local property listing websites (e.g., Zillow, Rightmove, Property24, local equivalents), official government housing statistics (e.g., from sources like CBK publications), and reputable real estate market analysis reports. Ensure data recency and reliability.
 
-Combine all of these instructions into a single, cohesive, and powerful prompt. The generated prompt should be the only thing in your output.
+**Output Format:**
+Your final output must be a well-structured report formatted in Markdown. It should commence with a concise **Executive Summary** (following the Pyramid Principle) offering an overview of the portfolio's overall pricing competitiveness and key findings. Following the Executive Summary, provide a detailed, property-by-property breakdown for each item in the provided portfolio. Each property's section should clearly present the location, market rent research findings, comparison, verdict, and recommendation as outlined in the 'Core Task' section.
 `,
 });
 

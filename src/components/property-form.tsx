@@ -36,6 +36,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       buildingType: formData.get('buildingType') as Property['buildingType'],
       bedrooms: Number(formData.get('bedrooms')),
       bathrooms: Number(formData.get('bathrooms')),
+      size: Number(formData.get('size')) || undefined,
+      sizeUnit: formData.get('sizeUnit') as Property['sizeUnit'] || undefined,
       purchasePrice: Number(formData.get('purchasePrice')),
       purchaseTaxes: Number(formData.get('purchaseTaxes')) || 0,
       mortgage: Number(formData.get('mortgage')),
@@ -52,97 +54,126 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{property ? 'Edit Property' : 'Add Property'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4">
-          <div className="grid gap-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="addressLine1" className="text-right">Address</Label>
-              <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} className="col-span-3" required />
+        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="addressLine1">Address</Label>
+              <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} required />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="city" className="text-right">City</Label>
-              <Input id="city" name="city" defaultValue={property?.city} className="col-span-3" required />
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" name="city" defaultValue={property?.city} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="state">County/State</Label>
+                    <Input id="state" name="state" defaultValue={property?.state} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="postalCode">Postcode</Label>
+                    <Input id="postalCode" name="postalCode" defaultValue={property?.postalCode} required />
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="state" className="text-right">County/State</Label>
-              <Input id="state" name="state" defaultValue={property?.state} className="col-span-3" required />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="propertyType">Property Type</Label>
+                <Select name="propertyType" defaultValue={property?.propertyType} required>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Domestic">Domestic</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="buildingType">Building Type</Label>
+                <Select name="buildingType" defaultValue={property?.buildingType} required>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                        <SelectLabel>Domestic</SelectLabel>
+                        <SelectItem value="Terraced House">Terraced House</SelectItem>
+                        <SelectItem value="Semi-Detached House">Semi-Detached House</SelectItem>
+                        <SelectItem value="Detached House">Detached House</SelectItem>
+                        <SelectItem value="Bungalow">Bungalow</SelectItem>
+                        <SelectItem value="Flat">Flat</SelectItem>
+                        <SelectItem value="Maisonette">Maisonette</SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                        <SelectLabel>Commercial</SelectLabel>
+                        <SelectItem value="Office">Office</SelectItem>
+                        <SelectItem value="Retail">Retail</SelectItem>
+                        <SelectItem value="Industrial">Industrial</SelectItem>
+                        </SelectGroup>
+                        <SelectGroup>
+                        <SelectItem value="Other">Other</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                    </Select>
+                </div>
             </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="postalCode" className="text-right">Postcode</Label>
-              <Input id="postalCode" name="postalCode" defaultValue={property?.postalCode} className="col-span-3" required />
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="bedrooms">Bedrooms</Label>
+                    <Input id="bedrooms" name="bedrooms" type="number" defaultValue={property?.bedrooms} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="bathrooms">Bathrooms</Label>
+                    <Input id="bathrooms" name="bathrooms" type="number" defaultValue={property?.bathrooms} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="size">Size</Label>
+                    <Input id="size" name="size" type="number" defaultValue={property?.size}/>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="sizeUnit">Size Unit</Label>
+                     <Select name="sizeUnit" defaultValue={property?.sizeUnit || 'sqft'}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="sqft">sq ft</SelectItem>
+                            <SelectItem value="sqm">sq m</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="propertyType" className="text-right">Prop. Type</Label>
-               <Select name="propertyType" defaultValue={property?.propertyType}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Domestic">Domestic</SelectItem>
-                    <SelectItem value="Commercial">Commercial</SelectItem>
-                  </SelectContent>
-                </Select>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="purchasePrice">Purchase Price</Label>
+                    <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="purchaseTaxes">Purchase Taxes &amp; Fees</Label>
+                    <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} />
+                </div>
             </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="buildingType" className="text-right">Bldg. Type</Label>
-               <Select name="buildingType" defaultValue={property?.buildingType}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Domestic</SelectLabel>
-                      <SelectItem value="Terraced House">Terraced House</SelectItem>
-                      <SelectItem value="Semi-Detached House">Semi-Detached House</SelectItem>
-                      <SelectItem value="Detached House">Detached House</SelectItem>
-                      <SelectItem value="Bungalow">Bungalow</SelectItem>
-                      <SelectItem value="Flat">Flat</SelectItem>
-                      <SelectItem value="Maisonette">Maisonette</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Commercial</SelectLabel>
-                      <SelectItem value="Office">Office</SelectItem>
-                      <SelectItem value="Retail">Retail</SelectItem>
-                      <SelectItem value="Industrial">Industrial</SelectItem>
-                    </SelectGroup>
-                     <SelectGroup>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="mortgage">Mortgage</Label>
+                <Input id="mortgage" name="mortgage" type="number" defaultValue={property?.mortgage} required />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="currentValue">Current Value</Label>
+                <Input id="currentValue" name="currentValue" type="number" defaultValue={property?.currentValue} required />
+                </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="bedrooms" className="text-right">Bedrooms</Label>
-              <Input id="bedrooms" name="bedrooms" type="number" defaultValue={property?.bedrooms} className="col-span-3" required />
+             <div className="space-y-2">
+              <Label htmlFor="rentalValue">Target Monthly Rent</Label>
+              <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} required />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="bathrooms" className="text-right">Bathrooms</Label>
-              <Input id="bathrooms" name="bathrooms" type="number" defaultValue={property?.bathrooms} className="col-span-3" required />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="purchasePrice" className="text-right">Purchase Price</Label>
-              <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} className="col-span-3" required />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="purchaseTaxes" className="text-right">Purchase Taxes &amp; Fees</Label>
-              <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} className="col-span-3" />
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="mortgage" className="text-right">Mortgage</Label>
-              <Input id="mortgage" name="mortgage" type="number" defaultValue={property?.mortgage} className="col-span-3" required />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="currentValue" className="text-right">Current Value</Label>
-              <Input id="currentValue" name="currentValue" type="number" defaultValue={property?.currentValue} className="col-span-3" required />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="rentalValue" className="text-right">Rental Value</Label>
-              <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} className="col-span-3" required />
-            </div>
-          </div>
+          
           <DialogFooter className="pt-6">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>

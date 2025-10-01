@@ -33,13 +33,14 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
     startTransition(async () => {
       setPrompt(null);
       
-      const propertiesToAnalyze = properties.map(({ id, addressLine1, city, state, postalCode, propertyType, buildingType, bedrooms, bathrooms, rentalValue }) => ({
+      const propertiesToAnalyze = properties.map(({ id, addressLine1, city, state, postalCode, propertyType, buildingType, bedrooms, bathrooms, size, sizeUnit, rentalValue }) => ({
         id,
         address: `${addressLine1}, ${city}, ${state} ${postalCode}`,
         propertyType,
         buildingType,
         bedrooms,
         bathrooms,
+        size: size ? `${size} ${sizeUnit}` : undefined,
         currentRent: rentalValue,
       }));
 

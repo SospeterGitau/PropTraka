@@ -10,6 +10,8 @@ export interface Property {
   buildingType: | 'Terraced House' | 'Semi-Detached House' | 'Detached House' | 'Bungalow' | 'Flat' | 'Maisonette' | 'Office' | 'Retail' | 'Industrial' | 'Warehouse' | 'Land' | 'Other';
   bedrooms: number;
   bathrooms: number;
+  size?: number;
+  sizeUnit?: 'sqft' | 'sqm';
   purchasePrice: number;
   mortgage: number;
   currentValue: number;
