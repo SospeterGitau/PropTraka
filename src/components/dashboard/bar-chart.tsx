@@ -23,8 +23,8 @@ const chartConfig = {
 
 // Helper to create a shorter, more readable address label
 function getShortAddress(property: Property) {
-    const streetName = property.addressLine1.split(' ')[1] || property.addressLine1;
-    return `${streetName}, ${property.city}`;
+    const addressPart = property.addressLine1.split(' ')[0] || property.addressLine1;
+    return `${addressPart}, ${property.city}`;
 }
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
