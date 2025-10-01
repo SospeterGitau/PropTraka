@@ -37,7 +37,7 @@ export const revenue: Transaction[] = [
 export const expenses: Transaction[] = [
   { id: 'e1', date: '2025-07-05', amount: 25000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Maintenance', vendor: 'Nairobi Plumbing Services', expenseType: 'one-off' },
   { id: 'e2', date: '2025-07-10', amount: 50000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'expense', category: 'Repairs', vendor: 'Westlands Roof Repairs', expenseType: 'one-off' },
-  { id: 'e3', date: '2025-07-15', amount: 150000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'expense', category: 'Insurance', vendor: 'Jubilee Insurance', expenseType: 'one-off' },
+  { id: 'e3', date: '2025-07-15', amount: 150000, type: 'expense', propertyName: 'General Expense', category: 'Insurance', vendor: 'Jubilee Insurance', expenseType: 'one-off' },
   { id: 'e4', date: '2025-06-08', amount: 30000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.', expenseType: 'one-off' },
   { id: 'e5', date: '2025-07-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
 ];
@@ -70,5 +70,3 @@ export const dashboardData = {
       return this.totalRevenue - this.totalExpenses;
     },
 };
-
-    

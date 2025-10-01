@@ -81,7 +81,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                 <Label htmlFor="propertyType">Property Type</Label>
-                <Select name="propertyType" defaultValue={property?.propertyType} required>
+                <Select name="propertyType" defaultValue={property?.propertyType || 'Domestic'} required>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a type" />
                     </SelectTrigger>
@@ -136,7 +136,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="sizeUnit">Size Unit</Label>
-                     <Select name="sizeUnit" defaultValue={property?.sizeUnit || 'sqft'}>
+                     <Select name="sizeUnit" defaultValue={property?.sizeUnit || 'sqm'}>
                         <SelectTrigger>
                             <SelectValue placeholder="Unit" />
                         </SelectTrigger>
