@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Label } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
@@ -56,7 +56,7 @@ function getShortAddress(property: Property) {
 
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
-  const { formatCurrency, formatCurrencyForAxis } = useDataContext();
+  const { formatCurrency, formatCurrencyForAxis, currency } = useDataContext();
   const currentYear = new Date().getFullYear();
 
   const chartData = properties.map(property => {
@@ -103,7 +103,9 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 tickLine={false} 
                 axisLine={false} 
                 tickMargin={8}
-              />
+              >
+                <Label value={`Profit (${currency})`} position="bottom" offset={10} fontSize={12} />
+              </XAxis>
               <YAxis 
                 type="category"
                 dataKey="property" 

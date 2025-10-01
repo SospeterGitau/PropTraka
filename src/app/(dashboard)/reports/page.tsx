@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, memo } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
 import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
@@ -40,7 +40,7 @@ function getFinancialYear(date: Date) {
 }
 
 function RevenueAnalysisTab() {
-  const { revenue, formatCurrency, formatCurrencyForAxis } = useDataContext();
+  const { revenue, formatCurrency, formatCurrencyForAxis, currency } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -174,17 +174,23 @@ function RevenueAnalysisTab() {
         </div>
          <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout={viewMode === 'year' ? 'vertical' : 'horizontal'} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <BarChart data={chartData} layout={viewMode === 'year' ? 'vertical' : 'horizontal'} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={viewMode === 'year'} vertical={viewMode !== 'year'} />
               {viewMode === 'year' ? (
                 <>
-                  <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
-                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
+                  <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
+                     <Label value={`Revenue (${currency})`} position="bottom" offset={10} fontSize={12} />
+                  </XAxis>
+                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false}>
+                    <Label value="Month" angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12} />
+                  </YAxis>
                 </>
               ) : (
                 <>
                   <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                  <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
+                  <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
+                     <Label value={`Revenue (${currency})`} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12}/>
+                  </YAxis>
                 </>
               )}
               <Tooltip 
