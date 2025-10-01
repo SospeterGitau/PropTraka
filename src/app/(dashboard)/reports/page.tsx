@@ -160,16 +160,16 @@ function RevenueAnalysisTab() {
             description={`Due in ${dateDisplayFormat}`}
           />
           <KpiCard
-            icon={CurrencyIcon}
-            title="Actual Revenue"
-            value={formatCurrency(actualRevenue)}
-            description={`Paid in ${dateDisplayFormat}`}
-          />
-          <KpiCard
             icon={TrendingDown}
             title="Arrears (Unpaid)"
             value={formatCurrency(totalArrears)}
             description={`Outstanding for ${dateDisplayFormat}`}
+          />
+          <KpiCard
+            icon={CurrencyIcon}
+            title="Actual Revenue"
+            value={formatCurrency(actualRevenue)}
+            description={`Paid in ${dateDisplayFormat}`}
           />
         </div>
          <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
