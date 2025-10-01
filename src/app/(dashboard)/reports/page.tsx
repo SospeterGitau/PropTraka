@@ -158,21 +158,21 @@ function RevenueAnalysisTab() {
         <div className="grid gap-4 md:grid-cols-3">
           <KpiCard
             icon={TrendingUp}
-            title="Projected Revenue"
+            title="Gross Potential Income"
             value={formatCurrency(projectedRevenue)}
-            description={`Due in ${dateDisplayFormat}`}
+            description={`Total rent due for the period`}
           />
            <KpiCard
             icon={CircleAlert}
-            title="Arrears (Unpaid)"
+            title="Vacancy & Credit Losses"
             value={formatCurrency(totalArrears)}
-            description={`Outstanding for ${dateDisplayFormat}`}
+            description={`Unpaid rent for the period`}
           />
           <KpiCard
             icon={CurrencyIcon}
-            title="Actual Revenue"
+            title="Net Rental Income"
             value={formatCurrency(actualRevenue)}
-            description={`Paid in ${dateDisplayFormat}`}
+            description={`Effective Gross Income collected`}
           />
         </div>
          <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
@@ -499,3 +499,5 @@ function ReportsPage() {
 }
 
 export default memo(ReportsPage);
+
+    
