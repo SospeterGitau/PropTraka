@@ -27,7 +27,7 @@ function getShortAddress(property: Property) {
     const parts = address.split(' ');
     
     if (parts.length < 2) {
-        return address; // Not enough parts to shorten
+        return address;
     }
 
     const lastWord = parts[parts.length - 1];
@@ -45,15 +45,12 @@ function getShortAddress(property: Property) {
         close: 'Cl',
     };
     
-    // Check if the last word is a known street type to abbreviate
     if (abbreviations[streetType]) {
         const abbreviatedType = abbreviations[streetType];
-        // Join all parts except the last one, and add the abbreviation
         const shortAddress = [...parts.slice(0, -1), abbreviatedType].join(' ');
         return shortAddress;
     }
     
-    // Fallback if no abbreviation is found: return the address as is, or a simpler version
     return address;
 }
 
@@ -74,15 +71,16 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
     const profit = propertyRevenue - propertyExpenses;
 
     return { 
-      property: getShortAddress(property), // Use a shorter name for the label
-      profit: profit > 0 ? profit : 0, // Don't show negative profit on this chart for clarity
+      property: getShortAddress(property),
+      fullAddress: property.addressLine1, // Pass full address for tooltip
+      profit: profit > 0 ? profit : 0,
     };
-  });
+  }).sort((a, b) => a.profit - b.profit); // Sort data for better visual flow
   
   // Dynamically adjust height based on number of properties to prevent label overlap
-  const baseHeight = 300;
-  const heightPerProperty = properties.length > 5 ? 20 : 0;
-  const dynamicHeight = baseHeight + (properties.length - 5) * heightPerProperty;
+  const baseHeight = 150; // Base height for the chart
+  const heightPerProperty = 40; // Pixels per bar
+  const dynamicHeight = baseHeight + (chartData.length * heightPerProperty);
 
   return (
     <Card>
@@ -93,37 +91,45 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
       <CardContent>
         <ChartContainer config={chartConfig} style={{ height: `${dynamicHeight}px` }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 75 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <BarChart 
+              data={chartData} 
+              layout="vertical"
+              margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis 
-                dataKey="property" 
+                type="number" 
+                tickFormatter={(value) => formatCurrencyForAxis(Number(value))}
                 tickLine={false} 
                 axisLine={false} 
                 tickMargin={8}
-                angle={-45}
-                textAnchor="end"
-                interval={0}
-                height={1} // Prevents recharts from auto-calculating height and cutting off labels
               />
-              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
+              <YAxis 
+                type="category"
+                dataKey="property" 
+                width={150} // Allocate space for labels
+                tickLine={false} 
+                axisLine={false}
+                tick={{ fontSize: 12 }}
+                interval={0}
+              />
               <Tooltip 
                 content={<ChartTooltipContent 
                     formatter={(value, name, props) => {
-                      const fullAddress = properties.find(p => getShortAddress(p) === props.payload.property)?.addressLine1;
                       return (
                         <div className="flex flex-col">
-                            <span className="font-bold">{fullAddress}</span>
+                            <span className="font-bold">{props.payload.fullAddress}</span>
                             <div className="flex justify-between">
                                <span className="text-muted-foreground capitalize">{name}: &nbsp;</span>
                                <span>{formatCurrency(Number(value))}</span>
                             </div>
                         </div>
-                    )
-                }}
+                      )
+                    }}
                 />} 
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} 
               />
-              <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
