@@ -25,7 +25,7 @@ const chartConfig = {
 function getShortAddress(property: Property) {
     const address = property.addressLine1 || '';
     const parts = address.split(' ');
-    if (parts.length <= 2) {
+    if (parts.length < 2) {
         return address;
     }
 
