@@ -74,9 +74,9 @@ Crucially, include a disclaimer stating that the tax calculation is an estimate 
 
 ### **Income**
 
-- **Gross Potential Income:** [Calculate by summing 'amount' and 'deposit' from all revenue transactions.]
-- **Less: Vacancy & Credit Losses:** [Calculate as Gross Potential Income - total 'amountPaid'.]
-- **Net Rental Income (Effective Gross Income):** **[Calculate as Gross Potential Income - Vacancy & Credit Losses.]**
+- **Gross Potential Income:** [Calculate by summing the 'amount' field from all revenue transactions. This represents the total rent due.]
+- **Less: Vacancy & Credit Losses:** [Calculate by summing the difference between 'amount' and 'amountPaid' for all revenue transactions where 'amountPaid' is less than 'amount'.]
+- **Net Rental Income (Effective Gross Income):** **[This is the total of the 'amountPaid' field from all revenue transactions. Use this as the basis for income calculations.]**
 
 ### **Operating Expenses**
 
@@ -99,7 +99,7 @@ Calculate the Net Operating Income by subtracting Total Operating Expenses from 
 
 ### **Tax Calculation (Estimation Only)**
 
-Based on KRA guidelines for residential rental income, calculate the estimated tax. Assume the Monthly Rental Income (MRI) tax rate of 7.5% applies to the **Net Rental Income**. State this assumption clearly.
+Based on KRA guidelines for residential rental income, calculate the estimated tax. Assume the Monthly Rental Income (MRI) tax rate of 7.5% applies to the **Net Rental Income (Effective Gross Income)**. State this assumption clearly.
 
 - **Estimated Rental Income Tax (7.5% of Net Rental Income):** [Calculate as Net Rental Income * 0.075]
 
