@@ -6,8 +6,7 @@ import { sessionOptions, type SessionData } from '@/lib/session';
 import { cookies } from 'next/headers';
 
 export async function middleware(request: NextRequest) {
-  const cookieStore = cookies();
-  const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
 
   if (!session.isLoggedIn) {
     // Avoid redirecting for static assets and API routes
