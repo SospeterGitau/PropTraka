@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth, differenceInCalendarMonths } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ import { CurrencyIcon } from '@/components/currency-icon';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
 import { MarketResearchDialog } from '@/components/market-research-dialog';
 import { cn } from '@/lib/utils';
-import type { Property } from '@/lib/types';
+import type { Property, Transaction } from '@/lib/types';
 
 
 type ViewMode = 'month' | 'year';
@@ -43,7 +44,7 @@ function getFinancialYear(date: Date) {
 }
 
 function RevenueAnalysisTab() {
-  const { revenue, formatCurrency, formatCurrencyForAxis, currency } = useDataContext();
+  const { revenue, properties, formatCurrency, formatCurrencyForAxis, currency } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -69,7 +70,7 @@ function RevenueAnalysisTab() {
     }
   };
 
-  if (!currentDate || !revenue) {
+  if (!currentDate || !revenue || !properties) {
     return (
       <Card>
         <CardHeader>
@@ -89,19 +90,45 @@ function RevenueAnalysisTab() {
   }
   
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
+  const periodStart = viewMode === 'month' ? startOfMonth(currentDate) : financialYearStart;
+  const periodEnd = viewMode === 'month' ? endOfMonth(currentDate) : financialYearEnd;
+
+  const activeTenancyPropertyIds = new Set(
+    revenue
+      .filter(t => {
+        const tStartDate = new Date(t.tenancyStartDate!);
+        const tEndDate = new Date(t.tenancyEndDate!);
+        return tStartDate <= periodEnd && tEndDate >= periodStart;
+      })
+      .map(t => t.propertyId)
+  );
+
+  const vacantProperties = properties.filter(p => !activeTenancyPropertyIds.has(p.id));
+  
+  let vacancyLoss = 0;
+  let potentialRentFromVacant = 0;
+  const monthsInPeriod = differenceInCalendarMonths(periodEnd, periodStart) + 1;
+
+  if (viewMode === 'year') {
+    vacancyLoss = vacantProperties.reduce((total, p) => total + (p.rentalValue * 12), 0);
+    potentialRentFromVacant = vacancyLoss;
+  } else { // month view
+    vacancyLoss = vacantProperties.reduce((total, p) => total + p.rentalValue, 0);
+    potentialRentFromVacant = vacancyLoss;
+  }
 
   const filteredTransactions = revenue.filter(t => {
     const transactionDate = new Date(t.date);
-    if (viewMode === 'month') {
-      return isSameMonth(transactionDate, currentDate);
-    } else { // year view
-      return transactionDate >= financialYearStart && transactionDate <= financialYearEnd;
-    }
+    return transactionDate >= periodStart && transactionDate <= periodEnd;
   });
+  
+  const creditLoss = filteredTransactions.reduce((acc, t) => acc + (t.amount + (t.deposit ?? 0) - (t.amountPaid ?? 0)), 0);
+  const totalLoss = creditLoss + vacancyLoss;
 
-  const projectedRevenue = filteredTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0);
-  const actualRevenue = filteredTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
-  const totalArrears = projectedRevenue - actualRevenue;
+  const grossPotentialFromTenancies = filteredTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0);
+  const grossPotentialIncome = grossPotentialFromTenancies + potentialRentFromVacant;
+  
+  const netRentalIncome = filteredTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
   
   let chartData;
   let dateDisplayFormat;
@@ -112,7 +139,11 @@ function RevenueAnalysisTab() {
     
     chartData = months.map(month => {
       const monthlyTransactions = revenue.filter(t => isSameMonth(new Date(t.date), month));
-      const projected = monthlyTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0);
+      const activeTenancyIdsThisMonth = new Set(monthlyTransactions.map(t => t.propertyId));
+      const vacantPropsThisMonth = properties.filter(p => !activeTenancyIdsThisMonth.has(p.id));
+      const vacantRentThisMonth = vacantPropsThisMonth.reduce((total, p) => total + p.rentalValue, 0);
+
+      const projected = monthlyTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0) + vacantRentThisMonth;
       const actual = monthlyTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
       return {
         name: format(month, 'MMM'),
@@ -120,10 +151,10 @@ function RevenueAnalysisTab() {
         actual,
       };
     });
-  } else {
+  } else { // month view
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
-      { name: format(currentDate, 'MMMM'), projected: projectedRevenue, actual: actualRevenue },
+      { name: format(currentDate, 'MMMM'), projected: grossPotentialIncome, actual: netRentalIncome },
     ];
   }
   
@@ -135,7 +166,7 @@ function RevenueAnalysisTab() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle>Actual vs. Projected Revenue</CardTitle>
-            <CardDescription>Analyze revenue performance and the impact of arrears.</CardDescription>
+            <CardDescription>Analyze revenue performance including vacancy and credit losses.</CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
              <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
@@ -159,19 +190,19 @@ function RevenueAnalysisTab() {
           <KpiCard
             icon={TrendingUp}
             title="Gross Potential Income"
-            value={formatCurrency(projectedRevenue)}
-            description={`Total rent due for the period`}
+            value={formatCurrency(grossPotentialIncome)}
+            description={`Total potential rent including vacant properties`}
           />
-           <KpiCard
+          <KpiCard
             icon={CircleAlert}
             title="Vacancy & Credit Losses"
-            value={formatCurrency(totalArrears)}
-            description={`Unpaid rent for the period`}
+            value={formatCurrency(totalLoss)}
+            description={`Unpaid rent and vacant property loss`}
           />
           <KpiCard
             icon={CurrencyIcon}
             title="Net Rental Income"
-            value={formatCurrency(actualRevenue)}
+            value={formatCurrency(netRentalIncome)}
             description={`Effective Gross Income collected`}
           />
         </div>
@@ -179,7 +210,7 @@ function RevenueAnalysisTab() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 0 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
@@ -344,26 +375,26 @@ function PnlStatementTab() {
             </div>
         </CardHeader>
         <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <KpiCard
-                icon={TrendingUp}
-                title="Total Revenue"
-                value={formatCurrency(totalRevenue)}
-                description="Sum of all income received"
-                />
-                <KpiCard
-                icon={TrendingDown}
-                title="Total Expenses"
-                value={formatCurrency(totalExpenses)}
-                description="Sum of all costs incurred"
-                />
-                <KpiCard
-                icon={CurrencyIcon}
-                title="Net Operating Income"
-                value={formatCurrency(netOperatingIncome)}
-                description="Profit before tax"
-                />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <KpiCard
+              icon={TrendingUp}
+              title="Total Revenue"
+              value={formatCurrency(totalRevenue)}
+              description="Sum of all income received"
+              />
+              <KpiCard
+              icon={TrendingDown}
+              title="Total Expenses"
+              value={formatCurrency(totalExpenses)}
+              description="Sum of all costs incurred"
+              />
+              <KpiCard
+              icon={CurrencyIcon}
+              title="Net Operating Income"
+              value={formatCurrency(netOperatingIncome)}
+              description="Profit before tax"
+              />
+          </div>
         </CardContent>
       </Card>
       
