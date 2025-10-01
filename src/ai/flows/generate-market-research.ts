@@ -30,7 +30,7 @@ const marketResearchPrompt = ai.definePrompt({
   name: 'marketResearchPrompt',
   input: { schema: GenerateMarketResearchInputSchema },
   output: { schema: GenerateMarketResearchOutputSchema },
-  prompt: `You are an expert real estate market analyst specializing in competitive rental pricing. Your goal is to conduct a deep-dive analysis of the provided rental property portfolio to determine if their current pricing is competitive within their respective local markets.
+  prompt: `You are an expert real estate market analyst specializing in competitive rental pricing within the Kenyan market. Your goal is to conduct a deep-dive analysis of the provided rental property portfolio to determine if their current pricing is competitive within their respective local markets.
 
 **Context:**
 The user's rental property portfolio data is provided below. This data will serve as the baseline for your analysis. All financial figures, including current rents, market averages, and recommendations, must be presented in {{currency}}.
@@ -42,7 +42,7 @@ The user's rental property portfolio data is provided below. This data will serv
 For each property in the portfolio, perform the following steps:
 
 a) **Location Identification:** 
-Accurately identify the city, state/province, and if possible, the specific submarket or neighborhood for each property.
+Accurately identify the city, and specific submarket or neighborhood for each property.
 
 b) **Market Rent Research:** 
 Research and determine the current average market rent for comparable properties. 'Comparable' means properties with the same property type (e.g., Domestic, Commercial), building type (e.g., Detached House, Flat, Office), similar number of bedrooms, bathrooms, and size (e.g., sq ft or sq m). Account for general property condition and amenities if sufficient data is available or can be reasonably inferred.
@@ -56,8 +56,25 @@ Conclude whether the property is 'Competitively Priced', 'Underpriced', or 'Over
 e) **Recommendation:** 
 Provide a specific new rental price recommendation (e.g., '{{currency}} 1950') or a percentage adjustment (e.g., 'Increase by 8%') to align it with competitive market rates. Justify your recommendation briefly.
 
-**Data Sources:**
-Utilize robust market data from the last 3-6 months. Prioritize reputable sources such as major national/local property listing websites (e.g., Zillow, Rightmove, Property24, local equivalents), official government housing statistics (e.g., from sources like CBK publications), and reputable real estate market analysis reports. Ensure data recency and reliability.
+**Data Sources & Key Information (MANDATORY):**
+You must prioritize and reference the following Kenyan sources. Utilize robust market data from the last 6-12 months.
+
+**1. Official Government Sources:**
+- **Kenya National Bureau of Statistics (KNBS):** Prioritize the official Real Estate Survey Report and the Kenya Housing Survey for critical data on residential/commercial markets, rental trends, and pricing variations.
+- **Central Bank of Kenya (CBK):** Use annual reports for broad economic and financial indicators that influence market conditions.
+
+**2. Private Sector Reports:**
+- **Cytonn Investments:** Use their reports for detailed analysis of specific markets (e.g., Nairobi Metropolitan Area), focusing on rental yields, occupancy rates by property grade (A, B, C), and year-on-year rental rate changes.
+- **HassConsult:** Reference their quarterly and annual property indices for insights into rental price movements.
+- **BuyRentKenya & Other Portals:** Use reports from major property portals for market trends and activity.
+- **KMRC & Business Publications:** Consult the KMRC Housing Market Trends and Forecasts report and publications like Business Daily for additional data on market dynamics.
+
+**3. Key Information to Extract and Analyze:**
+When reviewing these sources, you must look for and use the following metrics in your analysis:
+- **Rental Yields:** The return on investment from rental properties.
+- **Rental Rates:** The average price per square meter/foot for different property types and grades.
+- **Occupancy Rates:** The percentage of available rental space that is occupied, indicating demand.
+- **Market Trends:** Factors influencing demand, price changes, and overall sector growth.
 
 **Output Format:**
 Your final output must be a well-structured report formatted in Markdown. It should commence with a concise **Executive Summary** (following the Pyramid Principle) offering an overview of the portfolio's overall pricing competitiveness and key findings. 
