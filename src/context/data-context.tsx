@@ -17,6 +17,8 @@ interface DataContextType {
   setCurrency: (currency: string) => void;
   locale: string;
   setLocale: (locale: string) => void;
+  companyName: string;
+  setCompanyName: (companyName: string) => void;
   formatCurrency: (amount: number) => string;
 }
 
@@ -29,6 +31,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [currency, setCurrency] = useState('GBP');
   const [locale, setLocale] = useState('en-GB');
+  const [companyName, setCompanyName] = useState('RentVision Ltd');
 
   // Simulate loading data on component mount
   useEffect(() => {
@@ -119,6 +122,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setCurrency,
     locale,
     setLocale,
+    companyName,
+    setCompanyName,
     formatCurrency,
   };
 

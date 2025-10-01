@@ -40,7 +40,7 @@ interface GenerateReportDialogProps {
 }
 
 export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialogProps) {
-  const { currency } = useDataContext();
+  const { currency, companyName } = useDataContext();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [report, setReport] = useState<string | null>(null);
@@ -75,6 +75,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         revenueTransactions: JSON.stringify(filteredRevenue),
         expenseTransactions: JSON.stringify(filteredExpenses),
         currency: currency,
+        companyName: companyName,
       });
 
       if (result.error) {

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { useDataContext } from '@/context/data-context';
+import { Input } from '@/components/ui/input';
 
 const supportedCurrencies = [
   { code: 'USD', name: 'United States Dollar' },
@@ -30,21 +31,24 @@ const supportedLocales = [
 ];
 
 export default function SettingsPage() {
-  const { currency, setCurrency, locale, setLocale } = useDataContext();
+  const { currency, setCurrency, locale, setLocale, companyName, setCompanyName } = useDataContext();
   const [isEditing, setIsEditing] = useState(false);
   const [tempCurrency, setTempCurrency] = useState(currency);
   const [tempLocale, setTempLocale] = useState(locale);
+  const [tempCompanyName, setTempCompanyName] = useState(companyName);
 
   useEffect(() => {
     if (!isEditing) {
       setTempCurrency(currency);
       setTempLocale(locale);
+      setTempCompanyName(companyName);
     }
-  }, [isEditing, currency, locale]);
+  }, [isEditing, currency, locale, companyName]);
 
   const handleSave = () => {
     setCurrency(tempCurrency);
     setLocale(tempLocale);
+    setCompanyName(tempCompanyName);
     setIsEditing(false);
   };
 
@@ -66,6 +70,19 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <fieldset disabled={!isEditing} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="company-name">Company Name</Label>
+              <Input
+                id="company-name"
+                value={tempCompanyName}
+                onChange={(e) => setTempCompanyName(e.target.value)}
+                className="w-[280px]"
+                placeholder="Your Company Name"
+              />
+               <p className="text-sm text-muted-foreground">
+                This name will be used on generated reports.
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="currency-select">Currency</Label>
               <Select value={tempCurrency} onValueChange={setTempCurrency}>

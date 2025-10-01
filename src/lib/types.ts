@@ -1,3 +1,4 @@
+
 export interface Property {
   id: string;
   addressLine1: string;
@@ -72,6 +73,7 @@ export interface GeneratePnlReportInput {
   revenueTransactions: string;
   expenseTransactions: string;
   currency: string;
+  companyName?: string;
 }
 
 export interface GeneratePnlReportOutput {
