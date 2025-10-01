@@ -123,35 +123,49 @@ function ArrearsClient() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  arrears.map((arrear, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{arrear.tenant}</TableCell>
-                      <TableCell>{arrear.propertyAddress}</TableCell>
-                      <TableCell>
-                        <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
-                      </TableCell>
-                      <TableCell>{arrear.daysOverdue} days</TableCell>
-                      <TableCell>
-                        {arrear.rentOwed > 0 && arrear.depositOwed > 0 ? (
-                          <Badge variant="outline">Rent & Deposit</Badge>
-                        ) : arrear.rentOwed > 0 ? (
-                          <Badge variant="outline">Rent</Badge>
-                        ) : (
-                          <Badge variant="outline">Deposit</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-destructive">
-                        {formatCurrency(arrear.amountOwed)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                         <Button size="sm" asChild>
-                          <Link href={`mailto:${arrear.tenantEmail}?subject=Rent Arrears Reminder&body=Dear ${arrear.tenant},%0D%0A%0D%0AThis is a reminder that your payment of ${formatCurrency(arrear.amountOwed)} for the property at ${arrear.propertyAddress} is overdue since ${formattedDates[arrear.dueDate]}.%0D%0A%0D%0APlease make the payment as soon as possible.%0D%0A%0D%0AThank you,%0D%0A${companyName}`}>
-                            Send Reminder
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  arrears.map((arrear, index) => {
+                    const subject = `Overdue Rent Reminder`;
+                    const body = [
+                      `Dear ${arrear.tenant},`,
+                      `This is a friendly reminder regarding the outstanding balance for your tenancy at ${arrear.propertyAddress}.`,
+                      `Our records show that a payment of ${formatCurrency(arrear.amountOwed)} was due on ${formattedDates[arrear.dueDate]} and is now overdue.`,
+                      `Could you please arrange to make this payment at your earliest convenience? If you have already made the payment, please disregard this notice.`,
+                      `If you have any questions or wish to discuss this, please do not hesitate to reply to this email.`,
+                      `Thank you for your prompt attention to this matter.`,
+                      `Best regards,`,
+                      `${companyName}`
+                    ].join('%0D%0A%0D%0A'); // %0D%0A is a URL-encoded double line break
+
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{arrear.tenant}</TableCell>
+                        <TableCell>{arrear.propertyAddress}</TableCell>
+                        <TableCell>
+                          <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
+                        </TableCell>
+                        <TableCell>{arrear.daysOverdue} days</TableCell>
+                        <TableCell>
+                          {arrear.rentOwed > 0 && arrear.depositOwed > 0 ? (
+                            <Badge variant="outline">Rent & Deposit</Badge>
+                          ) : arrear.rentOwed > 0 ? (
+                            <Badge variant="outline">Rent</Badge>
+                          ) : (
+                            <Badge variant="outline">Deposit</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-semibold text-destructive">
+                          {formatCurrency(arrear.amountOwed)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button size="sm" asChild>
+                            <Link href={`mailto:${arrear.tenantEmail}?subject=${encodeURIComponent(subject)}&body=${body}`}>
+                              Send Reminder
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
