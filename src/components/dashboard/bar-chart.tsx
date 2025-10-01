@@ -43,8 +43,10 @@ function getShortAddress(property: Property) {
         Close: 'Cl',
     };
     
-    if (abbreviations[lastWord]) {
-        const abbreviatedType = abbreviations[lastWord];
+    const lowerCaseLastWord = lastWord.charAt(0).toUpperCase() + lastWord.slice(1).toLowerCase();
+
+    if (abbreviations[lowerCaseLastWord]) {
+        const abbreviatedType = abbreviations[lowerCaseLastWord];
         const shortAddress = [...parts.slice(0, -1), abbreviatedType].join(' ');
         return shortAddress;
     }
@@ -73,12 +75,9 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
       fullAddress: property.addressLine1,
       profit: profit > 0 ? profit : 0,
     };
-  }).sort((a, b) => b.profit - a.profit);
+  }).sort((a, b) => a.profit - b.profit); // Sort ascending for horizontal chart
 
-  const LAYOUT_THRESHOLD = 6;
-  const isHorizontal = chartData.length > LAYOUT_THRESHOLD;
-
-  const dynamicHeight = isHorizontal ? `${chartData.length * 50 + 80}px` : '350px';
+  const dynamicHeight = `${chartData.length * 40 + 80}px`; // 40px per bar + margins
 
   return (
     <Card>
@@ -91,25 +90,14 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={chartData} 
-              layout={isHorizontal ? 'vertical' : 'horizontal'}
-              margin={{ top: 10, right: 30, left: 20, bottom: 60 }}
+              layout="vertical"
+              margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={isHorizontal} vertical={!isHorizontal} />
-              {isHorizontal ? (
-                <>
-                  <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} >
-                     <Label value={`Profit (${currency})`} position="bottom" offset={10} fontSize={12} />
-                  </XAxis>
-                  <YAxis dataKey="property" type="category" width={150} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} interval={0} />
-                </>
-              ) : (
-                <>
-                  <XAxis dataKey="property" tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={80} interval={0} tick={{ fontSize: 12 }} />
-                  <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
-                    <Label value={`Profit (${currency})`} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12}/>
-                  </YAxis>
-                </>
-              )}
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+              <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
+                 <Label value={`Profit (${currency})`} position="bottom" offset={10} fontSize={12} />
+              </XAxis>
+              <YAxis dataKey="property" type="category" width={150} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} interval={0} />
               <Tooltip 
                 content={<ChartTooltipContent 
                     formatter={(value, name, props) => {
@@ -126,7 +114,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 />} 
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} 
               />
-              <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} />
+              <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

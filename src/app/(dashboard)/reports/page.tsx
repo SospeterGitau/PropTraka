@@ -125,7 +125,7 @@ function RevenueAnalysisTab() {
   }
   
   const LAYOUT_THRESHOLD = 6;
-  const isHorizontal = viewMode === 'year' && chartData.length > LAYOUT_THRESHOLD;
+  const isHorizontal = viewMode === 'year'; // Always horizontal for year view now
   if(isHorizontal) {
     chartData.reverse();
   }
