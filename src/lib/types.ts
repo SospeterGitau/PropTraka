@@ -1,5 +1,7 @@
 
 
+export type ResidencyStatus = 'resident' | 'non-resident';
+
 export interface Property {
   id: string;
   addressLine1: string;
@@ -77,6 +79,7 @@ export interface GeneratePnlReportInput {
   expenseTransactions: string;
   currency: string;
   companyName?: string;
+  residencyStatus: ResidencyStatus;
 }
 
 export interface GeneratePnlReportOutput {

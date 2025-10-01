@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { useDataContext } from '@/context/data-context';
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { ResidencyStatus } from '@/lib/types';
 
 const supportedCurrencies = [
   { code: 'USD', name: 'United States Dollar' },
@@ -31,24 +33,28 @@ const supportedLocales = [
 ];
 
 function SettingsPage() {
-  const { currency, setCurrency, locale, setLocale, companyName, setCompanyName } = useDataContext();
+  const { currency, setCurrency, locale, setLocale, companyName, setCompanyName, residencyStatus, setResidencyStatus } = useDataContext();
   const [isEditing, setIsEditing] = useState(false);
   const [tempCurrency, setTempCurrency] = useState(currency);
   const [tempLocale, setTempLocale] = useState(locale);
   const [tempCompanyName, setTempCompanyName] = useState(companyName);
+  const [tempResidencyStatus, setTempResidencyStatus] = useState(residencyStatus);
+
 
   useEffect(() => {
     if (!isEditing) {
       setTempCurrency(currency);
       setTempLocale(locale);
       setTempCompanyName(companyName);
+      setTempResidencyStatus(residencyStatus);
     }
-  }, [isEditing, currency, locale, companyName]);
+  }, [isEditing, currency, locale, companyName, residencyStatus]);
 
   const handleSave = () => {
     setCurrency(tempCurrency);
     setLocale(tempLocale);
     setCompanyName(tempCompanyName);
+    setResidencyStatus(tempResidencyStatus);
     setIsEditing(false);
   };
 
@@ -83,6 +89,28 @@ function SettingsPage() {
                 This name will be used on generated reports.
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label>Residency Status</Label>
+              <RadioGroup
+                value={tempResidencyStatus}
+                onValueChange={(value: ResidencyStatus) => setTempResidencyStatus(value)}
+                className="flex gap-4 pt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="resident" id="r-resident" />
+                  <Label htmlFor="r-resident">Resident</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="non-resident" id="r-non-resident" />
+                  <Label htmlFor="r-non-resident">Non-Resident</Label>
+                </div>
+              </RadioGroup>
+              <p className="text-sm text-muted-foreground">
+                Determines if KRA rental income tax is applicable.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="currency-select">Currency</Label>
               <Select value={tempCurrency} onValueChange={setTempCurrency}>

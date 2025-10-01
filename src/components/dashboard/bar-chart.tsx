@@ -56,7 +56,7 @@ function getShortAddress(property: Property) {
 
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
-  const { formatCurrency, formatCurrencyForAxis, currency } = useDataContext();
+  const { formatCurrency, formatCurrencyForAxis, currency, residencyStatus } = useDataContext();
   const currentYear = new Date().getFullYear();
 
   const chartData = properties.map(property => {
@@ -67,8 +67,9 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
     const propertyExpenses = expenses
       .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
       .reduce((sum, t) => sum + t.amount, 0);
-      
-    const taxOnRevenue = propertyRevenue * 0.075;
+
+    const isTaxable = residencyStatus === 'resident' && property.propertyType === 'Domestic';
+    const taxOnRevenue = isTaxable ? propertyRevenue * 0.075 : 0;
     const profit = propertyRevenue - propertyExpenses - taxOnRevenue;
 
     return { 

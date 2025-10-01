@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for generating a comprehensive Profit and Loss (P&L) report.
@@ -8,16 +9,17 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { GeneratePnlReportInput, GeneratePnlReportOutput } from '@/lib/types';
+import type { GeneratePnlReportInput, GeneratePnlReportOutput, ResidencyStatus } from '@/lib/types';
 
 // Define the input schema for the P&L report
 const GeneratePnlReportInputSchema = z.object({
   startDate: z.string().describe('The start date for the report period (YYYY-MM-DD).'),
   endDate: z.string().describe('The end date for the report period (YYYY-MM-DD).'),
-  revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions. "amount" is the rent due, "amountPaid" is the rent collected.'),
+  revenueTransactions: z.string().describe('A JSON string representing an array of revenue transactions. Each transaction must include a `propertyType` of "Domestic" or "Commercial". "amount" is the rent due, "amountPaid" is the rent collected.'),
   expenseTransactions: z.string().describe('A JSON string representing an array of expense transactions.'),
   currency: z.string().describe('The currency code (e.g., USD, GBP, EUR) to use for all financial figures in the report.'),
   companyName: z.string().optional().describe('The name of the company for which the report is being generated.'),
+  residencyStatus: z.enum(['resident', 'non-resident']).describe('The residency status of the landlord.'),
 });
 
 // Define the output schema for the structured report
@@ -42,6 +44,13 @@ const pnlReportPrompt = ai.definePrompt({
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
   prompt: `You are an expert financial analyst AI specializing in Kenyan real estate accounting. Your primary task is to generate a professional, well-structured Profit and Loss (P&L) Statement for {{companyName}} covering the period from {{startDate}} to {{endDate}}.
+
+**Critical Tax Rules:**
+- The landlord's residency status is: **{{residencyStatus}}**.
+- The Monthly Rental Income (MRI) tax of 7.5% applies ONLY to **resident** landlords.
+- MRI tax is calculated ONLY on the gross rent from **"Domestic"** (i.e., residential) properties.
+- Income from "Commercial" properties is exempt from this 7.5% MRI tax.
+- For non-resident landlords, NO MRI tax should be calculated or applied.
 
 **Formatting Rules (MANDATORY):**
 - The entire output MUST be a single string formatted in clean, readable Markdown.
@@ -69,7 +78,7 @@ Your report must follow the Pyramid Principle. Start with the main conclusion (t
 
 ## **1. Executive Summary**
 
-(Provide a brief, insightful narrative of 2-3 sentences on the overall financial performance for the period. Start with the most important figure, the Net Profit/Loss After Tax. Comment on the significance of any credit losses or major expense categories. Crucially, include a disclaimer stating that the tax calculation is an estimate for planning purposes and a certified accountant should be consulted for official KRA filing.)
+(Provide a brief, insightful narrative of 2-3 sentences on the overall financial performance for the period. Start with the most important figure, the Net Profit/Loss After Tax. Comment on the significance of any credit losses or major expense categories. Crucially, if tax was applied, include a disclaimer stating that the tax calculation is an estimate for planning purposes based on KRA's MRI rules for resident landlords and a certified accountant should be consulted for official filing. If no tax was applied due to residency status or property type, state that.)
 
 ---
 
@@ -115,9 +124,17 @@ Your report must follow the Pyramid Principle. Start with the main conclusion (t
 
 ### **Tax Calculation (Estimation Only)**
 
-(Based on KRA guidelines for residential rental income, calculate the estimated tax. You MUST state the assumption that you are using the Monthly Rental Income (MRI) tax rate of 7.5% and applying it to the **Net Rental Income (Effective Gross Income)** for the period.)
+{{#if (eq residencyStatus "resident")}}
+(Based on KRA guidelines for residential rental income, calculate the estimated tax. You MUST state the assumption that you are using the Monthly Rental Income (MRI) tax rate of 7.5% and applying it ONLY to the gross **Net Rental Income** from **"Domestic"** properties for the period.)
 
-- **Estimated Rental Income Tax (7.5% of Net Rental Income):** [Calculate as Net Rental Income * 0.075]
+- **Gross Residential Rental Income:** [Sum of 'amountPaid' from all revenue transactions where propertyType is 'Domestic'.]
+
+- **Estimated Rental Income Tax (7.5% of Gross Residential Rental Income):** [Calculate as Gross Residential Rental Income * 0.075]
+{{else}}
+(As a non-resident landlord, no Monthly Rental Income (MRI) tax is applicable. The Net Profit/Loss will be the same as the Net Operating Income.)
+
+- **Estimated Rental Income Tax:** **{{currency}} 0**
+{{/if}}
 
 \n\n
 

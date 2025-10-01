@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses } from '@/lib/data';
-import type { Property, Transaction, CalendarEvent } from '@/lib/types';
+import type { Property, Transaction, CalendarEvent, ResidencyStatus } from '@/lib/types';
 
 interface DataContextType {
   properties: Property[] | null;
@@ -19,6 +19,8 @@ interface DataContextType {
   setLocale: (locale: string) => void;
   companyName: string;
   setCompanyName: (companyName: string) => void;
+  residencyStatus: ResidencyStatus;
+  setResidencyStatus: (status: ResidencyStatus) => void;
   formatCurrency: (amount: number) => string;
   formatCurrencyForAxis: (amount: number) => string;
 }
@@ -33,6 +35,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
   const [companyName, setCompanyName] = useState('RentVision Ltd');
+  const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('resident');
+
 
   // Simulate loading data on component mount
   useEffect(() => {
@@ -137,6 +141,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setLocale,
     companyName,
     setCompanyName,
+    residencyStatus,
+    setResidencyStatus,
     formatCurrency,
     formatCurrencyForAxis,
   };

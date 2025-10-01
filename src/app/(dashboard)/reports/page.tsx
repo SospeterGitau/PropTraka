@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -25,6 +26,8 @@ import { CurrencyIcon } from '@/components/currency-icon';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
 import { MarketResearchDialog } from '@/components/market-research-dialog';
 import { cn } from '@/lib/utils';
+import type { Property } from '@/lib/types';
+
 
 type ViewMode = 'month' | 'year';
 
@@ -174,21 +177,25 @@ function RevenueAnalysisTab() {
         </div>
          <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-             <BarChart 
-              data={chartData} 
+            <BarChart
+              data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
-              <Tooltip 
-                 content={<ChartTooltipContent 
-                    formatter={(value, name) => (
+              <YAxis
+                tickFormatter={(value) => formatCurrencyForAxis(Number(value))}
+                tickLine={false}
+                axisLine={false}
+              />
+              <Tooltip
+                content={<ChartTooltipContent
+                  formatter={(value, name) => (
                     <div className="flex flex-col">
-                        <span className="text-muted-foreground capitalize">{name}</span>
-                        <span>{formatCurrency(Number(value))}</span>
+                      <span className="text-muted-foreground capitalize">{name}</span>
+                      <span>{formatCurrency(Number(value))}</span>
                     </div>
-                )}
+                  )}
                 />}
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
@@ -205,7 +212,7 @@ function RevenueAnalysisTab() {
 
 
 function PnlStatementTab() {
-  const { revenue, expenses, formatCurrency, formatCurrencyForAxis } = useDataContext();
+  const { properties, revenue, expenses, formatCurrency, formatCurrencyForAxis, residencyStatus } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -231,7 +238,7 @@ function PnlStatementTab() {
     }
   };
   
-  if (!currentDate || !revenue || !expenses) {
+  if (!currentDate || !revenue || !expenses || !properties) {
     // Show skeleton loader while waiting for client-side mount
     return (
        <div className="space-y-6">
@@ -285,7 +292,17 @@ function PnlStatementTab() {
   const netOperatingIncome = totalRevenue - totalExpenses;
   
   // Calculate estimated tax and net profit after tax
-  const estimatedTax = totalRevenue * 0.075;
+  const propertyMap = new Map(properties.map(p => [p.id, p]));
+  const grossResidentialRevenue = residencyStatus === 'resident'
+    ? filteredRevenue
+        .filter(t => {
+          const prop = propertyMap.get(t.propertyId!);
+          return prop?.propertyType === 'Domestic';
+        })
+        .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0)
+    : 0;
+    
+  const estimatedTax = grossResidentialRevenue * 0.075;
   const netProfitAfterTax = totalRevenue - totalExpenses - estimatedTax;
   const isProfit = netProfitAfterTax >= 0;
   
@@ -326,7 +343,7 @@ function PnlStatementTab() {
                </div>
             </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <KpiCard
                 icon={TrendingUp}
@@ -347,22 +364,23 @@ function PnlStatementTab() {
                 description="Profit before tax"
                 />
             </div>
-            <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
-                <CardHeader className="flex flex-col items-center pb-2">
-                    <CardTitle className="text-sm font-medium">
-                    {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
-                    </CardTitle>
-                    <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="text-center">
-                    <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
-                    {formatCurrency(netProfitAfterTax)}
-                    </div>
-                    <p className="text-xs text-muted-foreground">After 7.5% estimated tax on gross revenue</p>
-                </CardContent>
-            </Card>
         </CardContent>
       </Card>
+      
+       <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
+            <CardHeader className="flex flex-col items-center pb-2">
+                <CardTitle className="text-sm font-medium">
+                {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
+                </CardTitle>
+                <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="text-center">
+                <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+                {formatCurrency(netProfitAfterTax)}
+                </div>
+                <p className="text-xs text-muted-foreground">After 7.5% estimated tax on gross residential revenue</p>
+            </CardContent>
+        </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
