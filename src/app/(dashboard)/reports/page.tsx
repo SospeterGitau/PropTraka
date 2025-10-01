@@ -1,10 +1,9 @@
 
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth, differenceInCalendarMonths } from 'date-fns';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth, differenceInCalendarMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -110,7 +109,7 @@ function RevenueAnalysisTab() {
   const monthsInPeriod = differenceInCalendarMonths(periodEnd, periodStart) + 1;
 
   if (viewMode === 'year') {
-    vacancyLoss = vacantProperties.reduce((total, p) => total + (p.rentalValue * 12), 0);
+    vacancyLoss = vacantProperties.reduce((total, p) => total + (p.rentalValue * monthsInPeriod), 0);
     potentialRentFromVacant = vacancyLoss;
   } else { // month view
     vacancyLoss = vacantProperties.reduce((total, p) => total + p.rentalValue, 0);
@@ -143,18 +142,18 @@ function RevenueAnalysisTab() {
       const vacantPropsThisMonth = properties.filter(p => !activeTenancyIdsThisMonth.has(p.id));
       const vacantRentThisMonth = vacantPropsThisMonth.reduce((total, p) => total + p.rentalValue, 0);
 
-      const projected = monthlyTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0) + vacantRentThisMonth;
-      const actual = monthlyTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
+      const grossPotential = monthlyTransactions.reduce((acc, t) => acc + t.amount + (t.deposit ?? 0), 0) + vacantRentThisMonth;
+      const netIncome = monthlyTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
       return {
         name: format(month, 'MMM'),
-        projected,
-        actual,
+        grossPotential,
+        netIncome,
       };
     });
   } else { // month view
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
-      { name: format(currentDate, 'MMMM'), projected: grossPotentialIncome, actual: netRentalIncome },
+      { name: format(currentDate, 'MMMM'), grossPotential: grossPotentialIncome, netIncome: netRentalIncome },
     ];
   }
   
@@ -231,8 +230,8 @@ function RevenueAnalysisTab() {
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
               <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Projected" />
-              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Actual" />
+              <Bar dataKey="grossPotential" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Gross Potential" />
+              <Bar dataKey="netIncome" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Net Income" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
@@ -479,7 +478,7 @@ function PnlStatementTab() {
 
 
 function ReportsPage() {
-  const { revenue, expenses, properties } = useDataContext();
+  const { revenue, expenses, properties, isPnlReportEnabled, isMarketResearchEnabled } = useDataContext();
 
   if (!revenue || !expenses || !properties) {
     // Render a loading state or skeleton
@@ -510,8 +509,8 @@ function ReportsPage() {
   return (
     <>
       <PageHeader title="Financial Reports">
-        <MarketResearchDialog properties={properties} />
-        <GenerateReportDialog revenue={revenue} expenses={expenses} />
+        {isMarketResearchEnabled && <MarketResearchDialog properties={properties} />}
+        {isPnlReportEnabled && <GenerateReportDialog revenue={revenue} expenses={expenses} />}
       </PageHeader>
        <Tabs defaultValue="revenue-analysis">
         <TabsList>
