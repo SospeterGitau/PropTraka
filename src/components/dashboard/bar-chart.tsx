@@ -25,7 +25,7 @@ const chartConfig = {
 function getShortAddress(property: Property) {
     const parts = property.addressLine1.split(' ');
     if (parts.length <= 2) {
-        return property.addressLine1; // e.g. "Upper Hill"
+        return property.addressLine1;
     }
 
     const streetType = parts[parts.length - 1].toLowerCase();
@@ -42,7 +42,6 @@ function getShortAddress(property: Property) {
     
     const abbreviatedType = abbreviations[streetType] || parts[parts.length - 1];
     
-    // Take the first 3 parts (e.g., "123 Riara Road") and join them
     const shortAddress = [...parts.slice(0, 2), abbreviatedType].join(' ');
 
     return shortAddress;
@@ -69,6 +68,11 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
       profit: profit > 0 ? profit : 0, // Don't show negative profit on this chart for clarity
     };
   });
+  
+  // Dynamically adjust height based on number of properties to prevent label overlap
+  const baseHeight = 300;
+  const heightPerProperty = properties.length > 5 ? 20 : 0;
+  const dynamicHeight = baseHeight + (properties.length - 5) * heightPerProperty;
 
   return (
     <Card>
@@ -77,9 +81,9 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
         <CardDescription>Year-to-date profit for each property</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+        <ChartContainer config={chartConfig} style={{ height: `${dynamicHeight}px` }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 50 }}>
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 75 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis 
                 dataKey="property" 
@@ -89,6 +93,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 angle={-45}
                 textAnchor="end"
                 interval={0}
+                height={1} // Prevents recharts from auto-calculating height and cutting off labels
               />
               <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
