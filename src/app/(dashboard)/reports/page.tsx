@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -115,13 +116,15 @@ function RevenueAnalysisTab() {
         projected,
         actual,
       };
-    });
+    }).reverse(); // Reverse for horizontal chart
   } else {
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
       { name: format(currentDate, 'MMMM'), projected: projectedRevenue, actual: actualRevenue },
     ];
   }
+  
+  const chartHeight = viewMode === 'year' ? `${chartData.length * 50 + 80}px` : '350px';
 
   return (
     <Card>
@@ -169,12 +172,21 @@ function RevenueAnalysisTab() {
             description={`Outstanding for ${dateDisplayFormat}`}
           />
         </div>
-         <ChartContainer config={{}} className="h-[350px] w-full">
+         <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
+            <BarChart data={chartData} layout={viewMode === 'year' ? 'vertical' : 'horizontal'} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={viewMode === 'year'} vertical={viewMode !== 'year'} />
+              {viewMode === 'year' ? (
+                <>
+                  <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
+                  <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
+                </>
+              ) : (
+                <>
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                  <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
+                </>
+              )}
               <Tooltip 
                  content={<ChartTooltipContent 
                     formatter={(value, name) => (
@@ -187,8 +199,8 @@ function RevenueAnalysisTab() {
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
               <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Projected" />
-              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Actual" />
+              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[0, 4, 4, 0]} name="Projected" />
+              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} name="Actual" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
