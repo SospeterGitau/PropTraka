@@ -155,7 +155,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <Button onClick={() => setIsOpen(true)}>
         <FileText className="mr-2 h-4 w-4" />
-        Generate AI P&amp;L Statement
+        P&amp;L Statement
       </Button>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
@@ -266,3 +266,5 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     </Dialog>
   );
 }
+
+    
