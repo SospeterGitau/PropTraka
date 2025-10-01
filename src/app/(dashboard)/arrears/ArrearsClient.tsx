@@ -31,7 +31,7 @@ interface ArrearEntry {
 }
 
 function ArrearsClient() {
-  const { revenue, formatCurrency, locale } = useDataContext();
+  const { revenue, formatCurrency, locale, companyName } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -145,7 +145,7 @@ function ArrearsClient() {
                       </TableCell>
                       <TableCell className="text-center">
                          <Button size="sm" asChild>
-                          <Link href={`mailto:${arrear.tenantEmail}?subject=Rent Arrears Reminder&body=Dear ${arrear.tenant},%0D%0A%0D%0AThis is a reminder that your payment of ${formatCurrency(arrear.amountOwed)} for the property at ${arrear.propertyAddress} is overdue since ${formattedDates[arrear.dueDate]}.%0D%0A%0D%0APlease make the payment as soon as possible.%0D%0A%0D%0AThank you,%0D%0A[Your Name/Company Name]`}>
+                          <Link href={`mailto:${arrear.tenantEmail}?subject=Rent Arrears Reminder&body=Dear ${arrear.tenant},%0D%0A%0D%0AThis is a reminder that your payment of ${formatCurrency(arrear.amountOwed)} for the property at ${arrear.propertyAddress} is overdue since ${formattedDates[arrear.dueDate]}.%0D%0A%0D%0APlease make the payment as soon as possible.%0D%0A%0D%0AThank you,%0D%0A${companyName}`}>
                             Send Reminder
                           </Link>
                         </Button>
