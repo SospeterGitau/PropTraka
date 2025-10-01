@@ -35,7 +35,7 @@ function formatAddress(property: Property) {
 }
 
 function PropertiesPage() {
-  const { properties, setProperties, formatCurrency } = useDataContext();
+  const { properties, setProperties, revenue, formatCurrency } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -72,6 +72,19 @@ function PropertiesPage() {
       // Update
       setProperties(properties.map((p) => (p.id === data.id ? data : p)));
     }
+  };
+  
+  const getOccupancyStatus = (propertyId: string): 'Occupied' | 'Vacant' => {
+    if (!revenue) return 'Vacant';
+    const today = new Date();
+    const hasActiveTenancy = revenue.some(t => 
+      t.propertyId === propertyId &&
+      t.tenancyStartDate &&
+      t.tenancyEndDate &&
+      new Date(t.tenancyStartDate) <= today &&
+      new Date(t.tenancyEndDate) >= today
+    );
+    return hasActiveTenancy ? 'Occupied' : 'Vacant';
   };
 
   if (!properties) {
@@ -122,7 +135,7 @@ function PropertiesPage() {
                 </TableHead>
                 <TableHead>Property Details</TableHead>
                 <TableHead>Property Type</TableHead>
-                <TableHead>Building Type</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
                 <TableHead>
@@ -133,6 +146,7 @@ function PropertiesPage() {
             <TableBody>
               {properties.map((property) => {
                 const isPlaceholder = property.imageUrl?.includes('picsum.photos');
+                const status = getOccupancyStatus(property.id);
                 return (
                   <TableRow key={property.id}>
                     <TableCell className="hidden sm:table-cell">
@@ -174,7 +188,9 @@ function PropertiesPage() {
                        <Badge variant="outline">{property.propertyType}</Badge>
                     </TableCell>
                     <TableCell>
-                       <div className="text-sm text-muted-foreground">{property.buildingType}</div>
+                       <Badge variant={status === 'Occupied' ? 'secondary' : 'default'}>
+                         {status}
+                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(property.currentValue)}</TableCell>
                     <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue)}/month</TableCell>
