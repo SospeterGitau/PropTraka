@@ -177,7 +177,7 @@ function RevenueAnalysisTab() {
           <ResponsiveContainer width="100%" height="100%">
              <BarChart 
               data={chartData} 
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
@@ -349,13 +349,13 @@ function PnlStatementTab() {
             />
           </div>
           <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
-              <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-2">
+              <CardHeader className="flex flex-col items-center space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
                 </CardTitle>
                 <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="text-center">
                 <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
                   {formatCurrency(netProfitAfterTax)}
                 </div>
