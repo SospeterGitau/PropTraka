@@ -117,7 +117,7 @@ function RevenueAnalysisTab() {
         projected,
         actual,
       };
-    });
+    }).reverse();
   } else {
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
@@ -327,8 +327,8 @@ function PnlStatementTab() {
                </div>
             </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <KpiCard
               icon={TrendingUp}
               title="Total Revenue"
@@ -347,7 +347,8 @@ function PnlStatementTab() {
               value={formatCurrency(netOperatingIncome)}
               description="Profit before tax"
             />
-             <Card className={cn(isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
+          </div>
+          <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
@@ -361,7 +362,6 @@ function PnlStatementTab() {
                 <p className="text-xs text-muted-foreground">After 7.5% estimated tax</p>
               </CardContent>
             </Card>
-          </div>
         </CardContent>
       </Card>
 
@@ -482,3 +482,5 @@ function ReportsPage() {
 }
 
 export default memo(ReportsPage);
+
+    
