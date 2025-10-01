@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -287,7 +286,7 @@ function PnlStatementTab() {
   
   // Calculate estimated tax and net profit after tax
   const estimatedTax = totalRevenue * 0.075;
-  const netProfitAfterTax = netOperatingIncome - estimatedTax;
+  const netProfitAfterTax = totalRevenue - totalExpenses - estimatedTax;
   const isProfit = netProfitAfterTax >= 0;
   
   const expenseCategories = filteredExpenses.reduce((acc, expense) => {
@@ -328,39 +327,39 @@ function PnlStatementTab() {
             </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <KpiCard
-              icon={TrendingUp}
-              title="Total Revenue"
-              value={formatCurrency(totalRevenue)}
-              description="Sum of all income received"
-            />
-            <KpiCard
-              icon={TrendingDown}
-              title="Total Expenses"
-              value={formatCurrency(totalExpenses)}
-              description="Sum of all costs incurred"
-            />
-             <KpiCard
-              icon={CurrencyIcon}
-              title="Net Operating Income"
-              value={formatCurrency(netOperatingIncome)}
-              description="Profit before tax"
-            />
-          </div>
-          <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
-              <CardHeader className="flex flex-col items-center space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
-                </CardTitle>
-                <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
-                  {formatCurrency(netProfitAfterTax)}
-                </div>
-                <p className="text-xs text-muted-foreground">After 7.5% estimated tax</p>
-              </CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <KpiCard
+                icon={TrendingUp}
+                title="Total Revenue"
+                value={formatCurrency(totalRevenue)}
+                description="Sum of all income received"
+                />
+                <KpiCard
+                icon={TrendingDown}
+                title="Total Expenses"
+                value={formatCurrency(totalExpenses)}
+                description="Sum of all costs incurred"
+                />
+                <KpiCard
+                icon={CurrencyIcon}
+                title="Net Operating Income"
+                value={formatCurrency(netOperatingIncome)}
+                description="Profit before tax"
+                />
+            </div>
+            <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
+                <CardHeader className="flex flex-col items-center pb-2">
+                    <CardTitle className="text-sm font-medium">
+                    {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
+                    </CardTitle>
+                    <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="text-center">
+                    <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+                    {formatCurrency(netProfitAfterTax)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">After 7.5% estimated tax on gross revenue</p>
+                </CardContent>
             </Card>
         </CardContent>
       </Card>
@@ -482,5 +481,3 @@ function ReportsPage() {
 }
 
 export default memo(ReportsPage);
-
-    

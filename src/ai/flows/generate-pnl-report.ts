@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for generating a comprehensive Profit and Loss (P&L) report.
@@ -124,9 +123,9 @@ Your report must follow the Pyramid Principle. Start with the main conclusion (t
 
 ### **Net Profit / Loss After Tax**
 
-(Calculate the final Net Profit or Loss by subtracting the estimated tax from the Net Operating Income. This is the final "bottom line".)
+(Calculate the final Net Profit or Loss. This is the final "bottom line".)
 
-- **Net Profit / Loss After Tax:** **[Net Operating Income - Estimated Rental Income Tax]**
+- **Net Profit / Loss After Tax:** **[Net Rental Income - Total Operating Expenses - Estimated Rental Income Tax]**
 `,
 });
 
