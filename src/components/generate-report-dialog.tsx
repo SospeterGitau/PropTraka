@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -108,36 +107,42 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
   
   const handlePresetChange = (value: string) => {
     const now = new Date();
-    const currentYear = now.getFullYear();
+    // In Kenya, financial year starts in July.
+    const currentMonth = now.getMonth();
+    let currentFinancialYear = now.getFullYear();
+    if (currentMonth < 6) { // Before July, it's the previous year's FY
+      currentFinancialYear--;
+    }
+    
     switch (value) {
       case 'last-7-days':
         setDate({ from: sub(now, { days: 6 }), to: now });
         break;
-      case 'this-month':
+      case 'this-calendar-month':
         setDate({ from: startOfMonth(now), to: endOfMonth(now) });
         break;
-      case 'last-month':
+      case 'last-calendar-month':
         const lastMonth = sub(now, { months: 1 });
         setDate({ from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) });
         break;
-      case 'this-year':
-        setDate({ from: startOfYear(now), to: endOfYear(now) });
+      case 'this-financial-year':
+          setDate({ from: new Date(currentFinancialYear, 6, 1), to: new Date(currentFinancialYear + 1, 5, 30) });
+          break;
+      case 'last-financial-year':
+          setDate({ from: new Date(currentFinancialYear - 1, 6, 1), to: new Date(currentFinancialYear, 5, 30) });
+          break;
+      // Financial Quarters for Kenya (July-June)
+      case 'q1': // Jul - Sep
+        setDate({ from: new Date(currentFinancialYear, 6, 1), to: new Date(currentFinancialYear, 8, 30) });
         break;
-      case 'last-year':
-        const lastYear = sub(now, { years: 1 });
-        setDate({ from: startOfYear(lastYear), to: endOfYear(lastYear) });
+      case 'q2': // Oct - Dec
+        setDate({ from: new Date(currentFinancialYear, 9, 1), to: new Date(currentFinancialYear, 11, 31) });
         break;
-      case 'q1':
-        setDate({ from: new Date(currentYear, 0, 1), to: new Date(currentYear, 2, 31) });
+      case 'q3': // Jan - Mar
+        setDate({ from: new Date(currentFinancialYear + 1, 0, 1), to: new Date(currentFinancialYear + 1, 2, 31) });
         break;
-      case 'q2':
-        setDate({ from: new Date(currentYear, 3, 1), to: new Date(currentYear, 5, 30) });
-        break;
-      case 'q3':
-        setDate({ from: new Date(currentYear, 6, 1), to: new Date(currentYear, 8, 30) });
-        break;
-      case 'q4':
-        setDate({ from: new Date(currentYear, 9, 1), to: new Date(currentYear, 11, 31) });
+      case 'q4': // Apr - Jun
+        setDate({ from: new Date(currentFinancialYear + 1, 3, 1), to: new Date(currentFinancialYear + 1, 5, 30) });
         break;
       default:
         break;
@@ -154,7 +159,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         <DialogHeader>
           <DialogTitle>Generate P&L Report</DialogTitle>
           <DialogDescription>
-            Select a date range to generate a comprehensive Profit & Loss statement.
+            Select a date range to generate a comprehensive Profit &amp; Loss statement.
           </DialogDescription>
         </DialogHeader>
 
@@ -223,14 +228,14 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="last-7-days">Last 7 Days</SelectItem>
-                      <SelectItem value="this-month">This Month</SelectItem>
-                      <SelectItem value="last-month">Last Month</SelectItem>
-                      <SelectItem value="this-year">This Year</SelectItem>
-                      <SelectItem value="last-year">Last Year</SelectItem>
-                      <SelectItem value="q1">Q1 {new Date().getFullYear()}</SelectItem>
-                      <SelectItem value="q2">Q2 {new Date().getFullYear()}</SelectItem>
-                      <SelectItem value="q3">Q3 {new Date().getFullYear()}</SelectItem>
-                      <SelectItem value="q4">Q4 {new Date().getFullYear()}</SelectItem>
+                      <SelectItem value="this-calendar-month">This Month</SelectItem>
+                      <SelectItem value="last-calendar-month">Last Month</SelectItem>
+                      <SelectItem value="this-financial-year">This Financial Year</SelectItem>
+                      <SelectItem value="last-financial-year">Last Financial Year</SelectItem>
+                      <SelectItem value="q1">Q1 (Jul-Sep)</SelectItem>
+                      <SelectItem value="q2">Q2 (Oct-Dec)</SelectItem>
+                      <SelectItem value="q3">Q3 (Jan-Mar)</SelectItem>
+                      <SelectItem value="q4">Q4 (Apr-Jun)</SelectItem>
                     </SelectContent>
                   </Select>
                  </div>
