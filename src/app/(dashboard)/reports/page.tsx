@@ -116,7 +116,7 @@ function RevenueAnalysisTab() {
         projected,
         actual,
       };
-    }).reverse(); // Reverse for horizontal chart
+    });
   } else {
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
@@ -124,7 +124,13 @@ function RevenueAnalysisTab() {
     ];
   }
   
-  const chartHeight = viewMode === 'year' ? `${chartData.length * 50 + 80}px` : '350px';
+  const LAYOUT_THRESHOLD = 6;
+  const isHorizontal = viewMode === 'year' && chartData.length > LAYOUT_THRESHOLD;
+  if(isHorizontal) {
+    chartData.reverse();
+  }
+
+  const chartHeight = isHorizontal ? `${chartData.length * 50 + 80}px` : '350px';
 
   return (
     <Card>
@@ -174,9 +180,9 @@ function RevenueAnalysisTab() {
         </div>
          <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout={viewMode === 'year' ? 'vertical' : 'horizontal'} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={viewMode === 'year'} vertical={viewMode !== 'year'} />
-              {viewMode === 'year' ? (
+            <BarChart data={chartData} layout={isHorizontal ? 'vertical' : 'horizontal'} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={isHorizontal} vertical={!isHorizontal} />
+              {isHorizontal ? (
                 <>
                   <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
                      <Label value={`Revenue (${currency})`} position="bottom" offset={10} fontSize={12} />
@@ -205,8 +211,8 @@ function RevenueAnalysisTab() {
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
               <Legend />
-              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={viewMode === 'year' ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Projected" />
-              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={viewMode === 'year' ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Actual" />
+              <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Projected" />
+              <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} name="Actual" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

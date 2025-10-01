@@ -21,7 +21,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-// Helper to create a shorter, more readable address label
 function getShortAddress(property: Property) {
     const address = property.addressLine1 || '';
     const parts = address.split(' ');
@@ -72,15 +71,15 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
 
     return { 
       property: getShortAddress(property),
-      fullAddress: property.addressLine1, // Pass full address for tooltip
+      fullAddress: property.addressLine1,
       profit: profit > 0 ? profit : 0,
     };
-  }).sort((a, b) => a.profit - b.profit); // Sort data for better visual flow
-  
-  // Dynamically adjust height based on number of properties to prevent label overlap
-  const baseHeight = 150; // Base height for the chart
-  const heightPerProperty = 40; // Pixels per bar
-  const dynamicHeight = baseHeight + (chartData.length * heightPerProperty);
+  }).sort((a, b) => b.profit - a.profit);
+
+  const LAYOUT_THRESHOLD = 6;
+  const isHorizontal = chartData.length > LAYOUT_THRESHOLD;
+
+  const dynamicHeight = isHorizontal ? `${chartData.length * 50 + 80}px` : '350px';
 
   return (
     <Card>
@@ -89,32 +88,29 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
         <CardDescription>Year-to-date profit for each property</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} style={{ height: `${dynamicHeight}px` }} className="w-full">
+        <ChartContainer config={chartConfig} style={{ height: dynamicHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart 
               data={chartData} 
-              layout="vertical"
-              margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
+              layout={isHorizontal ? 'vertical' : 'horizontal'}
+              margin={ isHorizontal ? { top: 10, right: 30, left: 20, bottom: 20 } : { top: 10, right: 30, left: 0, bottom: 60 } }
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-              <XAxis 
-                type="number" 
-                tickFormatter={(value) => formatCurrencyForAxis(Number(value))}
-                tickLine={false} 
-                axisLine={false} 
-                tickMargin={8}
-              >
-                <Label value={`Profit (${currency})`} position="bottom" offset={10} fontSize={12} />
-              </XAxis>
-              <YAxis 
-                type="category"
-                dataKey="property" 
-                width={150} // Allocate space for labels
-                tickLine={false} 
-                axisLine={false}
-                tick={{ fontSize: 12 }}
-                interval={0}
-              />
+              <CartesianGrid strokeDasharray="3 3" horizontal={isHorizontal} vertical={!isHorizontal} />
+              {isHorizontal ? (
+                <>
+                  <XAxis type="number" tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} >
+                     <Label value={`Profit (${currency})`} position="bottom" offset={10} fontSize={12} />
+                  </XAxis>
+                  <YAxis dataKey="property" type="category" width={150} tickLine={false} axisLine={false} tick={{ fontSize: 12 }} interval={0} />
+                </>
+              ) : (
+                <>
+                  <XAxis dataKey="property" tickLine={false} axisLine={false} angle={-45} textAnchor="end" height={80} interval={0} tick={{ fontSize: 12 }} />
+                  <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false}>
+                    <Label value={`Profit (${currency})`} angle={-90} position="insideLeft" style={{ textAnchor: 'middle' }} fontSize={12}/>
+                  </YAxis>
+                </>
+              )}
               <Tooltip 
                 content={<ChartTooltipContent 
                     formatter={(value, name, props) => {
@@ -131,7 +127,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 />} 
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} 
               />
-              <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={isHorizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
