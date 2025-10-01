@@ -26,8 +26,9 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const id = property?.id || `p${Date.now()}`;
     const updatedProperty: Property = {
-      id: property?.id || `p${Date.now()}`,
+      id: id,
       addressLine1: formData.get('addressLine1') as string,
       city: formData.get('city') as string,
       state: formData.get('state') as string,
@@ -43,7 +44,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       mortgage: Number(formData.get('mortgage')),
       currentValue: Number(formData.get('currentValue')),
       rentalValue: Number(formData.get('rentalValue')),
-      imageUrl: property?.imageUrl || 'https://picsum.photos/seed/new/600/400',
+      imageUrl: property?.imageUrl || `https://picsum.photos/seed/${id}/600/400`,
       imageHint: property?.imageHint || 'new property',
     };
     onSubmit(updatedProperty);
