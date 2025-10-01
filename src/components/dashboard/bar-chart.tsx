@@ -23,9 +23,10 @@ const chartConfig = {
 
 // Helper to create a shorter, more readable address label
 function getShortAddress(property: Property) {
-    const parts = property.addressLine1.split(' ');
+    const address = property.addressLine1 || '';
+    const parts = address.split(' ');
     if (parts.length <= 2) {
-        return property.addressLine1;
+        return address;
     }
 
     const streetType = parts[parts.length - 1].toLowerCase();
@@ -40,8 +41,10 @@ function getShortAddress(property: Property) {
         boulevard: 'Blvd',
     };
     
-    const abbreviatedType = abbreviations[streetType] || parts[parts.length - 1];
+    const lastWord = parts[parts.length - 1];
+    const abbreviatedType = abbreviations[streetType] || lastWord;
     
+    // Join first 2 words (e.g., "123 Main") and the abbreviated type
     const shortAddress = [...parts.slice(0, 2), abbreviatedType].join(' ');
 
     return shortAddress;
