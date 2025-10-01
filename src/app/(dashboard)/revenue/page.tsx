@@ -43,7 +43,7 @@ function formatAddress(property: Property) {
 
 
 // A simple form dialog for adding/editing revenue.
-function RevenueForm({
+const RevenueForm = memo(function RevenueForm({
   isOpen,
   onClose,
   onSubmit,
@@ -242,7 +242,7 @@ function RevenueForm({
       </DialogContent>
     </Dialog>
   );
-}
+});
 
 
 function RevenuePage() {
