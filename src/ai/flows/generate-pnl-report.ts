@@ -155,3 +155,4 @@ const generatePnlReportFlow = ai.defineFlow({
   const { output } = await pnlReportPrompt(input);
   return { report: output!.report };
 });
+
