@@ -23,9 +23,31 @@ const chartConfig = {
 
 // Helper to create a shorter, more readable address label
 function getShortAddress(property: Property) {
-    const addressPart = property.addressLine1.split(' ')[0] || property.addressLine1;
-    return `${addressPart}, ${property.city}`;
+    const parts = property.addressLine1.split(' ');
+    if (parts.length <= 2) {
+        return property.addressLine1; // e.g. "Upper Hill"
+    }
+
+    const streetType = parts[parts.length - 1].toLowerCase();
+    const abbreviations: { [key: string]: string } = {
+        road: 'Rd',
+        avenue: 'Ave',
+        street: 'St',
+        lane: 'Ln',
+        drive: 'Dr',
+        court: 'Ct',
+        place: 'Pl',
+        boulevard: 'Blvd',
+    };
+    
+    const abbreviatedType = abbreviations[streetType] || parts[parts.length - 1];
+    
+    // Take the first 3 parts (e.g., "123 Riara Road") and join them
+    const shortAddress = [...parts.slice(0, 2), abbreviatedType].join(' ');
+
+    return shortAddress;
 }
+
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
   const { formatCurrency, formatCurrencyForAxis } = useDataContext();
