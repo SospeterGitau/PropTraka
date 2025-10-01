@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronRight, FileText } from 'lucide-react';
 import { format } from 'date-fns';
@@ -383,7 +383,7 @@ function ExpensesTable({
   )
 }
 
-export default function ExpensesPage() {
+function ExpensesPage() {
   const { properties, expenses, setExpenses, formatCurrency, locale } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -504,3 +504,5 @@ export default function ExpensesPage() {
     </>
   );
 }
+
+export default memo(ExpensesPage);

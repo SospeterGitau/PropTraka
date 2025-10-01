@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, memo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format, startOfToday } from 'date-fns';
@@ -105,7 +105,7 @@ function PaymentForm({
 }
 
 
-export default function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
+function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   const resolvedParams = use(params);
   const { revenue, setRevenue, formatCurrency, locale } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
@@ -307,3 +307,5 @@ export default function TenancyDetailPage({ params }: { params: { tenancyId: str
     </>
   );
 }
+
+export default memo(TenancyDetailPage);

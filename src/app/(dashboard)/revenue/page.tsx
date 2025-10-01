@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
 import { format, startOfToday, eachMonthOfInterval } from 'date-fns';
@@ -220,7 +220,7 @@ function RevenueForm({
 }
 
 
-export default function RevenuePage() {
+function RevenuePage() {
   const { properties, revenue, setRevenue, formatCurrency, locale } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -417,3 +417,5 @@ export default function RevenuePage() {
     </>
   );
 }
+
+export default memo(RevenuePage);

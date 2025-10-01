@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
@@ -381,7 +381,7 @@ function PnlStatementTab() {
 }
 
 
-export default function ReportsPage() {
+function ReportsPage() {
   const { revenue, expenses, properties } = useDataContext();
 
   if (!revenue || !expenses || !properties) {
@@ -431,3 +431,5 @@ export default function ReportsPage() {
     </>
   );
 }
+
+export default memo(ReportsPage);

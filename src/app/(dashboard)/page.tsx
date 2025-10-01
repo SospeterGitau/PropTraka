@@ -3,6 +3,7 @@
 
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { memo } from 'react';
 import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
@@ -14,7 +15,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false });
 const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false });
 
-export default function DashboardPage() {
+function DashboardPage() {
   const { properties, revenue, expenses, formatCurrency } = useDataContext();
 
   // Data might not be available on the first render, so we add a loading state.
@@ -117,3 +118,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+export default memo(DashboardPage);

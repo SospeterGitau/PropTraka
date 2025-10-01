@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -30,7 +30,7 @@ const supportedLocales = [
   { code: 'ja-JP', name: 'Japanese (Japan)' },
 ];
 
-export default function SettingsPage() {
+function SettingsPage() {
   const { currency, setCurrency, locale, setLocale, companyName, setCompanyName } = useDataContext();
   const [isEditing, setIsEditing] = useState(false);
   const [tempCurrency, setTempCurrency] = useState(currency);
@@ -131,3 +131,5 @@ export default function SettingsPage() {
     </>
   );
 }
+
+export default memo(SettingsPage);

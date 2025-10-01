@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
@@ -29,7 +30,7 @@ interface ArrearEntry {
   daysOverdue: number;
 }
 
-export default function ArrearsClient() {
+function ArrearsClient() {
   const { revenue, formatCurrency, locale } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
@@ -159,3 +160,5 @@ export default function ArrearsClient() {
     </>
   );
 }
+
+export default memo(ArrearsClient);

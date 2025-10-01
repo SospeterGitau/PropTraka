@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import Image from 'next/image';
 import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
@@ -34,7 +34,7 @@ function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-export default function PropertiesPage() {
+function PropertiesPage() {
   const { properties, setProperties, formatCurrency } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -217,3 +217,5 @@ export default function PropertiesPage() {
     </>
   );
 }
+
+export default memo(PropertiesPage);
