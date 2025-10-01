@@ -60,7 +60,11 @@ Provide a specific new rental price recommendation (e.g., '{{currency}} 1950') o
 Utilize robust market data from the last 3-6 months. Prioritize reputable sources such as major national/local property listing websites (e.g., Zillow, Rightmove, Property24, local equivalents), official government housing statistics (e.g., from sources like CBK publications), and reputable real estate market analysis reports. Ensure data recency and reliability.
 
 **Output Format:**
-Your final output must be a well-structured report formatted in Markdown. It should commence with a concise **Executive Summary** (following the Pyramid Principle) offering an overview of the portfolio's overall pricing competitiveness and key findings. Following the Executive Summary, provide a detailed, property-by-property breakdown for each item in the provided portfolio. Each property's section should clearly present the location, market rent research findings, comparison, verdict, and recommendation as outlined in the 'Core Task' section.
+Your final output must be a well-structured report formatted in Markdown. It should commence with a concise **Executive Summary** (following the Pyramid Principle) offering an overview of the portfolio's overall pricing competitiveness and key findings. 
+
+Following the Executive Summary, provide a detailed, property-by-property breakdown for each item in the provided portfolio. Each property's section should clearly present the location, market rent research findings, comparison, verdict, and recommendation as outlined in the 'Core Task' section.
+
+**IMPORTANT:** Ensure there is clear spacing (double newlines) between all sections and paragraphs for maximum readability.
 `,
 });
 
