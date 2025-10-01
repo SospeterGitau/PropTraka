@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   HelpCircle,
+  Shield,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -42,9 +43,13 @@ const navItems = [
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/reports', label: 'Financial Reports', icon: LineChart },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/settings', label: 'Settings', icon: Settings },
-  { href: '/faq', label: 'FAQ', icon: HelpCircle },
 ];
+
+const secondaryNavItems = [
+    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/faq', label: 'FAQ', icon: HelpCircle },
+    { href: '/privacy', label: 'Privacy Policy', icon: Shield },
+]
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -83,6 +88,25 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
+           <SidebarMenu className="mt-auto">
+            {secondaryNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    className="justify-start text-base h-12"
+                    tooltip={item.label}
+                    >
+                    <Link href={item.href}>
+                        <span className="inline-flex items-center justify-center w-6 h-6">
+                        <item.icon />
+                        </span>
+                        <span>{item.label}</span>
+                    </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            ))}
+           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
           <form action={logout}>

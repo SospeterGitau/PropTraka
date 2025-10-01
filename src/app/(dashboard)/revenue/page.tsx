@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -73,6 +74,16 @@ function RevenueForm({
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
     const notes = formData.get('notes') as string;
+    const consent = formData.get('consent') as string;
+
+    if (!consent) {
+        toast({
+            variant: "destructive",
+            title: "Consent Required",
+            description: "You must confirm the tenant has consented to their data being stored.",
+        });
+        return;
+    }
     
     // Check for existing tenant at the same property
     const isEditing = !!transaction;
@@ -207,6 +218,20 @@ function RevenueForm({
             <Label>Notes (optional)</Label>
             <Textarea name="notes" defaultValue={transaction?.notes} />
           </div>
+           <div className="items-top flex space-x-2 pt-2">
+                <Checkbox id="consent" name="consent" />
+                <div className="grid gap-1.5 leading-none">
+                    <label
+                    htmlFor="consent"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                    I confirm I have the tenant's consent to store and process their personal information in accordance with our privacy policy.
+                    </label>
+                    <p className="text-sm text-muted-foreground">
+                    You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for more details.
+                    </p>
+                </div>
+            </div>
           <DialogFooter className="pt-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
