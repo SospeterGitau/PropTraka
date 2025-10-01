@@ -2,11 +2,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Clipboard, Lightbulb, Loader2 } from 'lucide-react';
+import { Clipboard, Lightbulb, Loader2, AlertTriangle, FileText } from 'lucide-react';
 import type { Property } from '@/lib/types';
-import { getMarketResearchPrompt } from '@/lib/actions';
+import { getMarketResearch } from '@/lib/actions';
 import { useDataContext } from '@/context/data-context';
-
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,6 +16,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface MarketResearchDialogProps {
   properties: Property[];
@@ -27,11 +27,13 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [prompt, setPrompt] = useState<string | null>(null);
+  const [report, setReport] = useState<string | null>(null);
+  const [error, setError] = useState<{ code: string; hint: string } | null>(null);
 
-  const handleGeneratePrompt = () => {
+  const handleGenerateAnalysis = () => {
     startTransition(async () => {
-      setPrompt(null);
+      setReport(null);
+      setError(null);
       
       const propertiesToAnalyze = properties.map(({ id, addressLine1, city, state, postalCode, propertyType, buildingType, bedrooms, bathrooms, size, sizeUnit, rentalValue }) => ({
         id,
@@ -44,21 +46,25 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
         currentRent: rentalValue,
       }));
 
-      const result = await getMarketResearchPrompt({
+      const result = await getMarketResearch({
         properties: JSON.stringify(propertiesToAnalyze, null, 2),
         currency: currency,
       });
 
-      setPrompt(result.prompt);
+      if (result.error) {
+        setError({ code: result.error, hint: result.hint || 'An unexpected error occurred.' });
+      } else {
+        setReport(result.report);
+      }
     });
   };
   
   const handleCopyToClipboard = () => {
-    if (prompt) {
-      navigator.clipboard.writeText(prompt);
+    if (report) {
+      navigator.clipboard.writeText(report);
       toast({
         title: "Copied to Clipboard",
-        description: "The research prompt has been copied.",
+        description: "The market analysis has been copied.",
       });
     }
   };
@@ -66,8 +72,14 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (!open) {
-      setPrompt(null);
+      setReport(null);
+      setError(null);
     }
+  };
+  
+  const handleStartOver = () => {
+    setReport(null);
+    setError(null);
   };
 
   return (
@@ -78,28 +90,37 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
       </Button>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Generate Market Research Prompt</DialogTitle>
+          <DialogTitle>AI-Powered Market Analysis</DialogTitle>
           <DialogDescription>
-            Create a powerful, detailed prompt to analyze your portfolio's competitiveness using an advanced AI model.
+            Generate a detailed analysis of your portfolio's competitiveness against current market rates.
           </DialogDescription>
         </DialogHeader>
 
-        {prompt ? (
+        {report ? (
           <div className="prose prose-sm max-w-none h-[60vh] overflow-y-auto border rounded-md p-4 bg-muted/50 whitespace-pre-wrap font-sans text-sm">
-            {prompt}
+            {report}
           </div>
         ) : (
           <div className="py-8 flex flex-col items-center justify-center min-h-[300px]">
             {isPending ? (
               <>
                 <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                <p className="mt-4 text-muted-foreground">Generating your custom prompt...</p>
+                <p className="mt-4 text-muted-foreground">Analyzing market data, please wait...</p>
+                <p className="text-xs text-muted-foreground">(This can take up to a minute)</p>
               </>
+            ) : error ? (
+                 <Alert variant="destructive" className="w-full">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Error: {error.code}</AlertTitle>
+                  <AlertDescription>
+                    {error.hint}
+                  </AlertDescription>
+                </Alert>
             ) : (
               <div className="text-center">
                  <Lightbulb className="mx-auto h-12 w-12 text-muted-foreground" />
                  <p className="mt-4 max-w-md text-muted-foreground">
-                    This tool will generate a detailed prompt based on your current property portfolio. You can then use this prompt in a large language model (like Gemini or ChatGPT) to get a deep analysis of your rental prices vs. the market.
+                    This tool will use AI to analyze your portfolio based on market data. The generated report will assess if your rental prices are competitive and provide recommendations.
                  </p>
               </div>
             )}
@@ -107,22 +128,30 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
         )}
         
         <DialogFooter>
-          {prompt ? (
+          {report ? (
             <>
                 <Button variant="secondary" onClick={handleCopyToClipboard}>
                     <Clipboard className="mr-2 h-4 w-4" />
-                    Copy Prompt
+                    Copy Report
                 </Button>
-                <Button onClick={() => setPrompt(null)}>Start Over</Button>
+                <Button onClick={handleStartOver}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate New Report
+                </Button>
             </>
+          ) : error ? (
+            <Button onClick={handleStartOver}>
+                <FileText className="mr-2 h-4 w-4" />
+                Try Again
+            </Button>
           ) : (
-             <Button onClick={handleGeneratePrompt} disabled={isPending}>
+             <Button onClick={handleGenerateAnalysis} disabled={isPending}>
                 {isPending ? (
                     <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Generating...
                     </>
-                ) : 'Generate Prompt'}
+                ) : 'Generate Analysis'}
             </Button>
           )}
         </DialogFooter>

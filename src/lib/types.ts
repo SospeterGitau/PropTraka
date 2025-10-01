@@ -85,11 +85,13 @@ export interface GeneratePnlReportOutput {
   hint?: string | null;
 }
 
-export interface GenerateMarketResearchPromptInput {
+export interface GenerateMarketResearchInput {
   properties: string; // JSON string of Property[]
   currency: string;
 }
 
-export interface GenerateMarketResearchPromptOutput {
-  prompt: string;
+export interface GenerateMarketResearchOutput {
+  report: string | null;
+  error?: string | null;
+  hint?: string | null;
 }

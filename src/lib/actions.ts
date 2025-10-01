@@ -3,8 +3,8 @@
 
 import {generateReportSummary} from '@/ai/flows/generate-report-summary';
 import {generatePnlReport} from '@/ai/flows/generate-pnl-report';
-import {generateMarketResearchPrompt} from '@/ai/flows/generate-market-research-prompt';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchPromptInput, GenerateMarketResearchPromptOutput } from '@/lib/types';
+import {generateMarketResearch} from '@/ai/flows/generate-market-research';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -73,14 +73,25 @@ export async function getPnlReport(input: GeneratePnlReportInput): Promise<Gener
     }
 }
 
-export async function getMarketResearchPrompt(input: GenerateMarketResearchPromptInput): Promise<GenerateMarketResearchPromptOutput> {
+export async function getMarketResearch(input: GenerateMarketResearchInput): Promise<GenerateMarketResearchOutput> {
     try {
-        const result = await generateMarketResearchPrompt(input);
-        return result;
-    } catch (error) {
-        console.error('Error generating market research prompt:', error);
+        const result = await generateMarketResearch(input);
+        return { report: result.report, error: null };
+    } catch (e: any) {
+        const msg = String(e?.message || e);
+        console.error('Error generating market research:', msg);
+
+        const code =
+            /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ? "RATE_LIMITED_OR_QUOTA" :
+            /SAFETY|blocked/i.test(msg) ? "SAFETY_BLOCKED" :
+            /deadline|timeout|504|UNAVAILABLE|503/i.test(msg) ? "MODEL_UNAVAILABLE_OR_TIMEOUT" :
+            /invalid|400|content too long|tokens/i.test(msg) ? "INVALID_REQUEST" :
+            "UNEXPECTED_ERROR";
+        
         return {
-            prompt: 'Failed to generate prompt. Please try again later.',
+            report: null,
+            error: code,
+            hint: msg,
         };
     }
 }

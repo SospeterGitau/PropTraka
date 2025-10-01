@@ -1,36 +1,35 @@
-
 'use server';
 /**
- * @fileOverview This file defines a Genkit flow for generating a detailed market research prompt.
- * The prompt is designed to be used with an advanced AI model to analyze the competitiveness
- * of a user's rental property portfolio against current market rates.
+ * @fileOverview This file defines a Genkit flow for generating a detailed market research analysis.
+ * The flow takes a user's rental property portfolio and uses an AI model to generate a
+ * competitive analysis report against current market rates.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { GenerateMarketResearchPromptInput, GenerateMarketResearchPromptOutput } from '@/lib/types';
+import type { GenerateMarketResearchInput, GenerateMarketResearchOutput } from '@/lib/types';
 
-// Define the input schema for the market research prompt generation
-const GenerateMarketResearchPromptInputSchema = z.object({
+// Define the input schema for the market research analysis
+const GenerateMarketResearchInputSchema = z.object({
   properties: z.string().describe('A JSON string representing an array of the user\'s rental properties.'),
   currency: z.string().describe('The currency code (e.g., USD, KES, GBP) for all rental values.'),
 });
 
-// Define the output schema for the generated prompt
-const GenerateMarketResearchPromptOutputSchema = z.object({
-  prompt: z.string().describe('The generated, detailed market research prompt.'),
+// Define the output schema for the generated analysis report
+const GenerateMarketResearchOutputSchema = z.object({
+  report: z.string().describe('The full, formatted market research report as a single string.'),
 });
 
 // Define the main function that triggers the flow
-export async function generateMarketResearchPrompt(input: GenerateMarketResearchPromptInput): Promise<GenerateMarketResearchPromptOutput> {
-  return generateMarketResearchPromptFlow(input);
+export async function generateMarketResearch(input: GenerateMarketResearchInput): Promise<GenerateMarketResearchOutput> {
+  return generateMarketResearchFlow(input);
 }
 
-// Define the prompt template for generating the research prompt
-const researchPromptGenerator = ai.definePrompt({
-  name: 'researchPromptGenerator',
-  input: { schema: GenerateMarketResearchPromptInputSchema },
-  output: { schema: GenerateMarketResearchPromptOutputSchema },
+// Define the prompt template for generating the research report
+const marketResearchPrompt = ai.definePrompt({
+  name: 'marketResearchPrompt',
+  input: { schema: GenerateMarketResearchInputSchema },
+  output: { schema: GenerateMarketResearchOutputSchema },
   prompt: `You are an expert real estate market analyst specializing in competitive rental pricing. Your goal is to conduct a deep-dive analysis of the provided rental property portfolio to determine if their current pricing is competitive within their respective local markets.
 
 **Context:**
@@ -66,11 +65,15 @@ Your final output must be a well-structured report formatted in Markdown. It sho
 });
 
 // Define the flow
-const generateMarketResearchPromptFlow = ai.defineFlow({
-  name: 'generateMarketResearchPromptFlow',
-  inputSchema: GenerateMarketResearchPromptInputSchema,
-  outputSchema: GenerateMarketResearchPromptOutputSchema,
+const generateMarketResearchFlow = ai.defineFlow({
+  name: 'generateMarketResearchFlow',
+  inputSchema: GenerateMarketResearchInputSchema,
+  outputSchema: z.object({
+    report: z.string().nullable(),
+    error: z.string().nullable().optional(),
+    hint: z.string().nullable().optional(),
+  }),
 }, async (input) => {
-  const { output } = await researchPromptGenerator(input);
-  return output!;
+  const { output } = await marketResearchPrompt(input);
+  return { report: output!.report };
 });
