@@ -28,6 +28,17 @@ import { MarketResearchDialog } from '@/components/market-research-dialog';
 
 type ViewMode = 'month' | 'year';
 
+// Helper to get the start and end of the financial year for a given date
+function getFinancialYear(date: Date) {
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-11
+  // Financial year runs from July to June
+  const startYear = month >= 6 ? year : year - 1;
+  const financialYearStart = new Date(startYear, 6, 1);
+  const financialYearEnd = new Date(startYear + 1, 5, 30);
+  return { financialYearStart, financialYearEnd };
+}
+
 function RevenueAnalysisTab() {
   const { revenue, formatCurrency } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
@@ -73,13 +84,15 @@ function RevenueAnalysisTab() {
       </Card>
     );
   }
+  
+  const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
 
   const filteredTransactions = revenue.filter(t => {
     const transactionDate = new Date(t.date);
     if (viewMode === 'month') {
       return isSameMonth(transactionDate, currentDate);
-    } else {
-      return isSameYear(transactionDate, currentDate);
+    } else { // year view
+      return transactionDate >= financialYearStart && transactionDate <= financialYearEnd;
     }
   });
 
@@ -88,12 +101,11 @@ function RevenueAnalysisTab() {
   const totalArrears = projectedRevenue - actualRevenue;
   
   let chartData;
-  const dateDisplayFormat = viewMode === 'month' ? 'MMMM yyyy' : 'yyyy';
+  let dateDisplayFormat;
 
   if (viewMode === 'year') {
-    const yearStart = startOfYear(currentDate);
-    const yearEnd = endOfYear(currentDate);
-    const months = eachMonthOfInterval({ start: yearStart, end: yearEnd });
+    dateDisplayFormat = `${financialYearStart.getFullYear()}/${financialYearEnd.getFullYear()}`;
+    const months = eachMonthOfInterval({ start: financialYearStart, end: financialYearEnd });
     
     chartData = months.map(month => {
       const monthlyTransactions = revenue.filter(t => isSameMonth(new Date(t.date), month));
@@ -106,6 +118,7 @@ function RevenueAnalysisTab() {
       };
     });
   } else {
+    dateDisplayFormat = format(currentDate, 'MMMM yyyy');
      chartData = [
       { name: format(currentDate, 'MMMM'), projected: projectedRevenue, actual: actualRevenue },
     ];
@@ -128,7 +141,7 @@ function RevenueAnalysisTab() {
               <Button variant="outline" size="icon" onClick={handlePrev}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="font-semibold text-center w-32 shrink-0">{format(currentDate, dateDisplayFormat)}</span>
+              <span className="font-semibold text-center w-32 shrink-0">{dateDisplayFormat}</span>
               <Button variant="outline" size="icon" onClick={handleNext}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -142,19 +155,19 @@ function RevenueAnalysisTab() {
             icon={TrendingUp}
             title="Projected Revenue"
             value={formatCurrency(projectedRevenue)}
-            description={`Due in ${format(currentDate, dateDisplayFormat)}`}
+            description={`Due in ${dateDisplayFormat}`}
           />
           <KpiCard
             icon={CurrencyIcon}
             title="Actual Revenue"
             value={formatCurrency(actualRevenue)}
-            description={`Paid in ${format(currentDate, dateDisplayFormat)}`}
+            description={`Paid in ${dateDisplayFormat}`}
           />
           <KpiCard
             icon={TrendingDown}
             title="Arrears (Unpaid)"
             value={formatCurrency(totalArrears)}
-            description={`Outstanding for ${format(currentDate, dateDisplayFormat)}`}
+            description={`Outstanding for ${dateDisplayFormat}`}
           />
         </div>
          <ChartContainer config={{}} className="h-[350px] w-full">
@@ -237,20 +250,30 @@ function PnlStatementTab() {
       </div>
     );
   }
+  
+  const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
 
   const filteredRevenue = revenue.filter(t => {
     const tDate = new Date(t.date);
     const hasBeenPaid = (t.amountPaid ?? 0) > 0;
-    const isInPeriod = viewMode === 'month' ? isSameMonth(tDate, currentDate) : isSameYear(tDate, currentDate);
-    return isInPeriod && hasBeenPaid;
+    if (viewMode === 'month') {
+      return isSameMonth(tDate, currentDate) && hasBeenPaid;
+    }
+    return tDate >= financialYearStart && tDate <= financialYearEnd && hasBeenPaid;
   });
 
   const filteredExpenses = expenses.filter(e => {
     const eDate = new Date(e.date);
-    return viewMode === 'month' ? isSameMonth(eDate, currentDate) : isSameYear(eDate, currentDate);
+    if (viewMode === 'month') {
+      return isSameMonth(eDate, currentDate);
+    }
+    return eDate >= financialYearStart && eDate <= financialYearEnd;
   });
   
-  const dateDisplayFormat = viewMode === 'month' ? 'MMMM yyyy' : 'yyyy';
+  const dateDisplayFormat = viewMode === 'month' 
+    ? format(currentDate, 'MMMM yyyy') 
+    : `${financialYearStart.getFullYear()}/${financialYearEnd.getFullYear()}`;
+    
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
   const netProfit = totalRevenue - totalExpenses;
@@ -272,7 +295,7 @@ function PnlStatementTab() {
               <div>
                 <CardTitle>Financial Summary</CardTitle>
                 <CardDescription>
-                  Summary for {format(currentDate, dateDisplayFormat)}
+                  Summary for {dateDisplayFormat}
                 </CardDescription>
               </div>
                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -284,7 +307,7 @@ function PnlStatementTab() {
                     <Button variant="outline" size="icon" onClick={handlePrev}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <span className="font-semibold text-center w-32 shrink-0">{format(currentDate, dateDisplayFormat)}</span>
+                    <span className="font-semibold text-center w-32 shrink-0">{dateDisplayFormat}</span>
                     <Button variant="outline" size="icon" onClick={handleNext}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -433,3 +456,5 @@ function ReportsPage() {
 }
 
 export default memo(ReportsPage);
+
+    
