@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -276,7 +275,7 @@ function PnlStatementTab() {
     
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
-  const netProfit = totalRevenue - totalExpenses;
+  const netOperatingIncome = totalRevenue - totalExpenses;
   
   const expenseCategories = filteredExpenses.reduce((acc, expense) => {
     const category = expense.category || 'Uncategorized';
@@ -331,8 +330,8 @@ function PnlStatementTab() {
             />
             <KpiCard
               icon={CurrencyIcon}
-              title="Net Profit / Loss"
-              value={formatCurrency(netProfit)}
+              title={netOperatingIncome >= 0 ? 'Net Operating Income' : 'Net Operating Loss'}
+              value={formatCurrency(netOperatingIncome)}
               description="Revenue minus Expenses"
             />
           </div>
@@ -416,7 +415,7 @@ function ReportsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-8 w-3/s4" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
             <CardContent className="space-y-6">
