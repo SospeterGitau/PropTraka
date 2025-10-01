@@ -21,6 +21,10 @@ interface DataContextType {
   setCompanyName: (companyName: string) => void;
   residencyStatus: ResidencyStatus;
   setResidencyStatus: (status: ResidencyStatus) => void;
+  isPnlReportEnabled: boolean;
+  setIsPnlReportEnabled: (enabled: boolean) => void;
+  isMarketResearchEnabled: boolean;
+  setIsMarketResearchEnabled: (enabled: boolean) => void;
   formatCurrency: (amount: number) => string;
   formatCurrencyForAxis: (amount: number) => string;
 }
@@ -35,7 +39,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
   const [companyName, setCompanyName] = useState('RentVision Ltd');
-  const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('resident');
+  const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('non-resident');
+  const [isPnlReportEnabled, setIsPnlReportEnabled] = useState(true);
+  const [isMarketResearchEnabled, setIsMarketResearchEnabled] = useState(true);
 
 
   // Simulate loading data on component mount
@@ -143,6 +149,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setCompanyName,
     residencyStatus,
     setResidencyStatus,
+    isPnlReportEnabled,
+    setIsPnlReportEnabled,
+    isMarketResearchEnabled,
+    setIsMarketResearchEnabled,
     formatCurrency,
     formatCurrencyForAxis,
   };
