@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
 import { MarketResearchDialog } from '@/components/market-research-dialog';
+import { cn } from '@/lib/utils';
 
 type ViewMode = 'month' | 'year';
 
@@ -174,7 +175,7 @@ function RevenueAnalysisTab() {
         </div>
          <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart 
+             <BarChart 
               data={chartData} 
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
@@ -292,6 +293,8 @@ function PnlStatementTab() {
     return acc;
   }, {} as Record<string, number>);
 
+  const isProfit = netOperatingIncome >= 0;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -321,7 +324,7 @@ function PnlStatementTab() {
             </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <KpiCard
               icon={TrendingUp}
               title="Total Revenue"
@@ -334,12 +337,20 @@ function PnlStatementTab() {
               value={formatCurrency(totalExpenses)}
               description="Sum of all costs incurred"
             />
-            <KpiCard
-              icon={CurrencyIcon}
-              title={netOperatingIncome >= 0 ? 'Net Operating Income' : 'Net Operating Loss'}
-              value={formatCurrency(netOperatingIncome)}
-              description="Revenue minus Expenses"
-            />
+             <Card className={cn(isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {isProfit ? 'Net Profit' : 'Net Loss'}
+                </CardTitle>
+                <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+                  {formatCurrency(netOperatingIncome)}
+                </div>
+                <p className="text-xs text-muted-foreground">Revenue minus Expenses</p>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
@@ -447,7 +458,7 @@ function ReportsPage() {
        <Tabs defaultValue="revenue-analysis">
         <TabsList>
           <TabsTrigger value="revenue-analysis">Revenue Analysis</TabsTrigger>
-          <TabsTrigger value="pnl-statement">P&L Statement</TabsTrigger>
+          <TabsTrigger value="pnl-statement">P&amp;L Statement</TabsTrigger>
         </TabsList>
         <TabsContent value="revenue-analysis" className="pt-4">
           <RevenueAnalysisTab />
