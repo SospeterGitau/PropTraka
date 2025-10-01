@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, CircleAlert } from 'lucide-react';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -160,8 +160,8 @@ function RevenueAnalysisTab() {
             value={formatCurrency(projectedRevenue)}
             description={`Due in ${dateDisplayFormat}`}
           />
-          <KpiCard
-            icon={TrendingDown}
+           <KpiCard
+            icon={CircleAlert}
             title="Arrears (Unpaid)"
             value={formatCurrency(totalArrears)}
             description={`Outstanding for ${dateDisplayFormat}`}
@@ -206,7 +206,7 @@ function RevenueAnalysisTab() {
 
 
 function PnlStatementTab() {
-  const { revenue, expenses, formatCurrency } = useDataContext();
+  const { revenue, expenses, formatCurrency, formatCurrencyForAxis } = useDataContext();
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
@@ -242,7 +242,8 @@ function PnlStatementTab() {
             <Skeleton className="h-4 w-1/2" />
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Skeleton className="h-24" />
               <Skeleton className="h-24" />
               <Skeleton className="h-24" />
               <Skeleton className="h-24" />
@@ -284,6 +285,11 @@ function PnlStatementTab() {
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
   const netOperatingIncome = totalRevenue - totalExpenses;
   
+  // Calculate estimated tax and net profit after tax
+  const estimatedTax = totalRevenue * 0.075;
+  const netProfitAfterTax = netOperatingIncome - estimatedTax;
+  const isProfit = netProfitAfterTax >= 0;
+  
   const expenseCategories = filteredExpenses.reduce((acc, expense) => {
     const category = expense.category || 'Uncategorized';
     if (!acc[category]) {
@@ -292,8 +298,6 @@ function PnlStatementTab() {
     acc[category] += expense.amount;
     return acc;
   }, {} as Record<string, number>);
-
-  const isProfit = netOperatingIncome >= 0;
 
   return (
     <div className="space-y-6">
@@ -324,7 +328,7 @@ function PnlStatementTab() {
             </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               icon={TrendingUp}
               title="Total Revenue"
@@ -337,18 +341,24 @@ function PnlStatementTab() {
               value={formatCurrency(totalExpenses)}
               description="Sum of all costs incurred"
             />
+             <KpiCard
+              icon={CurrencyIcon}
+              title="Net Operating Income"
+              value={formatCurrency(netOperatingIncome)}
+              description="Profit before tax"
+            />
              <Card className={cn(isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  {isProfit ? 'Net Profit' : 'Net Loss'}
+                  {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
                 </CardTitle>
                 <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
-                  {formatCurrency(netOperatingIncome)}
+                  {formatCurrency(netProfitAfterTax)}
                 </div>
-                <p className="text-xs text-muted-foreground">Revenue minus Expenses</p>
+                <p className="text-xs text-muted-foreground">After 7.5% estimated tax</p>
               </CardContent>
             </Card>
           </div>
