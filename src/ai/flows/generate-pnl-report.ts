@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This file defines a Genkit flow for generating a comprehensive Profit and Loss (P&L) report.
@@ -42,7 +41,7 @@ const pnlReportPrompt = ai.definePrompt({
   name: 'pnlReportPrompt',
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
-  prompt: `You are a professional financial analyst AI. Your task is to generate a comprehensive Profit and Loss (P&L) Statement suitable for presentation to banks, financial institutions, or investors for {{companyName}} for the period from {{startDate}} to {{endDate}}.
+  prompt: `You are a professional financial analyst AI with expertise in Kenyan real estate accounting. Your task is to generate a comprehensive Profit and Loss (P&L) Statement for {{companyName}} for the period from {{startDate}} to {{endDate}}.
 
 IMPORTANT: The final output must be a single, clean string. Do not include any extraneous text or formatting outside of the report itself.
 IMPORTANT: All financial figures in the final report must be formatted using the specified currency: {{currency}}.
@@ -60,21 +59,21 @@ Please structure the report as follows:
 For the period: {{startDate}} to {{endDate}}
 
 ## 1. Executive Summary
-Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance during this period. Start with the most important figure, the Net Operating Income. Comment on the significance of any credit losses or major expense categories and what they imply for the business's health and investment potential.
+Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance. Start with the most important figure, the Net Profit/Loss After Tax. Comment on the significance of any credit losses or major expense categories. Crucially, include a disclaimer stating that the tax calculation is an estimate for planning purposes and a certified accountant should be consulted for official KRA filing.
 
 ## 2. Detailed Financial Breakdown
 
 ### Income
-Calculate the Gross Potential Income by summing the 'amount' and 'deposit' fields from all revenue transactions. This represents the total possible income.
-Calculate Vacancy & Credit Losses by finding the difference between the Gross Potential Income and the total amount paid ('amountPaid'). This shows revenue lost due to non-payment.
-Calculate the Net Rental Income (also known as Effective Gross Income) by subtracting Vacancy & Credit Losses from the Gross Potential Income.
+Calculate the Gross Potential Income by summing the 'amount' and 'deposit' fields from all revenue transactions.
+Calculate Vacancy & Credit Losses by finding the difference between Gross Potential Income and the total 'amountPaid'.
+Calculate Net Rental Income (Effective Gross Income) by subtracting Vacancy & Credit Losses from Gross Potential Income.
 
 - **Gross Potential Income:** [Total of all 'amount' + 'deposit' fields]
 - **Less: Vacancy & Credit Losses:** [Gross Potential Income - Total of all 'amountPaid' fields]
 - **Net Rental Income:** [Gross Potential Income - Vacancy & Credit Losses]
 
 ### Operating Expenses
-List and sum all operating expenses, grouped by category (e.g., Maintenance, Repairs, Insurance, Management Fees, Utilities, etc.).
+List and sum all operating expenses, grouped by category (e.g., Maintenance, Repairs, Insurance, Management Fees, Utilities).
 
 - **Maintenance & Repairs:** [Sum of all expenses in 'Maintenance' and 'Repairs' categories]
 - **Property Management Fees:** [Sum of all expenses in 'Management Fees' category]
@@ -85,14 +84,19 @@ List and sum all operating expenses, grouped by category (e.g., Maintenance, Rep
 - **Total Operating Expenses:** [Sum of all expense categories]
 
 ### Net Operating Income (NOI)
-Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of the property portfolio's profitability from its core operations, before financing and taxes.
+Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of profitability before financing and taxes.
 
 - **Net Operating Income:** [Net Rental Income - Total Operating Expenses]
 
-### Net Profit / Loss
-For this report, since we are not including non-operating items like mortgage interest, depreciation, or taxes, the Net Profit will be the same as the Net Operating Income. State this clearly for transparency.
+### Tax Calculation (for estimation only)
+Based on KRA guidelines for residential rental income, calculate the estimated tax. For this report, assume the Monthly Rental Income (MRI) tax rate of 7.5% applies to the **Net Rental Income**. State this assumption clearly. This is an estimate for financial planning.
 
-- **Net Profit / Loss:** [Value from Net Operating Income]
+- **Estimated Rental Income Tax (7.5% of Net Rental Income):** [Net Rental Income * 0.075]
+
+### Net Profit / Loss After Tax
+Calculate the final Net Profit or Loss by subtracting the estimated tax from the Net Operating Income.
+
+- **Net Profit / Loss After Tax:** [Net Operating Income - Estimated Rental Income Tax]
 `,
 });
 
