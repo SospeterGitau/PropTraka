@@ -37,7 +37,7 @@ function DashboardPage() {
             </Card>
           ))}
         </div>
-        <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
+        <div className="grid gap-4 mt-4 grid-cols-1">
             <Skeleton className="h-[380px]" />
             <Skeleton className="h-[380px]" />
         </div>
@@ -111,7 +111,7 @@ function DashboardPage() {
           description="Total outstanding payments"
         />
       </div>
-      <div className="grid gap-4 mt-4 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-4 mt-4 grid-cols-1">
         <AreaChartComponent revenue={revenue} expenses={expenses} />
         <BarChartComponent properties={properties} revenue={revenue} expenses={expenses} />
       </div>
