@@ -42,13 +42,17 @@ const pnlReportPrompt = ai.definePrompt({
   name: 'pnlReportPrompt',
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
-  prompt: `You are a professional financial analyst AI with expertise in Kenyan real estate accounting. Your task is to generate a comprehensive Profit and Loss (P&L) Statement for {{companyName}} for the period from {{startDate}} to {{endDate}}.
+  prompt: `You are an expert financial analyst AI specializing in Kenyan real estate accounting. Your primary task is to generate a professional, well-structured Profit and Loss (P&L) Statement for {{companyName}} covering the period from {{startDate}} to {{endDate}}.
 
-**IMPORTANT:**
-- The final output must be a single, clean string formatted in Markdown.
+**Formatting Rules (MANDATORY):**
+- The entire output MUST be a single string formatted in clean, readable Markdown.
+- CRITICAL: You MUST use double newlines ('\n\n') between all sections, paragraphs, and list items to ensure proper spacing and readability. Failure to do so results in an unreadable report.
 - All financial figures must be presented in the specified currency: **{{currency}}**.
-- Follow the Pyramid Principle: start with the conclusion (Executive Summary), then provide supporting details.
-- Ensure there is clear spacing (double newlines) between all sections and paragraphs for readability.
+- Use Markdown headings (#, ##, ###) for structure.
+- Use bolding (**) for all calculated totals (e.g., **Total Operating Expenses**).
+
+**Pyramid Principle Structure:**
+Your report must follow the Pyramid Principle. Start with the main conclusion (the Executive Summary), then provide the detailed supporting data.
 
 **Data for the Period:**
 - Revenue Transactions (JSON): {{{revenueTransactions}}}
@@ -57,16 +61,16 @@ const pnlReportPrompt = ai.definePrompt({
 ---
 
 # **Profit & Loss Statement**
+
 ### **{{companyName}}**
+
 **For the period:** {{startDate}} to {{endDate}}
 
 ---
 
 ## **1. Executive Summary**
 
-Provide a brief, insightful narrative (2-3 sentences) on the overall financial performance. Start with the most important figure, the Net Profit/Loss After Tax. Comment on the significance of any credit losses or major expense categories. 
-
-Crucially, include a disclaimer stating that the tax calculation is an estimate for planning purposes and a certified accountant should be consulted for official KRA filing.
+(Provide a brief, insightful narrative of 2-3 sentences on the overall financial performance for the period. Start with the most important figure, the Net Profit/Loss After Tax. Comment on the significance of any credit losses or major expense categories. Crucially, include a disclaimer stating that the tax calculation is an estimate for planning purposes and a certified accountant should be consulted for official KRA filing.)
 
 ---
 
@@ -74,38 +78,53 @@ Crucially, include a disclaimer stating that the tax calculation is an estimate 
 
 ### **Income**
 
-- **Gross Potential Income:** [Calculate by summing the 'amount' field from all revenue transactions. This represents the total rent due.]
+- **Gross Potential Income:** [Calculate by summing the 'amount' field from all revenue transactions. This represents the total rent due for the period.]
+
 - **Less: Vacancy & Credit Losses:** [Calculate by summing the difference between 'amount' and 'amountPaid' for all revenue transactions where 'amountPaid' is less than 'amount'.]
-- **Net Rental Income (Effective Gross Income):** **[This is the total of the 'amountPaid' field from all revenue transactions. Use this as the basis for income calculations.]**
+
+- **Net Rental Income (Effective Gross Income):** **[This is the total of the 'amountPaid' field from all revenue transactions. This is the actual income collected and the basis for all subsequent calculations.]**
+
+\n\n
 
 ### **Operating Expenses**
 
-List and sum all operating expenses, grouped by category.
+(List and sum all operating expenses from the data, grouped by category.)
 
 - **Maintenance & Repairs:** [Sum of all expenses in 'Maintenance' and 'Repairs' categories.]
-- **Property Management Fees:** [Sum of all expenses in 'Management Fees' category.]
-- **Insurance:** [Sum of all expenses in 'Insurance' category.]
-- **Utilities:** [Sum of all expenses in 'Utilities' category.]
-- **Legal & Professional Fees:** [Sum of all expenses in 'Legal Fees' category.]
-- *[Add other categories as found in the data...]*
 
-**Total Operating Expenses:** **[Sum of all expense categories.]**
+- **Property Management Fees:** [Sum of all expenses in 'Management Fees' category.]
+
+- **Insurance:** [Sum of all expenses in 'Insurance' category.]
+
+- **Utilities:** [Sum of all expenses in 'Utilities' category.]
+
+- **Legal & Professional Fees:** [Sum of all expenses in 'Legal Fees' category.]
+
+- *[Add other expense categories as found in the data, listing each on a new line.]*
+
+**Total Operating Expenses:** **[Sum of all individual expense categories.]**
+
+\n\n
 
 ### **Net Operating Income (NOI)**
 
-Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of profitability before financing and taxes.
+(Calculate the Net Operating Income by subtracting Total Operating Expenses from the Net Rental Income. This is a key indicator of profitability before financing and taxes.)
 
 - **Net Operating Income:** **[Net Rental Income - Total Operating Expenses]**
 
+\n\n
+
 ### **Tax Calculation (Estimation Only)**
 
-Based on KRA guidelines for residential rental income, calculate the estimated tax. Assume the Monthly Rental Income (MRI) tax rate of 7.5% applies to the **Net Rental Income (Effective Gross Income)**. State this assumption clearly.
+(Based on KRA guidelines for residential rental income, calculate the estimated tax. You MUST state the assumption that you are using the Monthly Rental Income (MRI) tax rate of 7.5% and applying it to the **Net Rental Income (Effective Gross Income)** for the period.)
 
 - **Estimated Rental Income Tax (7.5% of Net Rental Income):** [Calculate as Net Rental Income * 0.075]
 
+\n\n
+
 ### **Net Profit / Loss After Tax**
 
-Calculate the final Net Profit or Loss by subtracting the estimated tax from the Net Operating Income.
+(Calculate the final Net Profit or Loss by subtracting the estimated tax from the Net Operating Income. This is the final "bottom line".)
 
 - **Net Profit / Loss After Tax:** **[Net Operating Income - Estimated Rental Income Tax]**
 `,

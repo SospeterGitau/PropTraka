@@ -68,7 +68,7 @@ function DashboardPage() {
       return acc + (amountDue - amountPaid);
     }, 0);
 
-  const totalProfit = totalRevenue - totalExpenses;
+  const netOperatingIncome = totalRevenue - totalExpenses;
 
   return (
     <>
@@ -100,9 +100,9 @@ function DashboardPage() {
         />
         <KpiCard
           icon={CurrencyIcon}
-          title="Profit"
-          value={formatCurrency(totalProfit)}
-          description="This month"
+          title="Net Operating Income"
+          value={formatCurrency(netOperatingIncome)}
+          description="This month (before tax)"
         />
         <KpiCard
           icon={CircleAlert}
