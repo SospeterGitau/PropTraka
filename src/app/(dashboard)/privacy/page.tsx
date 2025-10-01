@@ -12,8 +12,8 @@ export default function PrivacyPolicyPage() {
         <h3>1. Introduction</h3>
         <p>
           This Privacy Policy outlines how RentVision ("the App") collects, uses, and manages personal data. 
-          The user of this app ("you", "the Landlord") acts as the **Data Controller** for the personal data you enter into the App. 
-          This app acts as a **Data Processor** on your behalf. This policy is designed to inform you of your responsibilities and how the App processes data.
+          The user of this app ("you", "the Landlord") acts as the <strong>Data Controller</strong> for the personal data you enter into the App. 
+          This app acts as a <strong>Data Processor</strong> on your behalf. This policy is designed to inform you of your responsibilities and how the App processes data.
         </p>
 
         <h3>2. Data We Process</h3>
