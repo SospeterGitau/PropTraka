@@ -7,6 +7,7 @@ import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { Transaction } from '@/lib/types';
+import { useDataContext } from '@/context/data-context';
 
 interface AreaChartProps {
   revenue: Transaction[];
@@ -25,6 +26,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
+  const { formatCurrency } = useDataContext();
   const chartData = Array.from({ length: 6 }).map((_, i) => {
     const d = subMonths(new Date(), 5 - i);
     const month = format(d, 'MMMM');
@@ -63,8 +65,17 @@ export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
-              <Tooltip content={<ChartTooltipContent />} />
+              <YAxis tickFormatter={(value) => formatCurrency(Number(value)).replace(/\.00$/, '')} tickLine={false} axisLine={false} />
+              <Tooltip 
+                content={<ChartTooltipContent 
+                    formatter={(value, name) => (
+                    <div className="flex flex-col">
+                        <span className="text-muted-foreground">{name}</span>
+                        <span>{formatCurrency(Number(value))}</span>
+                    </div>
+                )}
+                />}
+              />
               <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-4))" fillOpacity={1} fill="url(#colorExpenses)" />
               <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorRevenue)" />
             </AreaChart>

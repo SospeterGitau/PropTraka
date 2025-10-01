@@ -6,6 +6,7 @@ import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { Property, Transaction } from '@/lib/types';
+import { useDataContext } from '@/context/data-context';
 
 interface BarChartProps {
   properties: Property[];
@@ -21,6 +22,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
+  const { formatCurrency } = useDataContext();
   const currentYear = new Date().getFullYear();
 
   const chartData = properties.map(property => {
@@ -59,8 +61,18 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
                 angle={-45}
                 textAnchor="end"
               />
-              <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
-              <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
+              <YAxis tickFormatter={(value) => formatCurrency(Number(value)).replace(/\.00$/, '')} tickLine={false} axisLine={false} />
+              <Tooltip 
+                content={<ChartTooltipContent 
+                    formatter={(value, name) => (
+                    <div className="flex flex-col">
+                        <span className="text-muted-foreground">{name}</span>
+                        <span>{formatCurrency(Number(value))}</span>
+                    </div>
+                )}
+                />} 
+                cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} 
+              />
               <Bar dataKey="profit" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

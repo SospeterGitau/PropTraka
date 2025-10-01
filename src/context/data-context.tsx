@@ -29,7 +29,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [revenue, setRevenue] = useState<Transaction[] | null>(null);
   const [expenses, setExpenses] = useState<Transaction[] | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [currency, setCurrency] = useState('GBP');
+  const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
   const [companyName, setCompanyName] = useState('RentVision Ltd');
 

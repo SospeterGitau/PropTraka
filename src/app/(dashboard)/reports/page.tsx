@@ -162,8 +162,18 @@ function RevenueAnalysisTab() {
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} tickLine={false} axisLine={false} />
-              <Tooltip content={<ChartTooltipContent />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
+              <YAxis tickFormatter={(value) => formatCurrency(Number(value)).replace(/\.00$/, '')} tickLine={false} axisLine={false} />
+              <Tooltip 
+                 content={<ChartTooltipContent 
+                    formatter={(value, name) => (
+                    <div className="flex flex-col">
+                        <span className="text-muted-foreground capitalize">{name}</span>
+                        <span>{formatCurrency(Number(value))}</span>
+                    </div>
+                )}
+                />}
+                cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
+              />
               <Legend />
               <Bar dataKey="projected" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Projected" />
               <Bar dataKey="actual" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Actual" />
