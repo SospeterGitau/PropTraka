@@ -7,7 +7,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Button } from '@/components/ui/button';
 
 export default function FaqPage() {
   return (
@@ -35,7 +34,7 @@ export default function FaqPage() {
           <AccordionItem value="item-3">
             <AccordionTrigger className="text-lg font-semibold">How do I manage my properties?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              The <Link href="/properties" className="text-primary underline">Properties</Link> page is where you can add, view, and edit all the properties in your portfolio. Click the "Add Property" button to open a form where you can input details like address, property type, number of bedrooms/bathrooms, and financial information such as purchase price, purchase taxes/fees, and current value.
+              The <Link href="/properties" className="text-primary underline">Properties</Link> page is where you can add, view, and edit all the properties in your portfolio. Click the "Add Property" button to open a form where you can input details like address, property type, number of bedrooms/bathrooms, and financial information such as purchase price, purchase taxes/fees, current value, and the asking/target rent for the property.
             </AccordionContent>
           </AccordionItem>
 
@@ -46,12 +45,19 @@ export default function FaqPage() {
               All income is managed on the <Link href="/revenue" className="text-primary underline">Revenue</Link> page. Revenue is tracked by "Tenancy." When you click "Add Tenancy," you link a tenant to a specific property for a defined period (e.g., a 12-month lease). The app automatically generates the expected monthly rent payments for that period. You can then click on a specific tenancy to view a detailed breakdown and record payments as they come in. You can also add a link to a contract document.
             </AccordionContent>
           </AccordionItem>
+          
+          <AccordionItem value="item-10">
+            <AccordionTrigger className="text-lg font-semibold">How do I handle a tenancy that ends early?</AccordionTrigger>
+            <AccordionContent className="text-base leading-relaxed">
+              You can end a tenancy earlier than its original end date. Go to the specific tenancy's detail page by clicking on it from the <Link href="/revenue" className="text-primary underline">Revenue</Link> page. In the header, click the "End Tenancy" button. A dialog will appear allowing you to select a new, earlier end date. Confirming this action will automatically delete any future, unpaid rent records after the new end date, ensuring your financial projections remain accurate.
+            </AccordionContent>
+          </AccordionItem>
 
           {/* Expenses Section */}
           <AccordionItem value="item-5">
             <AccordionTrigger className="text-lg font-semibold">How do I manage expenses?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              Use the <Link href="/expenses" className="text-primary underline">Expenses</Link> page to log all costs associated with your properties or general business operations. You can categorize each expense, assign it to a specific property (or leave it as a general business expense), and add notes. The system supports both "One-off" and "Recurring" expenses to help you track everything from a single repair job to monthly management fees.
+              Use the <Link href="/expenses" className="text-primary underline">Expenses</Link> page to log all costs associated with your properties or general business operations. You can categorize each expense, assign it to a specific property (or leave it as a general business expense), and add notes. The system supports both "One-off" and "Recurring" expenses to help you track everything from a single repair job to monthly management fees. You can also add a link to a receipt for your records.
             </AccordionContent>
           </AccordionItem>
 
@@ -63,7 +69,9 @@ export default function FaqPage() {
               <br /><br />
               - **Interactive Dashboards:** You can switch between a "Revenue Analysis" view to compare projected vs. actual income, and a "P&L Statement" view that summarizes your income and expenses for any period you choose using the date filters.
               <br /><br />
-              - **AI-Powered P&L Statements:** For a more formal report, click the "Generate Report" button at the top of the page. This feature uses AI to create a comprehensive Profit and Loss statement, structured professionally with an executive summary, making it suitable for sharing with banks, investors, or financial institutions. You can select precise date ranges or use convenient presets like financial quarters.
+              - **AI-Powered P&L Statements:** For a more formal report, click the "P&L Statement" button at the top of the page. This feature uses AI to create a comprehensive Profit and Loss statement, structured professionally with an executive summary, making it suitable for sharing with banks or investors. You can select precise date ranges or use convenient presets like financial quarters.
+              <br /><br />
+              - **AI-Powered Market Research:** Click the "Market Research" button to get an AI-generated analysis of how your properties' rental prices compare to the current market rates in Kenya, providing data-backed recommendations.
             </AccordionContent>
           </AccordionItem>
 
@@ -85,9 +93,9 @@ export default function FaqPage() {
           
            {/* Settings Section */}
           <AccordionItem value="item-9">
-            <AccordionTrigger className="text-lg font-semibold">Can I change the currency or date format?</AccordionTrigger>
+            <AccordionTrigger className="text-lg font-semibold">Can I change the currency or other settings?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              Yes. In the <Link href="/settings" className="text-primary underline">Settings</Link> page, you can customize the currency symbol and locale (which controls date and number formatting) to match your preferences. Click the "Edit" button to make changes and then save them.
+              Yes. In the <Link href="/settings" className="text-primary underline">Settings</Link> page, you can customize the currency symbol and locale (which controls date and number formatting) to match your preferences. You can also set your company name for reports, define your tax residency status (which affects P&L report calculations), and enable or disable the AI-powered reporting features.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
