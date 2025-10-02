@@ -35,6 +35,7 @@ export interface Transaction {
   tenantEmail?: string; // for revenue
   vendor?: string; // for expenses
   deposit?: number; // for revenue
+  depositReturned?: boolean; // To track if the deposit has been returned
   amountPaid?: number; // for revenue
   tenancyId?: string; // for revenue, to group monthly payments
   tenancyStartDate?: string; // for revenue

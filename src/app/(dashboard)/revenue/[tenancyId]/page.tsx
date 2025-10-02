@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, FileText, MessageSquare } from 'lucide-react';
+import { ArrowLeft, FileText, MessageSquare, BadgeCheck, CircleDollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -166,6 +166,16 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
     setIsPaymentFormOpen(false);
     setSelectedTransaction(null);
   };
+  
+  const handleReturnDeposit = () => {
+    if (!revenue || !tenancy) return;
+    setRevenue(revenue.map(tx => {
+      if (tx.tenancyId === tenancy.tenancyId) {
+        return { ...tx, depositReturned: true };
+      }
+      return tx;
+    }));
+  };
 
   if (!tenancy) {
     // You can show a loading state here
@@ -179,6 +189,11 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
   const currentBalance = totalDueToDate - totalPaid;
+  
+  const firstTransaction = tenancy.transactions[0];
+  const depositAmount = firstTransaction.deposit || 0;
+  const isDepositReturned = firstTransaction.depositReturned || false;
+  const isTenancyEnded = tenancy.tenancyEndDate ? new Date(tenancy.tenancyEndDate) < today : false;
 
 
   return (
@@ -212,7 +227,7 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-            <div className="grid grid-cols-3 gap-4 mb-6 text-center">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 text-center">
                 <div className="p-4 bg-muted rounded-lg">
                     <div className="text-sm text-muted-foreground">Total Due to Date</div>
                     <div className="text-2xl font-bold">{formatCurrency(totalDueToDate)}</div>
@@ -225,6 +240,26 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
                     <div className="text-sm text-muted-foreground">Current Balance</div>
                     <div className={cn("text-2xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-primary')}>
                         {formatCurrency(currentBalance)}
+                    </div>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                    <div className="text-sm text-muted-foreground">Deposit Status</div>
+                    <div className="text-lg font-bold h-[32px] flex items-center justify-center">
+                        {isDepositReturned ? (
+                           <Badge variant="secondary" className="text-base">
+                                <BadgeCheck className="mr-2 h-4 w-4 text-green-500"/>
+                                Returned
+                            </Badge>
+                        ) : isTenancyEnded ? (
+                            <Button size="sm" onClick={handleReturnDeposit}>
+                                <CircleDollarSign className="mr-2 h-4 w-4" />
+                                Return Deposit
+                            </Button>
+                        ) : (
+                             <Badge className="text-base" variant="outline">
+                                {depositAmount > 0 ? `Held (${formatCurrency(depositAmount)})` : 'None'}
+                            </Badge>
+                        )}
                     </div>
                 </div>
             </div>
