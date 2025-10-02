@@ -108,7 +108,7 @@ function PaymentForm({
 
 function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   const resolvedParams = use(params);
-  const { revenue, setRevenue, formatCurrency, locale } = useDataContext();
+  const { revenue, setRevenue, properties, formatCurrency, locale } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
@@ -204,10 +204,12 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   };
 
 
-  if (!tenancy) {
+  if (!tenancy || !properties) {
     // You can show a loading state here
     return <div>Loading...</div>;
   }
+
+  const property = properties.find(p => p.id === tenancy.propertyId);
   
   const today = startOfToday();
 
@@ -253,6 +255,9 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
           <CardTitle>{tenancy.tenant}</CardTitle>
           <CardDescription>
             {tenancy.propertyName}
+            {property && (
+              <div className="text-muted-foreground text-sm">{property.propertyType} &middot; {property.buildingType}</div>
+            )}
             <br />
             {tenancy.tenantEmail} {tenancy.tenantPhone && `· ${tenancy.tenantPhone}`}
             <br />

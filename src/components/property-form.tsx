@@ -101,6 +101,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                     <SelectContent>
                         <SelectGroup>
                         <SelectLabel>Domestic</SelectLabel>
+                        <SelectItem value="Studio">Studio</SelectItem>
                         <SelectItem value="Terraced House">Terraced House</SelectItem>
                         <SelectItem value="Semi-Detached House">Semi-Detached House</SelectItem>
                         <SelectItem value="Detached House">Detached House</SelectItem>

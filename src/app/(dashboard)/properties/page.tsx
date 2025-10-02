@@ -134,7 +134,7 @@ function PropertiesPage() {
                   <span className="sr-only">Image</span>
                 </TableHead>
                 <TableHead>Property Details</TableHead>
-                <TableHead>Property Type</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Value</TableHead>
                 <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
@@ -167,6 +167,7 @@ function PropertiesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{formatAddress(property)}</div>
+                      <div className="text-sm text-muted-foreground">{property.buildingType}</div>
                       <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
                          <div className="flex items-center gap-1">
                           <Bed className="h-4 w-4" />
