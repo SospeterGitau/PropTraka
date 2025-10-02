@@ -378,6 +378,9 @@ function RevenuePage() {
                     const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                     const totalBalance = totalDue - totalPaid;
                     
+                    const today = startOfToday();
+                    const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
+
                     return (
                         <TableRow key={tenancy.tenancyId}>
                           <TableCell>
@@ -392,8 +395,12 @@ function RevenuePage() {
                                 <Badge variant={new Date(tenancy.nextDueDate) < startOfToday() ? "destructive" : "outline"}>
                                     Due {formattedDates[`${tenancy.tenancyId}-nextDue`]}
                                 </Badge>
-                             ) : (
+                             ) : !isTenancyActive && totalBalance <= 0 ? (
+                               <Badge variant="default">Completed</Badge>
+                             ) : isTenancyActive && totalBalance <= 0 ? (
                                 <Badge variant="secondary">Paid Up</Badge>
+                             ) : (
+                               <Badge variant="outline">N/A</Badge>
                              )}
                           </TableCell>
                           <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
@@ -411,6 +418,9 @@ function RevenuePage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => handleEditTenancy(tenancy)}>Edit Tenancy</DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
                               </DropdownMenuContent>

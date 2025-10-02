@@ -4,7 +4,7 @@
 import { useState, useEffect, use, memo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, isAfter } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -23,9 +23,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, FileText, MessageSquare, BadgeCheck, CircleDollarSign } from 'lucide-react';
+import { ArrowLeft, FileText, MessageSquare, BadgeCheck, CircleDollarSign, CalendarX2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
 
 
 function PaymentForm({
@@ -110,6 +111,7 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   const { revenue, setRevenue, formatCurrency, locale } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
+  const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
   
@@ -177,6 +179,31 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
     }));
   };
 
+  const handleEndTenancy = (newEndDate: Date) => {
+    if (!revenue || !tenancy) return;
+    
+    const newEndDateStr = format(newEndDate, 'yyyy-MM-dd');
+
+    // Filter out future, unpaid transactions
+    const updatedRevenue = revenue.filter(tx => {
+      if (tx.tenancyId === tenancy.tenancyId) {
+        const isFutureUnpaid = isAfter(new Date(tx.date), newEndDate) && (tx.amountPaid ?? 0) === 0;
+        return !isFutureUnpaid;
+      }
+      return true; // Keep all other transactions
+    }).map(tx => {
+      // Update the end date for the remaining transactions of this tenancy
+      if (tx.tenancyId === tenancy.tenancyId) {
+        return { ...tx, tenancyEndDate: newEndDateStr };
+      }
+      return tx;
+    });
+
+    setRevenue(updatedRevenue);
+    setIsEndTenancyOpen(false);
+  };
+
+
   if (!tenancy) {
     // You can show a loading state here
     return <div>Loading...</div>;
@@ -201,17 +228,21 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
       <PageHeader title={`Tenancy Details`}>
         <div className="flex items-center gap-2">
             {tenancy.contractUrl && (
-              <Button asChild variant="secondary">
+              <Button asChild variant="outline">
                 <Link href={tenancy.contractUrl} target="_blank">
                   <FileText className="mr-2 h-4 w-4" />
                   View Contract
                 </Link>
               </Button>
             )}
-            <Button asChild variant="outline">
+            <Button variant="outline" onClick={() => setIsEndTenancyOpen(true)}>
+                <CalendarX2 className="mr-2 h-4 w-4" />
+                End Tenancy
+            </Button>
+            <Button asChild>
                 <Link href="/revenue">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Revenue
+                    Back
                 </Link>
             </Button>
         </div>
@@ -338,6 +369,13 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
         transaction={selectedTransaction}
         locale={locale}
         formatCurrency={formatCurrency}
+      />
+      
+      <EndTenancyDialog
+        isOpen={isEndTenancyOpen}
+        onClose={() => setIsEndTenancyOpen(false)}
+        onConfirm={handleEndTenancy}
+        tenancy={tenancy}
       />
     </>
   );
