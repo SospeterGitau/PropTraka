@@ -142,7 +142,7 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
           ) : error ? (
             <Button onClick={handleStartOver}>
                 <FileText className="mr-2 h-4 w-4" />
-                Try Again
+                Generate New Report
             </Button>
           ) : (
              <Button onClick={handleGenerateAnalysis} disabled={isPending}>
