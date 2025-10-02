@@ -1,11 +1,10 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
-  experimental: {
-    outputFileTracingRoot: process.cwd(),
-  },
+  outputFileTracingRoot: process.cwd(),
   images: {
     remotePatterns: [
       {
