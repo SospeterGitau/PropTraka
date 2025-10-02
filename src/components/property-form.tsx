@@ -61,7 +61,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
         </DialogHeader>
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="addressLine1">Address</Label>
+              <Label htmlFor="addressLine1">Address Line 1</Label>
               <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} required />
             </div>
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -171,7 +171,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                 </div>
             </div>
              <div className="space-y-2">
-              <Label htmlFor="rentalValue">Target Monthly Rent</Label>
+              <Label htmlFor="rentalValue">Target/Asking Monthly Rent</Label>
               <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} required />
             </div>
           

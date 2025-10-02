@@ -68,7 +68,7 @@ const RevenueForm = memo(function RevenueForm({
     const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
     const propertyId = formData.get('propertyId') as string;
     const selectedProperty = properties.find(p => p.id === propertyId);
-    const tenant = formData.get('tenant') as string;
+    const tenant = formData.get('tenantName') as string;
     const tenantEmail = formData.get('tenantEmail') as string;
     const tenantPhone = formData.get('tenantPhone') as string;
     const amount = Number(formData.get('amount'));
@@ -189,8 +189,8 @@ const RevenueForm = memo(function RevenueForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Tenant</Label>
-            <Input name="tenant" defaultValue={transaction?.tenant} required />
+            <Label>Tenant Name</Label>
+            <Input name="tenantName" defaultValue={transaction?.tenant} required />
           </div>
            <div className="space-y-2">
             <Label>Tenant Email</Label>
