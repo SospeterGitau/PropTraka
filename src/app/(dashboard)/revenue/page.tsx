@@ -70,6 +70,7 @@ const RevenueForm = memo(function RevenueForm({
     const selectedProperty = properties.find(p => p.id === propertyId);
     const tenant = formData.get('tenant') as string;
     const tenantEmail = formData.get('tenantEmail') as string;
+    const tenantPhone = formData.get('tenantPhone') as string;
     const amount = Number(formData.get('amount'));
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
@@ -146,6 +147,7 @@ const RevenueForm = memo(function RevenueForm({
         propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
         tenant: tenant,
         tenantEmail: tenantEmail,
+        tenantPhone: tenantPhone,
         type: 'revenue' as const,
         propertyId: propertyId,
         // Deposit is only due on the first month
@@ -193,6 +195,10 @@ const RevenueForm = memo(function RevenueForm({
            <div className="space-y-2">
             <Label>Tenant Email</Label>
             <Input name="tenantEmail" type="email" defaultValue={transaction?.tenantEmail} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Tenant Phone</Label>
+            <Input name="tenantPhone" type="tel" defaultValue={transaction?.tenantPhone} />
           </div>
            <div className="space-y-2">
             <Label>Tenancy Start Date</Label>

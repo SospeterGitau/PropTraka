@@ -33,6 +33,7 @@ export interface Transaction {
   category?: string; // e.g., maintenance, repairs, insurance for expenses
   tenant?: string; // for revenue
   tenantEmail?: string; // for revenue
+  tenantPhone?: string; // for revenue
   vendor?: string; // for expenses
   deposit?: number; // for revenue
   depositReturned?: boolean; // To track if the deposit has been returned

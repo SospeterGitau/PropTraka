@@ -254,6 +254,8 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
           <CardDescription>
             {tenancy.propertyName}
             <br />
+            {tenancy.tenantEmail} {tenancy.tenantPhone && `· ${tenancy.tenantPhone}`}
+            <br />
             Tenancy Period: {formattedDates['start']} - {formattedDates['end']}
           </CardDescription>
         </CardHeader>
