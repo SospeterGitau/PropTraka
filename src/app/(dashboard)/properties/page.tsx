@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
@@ -74,19 +74,27 @@ function PropertiesPage() {
     }
   };
   
-  const getOccupancyStatus = (propertyId: string): 'Occupied' | 'Vacant' => {
-    if (!revenue) return 'Vacant';
-    const today = new Date();
-    const hasActiveTenancy = revenue.some(t => 
-      t.propertyId === propertyId &&
-      t.tenancyStartDate &&
-      t.tenancyEndDate &&
-      new Date(t.tenancyStartDate) <= today &&
-      new Date(t.tenancyEndDate) >= today
-    );
-    return hasActiveTenancy ? 'Occupied' : 'Vacant';
-  };
+  const occupiedPropertyIds = useMemo(() => {
+    if (!revenue) return new Set<string>();
 
+    const today = new Date();
+    const occupiedIds = new Set<string>();
+
+    revenue.forEach(t => {
+      if (
+        t.propertyId &&
+        t.tenancyStartDate &&
+        t.tenancyEndDate &&
+        new Date(t.tenancyStartDate) <= today &&
+        new Date(t.tenancyEndDate) >= today
+      ) {
+        occupiedIds.add(t.propertyId);
+      }
+    });
+
+    return occupiedIds;
+  }, [revenue]);
+  
   if (!properties) {
     return (
        <>
@@ -146,7 +154,7 @@ function PropertiesPage() {
             <TableBody>
               {properties.map((property) => {
                 const isPlaceholder = property.imageUrl?.includes('picsum.photos');
-                const status = getOccupancyStatus(property.id);
+                const status = occupiedPropertyIds.has(property.id) ? 'Occupied' : 'Vacant';
                 return (
                   <TableRow key={property.id}>
                     <TableCell className="hidden sm:table-cell">
