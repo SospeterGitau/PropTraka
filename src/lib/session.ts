@@ -12,10 +12,10 @@ export const sessionOptions: IronSessionOptions = {
   cookieName: 'rentvision_session',
   password: SESSION_PASSWORD,
   cookieOptions: {
-    // Set secure to true, which is required for SameSite=None
-    secure: true,
+    // Set secure to true in production, which is required for SameSite=None
+    secure: process.env.NODE_ENV === 'production',
     // SameSite=None allows the cookie to be sent in cross-site requests (e.g., from an iframe)
-    sameSite: 'none',
+    sameSite: 'lax',
   },
 };
 

@@ -1,12 +1,10 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { getIronSession } from 'iron-session';
-import { sessionOptions, type SessionData } from '@/lib/session';
-import { cookies } from 'next/headers';
+import { getSession } from '@/lib/session';
 
 export async function middleware(request: NextRequest) {
-  const session = await getIronSession<SessionData>(cookies(), sessionOptions);
+  const session = await getSession();
 
   if (!session.isLoggedIn) {
     // Avoid redirecting for static assets and API routes
