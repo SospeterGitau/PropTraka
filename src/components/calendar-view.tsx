@@ -29,7 +29,7 @@ interface CalendarViewProps {
   events: CalendarEvent[];
 }
 
-const eventColors = {
+const eventColors: { [key: string]: string } = {
   appointment: 'bg-blue-200 text-blue-800',
   'tenancy-start': 'bg-green-200 text-green-800',
   'tenancy-end': 'bg-red-200 text-red-800',

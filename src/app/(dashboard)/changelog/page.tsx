@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
 import { useState, useEffect } from 'react';
 
-const iconMap = {
+const iconMap: { [key: string]: React.ReactNode } = {
     Property: <Building2 className="h-4 w-4" />,
     Tenancy: <FileText className="h-4 w-4" />,
     Expense: <Receipt className="h-4 w-4" />,

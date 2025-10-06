@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import { PT_Sans } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster"
+import { DataProvider } from '@/context/data-context';
 import '@/app/globals.css';
 
 const ptSans = PT_Sans({
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${ptSans.variable} font-sans antialiased`}>
-        {children}
+        <DataProvider>
+          {children}
+        </DataProvider>
         <Toaster />
       </body>
     </html>
