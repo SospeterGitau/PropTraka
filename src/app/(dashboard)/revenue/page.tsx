@@ -4,7 +4,7 @@
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
-import { format, startOfToday, eachMonthOfInterval } from 'date-fns';
+import { format, startOfToday, eachMonthOfInterval, isAfter, isBefore } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -344,12 +344,23 @@ function RevenuePage() {
       return acc;
     }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
   ).map(tenancy => {
+      const today = startOfToday();
       const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      const nextDueTransaction = sortedTransactions.find(tx => {
-          const due = tx.amount + (tx.deposit ?? 0);
-          const paid = tx.amountPaid ?? 0;
-          return paid < due;
+      
+      const unpaidTransactions = sortedTransactions.filter(tx => {
+        const due = tx.amount + (tx.deposit ?? 0);
+        const paid = tx.amountPaid ?? 0;
+        return paid < due;
       });
+
+      // Find the next upcoming due date
+      const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
+      
+      // If no upcoming, find the earliest overdue
+      const earliestOverdue = unpaidTransactions.find(tx => isBefore(new Date(tx.date), today));
+
+      const nextDueTransaction = nextUpcoming || earliestOverdue;
+      
       return {
           ...tenancy,
           nextDueDate: nextDueTransaction?.date,
@@ -387,6 +398,22 @@ function RevenuePage() {
                     const today = startOfToday();
                     const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
+                    let statusBadge;
+                    if (tenancy.nextDueDate) {
+                        const isOverdue = isBefore(new Date(tenancy.nextDueDate), today);
+                        statusBadge = (
+                            <Badge variant={isOverdue ? "destructive" : "outline"}>
+                                {isOverdue ? 'Overdue' : 'Upcoming'} {formattedDates[`${tenancy.tenancyId}-nextDue`]}
+                            </Badge>
+                        );
+                    } else if (!isTenancyActive && totalBalance <= 0) {
+                        statusBadge = <Badge variant="default">Completed</Badge>;
+                    } else if (isTenancyActive && totalBalance <= 0) {
+                        statusBadge = <Badge variant="secondary">Paid Up</Badge>;
+                    } else {
+                        statusBadge = <Badge variant="outline">N/A</Badge>;
+                    }
+
                     return (
                         <TableRow key={tenancy.tenancyId}>
                           <TableCell>
@@ -397,17 +424,7 @@ function RevenuePage() {
                           </TableCell>
                           <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
                           <TableCell>
-                             {tenancy.nextDueDate ? (
-                                <Badge variant={new Date(tenancy.nextDueDate) < startOfToday() ? "destructive" : "outline"}>
-                                    Due {formattedDates[`${tenancy.tenancyId}-nextDue`]}
-                                </Badge>
-                             ) : !isTenancyActive && totalBalance <= 0 ? (
-                               <Badge variant="default">Completed</Badge>
-                             ) : isTenancyActive && totalBalance <= 0 ? (
-                                <Badge variant="secondary">Paid Up</Badge>
-                             ) : (
-                               <Badge variant="outline">N/A</Badge>
-                             )}
+                             {statusBadge}
                           </TableCell>
                           <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
                           <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
@@ -460,3 +477,5 @@ function RevenuePage() {
 }
 
 export default memo(RevenuePage);
+
+    
