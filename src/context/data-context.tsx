@@ -2,8 +2,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses } from '@/lib/data';
-import type { Property, Transaction, CalendarEvent, ResidencyStatus } from '@/lib/types';
+import { properties as initialProperties, revenue as initialRevenue, expenses as initialExpenses, changelog as initialChangelog } from '@/lib/data';
+import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry } from '@/lib/types';
 
 interface DataContextType {
   properties: Property[] | null;
@@ -12,6 +12,8 @@ interface DataContextType {
   setRevenue: (revenue: Transaction[]) => void;
   expenses: Transaction[] | null;
   setExpenses: (expenses: Transaction[]) => void;
+  changelog: ChangeLogEntry[] | null;
+  addChangeLogEntry: (entry: Omit<ChangeLogEntry, 'id' | 'date'>) => void;
   calendarEvents: CalendarEvent[];
   currency: string;
   setCurrency: (currency: string) => void;
@@ -35,6 +37,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[] | null>(null);
   const [revenue, setRevenue] = useState<Transaction[] | null>(null);
   const [expenses, setExpenses] = useState<Transaction[] | null>(null);
+  const [changelog, setChangelog] = useState<ChangeLogEntry[] | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
@@ -49,7 +52,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setProperties(initialProperties);
     setRevenue(initialRevenue);
     setExpenses(initialExpenses);
+    setChangelog(initialChangelog);
   }, []);
+  
+  const addChangeLogEntry = (entry: Omit<ChangeLogEntry, 'id' | 'date'>) => {
+    const newEntry: ChangeLogEntry = {
+      ...entry,
+      id: `cl${Date.now()}`,
+      date: new Date().toISOString(),
+    };
+    setChangelog(prevLog => prevLog ? [newEntry, ...prevLog] : [newEntry]);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, {
@@ -140,6 +153,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setRevenue: setRevenue as (revenue: Transaction[]) => void,
     expenses,
     setExpenses: setExpenses as (expenses: Transaction[]) => void,
+    changelog,
+    addChangeLogEntry,
     calendarEvents,
     currency,
     setCurrency,

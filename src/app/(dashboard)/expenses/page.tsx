@@ -384,7 +384,7 @@ function ExpensesTable({
 }
 
 function ExpensesPage() {
-  const { properties, expenses, setExpenses, formatCurrency, locale } = useDataContext();
+  const { properties, expenses, setExpenses, formatCurrency, locale, addChangeLogEntry } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -421,6 +421,12 @@ function ExpensesPage() {
   const confirmDelete = () => {
     if (selectedTransaction && expenses) {
       setExpenses(expenses.filter((item) => item.id !== selectedTransaction.id));
+      addChangeLogEntry({
+        type: 'Expense',
+        action: 'Deleted',
+        description: `Expense for ${formatCurrency(selectedTransaction.amount)} (${selectedTransaction.category}) was deleted.`,
+        entityId: selectedTransaction.id,
+      });
       setIsDeleteDialogOpen(false);
       setSelectedTransaction(null);
     }
@@ -428,10 +434,24 @@ function ExpensesPage() {
 
   const handleFormSubmit = (data: Transaction) => {
     if (!expenses) return;
-    if (data.id.startsWith('e') && !expenses.find(e => e.id === data.id)) {
-      setExpenses([data, ...expenses]);
-    } else {
+    const isEditing = expenses.some(e => e.id === data.id);
+    
+    if (isEditing) {
       setExpenses(expenses.map((item) => (item.id === data.id ? data : item)));
+       addChangeLogEntry({
+        type: 'Expense',
+        action: 'Updated',
+        description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was updated.`,
+        entityId: data.id,
+      });
+    } else {
+      setExpenses([data, ...expenses]);
+      addChangeLogEntry({
+        type: 'Expense',
+        action: 'Created',
+        description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was logged.`,
+        entityId: data.id,
+      });
     }
   };
   

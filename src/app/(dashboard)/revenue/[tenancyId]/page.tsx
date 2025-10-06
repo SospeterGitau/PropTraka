@@ -108,7 +108,7 @@ function PaymentForm({
 
 function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   const resolvedParams = use(params);
-  const { revenue, setRevenue, properties, formatCurrency, locale } = useDataContext();
+  const { revenue, setRevenue, properties, formatCurrency, locale, addChangeLogEntry } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
@@ -157,14 +157,28 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   
   const handlePaymentFormSubmit = (transactionId: string, amount: number) => {
     if (!revenue) return;
-    setRevenue(revenue.map(tx => {
+    let paidTransaction: Transaction | null = null;
+
+    const updatedRevenue = revenue.map(tx => {
       if (tx.id === transactionId) {
-        // Add the new payment to the existing amount paid
         const newAmountPaid = (tx.amountPaid || 0) + amount;
-        return { ...tx, amountPaid: newAmountPaid };
+        paidTransaction = { ...tx, amountPaid: newAmountPaid };
+        return paidTransaction;
       }
       return tx;
-    }));
+    });
+
+    setRevenue(updatedRevenue);
+
+    if (paidTransaction) {
+      addChangeLogEntry({
+        type: 'Payment',
+        action: 'Created',
+        description: `Payment of ${formatCurrency(amount)} recorded for "${paidTransaction.tenant}".`,
+        entityId: paidTransaction.id,
+      });
+    }
+    
     setIsPaymentFormOpen(false);
     setSelectedTransaction(null);
   };
@@ -177,6 +191,12 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
       }
       return tx;
     }));
+    addChangeLogEntry({
+        type: 'Tenancy',
+        action: 'Updated',
+        description: `Deposit for tenancy of "${tenancy.tenant}" was marked as returned.`,
+        entityId: tenancy.tenancyId!,
+    });
   };
 
   const handleEndTenancy = (newEndDate: Date) => {
@@ -200,6 +220,12 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
     });
 
     setRevenue(updatedRevenue);
+    addChangeLogEntry({
+        type: 'Tenancy',
+        action: 'Updated',
+        description: `Tenancy for "${tenancy.tenant}" end date changed to ${format(newEndDate, 'MMMM dd, yyyy')}.`,
+        entityId: tenancy.tenancyId!,
+    });
     setIsEndTenancyOpen(false);
   };
 

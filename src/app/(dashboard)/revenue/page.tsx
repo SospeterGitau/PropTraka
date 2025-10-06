@@ -252,7 +252,7 @@ const RevenueForm = memo(function RevenueForm({
 
 
 function RevenuePage() {
-  const { properties, revenue, setRevenue, formatCurrency, locale } = useDataContext();
+  const { properties, revenue, setRevenue, formatCurrency, locale, addChangeLogEntry } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -298,6 +298,12 @@ function RevenuePage() {
     if (selectedTransaction && revenue) {
       // Delete all transactions related to the same tenancy
       setRevenue(revenue.filter((item) => item.tenancyId !== selectedTransaction.tenancyId));
+      addChangeLogEntry({
+        type: 'Tenancy',
+        action: 'Deleted',
+        description: `Tenancy for "${selectedTransaction.tenant}" at "${selectedTransaction.propertyName}" was deleted.`,
+        entityId: selectedTransaction.tenancyId!,
+      });
       setIsDeleteDialogOpen(false);
       setSelectedTransaction(null);
     }
@@ -305,7 +311,9 @@ function RevenuePage() {
 
   const handleTenancyFormSubmit = (data: Transaction[]) => {
     if (!revenue) return;
-    const tenancyId = data[0].tenancyId;
+    const tenancyId = data[0].tenancyId!;
+    const isEditing = revenue.some(r => r.tenancyId === tenancyId);
+
     // Remove existing transactions for this tenancy before adding/updating
     const otherTenancies = revenue.filter(r => r.tenancyId !== tenancyId);
     
@@ -321,6 +329,14 @@ function RevenuePage() {
     });
 
     setRevenue([...otherTenancies, ...updatedData]);
+    
+    addChangeLogEntry({
+      type: 'Tenancy',
+      action: isEditing ? 'Updated' : 'Created',
+      description: `Tenancy for "${data[0].tenant}" at "${data[0].propertyName}" was ${isEditing ? 'updated' : 'created'}.`,
+      entityId: tenancyId,
+    });
+
     setIsTenancyFormOpen(false);
     setSelectedTransaction(null);
   };
@@ -477,5 +493,3 @@ function RevenuePage() {
 }
 
 export default memo(RevenuePage);
-
-    

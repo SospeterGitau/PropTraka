@@ -65,6 +65,15 @@ export interface CalendarEvent {
   details?: Record<string, string | number | undefined>;
 }
 
+export interface ChangeLogEntry {
+  id: string;
+  date: string;
+  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment';
+  action: 'Created' | 'Updated' | 'Deleted';
+  description: string;
+  entityId: string;
+}
+
 // AI Flow Types
 export interface GenerateReportSummaryInput {
   summary: string;

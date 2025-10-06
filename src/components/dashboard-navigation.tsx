@@ -17,6 +17,7 @@ import {
   LogOut,
   HelpCircle,
   Shield,
+  History,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ const navItems = [
 ];
 
 const secondaryNavItems = [
+    { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/settings', label: 'Settings', icon: Settings },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },

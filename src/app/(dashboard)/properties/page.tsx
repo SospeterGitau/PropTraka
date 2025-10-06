@@ -35,7 +35,7 @@ function formatAddress(property: Property) {
 }
 
 function PropertiesPage() {
-  const { properties, setProperties, revenue, formatCurrency } = useDataContext();
+  const { properties, setProperties, revenue, formatCurrency, addChangeLogEntry } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -58,6 +58,12 @@ function PropertiesPage() {
   const confirmDelete = () => {
     if (selectedProperty && properties) {
       setProperties(properties.filter((p) => p.id !== selectedProperty.id));
+      addChangeLogEntry({
+        type: 'Property',
+        action: 'Deleted',
+        description: `Property "${formatAddress(selectedProperty)}" was deleted.`,
+        entityId: selectedProperty.id,
+      });
       setIsDeleteDialogOpen(false);
       setSelectedProperty(null);
     }
@@ -65,12 +71,26 @@ function PropertiesPage() {
 
   const handleFormSubmit = (data: Property) => {
     if (!properties) return;
-    if (data.id.startsWith('p') && !properties.find(p => p.id === data.id)) {
-      // Add
-      setProperties([data, ...properties]);
-    } else {
+    const isEditing = properties.some(p => p.id === data.id);
+
+    if (isEditing) {
       // Update
       setProperties(properties.map((p) => (p.id === data.id ? data : p)));
+      addChangeLogEntry({
+        type: 'Property',
+        action: 'Updated',
+        description: `Property "${formatAddress(data)}" was updated.`,
+        entityId: data.id,
+      });
+    } else {
+      // Add
+      setProperties([data, ...properties]);
+      addChangeLogEntry({
+        type: 'Property',
+        action: 'Created',
+        description: `Property "${formatAddress(data)}" was created.`,
+        entityId: data.id,
+      });
     }
   };
   
