@@ -67,7 +67,7 @@ export const expenses: Transaction[] = [
   { id: 'e5', date: '2025-07-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
   { id: 'e6', date: '2025-08-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
   { id: 'e7', date: '2025-09-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
-  { id'e8', date: '2025-09-20', amount: 75000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'expense', category: 'Repairs', vendor: 'Gate Automation Inc.', expenseType: 'one-off' },
+  { id: 'e8', date: '2025-09-20', amount: 75000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'expense', category: 'Repairs', vendor: 'Gate Automation Inc.', expenseType: 'one-off' },
   { id: 'e9', date: '2025-10-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
 ];
 
