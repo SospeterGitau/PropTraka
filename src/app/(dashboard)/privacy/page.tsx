@@ -1,12 +1,22 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 
 export default function PrivacyPolicyPage() {
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    // This code runs only on the client, after hydration
+    setLastUpdated(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+  }, []);
+
   return (
     <>
       <PageHeader title="Privacy Policy" />
       <div className="max-w-4xl mx-auto prose prose-sm sm:prose-base">
-        <p><strong>Last Updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        <p><strong>Last Updated:</strong> {lastUpdated || '...'}</p>
 
         <h2 className="pt-4 font-bold">1. Introduction</h2>
         <p>

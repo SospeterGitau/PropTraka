@@ -100,7 +100,7 @@ function ArrearsClient() {
       <PageHeader title="Arrears" />
       <Card>
         <CardHeader>
-          <CardTitle>Tenants in Arrears</CardTitle>
+          <CardTitle>Arrears List</CardTitle>
         </CardHeader>
         <CardContent>
             <Table>

@@ -13,9 +13,9 @@ export const sessionOptions: IronSessionOptions = {
   password: SESSION_PASSWORD,
   cookieOptions: {
     // Set secure to true in production, which is required for SameSite=None
-    secure: true,
-    // SameSite=None allows the cookie to be sent in cross-site requests (e.g., from an iframe)
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+    // sameSite=Lax is the default, but we can be explicit
+    sameSite: 'lax',
   },
 };
 

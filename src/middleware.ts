@@ -6,15 +6,14 @@ import { getSession } from '@/lib/session';
 export async function middleware(request: NextRequest) {
   const session = await getSession();
 
-  if (!session.isLoggedIn) {
-    // Avoid redirecting for static assets and API routes
-    if (
-      !request.nextUrl.pathname.startsWith('/_next') &&
-      !request.nextUrl.pathname.startsWith('/api') &&
-      request.nextUrl.pathname !== '/favicon.ico'
-    ) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // If the user is not logged in and is trying to access a protected page, redirect to login
+  if (!session.isLoggedIn && request.nextUrl.pathname !== '/login') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  
+  // If the user is logged in and tries to access the login page, redirect to the dashboard
+  if (session.isLoggedIn && request.nextUrl.pathname === '/login') {
+      return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();
@@ -29,8 +28,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - login (the login page itself)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|login).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }
