@@ -258,7 +258,7 @@ function PnlStatementTab() {
 
   const handleNext = () => {
     if (currentDate) {
-      setCurrentDate(viewMode === 'month' ? addMonths(currentDate, 1) : addYears(currentDate, 1));
+      setCurrentDate(viewMode === 'month' ? addMonths(currentDate, 1) : subYears(currentDate, 1));
     }
   };
 
