@@ -1,7 +1,7 @@
 import type {Metadata} from 'next';
 import { PT_Sans } from 'next/font/google';
-import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import '@/app/globals.css';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
