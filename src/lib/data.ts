@@ -11,27 +11,57 @@ export const properties: Property[] = [
   { id: 'p7', addressLine1: '444 Karen Lane', city: 'Nairobi', state: 'Nairobi County', postalCode: '00502', propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 4, bathrooms: 4, size: 350, sizeUnit: 'sqm', purchasePrice: 65000000, mortgage: 45000000, currentValue: 75000000, rentalValue: 350000, imageUrl: 'https://picsum.photos/seed/p7/600/400', imageHint: 'family home' },
 ];
 
+const t1_transactions: Transaction[] = [];
+const t1_start = new Date('2025-06-01');
+const t1_end = new Date('2026-05-31');
+for (let i=0; i<12; i++) {
+  const date = new Date(t1_start);
+  date.setMonth(t1_start.getMonth() + i);
+  t1_transactions.push({ id: `t1-${i+1}`, tenancyId: 't1', date: date.toISOString().split('T')[0], amount: 250000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', tenantPhone: '+254 712 345 678', deposit: i === 0 ? 250000: 0, amountPaid: i < 4 ? 250000 + (i === 0 ? 250000 : 0) : 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' });
+}
+
+const t2_transactions: Transaction[] = [];
+const t2_start = new Date('2025-06-01');
+const t2_end = new Date('2026-05-31');
+for (let i=0; i<12; i++) {
+  const date = new Date(t2_start);
+  date.setMonth(t2_start.getMonth() + i);
+  t2_transactions.push({ id: `t2-${i+1}`, tenancyId: 't2', date: date.toISOString().split('T')[0], amount: 150000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', tenantPhone: '+254 723 456 789', deposit: i === 0 ? 150000: 0, amountPaid: i < 5 ? 150000 + (i === 0 ? 150000 : 0) : 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' });
+}
+
+const t3_transactions: Transaction[] = [];
+const t3_start = new Date('2025-07-02');
+const t3_end = new Date('2026-07-01');
+for (let i=0; i<12; i++) {
+  const date = new Date(t3_start);
+  date.setMonth(t3_start.getMonth() + i);
+  t3_transactions.push({ id: `t3-${i+1}`, tenancyId: 't3', date: date.toISOString().split('T')[0], amount: 180000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', tenantPhone: '+254 734 567 890', deposit: i === 0 ? 180000: 0, amountPaid: i < 4 ? 180000 + (i === 0 ? 180000 : 0) : 0, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' });
+}
+
+const t4_transactions: Transaction[] = [];
+const t4_start = new Date('2025-07-01');
+const t4_end = new Date('2026-06-30');
+for (let i=0; i<12; i++) {
+  const date = new Date(t4_start);
+  date.setMonth(t4_start.getMonth() + i);
+  t4_transactions.push({ id: `t4-${i+1}`, tenancyId: 't4', date: date.toISOString().split('T')[0], amount: 600000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', tenantPhone: '+254 745 678 901', deposit: i === 0 ? 600000: 0, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' });
+}
+
+const t5_transactions: Transaction[] = [];
+const t5_start = new Date('2025-05-01');
+const t5_end = new Date('2026-04-30');
+for (let i=0; i<12; i++) {
+  const date = new Date(t5_start);
+  date.setMonth(t5_start.getMonth() + i);
+  t5_transactions.push({ id: `t5-${i+1}`, tenancyId: 't5', date: date.toISOString().split('T')[0], amount: 500000, propertyId: 'p6', propertyName: '333 Upper Hill, Nairobi, Nairobi County 00200', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', tenantPhone: '+254 756 789 012', deposit: i === 0 ? 500000: 0, amountPaid: i < 3 ? 500000 + (i === 0 ? 500000 : 0) : (i === 3 ? 250000 : 0), tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' });
+}
+
 export const revenue: Transaction[] = [
-  // Tenancy 1: John Doe
-  { id: 't1-1', tenancyId: 't1', date: '2025-06-01', amount: 250000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', tenantPhone: '+254 712 345 678', deposit: 250000, amountPaid: 500000, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  { id: 't1-2', tenancyId: 't1', date: '2025-07-01', amount: 250000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'revenue', tenant: 'John Doe', tenantEmail: 'john.doe@example.com', tenantPhone: '+254 712 345 678', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  
-  // Tenancy 2: Jane Smith
-  { id: 't2-1', tenancyId: 't2', date: '2025-06-01', amount: 150000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', tenantPhone: '+254 723 456 789', deposit: 150000, amountPaid: 300000, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-  { id: 't2-2', tenancyId: 't2', date: '2025-07-01', amount: 150000, propertyId: 'p2', propertyName: '456 Westlands Ave, Nairobi, Nairobi County 00800', type: 'revenue', tenant: 'Jane Smith', tenantEmail: 'jane.smith@example.com', tenantPhone: '+254 723 456 789', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-06-01', tenancyEndDate: '2026-05-31' },
-
-  // Tenancy 3: Peter Jones
-  { id: 't3-1', tenancyId: 't3', date: '2025-07-02', amount: 180000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', tenantPhone: '+254 734 567 890', deposit: 180000, amountPaid: 360000, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
-  { id: 't3-2', tenancyId: 't3', date: '2025-08-02', amount: 180000, propertyId: 'p3', propertyName: '789 Ngong Road, Nairobi, Nairobi County 00505', type: 'revenue', tenant: 'Peter Jones', tenantEmail: 'peter.jones@example.com', tenantPhone: '+254 734 567 890', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-02', tenancyEndDate: '2026-07-01' },
-
-  
-  // Tenancy 4: Mike Johnson (Arrears)
-  { id: 't4-1', tenancyId: 't4', date: '2025-07-01', amount: 600000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', tenantPhone: '+254 745 678 901', deposit: 600000, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
-  { id: 't4-2', tenancyId: 't4', date: '2025-08-01', amount: 600000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'revenue', tenant: 'Mike Johnson', tenantEmail: 'mike.johnson@example.com', tenantPhone: '+254 745 678 901', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-07-01', tenancyEndDate: '2026-06-30' },
-  
-  // Tenancy 5: Emily Williams (Partial Payment)
-  { id: 't5-1', tenancyId: 't5', date: '2025-07-05', amount: 500000, propertyId: 'p6', propertyName: '333 Upper Hill, Nairobi, Nairobi County 00200', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', tenantPhone: '+254 756 789 012', deposit: 500000, amountPaid: 750000, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
-  { id: 't5-2', tenancyId: 't5', date: '2025-08-05', amount: 500000, propertyId: 'p6', propertyName: '333 Upper Hill, Nairobi, Nairobi County 00200', type: 'revenue', tenant: 'Emily Williams', tenantEmail: 'emily.williams@example.com', tenantPhone: '+254 756 789 012', deposit: 0, amountPaid: 0, tenancyStartDate: '2025-05-01', tenancyEndDate: '2026-04-30' },
+  ...t1_transactions,
+  ...t2_transactions,
+  ...t3_transactions,
+  ...t4_transactions,
+  ...t5_transactions
 ];
 
 export const expenses: Transaction[] = [
@@ -40,6 +70,10 @@ export const expenses: Transaction[] = [
   { id: 'e3', date: '2025-07-15', amount: 150000, type: 'expense', propertyName: 'General Expense', category: 'Insurance', vendor: 'Jubilee Insurance', expenseType: 'one-off' },
   { id: 'e4', date: '2025-06-08', amount: 30000, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Repairs', vendor: 'General Repairs Co.', expenseType: 'one-off' },
   { id: 'e5', date: '2025-07-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
+  { id: 'e6', date: '2025-08-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
+  { id: 'e7', date: '2025-09-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
+  { id: 'e8', date: '2025-09-20', amount: 75000, propertyId: 'p4', propertyName: '101 Muthaiga Rd, Nairobi, Nairobi County 00600', type: 'expense', category: 'Repairs', vendor: 'Gate Automation Inc.', expenseType: 'one-off' },
+  { id: 'e9', date: '2025-10-01', amount: 12500, propertyId: 'p1', propertyName: '123 Riara Road, Nairobi, Nairobi County 00100', type: 'expense', category: 'Management Fees', vendor: 'Property Management Ltd', expenseType: 'recurring', frequency: 'monthly' },
 ];
 
 // This is now derived from the revenue data, but we keep the type for structure.
