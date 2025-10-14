@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
