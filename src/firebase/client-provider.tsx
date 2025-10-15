@@ -3,17 +3,17 @@
 import React, { useMemo, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
-import { FirebaseAnalyticsProvider } from './analytics';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
+  // Initialize Firebase on the client side, once per component mount.
+  // This is the single source of truth for Firebase services.
   const firebaseServices = useMemo(() => {
-    // Initialize Firebase on the client side, once per component mount.
     return initializeFirebase();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []); // Empty dependency array ensures this runs only once.
 
   return (
     <FirebaseProvider
@@ -22,9 +22,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       firestore={firebaseServices.firestore}
       analytics={firebaseServices.analytics}
     >
-      <FirebaseAnalyticsProvider>
-        {children}
-      </FirebaseAnalyticsProvider>
+      {children}
     </FirebaseProvider>
   );
 }
