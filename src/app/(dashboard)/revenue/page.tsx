@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -51,7 +52,7 @@ const RevenueForm = memo(function RevenueForm({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Transaction[]) => void;
+  onSubmit: (data: Omit<Transaction, 'id' | 'ownerId'>[]) => void;
   transaction?: Transaction | null;
   properties: Property[],
   revenue: Transaction[],
@@ -131,7 +132,6 @@ const RevenueForm = memo(function RevenueForm({
 
     const tenancyId = transaction?.tenancyId || `t${Date.now()}`;
     const newTransactions = months.map((monthStartDate, index) => ({
-        id: `${tenancyId}-${index}`,
         tenancyId: tenancyId,
         date: format(monthStartDate, 'yyyy-MM-dd'),
         amount: amount,
@@ -295,13 +295,14 @@ function RevenuePage() {
     }
   };
 
-  const handleTenancyFormSubmit = async (data: Transaction[]) => {
+  const handleTenancyFormSubmit = async (data: Omit<Transaction, 'id' | 'ownerId'>[]) => {
     if (!revenue) return;
     const tenancyId = data[0].tenancyId!;
     const isEditing = revenue.some(r => r.tenancyId === tenancyId);
     
     if (isEditing) {
-      await updateTenancy(data);
+        const fullData = data.map((d, i) => ({...d, id: `${tenancyId}-${i}`})) as Transaction[]
+        await updateTenancy(fullData);
     } else {
       await addTenancy(data);
     }

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';

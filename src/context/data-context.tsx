@@ -1,9 +1,10 @@
+
 'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import {
   setDocumentNonBlocking,
   addDocumentNonBlocking,
@@ -14,20 +15,17 @@ import {
 
 interface DataContextType {
   properties: Property[] | null;
-  setProperties: (properties: Property[]) => void;
   addProperty: (property: Omit<Property, 'id' | 'ownerId'>) => Promise<void>;
   updateProperty: (property: Property) => Promise<void>;
   deleteProperty: (propertyId: string) => Promise<void>;
   
   revenue: Transaction[] | null;
-  setRevenue: (revenue: Transaction[]) => void;
-  addTenancy: (transactions: Transaction[]) => Promise<void>;
+  addTenancy: (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => Promise<void>;
   updateTenancy: (transactions: Transaction[]) => Promise<void>;
   deleteTenancy: (tenancyId: string) => Promise<void>;
   updateRevenueTransaction: (transaction: Transaction) => Promise<void>;
 
   expenses: Transaction[] | null;
-  setExpenses: (expenses: Transaction[]) => void;
   addExpense: (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => Promise<void>;
   updateExpense: (expense: Transaction) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
@@ -68,11 +66,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesRef);
   const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueRef);
   const { data: expenses, isLoading: loadingExpenses } = useCollection<Transaction>(expensesRef);
-  const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogRef);
+  const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogRef, {
+    sortField: 'date',
+    sortDirection: 'desc',
+  });
 
   const isDataLoading = loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog;
 
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
   const [companyName, setCompanyName] = useState('RentVision Ltd');
@@ -83,19 +83,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // --- MUTATION FUNCTIONS ---
 
   const addChangeLogEntry = async (entry: Omit<ChangeLogEntry, 'id' | 'date' | 'ownerId'>) => {
-    if (!changelogRef) return;
+    if (!changelogRef || !user) return;
     const newEntry = {
       ...entry,
       date: new Date().toISOString(),
-      ownerId: user!.uid,
+      ownerId: user.uid,
     };
     await addDocumentNonBlocking(changelogRef, newEntry);
   };
 
   // Properties
   const addProperty = async (property: Omit<Property, 'id' | 'ownerId'>) => {
-    if (!propertiesRef) return;
-    const newProperty = { ...property, ownerId: user!.uid };
+    if (!propertiesRef || !user) return;
+    const newProperty = { ...property, ownerId: user.uid };
     await addDocumentNonBlocking(propertiesRef, newProperty);
   };
   const updateProperty = async (property: Property) => {
@@ -110,7 +110,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   // Tenancy (Revenue)
-  const addTenancy = async (transactions: Transaction[]) => {
+  const addTenancy = async (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => {
     if (!user) return;
     const batch = writeBatch(firestore);
     transactions.forEach(tx => {
@@ -130,11 +130,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
   const deleteTenancy = async (tenancyId: string) => {
     if (!user || !revenue) return;
+    const q = query(revenueRef!, where('tenancyId', '==', tenancyId));
+    const querySnapshot = await getDocs(q);
     const batch = writeBatch(firestore);
-    const transactionsToDelete = revenue.filter(tx => tx.tenancyId === tenancyId);
-    transactionsToDelete.forEach(tx => {
-       const txDocRef = doc(firestore, 'users', user.uid, 'revenue', tx.id);
-       batch.delete(txDocRef);
+    querySnapshot.forEach((doc) => {
+       batch.delete(doc.ref);
     });
     await batch.commit();
   };
@@ -146,8 +146,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Expenses
   const addExpense = async (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => {
-    if (!expensesRef) return;
-    const newExpense = { ...expense, ownerId: user!.uid, type: 'expense' as const };
+    if (!expensesRef || !user) return;
+    const newExpense = { ...expense, ownerId: user.uid, type: 'expense' as const };
     await addDocumentNonBlocking(expensesRef, newExpense);
   };
   const updateExpense = async (expense: Transaction) => {
@@ -188,8 +188,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }).format(amount);
   };
 
-  useEffect(() => {
-    if (!revenue || !expenses) return;
+  const calendarEvents = useMemo(() => {
+    if (!revenue || !expenses) return [];
 
     const events: CalendarEvent[] = [];
     const processedTenancies = new Set<string>();
@@ -230,18 +230,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       });
     });
 
-    setCalendarEvents(events);
+    return events;
   }, [revenue, expenses, currency, locale]);
 
-  const value = {
+  const value = useMemo(() => ({
     properties,
-    setProperties: () => {}, // No-op, managed by useCollection
     addProperty, updateProperty, deleteProperty,
     revenue,
-    setRevenue: () => {}, // No-op, managed by useCollection
     addTenancy, updateTenancy, deleteTenancy, updateRevenueTransaction,
     expenses,
-    setExpenses: () => {}, // No-op, managed by useCollection
     addExpense, updateExpense, deleteExpense,
     changelog,
     addChangeLogEntry,
@@ -255,7 +252,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     formatCurrency,
     formatCurrencyForAxis,
     isDataLoading
-  };
+  }), [
+    properties, revenue, expenses, changelog, calendarEvents,
+    currency, locale, companyName, residencyStatus, isPnlReportEnabled,
+    isMarketResearchEnabled, isDataLoading
+  ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,6 +9,8 @@ import {
   FirestoreError,
   QuerySnapshot,
   CollectionReference,
+  orderBy,
+  query,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -37,6 +40,12 @@ export interface InternalQuery extends Query<DocumentData> {
   }
 }
 
+interface UseCollectionOptions {
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+}
+
+
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
@@ -53,6 +62,7 @@ export interface InternalQuery extends Query<DocumentData> {
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
+    options: UseCollectionOptions = {},
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
@@ -71,10 +81,15 @@ export function useCollection<T = any>(
 
     setIsLoading(true);
     setError(null);
+    
+    let finalQuery: Query<DocumentData> = memoizedTargetRefOrQuery;
+    if (options.sortField) {
+      finalQuery = query(memoizedTargetRefOrQuery, orderBy(options.sortField, options.sortDirection || 'asc'));
+    }
 
-    // Directly use memoizedTargetRefOrQuery as it's assumed to be the final query
+
     const unsubscribe = onSnapshot(
-      memoizedTargetRefOrQuery,
+      finalQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
@@ -106,7 +121,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
+  }, [memoizedTargetRefOrQuery, options.sortField, options.sortDirection]); // Re-run if the target query/reference changes.
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
   }
