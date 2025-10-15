@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -36,13 +35,12 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-
-// A simple form dialog for adding/editing revenue.
 const RevenueForm = memo(function RevenueForm({
   isOpen,
   onClose,
@@ -86,7 +84,6 @@ const RevenueForm = memo(function RevenueForm({
         return;
     }
     
-    // Check for existing tenant at the same property
     const isEditing = !!transaction;
     const existingTenancy = revenue.find(
       (t) =>
@@ -104,7 +101,6 @@ const RevenueForm = memo(function RevenueForm({
       return;
     }
 
-
     if (!tenancyStartDateStr || !tenancyEndDateStr) {
        toast({
         variant: "destructive",
@@ -114,13 +110,10 @@ const RevenueForm = memo(function RevenueForm({
       return;
     }
     
-    // Explicitly parse date parts to avoid timezone issues during comparison
     const [startYear, startMonth, startDay] = tenancyStartDateStr.split('-').map(Number);
     const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
-
     const tenancyStartDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
     const tenancyEndDate = new Date(Date.UTC(endYear, endMonth - 1, endDay));
-
 
     if (tenancyEndDate < tenancyStartDate) {
       toast({
@@ -136,10 +129,8 @@ const RevenueForm = memo(function RevenueForm({
       end: tenancyEndDate,
     });
 
-    const newTransactions = months.map((monthStartDate, index) => {
-      // Use a consistent ID scheme for the tenancy
-      const tenancyId = transaction?.tenancyId || `t${Date.now()}`;
-      return {
+    const tenancyId = transaction?.tenancyId || `t${Date.now()}`;
+    const newTransactions = months.map((monthStartDate, index) => ({
         id: `${tenancyId}-${index}`,
         tenancyId: tenancyId,
         date: format(monthStartDate, 'yyyy-MM-dd'),
@@ -150,17 +141,13 @@ const RevenueForm = memo(function RevenueForm({
         tenantPhone: tenantPhone,
         type: 'revenue' as const,
         propertyId: propertyId,
-        // Deposit is only due on the first month
         deposit: index === 0 ? deposit : 0,
-        // For new entries, default amountPaid to 0. Editing preserves old values if they exist.
         amountPaid: 0,
         tenancyStartDate: tenancyStartDateStr,
         tenancyEndDate: tenancyEndDateStr,
         contractUrl: contractUrl,
-        // Only the first month's transaction gets the note
         notes: index === 0 ? notes : undefined,
-      };
-    });
+      }));
 
     onSubmit(newTransactions);
     onClose();
@@ -252,14 +239,14 @@ const RevenueForm = memo(function RevenueForm({
 
 
 function RevenuePage() {
-  const { properties, revenue, setRevenue, formatCurrency, locale, addChangeLogEntry } = useDataContext();
+  const { properties, revenue, addTenancy, updateTenancy, deleteTenancy, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    if (!revenue || !properties) return;
+    if (!revenue) return;
     const formatAllDates = async () => {
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
@@ -277,7 +264,7 @@ function RevenuePage() {
       setFormattedDates(newFormattedDates);
     };
     formatAllDates();
-  }, [revenue, properties, locale]);
+  }, [revenue, locale]);
 
   const handleAddTenancy = () => {
     setSelectedTransaction(null);
@@ -294,41 +281,30 @@ function RevenuePage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (selectedTransaction && revenue) {
-      // Delete all transactions related to the same tenancy
-      setRevenue(revenue.filter((item) => item.tenancyId !== selectedTransaction.tenancyId));
+  const confirmDelete = async () => {
+    if (selectedTransaction?.tenancyId) {
+      await deleteTenancy(selectedTransaction.tenancyId);
       addChangeLogEntry({
         type: 'Tenancy',
         action: 'Deleted',
         description: `Tenancy for "${selectedTransaction.tenant}" at "${selectedTransaction.propertyName}" was deleted.`,
-        entityId: selectedTransaction.tenancyId!,
+        entityId: selectedTransaction.tenancyId,
       });
       setIsDeleteDialogOpen(false);
       setSelectedTransaction(null);
     }
   };
 
-  const handleTenancyFormSubmit = (data: Transaction[]) => {
+  const handleTenancyFormSubmit = async (data: Transaction[]) => {
     if (!revenue) return;
     const tenancyId = data[0].tenancyId!;
     const isEditing = revenue.some(r => r.tenancyId === tenancyId);
-
-    // Remove existing transactions for this tenancy before adding/updating
-    const otherTenancies = revenue.filter(r => r.tenancyId !== tenancyId);
     
-    // Attempt to preserve payment status on edit
-    const updatedData = data.map(newTx => {
-      const existingTx = revenue.find(oldTx => oldTx.id === newTx.id);
-      return existingTx ? { 
-        ...newTx, 
-        amountPaid: existingTx.amountPaid, 
-        contractUrl: data[0].contractUrl,
-        notes: data[0].notes, // Ensure notes are carried over
-      } : newTx;
-    });
-
-    setRevenue([...otherTenancies, ...updatedData]);
+    if (isEditing) {
+      await updateTenancy(data);
+    } else {
+      await addTenancy(data);
+    }
     
     addChangeLogEntry({
       type: 'Tenancy',
@@ -341,18 +317,30 @@ function RevenuePage() {
     setSelectedTransaction(null);
   };
   
-  if (!revenue || !properties) {
-    return <div>Loading...</div>; // Or a proper skeleton loader
+  if (isDataLoading) {
+    return (
+        <>
+            <PageHeader title="Revenue">
+                <Button disabled>Add Tenancy</Button>
+            </PageHeader>
+            <Card>
+                <CardHeader>
+                    <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Skeleton className="h-48 w-full" />
+                </CardContent>
+            </Card>
+        </>
+    );
   }
 
-
-  // Group transactions by tenancyId
   const tenancies = Object.values(
-    revenue.reduce((acc, tx) => {
+    (revenue || []).reduce((acc, tx) => {
       const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
       if (!acc[tenancyId]) {
         acc[tenancyId] = {
-          ...tx, // Use first transaction as representative
+          ...tx,
           transactions: [],
         };
       }
@@ -369,10 +357,7 @@ function RevenuePage() {
         return paid < due;
       });
 
-      // Find the next upcoming due date
       const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
-      
-      // If no upcoming, find the earliest overdue
       const earliestOverdue = unpaidTransactions.find(tx => isBefore(new Date(tx.date), today));
 
       const nextDueTransaction = nextUpcoming || earliestOverdue;
@@ -406,81 +391,89 @@ function RevenuePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
-                    const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
-                    const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
-                    const totalBalance = totalDue - totalPaid;
-                    
-                    const today = startOfToday();
-                    const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
+                {tenancies.length > 0 ? (
+                    tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
+                        const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
+                        const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
+                        const totalBalance = totalDue - totalPaid;
+                        
+                        const today = startOfToday();
+                        const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
-                    let statusBadge;
-                    if (tenancy.nextDueDate) {
-                        const isOverdue = isBefore(new Date(tenancy.nextDueDate), today);
-                        statusBadge = (
-                            <Badge variant={isOverdue ? "destructive" : "outline"}>
-                                {isOverdue ? 'Overdue' : 'Upcoming'} {formattedDates[`${tenancy.tenancyId}-nextDue`]}
-                            </Badge>
+                        let statusBadge;
+                        if (tenancy.nextDueDate) {
+                            const isOverdue = isBefore(new Date(tenancy.nextDueDate), today);
+                            statusBadge = (
+                                <Badge variant={isOverdue ? "destructive" : "outline"}>
+                                    {isOverdue ? 'Overdue' : 'Upcoming'} {formattedDates[`${tenancy.tenancyId}-nextDue`]}
+                                </Badge>
+                            );
+                        } else if (!isTenancyActive && totalBalance <= 0) {
+                            statusBadge = <Badge variant="default">Completed</Badge>;
+                        } else if (isTenancyActive && totalBalance <= 0) {
+                            statusBadge = <Badge variant="secondary">Paid Up</Badge>;
+                        } else {
+                            statusBadge = <Badge variant="outline">N/A</Badge>;
+                        }
+
+                        return (
+                            <TableRow key={tenancy.tenancyId}>
+                              <TableCell>
+                                <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary underline">
+                                    {tenancy.tenant}
+                                </Link>
+                                <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
+                              </TableCell>
+                              <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
+                              <TableCell>
+                                 {statusBadge}
+                              </TableCell>
+                              <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
+                              <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
+                                {formatCurrency(totalBalance)}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button aria-haspopup="true" size="icon" variant="ghost">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Toggle menu</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem asChild>
+                                      <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleEditTenancy(tenancy)}>Edit Tenancy</DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
                         );
-                    } else if (!isTenancyActive && totalBalance <= 0) {
-                        statusBadge = <Badge variant="default">Completed</Badge>;
-                    } else if (isTenancyActive && totalBalance <= 0) {
-                        statusBadge = <Badge variant="secondary">Paid Up</Badge>;
-                    } else {
-                        statusBadge = <Badge variant="outline">N/A</Badge>;
-                    }
-
-                    return (
-                        <TableRow key={tenancy.tenancyId}>
-                          <TableCell>
-                            <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary underline">
-                                {tenancy.tenant}
-                            </Link>
-                            <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
-                          </TableCell>
-                          <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
-                          <TableCell>
-                             {statusBadge}
-                          </TableCell>
-                          <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
-                          <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
-                            {formatCurrency(totalBalance)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">Toggle menu</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleEditTenancy(tenancy)}>Edit Tenancy</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                    );
-                })}
+                    })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      No tenancies found. Click "Add Tenancy" to get started.
+                    </TableCell>
+                  </TableRow>
+                )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
       
-      <RevenueForm
+      {properties && revenue && <RevenueForm
         isOpen={isTenancyFormOpen}
         onClose={() => setIsTenancyFormOpen(false)}
         onSubmit={handleTenancyFormSubmit}
         transaction={selectedTransaction}
         properties={properties}
         revenue={revenue}
-      />
+      />}
 
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}

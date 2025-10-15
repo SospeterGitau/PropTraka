@@ -1,34 +1,33 @@
-
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/session';
+import { getIronSession } from 'iron-session';
+import { sessionOptions, type SessionData } from '@/lib/session';
+
+// This middleware is no longer the primary guard for auth.
+// Firebase auth state is checked on the client.
+// This middleware can be used for other purposes or removed if not needed.
+// For now, it simply passes all requests through.
 
 export async function middleware(request: NextRequest) {
-  const session = await getSession();
   const { pathname } = request.nextUrl;
 
-  // Allow requests for static files, fonts, images, and the login page to pass through
+  // The new authentication model is based on Firebase client-side auth state.
+  // The pages will redirect to '/login' if the user is not authenticated.
+  // The login page itself will redirect to '/' if the user is already authenticated.
+  // This middleware is simplified to not interfere with that flow.
+
+  // Allow all API routes, static files, and the login page to pass through
   if (
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/static/') ||
-    pathname.startsWith('/fonts/') ||
-    pathname.startsWith('/images/') ||
-    pathname.endsWith('.ico') ||
-    pathname.endsWith('.png') ||
-    pathname.endsWith('.jpg') ||
-    pathname.endsWith('.jpeg') ||
-    pathname.endsWith('.svg') ||
-    pathname.endsWith('.gif') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.includes('.') || // for static files like favicon.ico
     pathname === '/login'
   ) {
     return NextResponse.next();
   }
-
-  // If the user is not logged in, redirect to login
-  if (!session.isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
   
+  // For other pages, we can just let them render.
+  // Client-side components will handle auth checks.
   return NextResponse.next();
 }
 

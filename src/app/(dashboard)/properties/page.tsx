@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, memo } from 'react';
@@ -29,13 +28,14 @@ import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser } from '@/firebase';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
 function PropertiesPage() {
-  const { properties, setProperties, revenue, formatCurrency, addChangeLogEntry } = useDataContext();
+  const { properties, addProperty, updateProperty, deleteProperty, revenue, formatCurrency, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -55,9 +55,9 @@ function PropertiesPage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (selectedProperty && properties) {
-      setProperties(properties.filter((p) => p.id !== selectedProperty.id));
+  const confirmDelete = async () => {
+    if (selectedProperty) {
+      await deleteProperty(selectedProperty.id);
       addChangeLogEntry({
         type: 'Property',
         action: 'Deleted',
@@ -69,13 +69,11 @@ function PropertiesPage() {
     }
   };
 
-  const handleFormSubmit = (data: Property) => {
-    if (!properties) return;
-    const isEditing = properties.some(p => p.id === data.id);
+  const handleFormSubmit = async (data: Property) => {
+    const isEditing = !!data.id && properties?.some(p => p.id === data.id);
 
     if (isEditing) {
-      // Update
-      setProperties(properties.map((p) => (p.id === data.id ? data : p)));
+      await updateProperty(data);
       addChangeLogEntry({
         type: 'Property',
         action: 'Updated',
@@ -83,13 +81,13 @@ function PropertiesPage() {
         entityId: data.id,
       });
     } else {
-      // Add
-      setProperties([data, ...properties]);
+      const { id, ...propertyData } = data; // Omit id for creation
+      await addProperty(propertyData);
       addChangeLogEntry({
         type: 'Property',
         action: 'Created',
         description: `Property "${formatAddress(data)}" was created.`,
-        entityId: data.id,
+        entityId: data.id, // The ID will be assigned by Firestore, but we use it for the log description
       });
     }
   };
@@ -115,7 +113,7 @@ function PropertiesPage() {
     return occupiedIds;
   }, [revenue]);
   
-  if (!properties) {
+  if (isDataLoading) {
     return (
        <>
         <PageHeader title="Properties">
@@ -172,7 +170,8 @@ function PropertiesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {properties.map((property) => {
+              {properties && properties.length > 0 ? (
+                properties.map((property) => {
                 const isPlaceholder = property.imageUrl?.includes('picsum.photos');
                 const status = occupiedPropertyIds.has(property.id) ? 'Occupied' : 'Vacant';
                 return (
@@ -240,7 +239,14 @@ function PropertiesPage() {
                     </TableCell>
                   </TableRow>
                 )
-              })}
+              })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No properties found. Click "Add Property" to get started.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

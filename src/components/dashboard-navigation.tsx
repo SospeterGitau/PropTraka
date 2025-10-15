@@ -1,9 +1,8 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Building2,
   Calendar,
@@ -34,7 +33,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { logout } from '@/app/(dashboard)/actions';
+import { useAuth } from '@/firebase';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -55,6 +54,13 @@ const secondaryNavItems = [
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/login');
+  };
 
   return (
     <SidebarProvider>
@@ -111,25 +117,21 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
            </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          <form action={logout}>
-            <div className="p-2">
-               <Button type="submit" className="justify-start w-full text-base h-12" variant="ghost">
-                  <LogOut />
-                  <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-                </Button>
-            </div>
-          </form>
+          <div className="p-2">
+             <Button onClick={handleLogout} className="justify-start w-full text-base h-12" variant="ghost">
+                <LogOut />
+                <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+              </Button>
+          </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex items-center justify-between h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
           <SidebarTrigger />
-          <form action={logout}>
-            <Button type="submit" variant="ghost" size="icon">
-              <LogOut />
-              <span className="sr-only">Logout</span>
-            </Button>
-          </form>
+          <Button onClick={handleLogout} variant="ghost" size="icon">
+            <LogOut />
+            <span className="sr-only">Logout</span>
+          </Button>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">
           {children}

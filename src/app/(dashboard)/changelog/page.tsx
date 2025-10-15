@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDataContext } from '@/context/data-context';
@@ -10,6 +9,7 @@ import { Building2, FileText, HandCoins, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
 import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const iconMap: { [key: string]: React.ReactNode } = {
     Property: <Building2 className="h-4 w-4" />,
@@ -19,7 +19,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
 };
 
 function ChangelogPage() {
-  const { changelog, locale } = useDataContext();
+  const { changelog, locale, isDataLoading } = useDataContext();
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
@@ -35,8 +35,29 @@ function ChangelogPage() {
     formatAllDates();
   }, [changelog, locale]);
   
-  if (!changelog) {
-    return <div>Loading...</div>;
+  if (isDataLoading) {
+    return (
+        <>
+            <PageHeader title="Changelog" />
+            <Card>
+                <CardHeader>
+                    <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
+                    <CardDescription><Skeleton className="h-4 w-3/4" /></CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                   {Array.from({ length: 5 }).map((_, i) => (
+                     <div key={i} className="flex gap-4">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-2 flex-1">
+                            <Skeleton className="h-5 w-1/3" />
+                            <Skeleton className="h-4 w-2/3" />
+                        </div>
+                     </div>
+                   ))}
+                </CardContent>
+            </Card>
+        </>
+    );
   }
 
   return (
@@ -48,21 +69,27 @@ function ChangelogPage() {
             <CardDescription>A log of all significant events and changes within your portfolio.</CardDescription>
         </CardHeader>
         <CardContent>
-           <Timeline>
-            {changelog.map((item, index) => (
-                <TimelineItem key={item.id}>
-                    {index < changelog.length - 1 && <TimelineConnector />}
-                    <TimelineHeader>
-                        <TimelineIcon>{iconMap[item.type]}</TimelineIcon>
-                        <TimelineTitle>{item.type} {item.action}</TimelineTitle>
-                        <div className="text-sm text-muted-foreground ml-auto">{formattedDates[item.id]}</div>
-                    </TimelineHeader>
-                    <TimelineDescription>
-                        {item.description}
-                    </TimelineDescription>
-                </TimelineItem>
-            ))}
-           </Timeline>
+           {changelog && changelog.length > 0 ? (
+            <Timeline>
+                {changelog.map((item, index) => (
+                    <TimelineItem key={item.id}>
+                        {index < changelog.length - 1 && <TimelineConnector />}
+                        <TimelineHeader>
+                            <TimelineIcon>{iconMap[item.type]}</TimelineIcon>
+                            <TimelineTitle>{item.type} {item.action}</TimelineTitle>
+                            <div className="text-sm text-muted-foreground ml-auto">{formattedDates[item.id]}</div>
+                        </TimelineHeader>
+                        <TimelineDescription>
+                            {item.description}
+                        </TimelineDescription>
+                    </TimelineItem>
+                ))}
+            </Timeline>
+           ) : (
+             <div className="text-center py-8 text-muted-foreground">
+                No activity recorded yet.
+             </div>
+           )}
         </CardContent>
       </Card>
     </>

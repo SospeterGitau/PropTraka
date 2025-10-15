@@ -1,9 +1,8 @@
-
-
 export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface Property {
   id: string;
+  ownerId: string; // Foreign key to the user
   addressLine1: string;
   city: string;
   state: string;
@@ -25,28 +24,28 @@ export interface Property {
 
 export interface Transaction {
   id: string;
+  ownerId: string; // Foreign key to the user
   date: string;
-  amount: number; // Represents monthly rent for revenue type
+  amount: number;
   propertyId?: string;
   propertyName: string;
   type: 'revenue' | 'expense';
-  category?: string; // e.g., maintenance, repairs, insurance for expenses
-  tenant?: string; // for revenue
-  tenantEmail?: string; // for revenue
-  tenantPhone?: string; // for revenue
-  vendor?: string; // for expenses
-  deposit?: number; // for revenue
-  depositReturned?: boolean; // To track if the deposit has been returned
-  amountPaid?: number; // for revenue
-  tenancyId?: string; // for revenue, to group monthly payments
-  tenancyStartDate?: string; // for revenue
-  tenancyEndDate?: string; // for revenue
-  contractUrl?: string; // Link to the tenancy agreement
-  expenseType?: 'one-off' | 'recurring'; // for expenses
-  frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly'; // for recurring expenses
-  notes?: string; // Optional notes field
-  receiptUrl?: string; // Optional link to a receipt/file for expenses
-  // The following are not part of the core data but can be added for UI purposes
+  category?: string;
+  tenant?: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
+  vendor?: string;
+  deposit?: number;
+  depositReturned?: boolean;
+  amountPaid?: number;
+  tenancyId?: string;
+  tenancyStartDate?: string;
+  tenancyEndDate?: string;
+  contractUrl?: string;
+  expenseType?: 'one-off' | 'recurring';
+  frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
+  notes?: string;
+  receiptUrl?: string;
   transactions?: Transaction[]; 
   nextDueDate?: string;
 }
@@ -67,6 +66,7 @@ export interface CalendarEvent {
 
 export interface ChangeLogEntry {
   id: string;
+  ownerId: string; // Foreign key to the user
   date: string;
   type: 'Property' | 'Tenancy' | 'Expense' | 'Payment';
   action: 'Created' | 'Updated' | 'Deleted';

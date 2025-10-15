@@ -1,27 +1,50 @@
-
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
-import { authenticate } from '@/app/login/actions';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth, useUser } from '@/firebase';
+import { signInAnonymously } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Wallet } from 'lucide-react';
+import { Wallet, Loader2 } from 'lucide-react';
 
 function LoginButton() {
-  const { pending } = useFormStatus();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
+  const handleLogin = async () => {
+    if (!auth) return;
+    try {
+      await signInAnonymously(auth);
+    } catch (error) {
+      console.error("Anonymous sign-in failed", error);
+    }
+  };
+
+  if (isUserLoading || user) {
+    return (
+        <Button className="w-full" disabled>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Redirecting...
+        </Button>
+    );
+  }
+
   return (
-    <Button className="w-full" aria-disabled={pending}>
-      {pending ? 'Logging in...' : 'Login'}
+    <Button className="w-full" onClick={handleLogin}>
+      Sign In Anonymously
     </Button>
   );
 }
 
 export default function LoginPage() {
-  const [errorMessage, dispatch] = useActionState(authenticate, undefined);
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40">
       <Card className="w-full max-w-sm">
@@ -30,21 +53,15 @@ export default function LoginPage() {
              <Wallet className="w-8 h-8 text-primary" />
              <h1 className="text-2xl font-semibold font-headline">RentVision</h1>
           </div>
-          <CardTitle>Please sign in to continue</CardTitle>
+          <CardTitle>Welcome</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={dispatch} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
-            </div>
-            
-            {errorMessage && (
-              <div className="text-sm text-destructive">{errorMessage}</div>
-            )}
-            
+          <div className="space-y-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Sign in to manage your property portfolio. All your data will be stored securely and privately.
+            </p>
             <LoginButton />
-          </form>
+          </div>
         </CardContent>
       </Card>
     </main>

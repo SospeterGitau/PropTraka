@@ -1,11 +1,5 @@
+// This file is no longer used for retrieving the app password.
+// Firebase handles authentication.
+// The session password is now read directly from environment variables.
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
-}
-
-export const APP_PASSWORD = requireEnv('APP_PASSWORD');
-export const SESSION_PASSWORD = requireEnv('SESSION_PASSWORD');
+export const SESSION_PASSWORD = process.env.SESSION_PASSWORD || 'complex_password_at_least_32_characters_long';

@@ -1,21 +1,22 @@
-
 import { cookies } from 'next/headers';
 import type { IronSessionOptions, IronSession } from 'iron-session';
 import { getIronSession } from 'iron-session';
-import { SESSION_PASSWORD } from '@/lib/config';
+
+// This session is no longer used for primary authentication, which is now
+// handled by Firebase client-side. However, it can still be useful for
+// storing other session-related data on the server if needed.
 
 export interface SessionData {
-  isLoggedIn: boolean;
+  isLoggedIn: boolean; // This is now a secondary indicator, not the source of truth.
 }
 
 export const sessionOptions: IronSessionOptions = {
   cookieName: 'rentvision_session',
-  password: SESSION_PASSWORD,
+  password: process.env.SESSION_PASSWORD || 'complex_password_at_least_32_characters_long',
   cookieOptions: {
     // Set secure to true in production, which is required for SameSite=None
-    secure: true,
-    // SameSite=None allows the cookie to be sent in cross-site requests (e.g., from an iframe)
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+    // sameSite: 'none',
   },
 };
 

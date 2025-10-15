@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -56,7 +55,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
-
+import { Skeleton } from '@/components/ui/skeleton';
 
 const defaultCategories = [
   'Accounting',
@@ -384,7 +383,7 @@ function ExpensesTable({
 }
 
 function ExpensesPage() {
-  const { properties, expenses, setExpenses, formatCurrency, locale, addChangeLogEntry } = useDataContext();
+  const { properties, expenses, addExpense, updateExpense, deleteExpense, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -419,8 +418,8 @@ function ExpensesPage() {
   };
 
   const confirmDelete = () => {
-    if (selectedTransaction && expenses) {
-      setExpenses(expenses.filter((item) => item.id !== selectedTransaction.id));
+    if (selectedTransaction) {
+      deleteExpense(selectedTransaction.id);
       addChangeLogEntry({
         type: 'Expense',
         action: 'Deleted',
@@ -433,11 +432,10 @@ function ExpensesPage() {
   };
 
   const handleFormSubmit = (data: Transaction) => {
-    if (!expenses) return;
-    const isEditing = expenses.some(e => e.id === data.id);
+    const isEditing = !!data.id && expenses?.some(e => e.id === data.id);
     
     if (isEditing) {
-      setExpenses(expenses.map((item) => (item.id === data.id ? data : item)));
+      updateExpense(data);
        addChangeLogEntry({
         type: 'Expense',
         action: 'Updated',
@@ -445,7 +443,8 @@ function ExpensesPage() {
         entityId: data.id,
       });
     } else {
-      setExpenses([data, ...expenses]);
+      const { id, type, ...expenseData } = data;
+      addExpense(expenseData);
       addChangeLogEntry({
         type: 'Expense',
         action: 'Created',
@@ -455,12 +454,25 @@ function ExpensesPage() {
     }
   };
   
-  if (!expenses || !properties) {
-    return <div>Loading...</div>; // Or a proper skeleton loader
+  if (isDataLoading) {
+    return (
+      <>
+        <PageHeader title="Expenses">
+          <Button disabled>Add Expense</Button>
+        </PageHeader>
+        <Skeleton className="h-10 w-48 mb-4" />
+        <Card>
+          <CardHeader><CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle></CardHeader>
+          <CardContent>
+            <Skeleton className="h-48 w-full" />
+          </CardContent>
+        </Card>
+      </>
+    )
   }
 
-  const oneOffExpenses = expenses.filter(e => e.expenseType === 'one-off' || !e.expenseType);
-  const recurringExpenses = expenses.filter(e => e.expenseType === 'recurring');
+  const oneOffExpenses = expenses?.filter(e => e.expenseType === 'one-off' || !e.expenseType) || [];
+  const recurringExpenses = expenses?.filter(e => e.expenseType === 'recurring') || [];
 
   return (
     <>
@@ -507,13 +519,13 @@ function ExpensesPage() {
         </TabsContent>
       </Tabs>
       
-      <ExpenseForm
+      {properties && <ExpenseForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleFormSubmit}
         transaction={selectedTransaction}
         properties={properties}
-      />
+      />}
       
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}

@@ -15,10 +15,10 @@ const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-cha
 const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false });
 
 function DashboardPage() {
-  const { properties, revenue, expenses, formatCurrency } = useDataContext();
+  const { properties, revenue, expenses, formatCurrency, isDataLoading } = useDataContext();
 
   // Data might not be available on the first render, so we add a loading state.
-  if (!properties || !revenue || !expenses) {
+  if (isDataLoading) {
     return (
       <>
         <PageHeader title="Dashboard" />
@@ -41,6 +41,18 @@ function DashboardPage() {
             <Skeleton className="h-[380px]" />
         </div>
       </>
+    )
+  }
+  
+  if (!properties || !revenue || !expenses) {
+    return (
+        <>
+            <PageHeader title="Dashboard" />
+            <div className="text-center py-12">
+                <h2 className="text-2xl font-semibold mb-2">Welcome to RentVision</h2>
+                <p className="text-muted-foreground">Get started by adding your first property.</p>
+            </div>
+        </>
     )
   }
 
