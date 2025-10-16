@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { format } from 'date-fns';
 import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle } from 'lucide-react';
 import type { MaintenanceRequest } from '@/lib/types';
@@ -66,7 +67,15 @@ function KanbanCard({
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
-            <CardTitle className="text-base font-semibold leading-tight">{request.propertyName}</CardTitle>
+            <CardTitle className="text-base font-semibold leading-tight">
+              {request.propertyId ? (
+                <Link href={`/properties#${request.propertyId}`} className="hover:underline">
+                  {request.propertyName}
+                </Link>
+              ) : (
+                request.propertyName
+              )}
+            </CardTitle>
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button aria-haspopup="true" size="icon" variant="ghost" className="h-6 w-6">
