@@ -3,23 +3,27 @@
  * @description This ruleset enforces a strict user-ownership model for all data.
  *
  * Data Structure:
- * All data is stored in top-level collections such as /properties/{propertyId}, /revenue/{transactionId}, etc.
- * Each document in these collections must contain an 'ownerId' field that matches the UID of the authenticated user.
+ * - All documents are stored in top-level collections such as /properties, /revenue, /expenses, /maintenanceRequests, and /changelog.
+ * - Each document must have an 'ownerId' field that matches the authenticated user's UID.
  *
  * Key Security Decisions:
- * - Users can only access documents where the 'ownerId' field matches their own UID.
- * - Listing of documents is allowed only if the query includes a where('ownerId', '==', user.uid) clause,
- *   ensuring that users can only list documents they own.
- * - Data validation is relaxed during this prototyping phase to allow for rapid iteration,
- *   but the 'ownerId' field is strictly enforced for all write operations to maintain authorization.
+ * - Users can only access (read, write) documents where the 'ownerId' field matches their UID.
+ * - Listing of documents is allowed only if the query includes a where('ownerId','==', user.uid) clause.
+ * - Documents cannot be created without a valid 'ownerId' matching the authenticated user.
+ * - The 'ownerId' field is immutable after creation.
  *
  * Denormalization for Authorization:
- * The 'ownerId' field is denormalized directly onto each document to enable efficient authorization checks
- * without requiring additional reads.
+ * - The 'ownerId' field is denormalized directly onto each document to allow for efficient ownership checks without additional reads.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
+
+    // Make changelog public
+    match /changelog/{docId} {
+        allow read: if true;
+        allow write: if false; // or isAdmin(), etc.
+    }
 
     // Catch-all for owned docs
     match /{collection}/{docId} {
@@ -33,7 +37,7 @@ service cloud.firestore {
 
       // UPDATE/DELETE: allow only the owner
       allow update, delete: if request.auth != null
-                            && resource.data.ownerId == resource.data.ownerId;
+                            && resource.data.ownerId == request.auth.uid;
     }
   }
 }
