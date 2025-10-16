@@ -3,229 +3,171 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the user is signed in.
-     * @path N/A
-     * @allow N/A
-     * @deny N/A
-     * @principle Authentication
+     * @description Checks if the request is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the user ID matches the requested user ID.
-     * @path N/A
-     * @allow N/A
-     * @deny N/A
-     * @principle Authorization
+     * @description Checks if the authenticated user is the owner of the document.
      */
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the user is the owner of the existing document.
-     * @path N/A
-     * @allow N/A
-     * @deny N/A
-     * @principle Authorization
+     * @description Checks if the authenticated user is the owner of the existing document.
      */
     function isExistingOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId && resource != null;
-    }
-    
-    /**
-     * @description Properties owned by a specific user.
-     * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get their own property.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update their own property.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete their own property.
-     * @deny (create) User 'anotherUser' cannot create a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties.
-     * @deny (get) User 'anotherUser' cannot get a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties.
-     * @deny (update) User 'anotherUser' cannot update a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties.
-     * @deny (delete) User 'anotherUser' cannot delete a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/properties/{propertyId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      return isSignedIn() && request.auth.uid == resource.data.userId;
     }
 
     /**
-     * @description Tenants related to a specific property, owned by a user.
-     * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/tenants/someTenantId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get the tenant under their property.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update the tenant under their property.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete the tenant under their property.
-     * @deny (create) User 'anotherUser' cannot create a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/tenants
-     * @deny (get) User 'anotherUser' cannot get a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/tenants
-     * @deny (update) User 'anotherUser' cannot update a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/tenants
-     * @deny (delete) User 'anotherUser' cannot delete a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/tenants
-     * @principle Enforces document ownership for writes.
+     * @description Enforces that the authenticated user is the owner when creating a new document.
      */
-    match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+    function isValidOwnerOnCreate(userId) {
+        return request.resource.data.userId == userId;
     }
 
     /**
-     * @description Rental payments made for a specific property, owned by a user.
-     * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/rentalPayments/someRentalPaymentId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get a rental payment under their property.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update a rental payment under their property.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete a rental payment under their property.
-     * @deny (create) User 'anotherUser' cannot create a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/rentalPayments
-     * @deny (get) User 'anotherUser' cannot get a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/rentalPayments
-     * @deny (update) User 'anotherUser' cannot update a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/rentalPayments
-     * @deny (delete) User 'anotherUser' cannot delete a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/rentalPayments
-     * @principle Enforces document ownership for writes.
+     * @description Enforces immutability of the owner field on update.
      */
-    match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+    function isValidOwnerOnUpdate(userId) {
+        return request.resource.data.userId == resource.data.userId;
     }
 
     /**
-     * @description Expenses related to a specific property, owned by a user.
-     * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/expenses/someExpenseId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get an expense under their property.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update an expense under their property.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete an expense under their property.
-     * @deny (create) User 'anotherUser' cannot create an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/expenses
-     * @deny (get) User 'anotherUser' cannot get an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/expenses
-     * @deny (update) User 'anotherUser' cannot update an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/expenses
-     * @deny (delete) User 'anotherUser' cannot delete an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/expenses
-     * @principle Enforces document ownership for writes.
+     * @description
+     * The rule structure prevents listing all users.
+     * It only allows access to data associated with the authenticated user's ID.
      */
-    match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
-      // Read permissions
+    match /users/{userId} {
       allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if false;
 
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
+      /**
+       * @description Manages properties owned by a specific user.
+       * @path /users/{userId}/properties/{propertyId}
+       * @allow (create) - Authenticated user creates a new property under their user ID.
+       * @deny (create) - Another user attempts to create a property under a different user ID.
+       * @principle Enforces document ownership for writes.
+       */
+      match /properties/{propertyId} {
+        allow get: if isSignedIn() && isOwner(userId);
+        allow list: if isSignedIn() && isOwner(userId);
+        allow create: if isSignedIn() && isOwner(userId);
+        allow update: if isSignedIn() && isOwner(userId);
+        allow delete: if isSignedIn() && isOwner(userId);
 
-    /**
-     * @description Appointments related to a specific property, owned by a user.
-     * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/appointments/someAppointmentId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get an appointment under their property.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update an appointment under their property.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete an appointment under their property.
-     * @deny (create) User 'anotherUser' cannot create an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/appointments
-     * @deny (get) User 'anotherUser' cannot get an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/appointments
-     * @deny (update) User 'anotherUser' cannot update an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/appointments
-     * @deny (delete) User 'anotherUser' cannot delete an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/appointments
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
+        /**
+         * @description Manages tenants related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
+         * @allow (create) - Authenticated user creates a new tenant under their property.
+         * @deny (create) - Another user attempts to create a tenant under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /tenants/{tenantId} {
+          allow get: if isSignedIn() && isOwner(userId);
+          allow list: if isSignedIn() && isOwner(userId);
+          allow create: if isSignedIn() && isOwner(userId);
+          allow update: if isSignedIn() && isOwner(userId);
+          allow delete: if isSignedIn() && isOwner(userId);
+        }
 
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
+        /**
+         * @description Manages rental payments made for a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
+         * @allow (create) - Authenticated user creates a new rental payment under their property.
+         * @deny (create) - Another user attempts to create a rental payment under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /rentalPayments/{rentalPaymentId} {
+          allow get: if isSignedIn() && isOwner(userId);
+          allow list: if isSignedIn() && isOwner(userId);
+          allow create: if isSignedIn() && isOwner(userId);
+          allow update: if isSignedIn() && isOwner(userId);
+          allow delete: if isSignedIn() && isOwner(userId);
+        }
 
-    /**
-     * @description Alerts related to a specific property, owned by a user.
-     * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/alerts/someAlertId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get an alert under their property.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update an alert under their property.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete an alert under their property.
-     * @deny (create) User 'anotherUser' cannot create an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/alerts
-     * @deny (get) User 'anotherUser' cannot get an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/alerts
-     * @deny (update) User 'anotherUser' cannot update an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/alerts
-     * @deny (delete) User 'anotherUser' cannot delete an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/somePropertyId/alerts
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
+        /**
+         * @description Manages expenses related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
+         * @allow (create) - Authenticated user creates a new expense under their property.
+         * @deny (create) - Another user attempts to create an expense under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /expenses/{expenseId} {
+          allow get: if isSignedIn() && isOwner(userId);
+          allow list: if isSignedIn() && isOwner(userId);
+          allow create: if isSignedIn() && isOwner(userId);
+          allow update: if isSignedIn() && isOwner(userId);
+          allow delete: if isSignedIn() && isOwner(userId);
+        }
 
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
+        /**
+         * @description Manages appointments related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
+         * @allow (create) - Authenticated user creates a new appointment under their property.
+         * @deny (create) - Another user attempts to create an appointment under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /appointments/{appointmentId} {
+          allow get: if isSignedIn() && isOwner(userId);
+          allow list: if isSignedIn() && isOwner(userId);
+          allow create: if isSignedIn() && isOwner(userId);
+          allow update: if isSignedIn() && isOwner(userId);
+          allow delete: if isSignedIn() && isOwner(userId);
+        }
 
-    /**
-     * @description Maintenance requests for properties owned by a specific user.
-     * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests/someMaintenanceRequestId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get their own maintenance request.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update their own maintenance request.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete their own maintenance request.
-     * @deny (create) User 'anotherUser' cannot create a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests.
-     * @deny (get) User 'anotherUser' cannot get a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests.
-     * @deny (update) User 'anotherUser' cannot update a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests.
-     * @deny (delete) User 'anotherUser' cannot delete a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
+        /**
+         * @description Manages alerts related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
+         * @allow (create) - Authenticated user creates a new alert under their property.
+         * @deny (create) - Another user attempts to create an alert under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /alerts/{alertId} {
+          allow get: if isSignedIn() && isOwner(userId);
+          allow list: if isSignedIn() && isOwner(userId);
+          allow create: if isSignedIn() && isOwner(userId);
+          allow update: if isSignedIn() && isOwner(userId);
+          allow delete: if isSignedIn() && isOwner(userId);
+        }
+      }
 
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Expenses related to a specific property, owned by a user.
-     * @path /users/{userId}/expenses/{expenseId}
-     * @allow (create) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can create a new expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/expenses/someExpenseId
-     * @allow (get) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can get an expense.
-     * @allow (list) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can list expenses.
-     * @allow (update) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can update an expense.
-     * @allow (delete) User 'Tu5oCEPnGXat4Rl6iLHUU0DxL4j1' can delete an expense.
-     * @deny (create) User 'anotherUser' cannot create an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/expenses
-     * @deny (get) User 'anotherUser' cannot get an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/expenses
-     * @deny (update) User 'anotherUser' cannot update an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/expenses
-     * @deny (delete) User 'anotherUser' cannot delete an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/expenses
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/expenses/{expenseId} {
-      // Read permissions
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-
-      // Write permissions
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      /**
+       * @description Manages maintenance requests for properties owned by a specific user.
+       * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
+       * @allow (create) - Authenticated user creates a new maintenance request under their user ID.
+       * @deny (create) - Another user attempts to create a maintenance request under a different user ID.
+       * @principle Enforces document ownership for writes.
+       */
+      match /maintenanceRequests/{maintenanceRequestId} {
+        allow get: if isSignedIn() && isOwner(userId);
+        allow list: if isSignedIn() && isOwner(userId);
+        allow create: if isSignedIn() && isOwner(userId);
+        allow update: if isSignedIn() && isOwner(userId);
+        allow delete: if isSignedIn() && isOwner(userId);
+      }
+      
+      /**
+       * @description Manages revenue for a specific user.
+       * @path /users/{userId}/revenue
+       * @allow (list) - Authenticated user lists revenue under their user ID.
+       * @deny (list) - Another user attempts to list revenue under a different user ID.
+       * @principle Enforces document ownership for reads.
+       */
+      match /revenue/{revenueId} {
+        allow get: if isSignedIn() && isOwner(userId);
+        allow list: if isSignedIn() && isOwner(userId);
+        allow create: if isSignedIn() && isOwner(userId);
+        allow update: if isSignedIn() && isOwner(userId);
+        allow delete: if isSignedIn() && isOwner(userId);
+      }
     }
   }
 }
