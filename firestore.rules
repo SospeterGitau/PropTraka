@@ -1,33 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // This function checks if the user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
+
+    // Helper function to check ownership
+    function isOwner() {
+      return request.auth != null && request.auth.uid == resource.data.ownerId;
     }
 
-    // This function checks if the user is the owner of the document
-    function isOwner(docData) {
-      return isAuthenticated() && request.auth.uid == docData.ownerId;
-    }
-    
-    // This function secures list (query) operations
+    // Helper function to check if a query is properly restricted
     function isQueryingOwnData() {
-      // Check for ownerId in where clause
-      let ownerIdConstraint = request.query.where.get('ownerId', null);
-      if (ownerIdConstraint != null) {
-        // A where clause on ownerId exists.
-        // It must be an '==' comparison and the value must be the user's UID.
-        return isAuthenticated() && ownerIdConstraint.operator == '==' && ownerIdConstraint.value == request.auth.uid;
-      }
-      return false; // No ownerId filter, so deny the query.
+      return request.auth != null && request.query.where.get('ownerId', ['==']) == request.auth.uid;
     }
 
-    // Apply rules to all top-level collections
-    match /{collection}/{docId} {
-      allow read, update, delete: if isAuthenticated() && isOwner(resource.data);
-      allow create: if isAuthenticated() && isOwner(request.resource.data);
-      allow list: if isAuthenticated() && isQueryingOwnData();
+    // Generic rule for most collections
+    match /{collection}/{docId}
+      where collection in ['properties', 'revenue', 'expenses', 'maintenanceRequests', 'changelog'] {
+        allow read, update, delete: if isOwner();
+        allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+        allow list: if isQueryingOwnData();
     }
   }
 }
