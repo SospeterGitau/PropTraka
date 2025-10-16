@@ -1,8 +1,10 @@
-import type {Metadata} from 'next';
+import type { ReactNode } from 'react';
 import { PT_Sans } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster"
-import '@/app/globals.css';
+import { DashboardNavigation } from '@/components/dashboard-navigation';
+import { DataProvider } from '@/context/data-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import '@/app/globals.css';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -10,21 +12,21 @@ const ptSans = PT_Sans({
   variable: '--font-sans'
 });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'RentVision',
   description: 'A basic ERP for small property rental businesses.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${ptSans.variable} font-sans antialiased`}>
         <FirebaseClientProvider>
-          {children}
+          <DataProvider>
+            <DashboardNavigation>
+              {children}
+            </DashboardNavigation>
+          </DataProvider>
         </FirebaseClientProvider>
         <Toaster />
       </body>
