@@ -1,50 +1,27 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isOwner(resource) {
-      // Check if the requesting user is the owner of the document.
-      return request.auth.uid == resource.data.ownerId;
+    // Helper function to check ownership
+    function isOwner(docData) {
+      return request.auth.uid == docData.ownerId;
     }
 
-    function isQueryingOwnData() {
-      // Check if a 'list' query is filtering for the user's own documents.
-      return request.auth.uid == request.query.where.ownerId;
-    }
+    // Rules for all top-level collections
+    match /{collection}/{docId} {
+      // Allow single document reads (get) if the user is the owner.
+      allow get: if isOwner(get(/databases/$(database)/documents/$(collection)/$(docId)).data);
 
-    // Secure the 'properties' collection
-    match /properties/{propertyId} {
-      allow get, update, delete: if isOwner(get(after:path()));
-      allow create: if isOwner(request.resource);
-      allow list: if isQueryingOwnData();
-    }
+      // Allow listing documents (queries) only if the query is filtering by the user's own ownerId.
+      // This is crucial for useCollection to work.
+      allow list: if request.auth.uid != null && request.query.where.get('ownerId', ['==']) == request.auth.uid;
 
-    // Secure the 'revenue' collection
-    match /revenue/{revenueId} {
-      allow get, update, delete: if isOwner(get(after:path()));
-      allow create: if isOwner(request.resource);
-      allow list: if isQueryingOwnData();
-    }
+      // Allow creating a document if the new document's ownerId is the user's uid.
+      allow create: if isOwner(request.resource.data);
 
-    // Secure the 'expenses' collection
-    match /expenses/{expenseId} {
-      allow get, update, delete: if isOwner(get(after:path()));
-      allow create: if isOwner(request.resource);
-      allow list: if isQueryingOwnData();
-    }
-
-    // Secure the 'maintenanceRequests' collection
-    match /maintenanceRequests/{requestId} {
-      allow get, update, delete: if isOwner(get(after:path()));
-      allow create: if isOwner(request.resource);
-      allow list: if isQueryingOwnData();
-    }
-
-    // Secure the 'changelog' collection
-    match /changelog/{changelogId} {
-      allow get, update, delete: if isOwner(get(after:path()));
-      allow create: if isOwner(request.resource);
-      allow list: if isQueryingOwnData();
+      // Allow updating/deleting a document if the user is the owner of the existing document.
+      allow update, delete: if isOwner(get(/databases/$(database)/documents/$(collection)/$(docId)).data);
     }
   }
 }
