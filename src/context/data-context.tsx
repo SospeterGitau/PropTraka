@@ -3,7 +3,8 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
 
@@ -150,18 +151,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
   const { user, isUserLoading: isAuthLoading } = useUser();
 
-  // Firestore collection references that depend on the user
-  const propertiesRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'properties') : null, [firestore, user]);
-  const revenueRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'revenue') : null, [firestore, user]);
-  const expensesRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'expenses') : null, [firestore, user]);
-  const maintenanceRequestsRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'maintenanceRequests') : null, [firestore, user]);
-  const changelogRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'changelog') : null, [firestore, user]);
+  // Firestore collection references that depend on the user.
+  // These are memoized and will be null until the user is authenticated.
+  const propertiesQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'properties') : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'revenue') : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'expenses') : null, [firestore, user]);
+  const maintenanceRequestsQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'maintenanceRequests') : null, [firestore, user]);
+  const changelogQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'changelog') : null, [firestore, user]);
 
-  const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesRef);
-  const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueRef);
-  const { data: expenses, isLoading: loadingExpenses } = useCollection<Transaction>(expensesRef);
-  const { data: maintenanceRequests, isLoading: loadingMaintenance } = useCollection<MaintenanceRequest>(maintenanceRequestsRef);
-  const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogRef, {
+  const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesQuery);
+  const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueQuery);
+  const { data: expenses, isLoading: loadingExpenses } = useCollection<Transaction>(expensesQuery);
+  const { data: maintenanceRequests, isLoading: loadingMaintenance } = useCollection<MaintenanceRequest>(maintenanceRequestsQuery);
+  const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogQuery, {
     sortField: 'date',
     sortDirection: 'desc',
   });
@@ -200,20 +202,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // --- MUTATION FUNCTIONS ---
 
   const addChangeLogEntry = async (entry: Omit<ChangeLogEntry, 'id' | 'date' | 'ownerId'>) => {
-    if (!changelogRef || !user) return;
+    if (!changelogQuery || !user) return;
     const newEntry = {
       ...entry,
       date: new Date().toISOString(),
       ownerId: user.uid,
     };
-    await addDoc(changelogRef, newEntry);
+    await addDoc(changelogQuery, newEntry);
   };
 
   // Properties
   const addProperty = async (property: Omit<Property, 'id' | 'ownerId'>) => {
-    if (!propertiesRef || !user) return;
+    if (!propertiesQuery || !user) return;
     const newProperty = { ...property, ownerId: user.uid };
-    await addDoc(propertiesRef, newProperty);
+    await addDoc(propertiesQuery, newProperty);
   };
   const updateProperty = async (property: Property) => {
     if (!user) return;
@@ -228,20 +230,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Tenancy (Revenue)
   const addTenancy = async (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => {
-    if (!user || !revenueRef) return;
+    if (!user || !revenueQuery) return;
     const batch = writeBatch(firestore);
     transactions.forEach(tx => {
-      const txDocRef = doc(revenueRef);
+      const txDocRef = doc(revenueQuery);
       batch.set(txDocRef, {...tx, ownerId: user.uid});
     });
     await batch.commit();
   };
   const updateTenancy = async (transactions: Transaction[]) => {
-     if (!user || !revenueRef) return;
+     if (!user || !revenueQuery) return;
     const batch = writeBatch(firestore);
 
     // Get all existing transactions for this tenancy
-    const q = query(revenueRef, where('tenancyId', '==', transactions[0].tenancyId));
+    const q = query(revenueQuery, where('tenancyId', '==', transactions[0].tenancyId));
     const querySnapshot = await getDocs(q);
     const newIds = new Set(transactions.filter(t => t.id).map(t => t.id));
 
@@ -253,14 +255,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
 
     transactions.forEach(tx => {
-      const docRef = tx.id ? doc(revenueRef, tx.id) : doc(revenueRef);
+      const docRef = tx.id ? doc(revenueQuery, tx.id) : doc(revenueQuery);
       batch.set(docRef, {...tx, ownerId: user.uid}, { merge: true });
     });
     await batch.commit();
   };
   const deleteTenancy = async (tenancyId: string) => {
-    if (!user || !revenueRef) return;
-    const q = query(revenueRef, where('tenancyId', '==', tenancyId));
+    if (!user || !revenueQuery) return;
+    const q = query(revenueQuery, where('tenancyId', '==', tenancyId));
     const querySnapshot = await getDocs(q);
     const batch = writeBatch(firestore);
     querySnapshot.forEach((doc) => {
@@ -270,13 +272,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const endTenancy = async (tenancyId: string, newEndDate: Date) => {
-    if (!user || !revenueRef) return;
+    if (!user || !revenueQuery) return;
 
     const newEndDateStr = format(newEndDate, 'yyyy-MM-dd');
     const batch = writeBatch(firestore);
     
     // Query for all transactions of the tenancy
-    const q = query(revenueRef, where('tenancyId', '==', tenancyId));
+    const q = query(revenueQuery, where('tenancyId', '==', tenancyId));
     const querySnapshot = await getDocs(q);
     
     querySnapshot.forEach(docSnap => {
@@ -303,9 +305,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Expenses
   const addExpense = async (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => {
-    if (!expensesRef || !user) return;
+    if (!expensesQuery || !user) return;
     const newExpense = { ...expense, ownerId: user.uid, type: 'expense' as const };
-    await addDoc(expensesRef, newExpense);
+    await addDoc(expensesQuery, newExpense);
   };
   const updateExpense = async (expense: Transaction) => {
     if (!user) return;
@@ -320,9 +322,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Maintenance
   const addMaintenanceRequest = async (request: Omit<MaintenanceRequest, 'id'|'ownerId'>) => {
-    if (!maintenanceRequestsRef || !user) return;
+    if (!maintenanceRequestsQuery || !user) return;
     const newRequest = { ...request, ownerId: user.uid };
-    await addDoc(maintenanceRequestsRef, newRequest);
+    await addDoc(maintenanceRequestsQuery, newRequest);
   };
   const updateMaintenanceRequest = async (request: MaintenanceRequest) => {
     if (!user) return;
@@ -432,7 +434,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }), [
     properties, revenue, expenses, maintenanceRequests, changelog, calendarEvents,
     currency, locale, companyName, residencyStatus, isPnlReportEnabled,
-    isMarketResearchEnabled, isDataLoading
+    isMarketResearchEnabled, isDataLoading, user
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
