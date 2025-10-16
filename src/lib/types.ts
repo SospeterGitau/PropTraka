@@ -68,10 +68,22 @@ export interface ChangeLogEntry {
   id: string;
   ownerId: string; // Foreign key to the user
   date: string;
-  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment';
+  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance';
   action: 'Created' | 'Updated' | 'Deleted';
   description: string;
   entityId: string;
+}
+
+export interface MaintenanceRequest {
+  id: string;
+  ownerId: string; // Foreign key to the user
+  propertyId: string;
+  propertyName: string;
+  description: string;
+  status: 'To Do' | 'In Progress' | 'Done' | 'Cancelled';
+  priority: 'Low' | 'Medium' | 'High' | 'Emergency';
+  reportedDate: string;
+  completedDate?: string;
 }
 
 // AI Flow Types
@@ -109,3 +121,5 @@ export interface GenerateMarketResearchOutput {
   error?: string | null;
   hint?: string | null;
 }
+
+    

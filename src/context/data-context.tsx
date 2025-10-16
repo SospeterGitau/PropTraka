@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
-import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry } from '@/lib/types';
+import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import {
@@ -29,6 +29,11 @@ interface DataContextType {
   addExpense: (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => Promise<void>;
   updateExpense: (expense: Transaction) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
+
+  maintenanceRequests: MaintenanceRequest[] | null;
+  addMaintenanceRequest: (request: Omit<MaintenanceRequest, 'id' | 'ownerId'>) => Promise<void>;
+  updateMaintenanceRequest: (request: MaintenanceRequest) => Promise<void>;
+  deleteMaintenanceRequest: (requestId: string) => Promise<void>;
 
   changelog: ChangeLogEntry[] | null;
   addChangeLogEntry: (entry: Omit<ChangeLogEntry, 'id' | 'date'|'ownerId'>) => void;
@@ -61,17 +66,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const propertiesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'properties') : null, [firestore, user]);
   const revenueRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'revenue') : null, [firestore, user]);
   const expensesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'expenses') : null, [firestore, user]);
+  const maintenanceRequestsRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'maintenanceRequests') : null, [firestore, user]);
   const changelogRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'changelog') : null, [firestore, user]);
 
   const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesRef);
   const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueRef);
   const { data: expenses, isLoading: loadingExpenses } = useCollection<Transaction>(expensesRef);
+  const { data: maintenanceRequests, isLoading: loadingMaintenance } = useCollection<MaintenanceRequest>(maintenanceRequestsRef);
   const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogRef, {
     sortField: 'date',
     sortDirection: 'desc',
   });
 
-  const isDataLoading = loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog;
+  const isDataLoading = loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance;
 
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
@@ -161,6 +168,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     deleteDocumentNonBlocking(expDocRef);
   };
 
+  // Maintenance
+  const addMaintenanceRequest = async (request: Omit<MaintenanceRequest, 'id'|'ownerId'>) => {
+    if (!maintenanceRequestsRef || !user) return;
+    const newRequest = { ...request, ownerId: user.uid };
+    await addDocumentNonBlocking(maintenanceRequestsRef, newRequest);
+  };
+  const updateMaintenanceRequest = async (request: MaintenanceRequest) => {
+    if (!user) return;
+    const reqDocRef = doc(firestore, 'users', user.uid, 'maintenanceRequests', request.id);
+    updateDocumentNonBlocking(reqDocRef, request);
+  };
+  const deleteMaintenanceRequest = async (requestId: string) => {
+    if (!user) return;
+    const reqDocRef = doc(firestore, 'users', user.uid, 'maintenanceRequests', requestId);
+    deleteDocumentNonBlocking(reqDocRef);
+  };
+
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
@@ -240,6 +265,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addTenancy, updateTenancy, deleteTenancy, updateRevenueTransaction,
     expenses,
     addExpense, updateExpense, deleteExpense,
+    maintenanceRequests,
+    addMaintenanceRequest, updateMaintenanceRequest, deleteMaintenanceRequest,
     changelog,
     addChangeLogEntry,
     calendarEvents,
@@ -253,7 +280,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     formatCurrencyForAxis,
     isDataLoading
   }), [
-    properties, revenue, expenses, changelog, calendarEvents,
+    properties, revenue, expenses, maintenanceRequests, changelog, calendarEvents,
     currency, locale, companyName, residencyStatus, isPnlReportEnabled,
     isMarketResearchEnabled, isDataLoading
   ]);
@@ -268,3 +295,5 @@ export function useDataContext() {
   }
   return context;
 }
+
+    

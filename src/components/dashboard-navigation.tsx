@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Shield,
   History,
+  Wrench,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -41,6 +42,7 @@ const navItems = [
   { href: '/revenue', label: 'Revenue', icon: TrendingUp },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
+  { href: '/maintenance', label: 'Maintenance', icon: Wrench },
   { href: '/reports', label: 'Financial Reports', icon: LineChart },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
 ];
@@ -140,3 +142,5 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
+
+    
