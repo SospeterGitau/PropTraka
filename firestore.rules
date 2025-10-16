@@ -1,13 +1,33 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+    // This function checks if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
 
-    // This rule applies to all top-level collections in the database.
-    match /{document=**} {
-      // A user can read or write a document if they are authenticated and the document's `ownerId`
-      // matches their own user ID. This secures individual document access.
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    // This function checks if the user is the owner of the document
+    function isOwner(docData) {
+      return isAuthenticated() && request.auth.uid == docData.ownerId;
+    }
+    
+    // This function secures list (query) operations
+    function isQueryingOwnData() {
+      // Check for ownerId in where clause
+      let ownerIdConstraint = request.query.where.get('ownerId', null);
+      if (ownerIdConstraint != null) {
+        // A where clause on ownerId exists.
+        // It must be an '==' comparison and the value must be the user's UID.
+        return isAuthenticated() && ownerIdConstraint.operator == '==' && ownerIdConstraint.value == request.auth.uid;
+      }
+      return false; // No ownerId filter, so deny the query.
+    }
+
+    // Apply rules to all top-level collections
+    match /{collection}/{docId} {
+      allow read, update, delete: if isAuthenticated() && isOwner(resource.data);
+      allow create: if isAuthenticated() && isOwner(request.resource.data);
+      allow list: if isAuthenticated() && isQueryingOwnData();
     }
   }
 }
