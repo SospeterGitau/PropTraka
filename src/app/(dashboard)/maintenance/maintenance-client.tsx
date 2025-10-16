@@ -1,10 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useDataContext } from '@/context/data-context';
-import type { MaintenanceRequest, Transaction } from '@/lib/types';
-import { getLocale } from '@/lib/locales';
+import type { MaintenanceRequest, Transaction, Property } from '@/lib/types';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,11 @@ import { MaintenanceForm } from '@/components/maintenance-form';
 import { ExpenseForm } from '@/components/expense-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaintenanceKanbanBoard } from '@/components/maintenance-kanban-board';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+function formatAddress(property: Property) {
+  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+}
 
 function MaintenanceClient() {
   const { 
@@ -34,6 +37,7 @@ function MaintenanceClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [expenseFromMaintenance, setExpenseFromMaintenance] = useState<Partial<Transaction> | null>(null);
+  const [propertyFilter, setPropertyFilter] = useState('all');
 
   const handleAdd = () => {
     setSelectedRequest(null);
@@ -121,13 +125,27 @@ function MaintenanceClient() {
     });
   };
 
+  const filteredRequests = useMemo(() => {
+    if (!maintenanceRequests) return [];
+    if (propertyFilter === 'all') {
+      return maintenanceRequests;
+    }
+    if (propertyFilter === 'general') {
+      return maintenanceRequests.filter(req => !req.propertyId);
+    }
+    return maintenanceRequests.filter(req => req.propertyId === propertyFilter);
+  }, [maintenanceRequests, propertyFilter]);
+
   if (isDataLoading || !properties || !maintenanceRequests) {
     return (
       <>
         <PageHeader title="Maintenance">
-          <Button disabled>Add Request</Button>
+           <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-48" />
+            <Button disabled>Add Request</Button>
+          </div>
         </PageHeader>
-        <div className="flex gap-4 h-[calc(100vh-200px)]">
+        <div className="flex gap-6 h-[calc(100vh-200px)]">
           {['To Do', 'In Progress', 'Done', 'Cancelled'].map(status => (
             <div key={status} className="flex-1">
               <Skeleton className="h-8 w-1/2 mb-4" />
@@ -145,11 +163,25 @@ function MaintenanceClient() {
   return (
     <>
       <PageHeader title="Maintenance">
-        <Button onClick={handleAdd}>Add Request</Button>
+        <div className="flex items-center gap-2">
+            <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Filter by property..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Properties</SelectItem>
+                <SelectItem value="general">General Tasks</SelectItem>
+                {properties.map(p => (
+                  <SelectItem key={p.id} value={p.id}>{formatAddress(p)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={handleAdd}>Add Request</Button>
+        </div>
       </PageHeader>
       
       <MaintenanceKanbanBoard
-        requests={maintenanceRequests}
+        requests={filteredRequests}
         onEditRequest={handleEdit}
         onDeleteRequest={handleDelete}
         onCreateExpense={handleCreateExpense}
