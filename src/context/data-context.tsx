@@ -87,7 +87,7 @@ async function seedDatabase(
     }
   ];
   
-  const propertiesCollectionRef = collection(firestore, 'users', user.uid, 'properties');
+  const propertiesCollectionRef = collection(firestore, 'properties');
   const propertyDocsData = await Promise.all(propertiesToCreate.map(async (p) => {
     const docRef = doc(propertiesCollectionRef);
     batch.set(docRef, { ...p, ownerId: user.uid });
@@ -95,7 +95,7 @@ async function seedDatabase(
   }));
 
   // 2. Tenancies (Revenue)
-  const revenueCollectionRef = collection(firestore, 'users', user.uid, 'revenue');
+  const revenueCollectionRef = collection(firestore, 'revenue');
   const tenancy1Id = `t${Date.now()}`;
   const startDate1 = new Date();
   startDate1.setMonth(startDate1.getMonth() - 4);
@@ -119,7 +119,7 @@ async function seedDatabase(
   }
 
   // 3. Expenses
-  const expensesCollectionRef = collection(firestore, 'users', user.uid, 'expenses');
+  const expensesCollectionRef = collection(firestore, 'expenses');
   const expensesToCreate = [
     { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', vendor: 'FixIt Bros', expenseType: 'one-off', ownerId: user.uid },
     { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, category: 'Repairs', vendor: 'PlumbPerfect', expenseType: 'one-off', ownerId: user.uid },
@@ -132,7 +132,7 @@ async function seedDatabase(
   });
 
   // 4. Maintenance Requests
-  const maintenanceCollectionRef = collection(firestore, 'users', user.uid, 'maintenanceRequests');
+  const maintenanceCollectionRef = collection(firestore, 'maintenanceRequests');
   const maintenanceToCreate = [
     { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0], ownerId: user.uid },
     { propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0], ownerId: user.uid },
@@ -164,13 +164,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [auth, user, isAuthLoading]);
 
 
-  // Firestore collection references that depend on the user.
-  // These are memoized and will be null until the user is authenticated.
-  const propertiesQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'properties') : null, [firestore, user]);
-  const revenueQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'revenue') : null, [firestore, user]);
-  const expensesQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'expenses') : null, [firestore, user]);
-  const maintenanceRequestsQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'maintenanceRequests') : null, [firestore, user]);
-  const changelogQuery = useMemo(() => user ? collection(firestore, 'users', user.uid, 'changelog') : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const maintenanceRequestsQuery = useMemo(() => user ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const changelogQuery = useMemo(() => user ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
   const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesQuery);
   const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueQuery);
@@ -227,52 +225,54 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // --- MUTATION FUNCTIONS ---
 
   const addChangeLogEntry = async (entry: Omit<ChangeLogEntry, 'id' | 'date' | 'ownerId'>) => {
-    if (!changelogQuery || !user) return;
+    if (!user) return;
+    const changelogCollection = collection(firestore, 'changelog');
     const newEntry = {
       ...entry,
       date: new Date().toISOString(),
       ownerId: user.uid,
     };
-    await addDoc(changelogQuery, newEntry);
+    await addDoc(changelogCollection, newEntry);
   };
 
   // Properties
   const addProperty = async (property: Omit<Property, 'id' | 'ownerId'>) => {
-    if (!propertiesQuery || !user) return;
+    if (!user) return;
+    const propertiesCollection = collection(firestore, 'properties');
     const newProperty = { ...property, ownerId: user.uid };
-    await addDoc(propertiesQuery, newProperty);
+    await addDoc(propertiesCollection, newProperty);
   };
   const updateProperty = async (property: Property) => {
     if (!user) return;
-    const propDocRef = doc(firestore, 'users', user.uid, 'properties', property.id);
+    const propDocRef = doc(firestore, 'properties', property.id);
     await setDoc(propDocRef, property, { merge: true });
   };
   const deleteProperty = async (propertyId: string) => {
     if (!user) return;
-    const propDocRef = doc(firestore, 'users', user.uid, 'properties', propertyId);
+    const propDocRef = doc(firestore, 'properties', propertyId);
     await deleteDoc(propDocRef);
   };
 
   // Tenancy (Revenue)
   const addTenancy = async (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => {
-    if (!user || !revenueQuery) return;
+    if (!user) return;
+    const revenueCollection = collection(firestore, 'revenue');
     const batch = writeBatch(firestore);
     transactions.forEach(tx => {
-      const txDocRef = doc(revenueQuery);
+      const txDocRef = doc(revenueCollection);
       batch.set(txDocRef, {...tx, ownerId: user.uid});
     });
     await batch.commit();
   };
   const updateTenancy = async (transactions: Transaction[]) => {
-     if (!user || !revenueQuery) return;
+     if (!user) return;
+    const revenueCollection = collection(firestore, 'revenue');
     const batch = writeBatch(firestore);
 
-    // Get all existing transactions for this tenancy
-    const q = query(revenueQuery, where('tenancyId', '==', transactions[0].tenancyId));
+    const q = query(revenueCollection, where('tenancyId', '==', transactions[0].tenancyId), where('ownerId', '==', user.uid));
     const querySnapshot = await getDocs(q);
     const newIds = new Set(transactions.filter(t => t.id).map(t => t.id));
 
-    // Delete transactions that are no longer in the updated date range
     querySnapshot.forEach(docSnap => {
         if (!newIds.has(docSnap.id)) {
             batch.delete(docSnap.ref);
@@ -280,14 +280,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
 
     transactions.forEach(tx => {
-      const docRef = tx.id ? doc(revenueQuery, tx.id) : doc(revenueQuery);
+      const docRef = tx.id ? doc(revenueCollection, tx.id) : doc(revenueCollection);
       batch.set(docRef, {...tx, ownerId: user.uid}, { merge: true });
     });
     await batch.commit();
   };
   const deleteTenancy = async (tenancyId: string) => {
-    if (!user || !revenueQuery) return;
-    const q = query(revenueQuery, where('tenancyId', '==', tenancyId));
+    if (!user) return;
+    const revenueCollection = collection(firestore, 'revenue');
+    const q = query(revenueCollection, where('tenancyId', '==', tenancyId), where('ownerId', '==', user.uid));
     const querySnapshot = await getDocs(q);
     const batch = writeBatch(firestore);
     querySnapshot.forEach((doc) => {
@@ -297,13 +298,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const endTenancy = async (tenancyId: string, newEndDate: Date) => {
-    if (!user || !revenueQuery) return;
-
+    if (!user) return;
+    const revenueCollection = collection(firestore, 'revenue');
     const newEndDateStr = format(newEndDate, 'yyyy-MM-dd');
     const batch = writeBatch(firestore);
     
-    // Query for all transactions of the tenancy
-    const q = query(revenueQuery, where('tenancyId', '==', tenancyId));
+    const q = query(revenueCollection, where('tenancyId', '==', tenancyId), where('ownerId', '==', user.uid));
     const querySnapshot = await getDocs(q);
     
     querySnapshot.forEach(docSnap => {
@@ -311,10 +311,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const isFutureUnpaid = isAfter(new Date(tx.date), newEndDate) && (tx.amountPaid ?? 0) === 0;
 
         if (isFutureUnpaid) {
-            // Delete future, unpaid records
             batch.delete(docSnap.ref);
         } else {
-            // Update the end date for all remaining records
             batch.update(docSnap.ref, { tenancyEndDate: newEndDateStr });
         }
     });
@@ -324,41 +322,43 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateRevenueTransaction = async (transaction: Transaction) => {
     if (!user) return;
-    const txDocRef = doc(firestore, 'users', user.uid, 'revenue', transaction.id);
+    const txDocRef = doc(firestore, 'revenue', transaction.id);
     await setDoc(txDocRef, transaction, { merge: true });
   };
 
   // Expenses
   const addExpense = async (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => {
-    if (!expensesQuery || !user) return;
+    if (!user) return;
+    const expensesCollection = collection(firestore, 'expenses');
     const newExpense = { ...expense, ownerId: user.uid, type: 'expense' as const };
-    await addDoc(expensesQuery, newExpense);
+    await addDoc(expensesCollection, newExpense);
   };
   const updateExpense = async (expense: Transaction) => {
     if (!user) return;
-    const expDocRef = doc(firestore, 'users', user.uid, 'expenses', expense.id);
+    const expDocRef = doc(firestore, 'expenses', expense.id);
     await setDoc(expDocRef, expense, { merge: true });
   };
   const deleteExpense = async (expenseId: string) => {
     if (!user) return;
-    const expDocRef = doc(firestore, 'users', user.uid, 'expenses', expenseId);
+    const expDocRef = doc(firestore, 'expenses', expenseId);
     await deleteDoc(expDocRef);
   };
 
   // Maintenance
   const addMaintenanceRequest = async (request: Omit<MaintenanceRequest, 'id'|'ownerId'>) => {
-    if (!maintenanceRequestsQuery || !user) return;
+    if (!user) return;
+    const maintenanceCollection = collection(firestore, 'maintenanceRequests');
     const newRequest = { ...request, ownerId: user.uid };
-    await addDoc(maintenanceRequestsQuery, newRequest);
+    await addDoc(maintenanceCollection, newRequest);
   };
   const updateMaintenanceRequest = async (request: MaintenanceRequest) => {
     if (!user) return;
-    const reqDocRef = doc(firestore, 'users', user.uid, 'maintenanceRequests', request.id);
+    const reqDocRef = doc(firestore, 'maintenanceRequests', request.id);
     await setDoc(reqDocRef, request, { merge: true });
   };
   const deleteMaintenanceRequest = async (requestId: string) => {
     if (!user) return;
-    const reqDocRef = doc(firestore, 'users', user.uid, 'maintenanceRequests', requestId);
+    const reqDocRef = doc(firestore, 'maintenanceRequests', requestId);
     await deleteDoc(reqDocRef);
   };
 
