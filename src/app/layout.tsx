@@ -1,7 +1,7 @@
+
 import type { ReactNode } from 'react';
 import { PT_Sans } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster"
-import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { DataProvider } from '@/context/data-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import '@/app/globals.css';
@@ -23,9 +23,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className={`${ptSans.variable} font-sans antialiased`}>
         <FirebaseClientProvider>
           <DataProvider>
-            <DashboardNavigation>
               {children}
-            </DashboardNavigation>
           </DataProvider>
         </FirebaseClientProvider>
         <Toaster />

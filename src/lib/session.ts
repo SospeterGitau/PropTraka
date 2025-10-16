@@ -11,6 +11,7 @@ if (!sessionPassword) {
 
 export interface SessionData {
   isLoggedIn: boolean;
+  uid?: string;
 }
 
 export const sessionOptions: IronSessionOptions = {

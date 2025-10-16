@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "property": {
@@ -92,7 +93,7 @@
     }
   },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": ["anonymous", "email-password"]
   },
   "firestore": {
     "/properties/{propertyId}": {

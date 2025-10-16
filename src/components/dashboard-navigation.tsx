@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -84,7 +85,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href || (item.href === '/dashboard' && pathname.startsWith('/'))}
+                    isActive={pathname === item.href}
                     className="justify-start"
                     tooltip={item.label}
                     >
