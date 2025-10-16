@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDataContext } from '@/context/data-context';
@@ -19,7 +18,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
     Maintenance: <Wrench className="h-4 w-4" />,
 };
 
-function ChangelogPageContent() {
+function ChangelogPage() {
   const { changelog, locale, isDataLoading } = useDataContext();
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -97,8 +96,4 @@ function ChangelogPageContent() {
   );
 }
 
-export default function ChangelogPage() {
-    return (
-        <ChangelogPageContent />
-    )
-}
+export default ChangelogPage;

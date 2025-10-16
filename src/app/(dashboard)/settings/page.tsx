@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -35,7 +33,7 @@ const supportedLocales = [
   { code: 'ja-JP', name: 'Japanese (Japan)' },
 ];
 
-function SettingsPageContent() {
+function SettingsPage() {
   const { 
     currency, setCurrency, 
     locale, setLocale, 
@@ -214,10 +212,5 @@ function SettingsPageContent() {
   );
 }
 
-function SettingsPage() {
-    return (
-        <SettingsPageContent />
-    )
-}
 
 export default memo(SettingsPage);
