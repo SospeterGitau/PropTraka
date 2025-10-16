@@ -1,18 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    // Owned docs: get + list OK if doc.ownerId matches the caller
+
+    // Catch-all for owned docs
     match /{collection}/{docId} {
+      // READS (get + list): allow if the stored doc owner matches the caller
       allow get, list: if request.auth != null
-                        && resource.data.ownerId == request.auth.uid;
+                       && resource.data.ownerId == request.auth.uid;
 
-      // Create requires the incoming doc to set the right owner
+      // CREATE: require the incoming doc to set ownerId to the caller
       allow create: if request.auth != null
-                     && request.resource.data.ownerId == request.auth.uid;
+                    && request.resource.data.ownerId == request.auth.uid;
 
-      // Update/Delete only by owner
+      // UPDATE/DELETE: allow only the owner
       allow update, delete: if request.auth != null
-                             && resource.data.ownerId == request.auth.uid;
+                            && resource.data.ownerId == request.auth.uid;
     }
   }
 }
