@@ -1,4 +1,10 @@
 'use server';
 
-// This file is no longer needed as logout is handled on the client.
-// It can be safely removed or left empty.
+import { redirect } from 'next/navigation';
+import { getSession } from '@/lib/session';
+
+export async function logout() {
+  const session = await getSession();
+  await session.destroy();
+  redirect('/login');
+}

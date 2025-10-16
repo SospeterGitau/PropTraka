@@ -18,7 +18,9 @@ import {
   Shield,
   History,
   Wrench,
+  LogOut,
 } from 'lucide-react';
+import { logout } from '@/app/(dashboard)/actions';
 
 import {
   SidebarProvider,
@@ -83,7 +85,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={pathname === item.href || (item.href === '/' && pathname.startsWith('/dashboard'))}
                     className="justify-start"
                     tooltip={item.label}
                     >
@@ -144,8 +146,13 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter>
           <SidebarSeparator />
-          <div className="p-2 h-[56px]">
-            {/* Placeholder for potential footer content */}
+          <div className="p-2 h-[56px] flex items-center">
+            <form action={logout}>
+              <SidebarMenuButton variant="ghost" className="w-full justify-start h-10" tooltip="Logout">
+                <LogOut />
+                <span>Logout</span>
+              </SidebarMenuButton>
+            </form>
           </div>
         </SidebarFooter>
       </Sidebar>
