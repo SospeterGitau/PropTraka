@@ -4,13 +4,7 @@
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs } from 'firebase/firestore';
-import {
-  setDocumentNonBlocking,
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
-  deleteDocumentNonBlocking,
-} from '@/firebase/non-blocking-updates';
+import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 
 
 interface DataContextType {
@@ -203,24 +197,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
       ownerId: user.uid,
     };
-    await addDocumentNonBlocking(changelogRef, newEntry);
+    await addDoc(changelogRef, newEntry);
   };
 
   // Properties
   const addProperty = async (property: Omit<Property, 'id' | 'ownerId'>) => {
     if (!propertiesRef || !user) return;
     const newProperty = { ...property, ownerId: user.uid };
-    await addDocumentNonBlocking(propertiesRef, newProperty);
+    await addDoc(propertiesRef, newProperty);
   };
   const updateProperty = async (property: Property) => {
     if (!user) return;
     const propDocRef = doc(firestore, 'users', user.uid, 'properties', property.id);
-    updateDocumentNonBlocking(propDocRef, property);
+    await setDoc(propDocRef, property, { merge: true });
   };
   const deleteProperty = async (propertyId: string) => {
     if (!user) return;
     const propDocRef = doc(firestore, 'users', user.uid, 'properties', propertyId);
-    deleteDocumentNonBlocking(propDocRef);
+    await deleteDoc(propDocRef);
   };
 
   // Tenancy (Revenue)
@@ -255,41 +249,41 @@ export function DataProvider({ children }: { children: ReactNode }) {
    const updateRevenueTransaction = async (transaction: Transaction) => {
     if (!user) return;
     const txDocRef = doc(firestore, 'users', user.uid, 'revenue', transaction.id);
-    updateDocumentNonBlocking(txDocRef, transaction);
+    await setDoc(txDocRef, transaction, { merge: true });
   };
 
   // Expenses
   const addExpense = async (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => {
     if (!expensesRef || !user) return;
     const newExpense = { ...expense, ownerId: user.uid, type: 'expense' as const };
-    await addDocumentNonBlocking(expensesRef, newExpense);
+    await addDoc(expensesRef, newExpense);
   };
   const updateExpense = async (expense: Transaction) => {
     if (!user) return;
     const expDocRef = doc(firestore, 'users', user.uid, 'expenses', expense.id);
-    updateDocumentNonBlocking(expDocRef, expense);
+    await setDoc(expDocRef, expense, { merge: true });
   };
   const deleteExpense = async (expenseId: string) => {
     if (!user) return;
     const expDocRef = doc(firestore, 'users', user.uid, 'expenses', expenseId);
-    deleteDocumentNonBlocking(expDocRef);
+    await deleteDoc(expDocRef);
   };
 
   // Maintenance
   const addMaintenanceRequest = async (request: Omit<MaintenanceRequest, 'id'|'ownerId'>) => {
     if (!maintenanceRequestsRef || !user) return;
     const newRequest = { ...request, ownerId: user.uid };
-    await addDocumentNonBlocking(maintenanceRequestsRef, newRequest);
+    await addDoc(maintenanceRequestsRef, newRequest);
   };
   const updateMaintenanceRequest = async (request: MaintenanceRequest) => {
     if (!user) return;
     const reqDocRef = doc(firestore, 'users', user.uid, 'maintenanceRequests', request.id);
-    updateDocumentNonBlocking(reqDocRef, request);
+    await setDoc(reqDocRef, request, { merge: true });
   };
   const deleteMaintenanceRequest = async (requestId: string) => {
     if (!user) return;
     const reqDocRef = doc(firestore, 'users', user.uid, 'maintenanceRequests', requestId);
-    deleteDocumentNonBlocking(reqDocRef);
+    await deleteDoc(reqDocRef);
   };
 
 
@@ -402,5 +396,3 @@ export function useDataContext() {
   }
   return context;
 }
-
-    
