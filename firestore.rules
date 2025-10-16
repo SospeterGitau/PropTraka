@@ -1,17 +1,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    // Generic rule for all collections.
-    // It's secure because the client queries must include a `where('ownerId', '==', uid)` clause.
+    // Owned docs: get + list OK if doc.ownerId matches caller
     match /{collection}/{docId} {
-      // READS (get, list): Allow if the user is authenticated and the ownerId on the document matches the user's UID.
-      allow get, list: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow get, list: if request.auth != null
+                        && resource.data.ownerId == request.auth.uid;
 
-      // CREATE: Allow if the user is authenticated and the new document's ownerId is being set to the user's UID.
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      // Create requires the incoming doc to set the right owner
+      allow create: if request.auth != null
+                     && request.resource.data.ownerId == request.auth.uid;
 
-      // UPDATE, DELETE: Allow if the user is authenticated and is the owner of the document being modified.
-      allow update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      // Update/Delete only by owner
+      allow update, delete: if request.auth != null
+                             && resource.data.ownerId == request.auth.uid;
     }
   }
 }
