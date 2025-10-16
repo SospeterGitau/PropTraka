@@ -1,29 +1,27 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // Helper function to check ownership
-    function isOwner(docData) {
-      return request.auth != null && request.auth.uid == docData.ownerId;
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // Secure all top-level collections with the same ownership-based rules
+    // Rules for all top-level collections
     match /{collection}/{docId} {
-      // READ (get): Allow if the user is the owner of the document.
-      allow get: if isOwner(resource.data);
+      // READ: Users can read their own documents.
+      allow get: if isOwner(resource.data.ownerId);
 
-      // LIST (query): Allow if the user is querying for their own documents.
-      // This rule requires that any query on the collection MUST include
-      // a 'where("ownerId", "==", request.auth.uid)' clause.
-      allow list: if request.auth != null && request.query.filters.size() == 1 && 'ownerId' in request.query.filters && request.query.filters.ownerId == request.auth.uid;
+      // LIST: Users can only query for their own documents.
+      // The client-side query MUST include `where('ownerId', '==', request.auth.uid)`.
+      allow list: if isOwner(request.query.filters.ownerId);
 
-      // CREATE: Allow if the incoming document's ownerId matches the user's UID.
-      allow create: if isOwner(request.resource.data);
+      // CREATE: Users can create documents, but must set themselves as the owner.
+      allow create: if isOwner(request.resource.data.ownerId);
 
-      // UPDATE, DELETE: Allow if the user is the owner of the existing document.
-      allow update, delete: if isOwner(resource.data);
+      // UPDATE, DELETE: Users can update or delete their own documents.
+      allow update, delete: if isOwner(resource.data.ownerId);
     }
   }
 }
