@@ -4,7 +4,8 @@
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc, getDoc } from 'firebase/firestore';
+import { isAfter, format } from 'date-fns';
 
 
 interface DataContextType {
@@ -17,6 +18,7 @@ interface DataContextType {
   addTenancy: (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => Promise<void>;
   updateTenancy: (transactions: Transaction[]) => Promise<void>;
   deleteTenancy: (tenancyId: string) => Promise<void>;
+  endTenancy: (tenancyId: string, newEndDate: Date) => Promise<void>;
   updateRevenueTransaction: (transaction: Transaction) => Promise<void>;
 
   expenses: Transaction[] | null;
@@ -83,11 +85,11 @@ async function seedDatabase(
     }
   ];
   
-  const propertyDocsData = propertiesToCreate.map(p => {
+  const propertyDocsData = await Promise.all(propertiesToCreate.map(async (p) => {
     const docRef = doc(collection(firestore, 'users', user.uid, 'properties'));
     batch.set(docRef, { ...p, ownerId: user.uid });
-    return { ...p, id: docRef.id }; // return with generated id
-  });
+    return { ...p, id: docRef.id };
+  }));
 
   // 2. Tenancies (Revenue)
   const tenancy1Id = `t${Date.now()}`;
@@ -171,9 +173,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
-    // This effect runs when all data sources are confirmed to be loaded.
     if (!isDataLoading && firestore && user) {
-        // We only seed if ALL primary collections are empty.
         const shouldSeed = 
             properties?.length === 0 &&
             revenue?.length === 0 &&
@@ -182,8 +182,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
         if (shouldSeed) {
             seedDatabase(firestore, user);
-        } else {
-             console.log("Data exists or is still loading, skipping seed.");
         }
     }
   }, [isDataLoading, firestore, user, properties, revenue, expenses, maintenanceRequests]);
@@ -219,26 +217,40 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Tenancy (Revenue)
   const addTenancy = async (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => {
-    if (!user) return;
+    if (!user || !revenueRef) return;
     const batch = writeBatch(firestore);
     transactions.forEach(tx => {
-      const txDocRef = doc(collection(firestore, 'users', user.uid, 'revenue'));
+      const txDocRef = doc(revenueRef);
       batch.set(txDocRef, {...tx, ownerId: user.uid});
     });
     await batch.commit();
   };
   const updateTenancy = async (transactions: Transaction[]) => {
-     if (!user) return;
+     if (!user || !revenueRef) return;
     const batch = writeBatch(firestore);
+
+    // Get all existing transactions for this tenancy
+    const q = query(revenueRef, where('tenancyId', '==', transactions[0].tenancyId));
+    const querySnapshot = await getDocs(q);
+    const existingIds = new Set(querySnapshot.docs.map(d => d.id));
+    const newIds = new Set(transactions.filter(t => t.id).map(t => t.id));
+
+    // Delete transactions that are no longer in the updated date range
+    querySnapshot.forEach(docSnap => {
+        if (!newIds.has(docSnap.id)) {
+            batch.delete(docSnap.ref);
+        }
+    });
+
     transactions.forEach(tx => {
-      const txDocRef = doc(firestore, 'users', user.uid, 'revenue', tx.id);
-      batch.set(txDocRef, {...tx, ownerId: user.uid}, { merge: true });
+      const docRef = tx.id ? doc(revenueRef, tx.id) : doc(revenueRef);
+      batch.set(docRef, {...tx, ownerId: user.uid}, { merge: true });
     });
     await batch.commit();
   };
   const deleteTenancy = async (tenancyId: string) => {
-    if (!user || !revenue) return;
-    const q = query(revenueRef!, where('tenancyId', '==', tenancyId));
+    if (!user || !revenueRef) return;
+    const q = query(revenueRef, where('tenancyId', '==', tenancyId));
     const querySnapshot = await getDocs(q);
     const batch = writeBatch(firestore);
     querySnapshot.forEach((doc) => {
@@ -246,7 +258,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
     await batch.commit();
   };
-   const updateRevenueTransaction = async (transaction: Transaction) => {
+
+  const endTenancy = async (tenancyId: string, newEndDate: Date) => {
+    if (!user || !revenueRef) return;
+
+    const newEndDateStr = format(newEndDate, 'yyyy-MM-dd');
+    const batch = writeBatch(firestore);
+    
+    // Query for all transactions of the tenancy
+    const q = query(revenueRef, where('tenancyId', '==', tenancyId));
+    const querySnapshot = await getDocs(q);
+    
+    querySnapshot.forEach(docSnap => {
+        const tx = docSnap.data() as Transaction;
+        const isFutureUnpaid = isAfter(new Date(tx.date), newEndDate) && (tx.amountPaid ?? 0) === 0;
+
+        if (isFutureUnpaid) {
+            // Delete future, unpaid records
+            batch.delete(docSnap.ref);
+        } else {
+            // Update the end date for all remaining records
+            batch.update(docSnap.ref, { tenancyEndDate: newEndDateStr });
+        }
+    });
+    
+    await batch.commit();
+  };
+
+  const updateRevenueTransaction = async (transaction: Transaction) => {
     if (!user) return;
     const txDocRef = doc(firestore, 'users', user.uid, 'revenue', transaction.id);
     await setDoc(txDocRef, transaction, { merge: true });
@@ -363,7 +402,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     properties,
     addProperty, updateProperty, deleteProperty,
     revenue,
-    addTenancy, updateTenancy, deleteTenancy, updateRevenueTransaction,
+    addTenancy, updateTenancy, deleteTenancy, endTenancy, updateRevenueTransaction,
     expenses,
     addExpense, updateExpense, deleteExpense,
     maintenanceRequests,
@@ -396,3 +435,5 @@ export function useDataContext() {
   }
   return context;
 }
+
+    

@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Property, Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -66,14 +67,22 @@ export function ExpenseForm({
   transaction?: Partial<Transaction> | null;
   properties: Property[];
 }) {
-  const [category, setCategory] = useState(transaction?.category || '');
-  const [expenseType, setExpenseType] = useState<Transaction['expenseType']>(transaction?.expenseType || 'one-off');
-  const [open, setOpen] = useState(false);
-
+  const [category, setCategory] = useState('');
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [expenseType, setExpenseType] = useState<Transaction['expenseType']>('one-off');
+  
+  // Memoize custom categories to avoid re-calculating on every render
+  const allCategories = useMemo(() => {
+    const customCategory = category && !defaultCategories.includes(category) ? [category] : [];
+    return [...defaultCategories, ...customCategory];
+  }, [category]);
+  
   useEffect(() => {
-    setCategory(transaction?.category || '');
-    setExpenseType(transaction?.expenseType || 'one-off');
-  }, [transaction]);
+    if (isOpen) {
+      setCategory(transaction?.category || '');
+      setExpenseType(transaction?.expenseType || 'one-off');
+    }
+  }, [isOpen, transaction]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -129,10 +138,10 @@ export function ExpenseForm({
           </div>
           <div className="space-y-2">
             <Label>Category</Label>
-            <Popover open={open} onOpenChange={setOpen}>
+            <Popover open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
-                  {category ? defaultCategories.find((c) => c.toLowerCase() === category.toLowerCase()) || category : "Select a category..."}
+                <Button variant="outline" role="combobox" aria-expanded={isCategoryOpen} className="w-full justify-between">
+                  {category ? category : "Select a category..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -143,15 +152,17 @@ export function ExpenseForm({
                     onValueChange={(currentValue) => setCategory(currentValue)}
                   />
                   <CommandList>
-                    <CommandEmpty>No category found. Type to create.</CommandEmpty>
+                    <CommandEmpty>
+                        {category ? `Create "${category}"` : "No category found."}
+                    </CommandEmpty>
                     <CommandGroup>
-                      {defaultCategories.map((cat) => (
+                      {allCategories.map((cat) => (
                         <CommandItem
                           key={cat}
                           value={cat}
                           onSelect={(currentValue) => {
-                            setCategory(currentValue === category ? "" : currentValue);
-                            setOpen(false);
+                            setCategory(currentValue.toLowerCase() === category.toLowerCase() ? "" : currentValue);
+                            setIsCategoryOpen(false);
                           }}
                         >
                           <Check className={cn("mr-2 h-4 w-4", category.toLowerCase() === cat.toLowerCase() ? "opacity-100" : "opacity-0")} />
@@ -167,7 +178,7 @@ export function ExpenseForm({
           <div className="space-y-2">
               <Label>Expense Type</Label>
               <RadioGroup
-                defaultValue={expenseType}
+                value={expenseType}
                 onValueChange={(value: Transaction['expenseType']) => setExpenseType(value)}
                 className="flex gap-4 pt-2"
               >
@@ -204,7 +215,7 @@ export function ExpenseForm({
           </div>
           <div className="space-y-2">
             <Label>Amount</Label>
-            <Input name="amount" type="number" defaultValue={transaction?.amount} required />
+            <Input name="amount" type="number" step="0.01" defaultValue={transaction?.amount} required />
           </div>
           <div className="space-y-2">
             <Label>Receipt/File Link (optional)</Label>
@@ -223,3 +234,5 @@ export function ExpenseForm({
     </Dialog>
   );
 }
+
+    

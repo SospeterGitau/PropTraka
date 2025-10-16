@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, use, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format, startOfToday, isAfter } from 'date-fns';
@@ -90,7 +90,7 @@ function PaymentForm({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amountPaid" className="text-right">Amount to Record</Label>
-              <Input id="amountPaid" name="amountPaid" type="number" step="0.01" defaultValue={balanceDue > 0 ? balanceDue : ''} className="col-span-3" required />
+              <Input id="amountPaid" name="amountPaid" type="number" step="0.01" defaultValue={balanceDue > 0 ? balanceDue.toFixed(2) : ''} className="col-span-3" required />
             </div>
           </div>
           <DialogFooter>
@@ -108,7 +108,7 @@ function PaymentForm({
 
 function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   const { tenancyId } = params;
-  const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry } = useDataContext();
+  const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry, endTenancy } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
@@ -183,8 +183,6 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
 
     const transactionsToUpdate = revenue.filter(tx => tx.tenancyId === tenancy.tenancyId);
     
-    // As all transactions in a tenancy share the depositReturned status in this data model,
-    // we can update them all. In a more granular model, you'd target one.
     const updatePromises = transactionsToUpdate.map(tx => {
         const updatedTransaction = { ...tx, depositReturned: true };
         return updateRevenueTransaction(updatedTransaction);
@@ -200,29 +198,10 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
     });
   };
 
-  const handleEndTenancy = (newEndDate: Date) => {
-    if (!revenue || !tenancy) return;
+  const handleEndTenancy = async (newEndDate: Date) => {
+    if (!tenancy) return;
     
-    const newEndDateStr = format(newEndDate, 'yyyy-MM-dd');
-
-    // Filter out future, unpaid transactions
-    const updatedRevenue = revenue.filter(tx => {
-      if (tx.tenancyId === tenancy.tenancyId) {
-        const isFutureUnpaid = isAfter(new Date(tx.date), newEndDate) && (tx.amountPaid ?? 0) === 0;
-        return !isFutureUnpaid;
-      }
-      return true; // Keep all other transactions
-    }).map(tx => {
-      // Update the end date for the remaining transactions of this tenancy
-      if (tx.tenancyId === tenancy.tenancyId) {
-        return { ...tx, tenancyEndDate: newEndDateStr };
-      }
-      return tx;
-    });
-
-    // Here you would call a function to batch update/delete in Firestore
-    // For now, we are just using client state update for demonstration
-    // setRevenue(updatedRevenue); 
+    await endTenancy(tenancy.tenancyId!, newEndDate);
     
     addChangeLogEntry({
         type: 'Tenancy',
@@ -387,7 +366,7 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
                           ) : null}
                         </TableCell>
                         <TableCell className="text-center">
-                          <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)}>
+                          <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)} disabled={balance <= 0}>
                             Record Payment
                           </Button>
                         </TableCell>
@@ -419,3 +398,5 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
 }
 
 export default memo(TenancyDetailPage);
+
+    

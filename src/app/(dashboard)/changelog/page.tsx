@@ -1,11 +1,11 @@
+
 'use client';
 
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
-import { PropertyIcon } from '@/components/property-icon';
-import { Building2, FileText, HandCoins, Receipt } from 'lucide-react';
+import { Building2, FileText, HandCoins, Receipt, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
 import { useState, useEffect } from 'react';
@@ -16,6 +16,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
     Tenancy: <FileText className="h-4 w-4" />,
     Expense: <Receipt className="h-4 w-4" />,
     Payment: <HandCoins className="h-4 w-4" />,
+    Maintenance: <Wrench className="h-4 w-4" />,
 };
 
 function ChangelogPage() {
@@ -97,3 +98,5 @@ function ChangelogPage() {
 }
 
 export default ChangelogPage;
+
+    

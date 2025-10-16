@@ -46,14 +46,14 @@ const RevenueForm = memo(function RevenueForm({
   isOpen,
   onClose,
   onSubmit,
-  transaction,
+  tenancyToEdit,
   properties,
   revenue,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Transaction, 'id' | 'ownerId'>[]) => void;
-  transaction?: Transaction | null;
+  onSubmit: (data: Transaction[]) => void;
+  tenancyToEdit?: Transaction | null;
   properties: Property[],
   revenue: Transaction[],
 }) {
@@ -62,6 +62,7 @@ const RevenueForm = memo(function RevenueForm({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const isEditing = !!tenancyToEdit;
 
     const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
     const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
@@ -76,7 +77,7 @@ const RevenueForm = memo(function RevenueForm({
     const notes = formData.get('notes') as string;
     const consent = formData.get('consent') as string;
 
-    if (!consent) {
+    if (!isEditing && !consent) {
         toast({
             variant: "destructive",
             title: "Consent Required",
@@ -85,12 +86,11 @@ const RevenueForm = memo(function RevenueForm({
         return;
     }
     
-    const isEditing = !!transaction;
     const existingTenancy = revenue.find(
       (t) =>
         t.tenant?.toLowerCase() === tenant.toLowerCase() &&
         t.propertyId === propertyId &&
-        (!isEditing || t.tenancyId !== transaction.tenancyId)
+        (!isEditing || t.tenancyId !== tenancyToEdit.tenancyId)
     );
 
     if (existingTenancy) {
@@ -130,26 +130,36 @@ const RevenueForm = memo(function RevenueForm({
       end: tenancyEndDate,
     });
 
-    const tenancyId = transaction?.tenancyId || `t${Date.now()}`;
-    const newTransactions = months.map((monthStartDate, index) => ({
-        tenancyId: tenancyId,
-        date: format(monthStartDate, 'yyyy-MM-dd'),
-        amount: amount,
-        propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-        tenant: tenant,
-        tenantEmail: tenantEmail,
-        tenantPhone: tenantPhone,
-        type: 'revenue' as const,
-        propertyId: propertyId,
-        deposit: index === 0 ? deposit : 0,
-        amountPaid: 0,
-        tenancyStartDate: tenancyStartDateStr,
-        tenancyEndDate: tenancyEndDateStr,
-        contractUrl: contractUrl,
-        notes: index === 0 ? notes : undefined,
-      }));
+    const tenancyId = tenancyToEdit?.tenancyId || `t${Date.now()}`;
+    const existingTransactions = isEditing ? revenue.filter(t => t.tenancyId === tenancyToEdit.tenancyId) : [];
 
-    onSubmit(newTransactions);
+    const newTransactions = months.map((monthStartDate, index) => {
+        const dateStr = format(monthStartDate, 'yyyy-MM-dd');
+        // Find if a transaction for this month already existed to preserve its paid amount
+        const existingTx = existingTransactions.find(tx => tx.date === dateStr);
+
+        return {
+            id: existingTx?.id, // Keep old ID if it exists
+            tenancyId: tenancyId,
+            date: dateStr,
+            amount: amount,
+            amountPaid: existingTx?.amountPaid || 0, // Preserve payment status
+            propertyId: propertyId,
+            propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
+            tenant: tenant,
+            tenantEmail: tenantEmail,
+            tenantPhone: tenantPhone,
+            type: 'revenue' as const,
+            deposit: index === 0 ? deposit : 0,
+            tenancyStartDate: tenancyStartDateStr,
+            tenancyEndDate: tenancyEndDateStr,
+            contractUrl: contractUrl,
+            notes: index === 0 ? notes : undefined,
+            ownerId: tenancyToEdit?.ownerId || '',
+        }
+    });
+
+    onSubmit(newTransactions as Transaction[]);
     onClose();
   };
 
@@ -159,12 +169,12 @@ const RevenueForm = memo(function RevenueForm({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{transaction ? 'Edit' : 'Add'} Tenancy</DialogTitle>
+          <DialogTitle>{tenancyToEdit ? 'Edit' : 'Add'} Tenancy</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-2">
            <div className="space-y-2">
             <Label>Property</Label>
-             <Select name="propertyId" defaultValue={transaction?.propertyId} required>
+             <Select name="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a property" />
               </SelectTrigger>
@@ -177,54 +187,56 @@ const RevenueForm = memo(function RevenueForm({
           </div>
           <div className="space-y-2">
             <Label>Tenant Name</Label>
-            <Input name="tenantName" defaultValue={transaction?.tenant} required />
+            <Input name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
           </div>
            <div className="space-y-2">
             <Label>Tenant Email</Label>
-            <Input name="tenantEmail" type="email" defaultValue={transaction?.tenantEmail} required />
+            <Input name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
           </div>
           <div className="space-y-2">
             <Label>Tenant Phone</Label>
-            <Input name="tenantPhone" type="tel" defaultValue={transaction?.tenantPhone} />
+            <Input name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
           </div>
            <div className="space-y-2">
             <Label>Tenancy Start Date</Label>
-            <Input name="tenancyStartDate" type="date" defaultValue={transaction?.tenancyStartDate ? format(new Date(transaction.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
+            <Input name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
           </div>
           <div className="space-y-2">
             <Label>Tenancy End Date</Label>
-            <Input name="tenancyEndDate" type="date" defaultValue={transaction?.tenancyEndDate ? format(new Date(transaction.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
+            <Input name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
           </div>
           <div className="space-y-2">
             <Label>Monthly Rent</Label>
-            <Input name="amount" type="number" defaultValue={transaction?.amount} required />
+            <Input name="amount" type="number" defaultValue={tenancyToEdit?.amount} required />
           </div>
           <div className="space-y-2">
             <Label>Deposit (due with first month's rent)</Label>
-            <Input name="deposit" type="number" defaultValue={transaction?.deposit} />
+            <Input name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
           </div>
           <div className="space-y-2">
             <Label>Contract Link (optional)</Label>
-            <Input name="contractUrl" type="url" defaultValue={transaction?.contractUrl} placeholder="https://docs.google.com/..." />
+            <Input name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
           </div>
           <div className="space-y-2">
             <Label>Notes (optional)</Label>
-            <Textarea name="notes" defaultValue={transaction?.notes} />
+            <Textarea name="notes" defaultValue={tenancyToEdit?.notes} />
           </div>
-           <div className="items-top flex space-x-2 pt-2">
-                <Checkbox id="consent" name="consent" />
-                <div className="grid gap-1.5 leading-none">
-                    <label
-                    htmlFor="consent"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                    I confirm I have the tenant's consent to store and process their personal information in accordance with our privacy policy.
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                    You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for more details.
-                    </p>
+           {!tenancyToEdit && (
+            <div className="items-top flex space-x-2 pt-2">
+                    <Checkbox id="consent" name="consent" />
+                    <div className="grid gap-1.5 leading-none">
+                        <label
+                        htmlFor="consent"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                        I confirm I have the tenant's consent to store and process their personal information in accordance with our privacy policy.
+                        </label>
+                        <p className="text-sm text-muted-foreground">
+                        You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for more details.
+                        </p>
+                    </div>
                 </div>
-            </div>
+            )}
           <DialogFooter className="pt-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">Cancel</Button>
@@ -251,13 +263,13 @@ function RevenuePage() {
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
       for (const item of revenue) {
-        if(item.tenancyStartDate) {
+        if(item.tenancyId && item.tenancyStartDate && !newFormattedDates[`${item.tenancyId}-start`]) {
           newFormattedDates[`${item.tenancyId}-start`] = format(new Date(item.tenancyStartDate), 'MMM dd, yyyy', { locale: localeData });
         }
-        if(item.tenancyEndDate) {
+        if(item.tenancyId && item.tenancyEndDate && !newFormattedDates[`${item.tenancyId}-end`]) {
           newFormattedDates[`${item.tenancyId}-end`] = format(new Date(item.tenancyEndDate), 'MMM dd, yyyy', { locale: localeData });
         }
-        if(item.nextDueDate) {
+        if(item.tenancyId && item.nextDueDate && !newFormattedDates[`${item.tenancyId}-nextDue`]) {
             newFormattedDates[`${item.tenancyId}-nextDue`] = format(new Date(item.nextDueDate), 'MMM dd, yyyy', { locale: localeData });
         }
       }
@@ -295,14 +307,13 @@ function RevenuePage() {
     }
   };
 
-  const handleTenancyFormSubmit = async (data: Omit<Transaction, 'id' | 'ownerId'>[]) => {
+  const handleTenancyFormSubmit = async (data: Transaction[]) => {
     if (!revenue) return;
     const tenancyId = data[0].tenancyId!;
     const isEditing = revenue.some(r => r.tenancyId === tenancyId);
     
     if (isEditing) {
-        const fullData = data.map((d, i) => ({...d, id: `${tenancyId}-${i}`})) as Transaction[]
-        await updateTenancy(fullData);
+        await updateTenancy(data);
     } else {
       await addTenancy(data);
     }
@@ -471,7 +482,7 @@ function RevenuePage() {
         isOpen={isTenancyFormOpen}
         onClose={() => setIsTenancyFormOpen(false)}
         onSubmit={handleTenancyFormSubmit}
-        transaction={selectedTransaction}
+        tenancyToEdit={selectedTransaction}
         properties={properties}
         revenue={revenue}
       />}
@@ -487,3 +498,5 @@ function RevenuePage() {
 }
 
 export default memo(RevenuePage);
+
+    

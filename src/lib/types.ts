@@ -1,3 +1,4 @@
+
 export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface Property {
@@ -77,7 +78,7 @@ export interface ChangeLogEntry {
 export interface MaintenanceRequest {
   id: string;
   ownerId: string; // Foreign key to the user
-  propertyId: string;
+  propertyId?: string;
   propertyName: string;
   description: string;
   status: 'To Do' | 'In Progress' | 'Done' | 'Cancelled';

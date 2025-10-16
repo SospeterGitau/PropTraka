@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getLocale } from '@/lib/locales';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ArrearEntry {
   tenant: string;
@@ -31,7 +32,7 @@ interface ArrearEntry {
 }
 
 function ArrearsClient() {
-  const { revenue, formatCurrency, locale, companyName } = useDataContext();
+  const { revenue, formatCurrency, locale, companyName, isDataLoading } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -53,10 +54,10 @@ function ArrearsClient() {
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
 
-        // Logic to determine how the paid amount is allocated
+        // This logic correctly allocates payment first to deposit, then to rent.
         const paidTowardsDeposit = Math.min(amountPaid, depositDue);
-        const remainingPaid = amountPaid - paidTowardsDeposit;
-        const paidTowardsRent = Math.min(remainingPaid, rentDue);
+        const remainingPaidAfterDeposit = amountPaid - paidTowardsDeposit;
+        const paidTowardsRent = Math.min(remainingPaidAfterDeposit, rentDue);
         
         const depositOwed = depositDue - paidTowardsDeposit;
         const rentOwed = rentDue - paidTowardsRent;
@@ -76,7 +77,7 @@ function ArrearsClient() {
         };
       });
     
-    setArrears(calculatedArrears.filter(a => a.amountOwed > 0));
+    setArrears(calculatedArrears.filter(a => a.amountOwed > 0).sort((a,b) => b.daysOverdue - a.daysOverdue));
   }, [revenue]);
   
   useEffect(() => {
@@ -84,7 +85,9 @@ function ArrearsClient() {
       const localeData = await getLocale(locale);
       const newFormattedDates: {[key: string]: string} = {};
       for (const arrear of arrears) {
-        newFormattedDates[arrear.dueDate] = format(new Date(arrear.dueDate), 'MMMM dd, yyyy', { locale: localeData });
+        if (arrear.dueDate && !newFormattedDates[arrear.dueDate]) {
+          newFormattedDates[arrear.dueDate] = format(new Date(arrear.dueDate), 'MMMM dd, yyyy', { locale: localeData });
+        }
       }
       setFormattedDates(newFormattedDates);
     };
@@ -93,6 +96,22 @@ function ArrearsClient() {
       formatAllDates();
     }
   }, [arrears, locale]);
+
+   if (isDataLoading) {
+    return (
+       <>
+        <PageHeader title="Arrears" />
+        <Card>
+          <CardHeader>
+            <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
+          </CardHeader>
+          <CardContent>
+             <Skeleton className="h-48 w-full" />
+          </CardContent>
+        </Card>
+      </>
+    )
+  }
 
 
   return (
@@ -176,3 +195,5 @@ function ArrearsClient() {
 }
 
 export default memo(ArrearsClient);
+
+    

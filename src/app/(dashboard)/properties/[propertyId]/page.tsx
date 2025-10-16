@@ -207,7 +207,7 @@ export default function PropertyDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Asking/Target Rent</span>
+                        <span className="text-muted-foreground">Asking Rent</span>
                         <span className="font-medium">{formatCurrency(property.rentalValue)}/month</span>
                     </div>
                 </CardContent>
@@ -231,3 +231,5 @@ export default function PropertyDetailPage() {
     </div>
   );
 }
+
+    
