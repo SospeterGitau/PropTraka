@@ -1,27 +1,22 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // Helper function to check ownership
-    function isOwner() {
-      return request.auth != null && request.auth.uid == resource.data.ownerId;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // Function to check if a query is correctly filtered by owner
-    function isQueryingOwnData() {
-      return request.auth != null && request.query.filters.size() == 1 && 'ownerId' in request.query.filters && request.query.filters.ownerId == request.auth.uid;
-    }
+    // Secure all top-level collections with the same ownership-based rules
+    match /{collectionName}/{docId} {
+      // Allow single-document reads/writes if the user is the owner.
+      allow read, write: if isOwner(resource.data.ownerId);
 
-    // Secure all top-level collections with the same ownership-based rules.
-    match /{collection}/{docId} {
-      // READ, UPDATE, DELETE on a single document: User must be the owner.
-      allow get, update, delete: if isOwner();
-
-      // CREATE a new document: The new document's ownerId must be the user's own UID.
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      
-      // LIST (query) the collection: The query must be filtered by the user's UID.
-      allow list: if isQueryingOwnData();
+      // Allow collection queries (list) only if the query is filtered by the user's own ownerId.
+      // This is crucial for allowing useCollection to work.
+      allow list: if isOwner(request.query.get("where")[0][2]);
     }
   }
 }
