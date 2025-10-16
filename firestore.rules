@@ -1,18 +1,47 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
-    // Owned docs: get + list OK if doc.ownerId matches caller
-    match /{collection}/{docId} {
-      allow get, list: if request.auth != null
-                        && resource.data.ownerId == request.auth.uid;
 
-      // Create requires the incoming doc to set the right owner
-      allow create: if request.auth != null
-                     && request.resource.data.ownerId == request.auth.uid;
+    function isOwner(collectionName) {
+      return request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
 
-      // Update/Delete only by owner
-      allow update, delete: if request.auth != null
-                             && resource.data.ownerId == request.auth.uid;
+    function isQueryingOwnData() {
+      // Check for ownerId in a 'where' clause. This is a simplified check.
+      // Firestore security rules do not allow inspecting the full query object,
+      // but they do enforce that all documents returned by a query must meet the read conditions.
+      // By checking resource.data.ownerId, we enforce this for list queries implicitly.
+      return request.auth != null;
+    }
+
+    match /properties/{docId} {
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow write: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+    
+    match /revenue/{docId} {
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow write: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+    
+    match /expenses/{docId} {
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow write: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+    
+    match /maintenanceRequests/{docId} {
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow write: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    match /changelog/{docId} {
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow write: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    // Fallback for any other collection
+    match /{path=**}/{docId} {
+      allow read, write: if false;
     }
   }
 }
