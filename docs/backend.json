@@ -256,7 +256,6 @@
       },
       "required": [
         "id",
-        "propertyId",
         "description",
         "status",
         "priority",
@@ -436,5 +435,3 @@
     "reasoning": "The Firestore structure is designed to manage rental property data with a focus on scalability, security, and ease of querying. It leverages path-based ownership for private user data and subcollections to organize related entities. The structure ensures authorization independence by avoiding hierarchical `get()` calls in security rules.  Specifically:\n\n*   **/users/{userId}/properties/{propertyId}**: Each user owns properties. This path structure makes ownership clear and simplifies security rules. Tenant, RentalPayment, Expense, Appointment, and Alert subcollections are nested under each property document, and their documents contain a denormalized `ownerId` field, copied from the parent `property`, allowing for authorization independence.\n*   **/users/{userId}/maintenanceRequests/{maintenanceRequestId}**: Each user owns maintenance requests. This is a top-level collection per user for easy querying of all maintenance tasks across all properties.\n*   **Authorization Independence**: All subcollections like `tenants`, `rentalPayments`, `expenses`, `appointments`, and `alerts` include a `ownerId` field, copied from the parent `property`. This eliminates the need for `get()` calls in security rules, ensuring atomic operations and easy debugging.\n*   **QAPs (Rules are not Filters)**: Using segregation and path-based ownership, listing operations are secured. Rules can easily check `request.auth.uid == resource.data.ownerId` for all subcollections.\n*   **Data Integrity**: The structure supports data integrity by enforcing clear ownership and relationships. For example, each `rentalPayment` document includes `propertyId` and `tenantId`, maintaining the relationship between these entities."
   }
 }
-
-    

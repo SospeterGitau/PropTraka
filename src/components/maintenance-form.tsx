@@ -36,8 +36,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
 
     const data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest = {
       ...(request ? { id: request.id } : {}), // include id if editing
-      propertyId,
-      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
+      propertyId: propertyId !== 'none' ? propertyId : undefined,
+      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Task',
       description: formData.get('description') as string,
       status: formData.get('status') as MaintenanceRequest['status'],
       priority: formData.get('priority') as MaintenanceRequest['priority'],
@@ -58,12 +58,13 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
         </DialogHeader>
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="propertyId">Property</Label>
-                <Select name="propertyId" defaultValue={request?.propertyId} required>
+                <Label htmlFor="propertyId">Property (Optional)</Label>
+                <Select name="propertyId" defaultValue={request?.propertyId || 'none'}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a property" />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="none">General Business Task</SelectItem>
                         {properties.map(property => (
                             <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
                         ))}
