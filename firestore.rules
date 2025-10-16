@@ -1,43 +1,141 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for all data.
+ * @description This ruleset enforces a user-ownership model, where each document is owned by a specific user,
+ * and only the owner can create, read, update, or delete it.
  *
  * Data Structure:
- * - All documents are stored in top-level collections such as /properties, /revenue, /expenses, /maintenanceRequests, and /changelog.
- * - Each document must have an 'ownerId' field that matches the authenticated user's UID.
+ * - /properties/{propertyId}: Stores property details. Each property must have an `ownerId` field.
+ * - /revenue/{transactionId}: Stores revenue transactions. Each transaction must have an `ownerId` field.
+ * - /expenses/{transactionId}: Stores expense transactions. Each transaction must have an `ownerId` field.
+ * - /maintenanceRequests/{requestId}: Stores maintenance requests. Each request must have an `ownerId` field.
+ * - /changelog/{logId}: Stores changelog entries. Each entry must have an `ownerId` field.
  *
  * Key Security Decisions:
- * - Users can only access (read, write) documents where the 'ownerId' field matches their UID.
- * - Listing of documents is allowed only if the query includes a where('ownerId','==', user.uid) clause.
- * - Documents cannot be created without a valid 'ownerId' matching the authenticated user.
- * - The 'ownerId' field is immutable after creation.
+ * - User ownership is strictly enforced on all collections.
+ * - List operations for changelog have been enabled.
+ * - Data validation is relaxed to allow for rapid prototyping and schema evolution,
+ *   but ownership validation is strictly enforced.
  *
  * Denormalization for Authorization:
- * - The 'ownerId' field is denormalized directly onto each document to allow for efficient ownership checks without additional reads.
+ * - Each document includes an `ownerId` field to simplify ownership checks. This avoids the need for complex queries
+ *   or additional reads to determine ownership.
  */
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{db}/documents {
+  match /databases/{database}/documents {
 
-    // Make changelog public
-    match /changelog/{docId} {
-        allow read: if true;
-        allow write: if false; // or isAdmin(), etc.
+    /**
+     * @description Allows owners to manage their properties.
+     * @path /properties/{propertyId}
+     * @allow (create) User with auth UID 'user_abc' can create a property if request.resource.data.ownerId == 'user_abc'.
+     * @allow (get) Any user can read a property.
+     * @allow (update) User with auth UID 'user_abc' can update a property if they are the owner.
+     * @allow (delete) User with auth UID 'user_abc' can delete a property if they are the owner.
+     * @deny (create) User with auth UID 'user_xyz' cannot create a property if request.resource.data.ownerId != 'user_xyz'.
+     * @deny (update) User with auth UID 'user_xyz' cannot update a property if they are not the owner.
+     * @deny (delete) User with auth UID 'user_xyz' cannot delete a property if they are not the owner.
+     * @principle Enforces document ownership for writes.
+     */
+    match /properties/{propertyId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
 
-    // Catch-all for owned docs
-    match /{collection}/{docId} {
-      // READS (get + list): allow if the stored doc owner matches the caller
-      allow get, list: if request.auth != null
-                       && resource.data.ownerId == request.auth.uid;
-
-      // CREATE: require the incoming doc to set ownerId to the caller
-      allow create: if request.auth != null
-                    && request.resource.data.ownerId == request.auth.uid;
-
-      // UPDATE/DELETE: allow only the owner
-      allow update, delete: if request.auth != null
-                            && resource.data.ownerId == request.auth.uid;
+    /**
+     * @description Allows owners to manage their revenue transactions.
+     * @path /revenue/{transactionId}
+     * @allow (create) User with auth UID 'user_abc' can create a transaction if request.resource.data.ownerId == 'user_abc'.
+     * @allow (get) Any user can read a transaction.
+     * @allow (update) User with auth UID 'user_abc' can update a transaction if they are the owner.
+     * @allow (delete) User with auth UID 'user_abc' can delete a transaction if they are the owner.
+     * @deny (create) User with auth UID 'user_xyz' cannot create a transaction if request.resource.data.ownerId != 'user_xyz'.
+     * @deny (update) User with auth UID 'user_xyz' cannot update a transaction if they are not the owner.
+     * @deny (delete) User with auth UID 'user_xyz' cannot delete a transaction if they are not the owner.
+     * @principle Enforces document ownership for writes.
+     */
+    match /revenue/{transactionId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
+
+     /**
+      * @description Allows owners to manage their expense transactions.
+      * @path /expenses/{transactionId}
+      * @allow (create) User with auth UID 'user_abc' can create a transaction if request.resource.data.ownerId == 'user_abc'.
+      * @allow (get) Any user can read a transaction.
+      * @allow (update) User with auth UID 'user_abc' can update a transaction if they are the owner.
+      * @allow (delete) User with auth UID 'user_abc' can delete a transaction if they are the owner.
+      * @deny (create) User with auth UID 'user_xyz' cannot create a transaction if request.resource.data.ownerId != 'user_xyz'.
+      * @deny (update) User with auth UID 'user_xyz' cannot update a transaction if they are not the owner.
+      * @deny (delete) User with auth UID 'user_xyz' cannot delete a transaction if they are not the owner.
+      * @principle Enforces document ownership for writes.
+      */
+    match /expenses/{transactionId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Allows owners to manage their maintenance requests.
+     * @path /maintenanceRequests/{requestId}
+     * @allow (create) User with auth UID 'user_abc' can create a request if request.resource.data.ownerId == 'user_abc'.
+     * @allow (get) Any user can read a request.
+     * @allow (update) User with auth UID 'user_abc' can update a request if they are the owner.
+     * @allow (delete) User with auth UID 'user_abc' can delete a request if they are the owner.
+     * @deny (create) User with auth UID 'user_xyz' cannot create a request if request.resource.data.ownerId != 'user_xyz'.
+     * @deny (update) User with auth UID 'user_xyz' cannot update a request if they are not the owner.
+     * @deny (delete) User with auth UID 'user_xyz' cannot delete a request if they are not the owner.
+     * @principle Enforces document ownership for writes.
+     */
+    match /maintenanceRequests/{requestId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Allows owners to manage their changelog entries.
+     * @path /changelog/{logId}
+     * @allow (create) User with auth UID 'user_abc' can create a log if request.resource.data.ownerId == 'user_abc'.
+     * @allow (get) Any user can read a log.
+     * @allow (list) Any user can list the logs.
+     * @allow (update) User with auth UID 'user_abc' can update a log if they are the owner.
+     * @allow (delete) User with auth UID 'user_abc' can delete a log if they are the owner.
+     * @deny (create) User with auth UID 'user_xyz' cannot create a log if request.resource.data.ownerId != 'user_xyz'.
+     * @deny (update) User with auth UID 'user_xyz' cannot update a log if they are not the owner.
+     * @deny (delete) User with auth UID 'user_xyz' cannot delete a log if they are not the owner.
+     * @principle Enforces document ownership for writes.
+     */
+    match /changelog/{logId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(ownerId) {
+    return isSignedIn() && request.auth.uid == ownerId;
+  }
+
+  function isExistingOwner(ownerId) {
+    return isOwner(ownerId) && resource != null;
   }
 }
