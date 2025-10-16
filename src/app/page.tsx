@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  // The root of the app is the dashboard page
+  // Redirect to the dashboard, which is the main page of the app.
   redirect('/dashboard');
 }
