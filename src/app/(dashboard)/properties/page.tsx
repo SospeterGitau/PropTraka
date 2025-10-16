@@ -5,7 +5,7 @@ import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import type { Property } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -272,9 +272,7 @@ function PropertiesPageContent() {
 
 function PropertiesPage() {
     return (
-        <DataProvider>
-            <PropertiesPageContent />
-        </DataProvider>
+        <PropertiesPageContent />
     )
 }
 

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { ResidencyStatus } from '@/lib/types';
@@ -216,9 +216,7 @@ function SettingsPageContent() {
 
 function SettingsPage() {
     return (
-        <DataProvider>
-            <SettingsPageContent />
-        </DataProvider>
+        <SettingsPageContent />
     )
 }
 

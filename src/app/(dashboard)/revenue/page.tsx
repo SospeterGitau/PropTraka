@@ -5,7 +5,7 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
 import { format, startOfToday, eachMonthOfInterval, isAfter, isBefore } from 'date-fns';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -499,9 +499,7 @@ function RevenuePageContent() {
 
 function RevenuePage() {
     return (
-        <DataProvider>
-            <RevenuePageContent />
-        </DataProvider>
+        <RevenuePageContent />
     )
 }
 

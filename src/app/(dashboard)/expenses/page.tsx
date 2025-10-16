@@ -5,7 +5,7 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { ChevronRight, FileText, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 
@@ -322,9 +322,7 @@ function ExpensesPageContent() {
 
 function ExpensesPage() {
     return (
-        <DataProvider>
-            <ExpensesPageContent />
-        </DataProvider>
+        <ExpensesPageContent />
     )
 }
 

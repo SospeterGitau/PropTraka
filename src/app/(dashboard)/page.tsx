@@ -4,7 +4,7 @@
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { memo } from 'react';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
 import { CurrencyIcon } from '@/components/currency-icon';
@@ -133,9 +133,7 @@ function DashboardPageContent() {
 
 function DashboardPage() {
     return (
-        <DataProvider>
-            <DashboardPageContent />
-        </DataProvider>
+        <DashboardPageContent />
     )
 }
 

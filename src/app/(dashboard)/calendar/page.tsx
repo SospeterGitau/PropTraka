@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { CalendarView } from '@/components/calendar-view';
 
@@ -19,8 +19,6 @@ function CalendarPageContent() {
 
 export default function CalendarPage() {
   return (
-    <DataProvider>
       <CalendarPageContent />
-    </DataProvider>
   );
 }

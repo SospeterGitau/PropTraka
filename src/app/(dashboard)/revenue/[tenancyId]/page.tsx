@@ -5,7 +5,7 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format, startOfToday, isAfter } from 'date-fns';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -399,9 +399,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
 
 function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
     return (
-        <DataProvider>
-            <TenancyDetailPageContent params={params} />
-        </DataProvider>
+        <TenancyDetailPageContent params={params} />
     )
 }
 

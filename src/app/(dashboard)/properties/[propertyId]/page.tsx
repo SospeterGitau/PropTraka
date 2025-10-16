@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -234,8 +234,6 @@ function PropertyDetailPageContent() {
 
 export default function PropertyDetailPage() {
     return (
-        <DataProvider>
-            <PropertyDetailPageContent />
-        </DataProvider>
+        <PropertyDetailPageContent />
     )
 }

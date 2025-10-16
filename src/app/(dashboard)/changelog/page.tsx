@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useDataContext, DataProvider } from '@/context/data-context';
+import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
@@ -99,8 +99,6 @@ function ChangelogPageContent() {
 
 export default function ChangelogPage() {
     return (
-        <DataProvider>
-            <ChangelogPageContent />
-        </DataProvider>
+        <ChangelogPageContent />
     )
 }
