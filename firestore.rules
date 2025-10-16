@@ -1,3 +1,15 @@
+/**
+ * @file Overview
+ * This ruleset enforces a strict user-ownership model for all data.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, with properties and associated data (tenants, payments, expenses, etc.) stored in subcollections.
+ * Maintenance requests are stored directly under the user's document.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own data. Listing other user's properties or subcollections is disallowed.
+ * - Data relevant to authorization (ownerId) is denormalized to subcollections to avoid costly `get()` calls in security rules.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -10,164 +22,151 @@ service cloud.firestore {
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the document.
+     * @description Checks if the authenticated user is the owner of the resource.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the existing document.
+     * @description Checks if the authenticated user is the owner of the existing resource.
+     * This function is used for update and delete operations to ensure the document exists.
      */
     function isExistingOwner(userId) {
-      return isSignedIn() && request.auth.uid == resource.data.userId;
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Enforces that the authenticated user is the owner when creating a new document.
+     * @description Properties owned by a specific user.
+     * @path /users/{userId}/properties/{propertyId}
+     * @allow (create) - Authenticated user with UID 'user123' can create a property with the ID 'property456' under their user document.
+     * @allow (read) - Authenticated user with UID 'user123' can read their own property with ID 'property456'.
+     * @allow (update) - Authenticated user with UID 'user123' can update their own property with ID 'property456'.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete their own property with ID 'property456'.
+     * @deny  (create) - Authenticated user with UID 'user123' cannot create a property under another user's document (e.g., /users/otherUser/properties/property456).
+     * @deny  (read)   - Authenticated user with UID 'user123' cannot read properties owned by another user (e.g., /users/otherUser/properties/property456).
+     * @principle Enforces document ownership for all CRUD operations.
      */
-    function isValidOwnerOnCreate(userId) {
-        return request.resource.data.userId == userId;
+    match /users/{userId}/properties/{propertyId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Enforces immutability of the owner field on update.
+     * @description Tenants related to a specific property, owned by a user.
+     * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
+     * @allow (create) - Authenticated user 'user123' creates a tenant 'tenant789' under their property 'property456'.
+     * @allow (read) - Authenticated user 'user123' reads a tenant 'tenant789' under their property 'property456'.
+     * @allow (update) - Authenticated user 'user123' updates a tenant 'tenant789' under their property 'property456'.
+     * @allow (delete) - Authenticated user 'user123' deletes a tenant 'tenant789' under their property 'property456'.
+     * @deny  (create) - Authenticated user 'user123' cannot create a tenant under another user's property.
+     * @deny  (read)   - Authenticated user 'user123' cannot read tenants from another user's property.
+     * @principle Enforces document ownership for all CRUD operations.
      */
-    function isValidOwnerOnUpdate(userId) {
-        return request.resource.data.userId == resource.data.userId;
+    match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description
-     * The rule structure prevents listing all users.
-     * It only allows access to data associated with the authenticated user's ID.
+     * @description Rental payments made for a specific property, owned by a user.
+     * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
+     * @allow (create) - Authenticated user 'user123' creates a rental payment 'payment101' under their property 'property456'.
+     * @allow (read) - Authenticated user 'user123' reads a rental payment 'payment101' under their property 'property456'.
+     * @allow (update) - Authenticated user 'user123' updates a rental payment 'payment101' under their property 'property456'.
+     * @allow (delete) - Authenticated user 'user123' deletes a rental payment 'payment101' under their property 'property456'.
+     * @deny  (create) - Authenticated user 'user123' cannot create a rental payment under another user's property.
+     * @deny  (read)   - Authenticated user 'user123' cannot read rental payments from another user's property.
+     * @principle Enforces document ownership for all CRUD operations.
      */
-    match /users/{userId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if false;
+    match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
 
-      /**
-       * @description Manages properties owned by a specific user.
-       * @path /users/{userId}/properties/{propertyId}
-       * @allow (create) - Authenticated user creates a new property under their user ID.
-       * @deny (create) - Another user attempts to create a property under a different user ID.
-       * @principle Enforces document ownership for writes.
-       */
-      match /properties/{propertyId} {
-        allow get: if isSignedIn() && isOwner(userId);
-        allow list: if isSignedIn() && isOwner(userId);
-        allow create: if isSignedIn() && isOwner(userId);
-        allow update: if isSignedIn() && isOwner(userId);
-        allow delete: if isSignedIn() && isOwner(userId);
+    /**
+     * @description Expenses related to a specific property, owned by a user.
+     * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
+     * @allow (create) - Authenticated user 'user123' creates an expense 'expense202' under their property 'property456'.
+     * @allow (read) - Authenticated user 'user123' reads an expense 'expense202' under their property 'property456'.
+     * @allow (update) - Authenticated user 'user123' updates an expense 'expense202' under their property 'property456'.
+     * @allow (delete) - Authenticated user 'user123' deletes an expense 'expense202' under their property 'property456'.
+     * @deny  (create) - Authenticated user 'user123' cannot create an expense under another user's property.
+     * @deny  (read)   - Authenticated user 'user123' cannot read expenses from another user's property.
+     * @principle Enforces document ownership for all CRUD operations.
+     */
+    match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Manages tenants related to a specific property, owned by a user.
-         * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-         * @allow (create) - Authenticated user creates a new tenant under their property.
-         * @deny (create) - Another user attempts to create a tenant under a different user or property.
-         * @principle Enforces document ownership for writes, ensures data consistency.
-         */
-        match /tenants/{tenantId} {
-          allow get: if isSignedIn() && isOwner(userId);
-          allow list: if isSignedIn() && isOwner(userId);
-          allow create: if isSignedIn() && isOwner(userId);
-          allow update: if isSignedIn() && isOwner(userId);
-          allow delete: if isSignedIn() && isOwner(userId);
-        }
+    /**
+     * @description Appointments related to a specific property, owned by a user.
+     * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
+     * @allow (create) - Authenticated user 'user123' creates an appointment 'appointment303' under their property 'property456'.
+     * @allow (read) - Authenticated user 'user123' reads an appointment 'appointment303' under their property 'property456'.
+     * @allow (update) - Authenticated user 'user123' updates an appointment 'appointment303' under their property 'property456'.
+     * @allow (delete) - Authenticated user 'user123' deletes an appointment 'appointment303' under their property 'property456'.
+     * @deny  (create) - Authenticated user 'user123' cannot create an appointment under another user's property.
+     * @deny  (read)   - Authenticated user 'user123' cannot read appointments from another user's property.
+     * @principle Enforces document ownership for all CRUD operations.
+     */
+    match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Manages rental payments made for a specific property, owned by a user.
-         * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-         * @allow (create) - Authenticated user creates a new rental payment under their property.
-         * @deny (create) - Another user attempts to create a rental payment under a different user or property.
-         * @principle Enforces document ownership for writes, ensures data consistency.
-         */
-        match /rentalPayments/{rentalPaymentId} {
-          allow get: if isSignedIn() && isOwner(userId);
-          allow list: if isSignedIn() && isOwner(userId);
-          allow create: if isSignedIn() && isOwner(userId);
-          allow update: if isSignedIn() && isOwner(userId);
-          allow delete: if isSignedIn() && isOwner(userId);
-        }
+    /**
+     * @description Alerts related to a specific property, owned by a user.
+     * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
+     * @allow (create) - Authenticated user 'user123' creates an alert 'alert404' under their property 'property456'.
+     * @allow (read) - Authenticated user 'user123' reads an alert 'alert404' under their property 'property456'.
+     * @allow (update) - Authenticated user 'user123' updates an alert 'alert404' under their property 'property456'.
+     * @allow (delete) - Authenticated user 'user123' deletes an alert 'alert404' under their property 'property456'.
+     * @deny  (create) - Authenticated user 'user123' cannot create an alert under another user's property.
+     * @deny  (read)   - Authenticated user 'user123' cannot read alerts from another user's property.
+     * @principle Enforces document ownership for all CRUD operations.
+     */
+    match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
 
-        /**
-         * @description Manages expenses related to a specific property, owned by a user.
-         * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-         * @allow (create) - Authenticated user creates a new expense under their property.
-         * @deny (create) - Another user attempts to create an expense under a different user or property.
-         * @principle Enforces document ownership for writes, ensures data consistency.
-         */
-        match /expenses/{expenseId} {
-          allow get: if isSignedIn() && isOwner(userId);
-          allow list: if isSignedIn() && isOwner(userId);
-          allow create: if isSignedIn() && isOwner(userId);
-          allow update: if isSignedIn() && isOwner(userId);
-          allow delete: if isSignedIn() && isOwner(userId);
-        }
-
-        /**
-         * @description Manages appointments related to a specific property, owned by a user.
-         * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-         * @allow (create) - Authenticated user creates a new appointment under their property.
-         * @deny (create) - Another user attempts to create an appointment under a different user or property.
-         * @principle Enforces document ownership for writes, ensures data consistency.
-         */
-        match /appointments/{appointmentId} {
-          allow get: if isSignedIn() && isOwner(userId);
-          allow list: if isSignedIn() && isOwner(userId);
-          allow create: if isSignedIn() && isOwner(userId);
-          allow update: if isSignedIn() && isOwner(userId);
-          allow delete: if isSignedIn() && isOwner(userId);
-        }
-
-        /**
-         * @description Manages alerts related to a specific property, owned by a user.
-         * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-         * @allow (create) - Authenticated user creates a new alert under their property.
-         * @deny (create) - Another user attempts to create an alert under a different user or property.
-         * @principle Enforces document ownership for writes, ensures data consistency.
-         */
-        match /alerts/{alertId} {
-          allow get: if isSignedIn() && isOwner(userId);
-          allow list: if isSignedIn() && isOwner(userId);
-          allow create: if isSignedIn() && isOwner(userId);
-          allow update: if isSignedIn() && isOwner(userId);
-          allow delete: if isSignedIn() && isOwner(userId);
-        }
-      }
-
-      /**
-       * @description Manages maintenance requests for properties owned by a specific user.
-       * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-       * @allow (create) - Authenticated user creates a new maintenance request under their user ID.
-       * @deny (create) - Another user attempts to create a maintenance request under a different user ID.
-       * @principle Enforces document ownership for writes.
-       */
-      match /maintenanceRequests/{maintenanceRequestId} {
-        allow get: if isSignedIn() && isOwner(userId);
-        allow list: if isSignedIn() && isOwner(userId);
-        allow create: if isSignedIn() && isOwner(userId);
-        allow update: if isSignedIn() && isOwner(userId);
-        allow delete: if isSignedIn() && isOwner(userId);
-      }
-      
-      /**
-       * @description Manages revenue for a specific user.
-       * @path /users/{userId}/revenue
-       * @allow (list) - Authenticated user lists revenue under their user ID.
-       * @deny (list) - Another user attempts to list revenue under a different user ID.
-       * @principle Enforces document ownership for reads.
-       */
-      match /revenue/{revenueId} {
-        allow get: if isSignedIn() && isOwner(userId);
-        allow list: if isSignedIn() && isOwner(userId);
-        allow create: if isSignedIn() && isOwner(userId);
-        allow update: if isSignedIn() && isOwner(userId);
-        allow delete: if isSignedIn() && isOwner(userId);
-      }
+    /**
+     * @description Maintenance requests for properties owned by a specific user.
+     * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
+     * @allow (create) - Authenticated user 'user123' creates a maintenance request 'request505' under their user document.
+     * @allow (read) - Authenticated user 'user123' reads their own maintenance request 'request505'.
+     * @allow (update) - Authenticated user 'user123' updates their own maintenance request 'request505'.
+     * @allow (delete) - Authenticated user 'user123' deletes their own maintenance request 'request505'.
+     * @deny  (create) - Authenticated user 'user123' cannot create a maintenance request under another user's document.
+     * @deny  (read)   - Authenticated user 'user123' cannot read maintenance requests owned by another user.
+     * @principle Enforces document ownership for all CRUD operations.
+     */
+    match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
   }
 }
