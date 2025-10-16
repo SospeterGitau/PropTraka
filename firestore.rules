@@ -1,102 +1,88 @@
 /**
- * @fileoverview Firestore Security Rules for the Rental Property Management App.
+ * @fileoverview Firestore Security Rules for the rental property management application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model.  Each user has complete control
- * over their own data, and no user can access another user's data unless explicitly
- * shared (currently not supported).
+ * This ruleset enforces a strict user-ownership model. Each user has full control over their own data,
+ * and no user can access another user's data. All data is nested under /users/{userId} to enforce
+ * this ownership. Subcollections under /properties/{propertyId} inherit ownership from the parent
+ * property document.
  *
  * Data Structure:
- * The database is structured with user-owned data nested under /users/{userId}.
- * Properties, Tenants, RentalPayments, Expenses, Appointments, Alerts and MaintenanceRequests are all secured
- * under their respective user's node.
+ * All data is nested under /users/{userId}.  Each user has a collection of properties, and each property
+ * has subcollections for tenants, rental payments, expenses, appointments, and alerts.
+ * Maintenance Requests are directly under the /users/{userId} collection.
  *
  * Key Security Decisions:
- * - Users can only create, read, update, and delete data they own.
- * - Listing other users' properties or maintenance requests is disallowed.
- * - Data schema is not strictly enforced in this prototype; only authorization is enforced.
+ * - Users can only access their own data.
+ * - Listing all users is disallowed.
+ * - Data in user subcollections implicitly inherits ownership from the parent property document,
+ *   avoiding the need for complex `get()` calls in the rules.
+ * - Denormalization is used to simplify and optimize rules. The `ownerId` is copied to all subcollections
+ *   of a property to avoid hierarchical `get()` calls.
  *
- * Denormalization for Authorization:
- *  - Subcollections under `/users/{userId}/properties/{propertyId}` such as `tenants`, `rentalPayments`, `expenses`, `appointments`, and `alerts` include a `ownerId` field, copied from the parent `property`. This eliminates the need for `get()` calls in security rules, ensuring atomic operations and easy debugging.
+ * Authorization Independence:
+ * All subcollections under a property include a denormalized `ownerId` field, copied from the parent
+ * property. This eliminates the need for `get()` calls in security rules, ensuring atomic operations
+ * and easy debugging.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by an authenticated user.
+     * @description Checks if the current user is signed in.
+     * @example isSignedIn() == true if request.auth != null
+     * @principle Requires authentication for data access.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the resource.
+     * @description Checks if the current user is the owner of the resource based on the userId.
+     * @param {string} userId - The user ID to compare against the request's auth UID.
+     * @example isOwner("user123") == (request.auth.uid == "user123")
+     * @principle Enforces ownership-based access control.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the existing resource.
-     *  This also ensures that the resource exists to prevent modification of non-existent data.
+     * @description Checks if the current user is the owner of the resource, and that the document exists.
+     * @param {string} userId - The user ID to compare against the request's auth UID.
+     * @example isExistingOwner("user123") == (request.auth.uid == "user123" && resource != null)
+     * @principle Enforces ownership-based access control and prevents modification of non-existent documents.
      */
     function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Defines a validation to make sure that the user id can not be updated after creation
-     */
-    function isValidOwnerUpdate(userId) {
-        return resource.data.id == userId;
-    }
-
-    /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/properties/{propertyId}` collection.
-     *  Enforces that only the owner can create, read, update, or delete their own properties.
+     * @description Rules for user properties.
      * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) - User 'user123' creates a new property under their user ID.
-     *   Request: `{ "auth": { "uid": "user123" }, "resource": { "data": { "id": "user123" } } }`
-     * @allow (get) - User 'user123' reads a property they own.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates a property they own.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes a property they own.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create a property under user 'user123''s ID.
-     *   Request: `{ "auth": { "uid": "user456" }, "resource": { "data": { "id": "user123" } } }`
-     * @deny (get) - User 'user456' attempts to read a property owned by user 'user123'.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create a property.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete a property.
+     * @deny (create) - Authenticated user with non-matching userId cannot create a property.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete a property.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/properties/{propertyId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && isValidOwnerUpdate(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/properties/{propertyId}/tenants/{tenantId}` collection.
-     *  Enforces that only the owner of the property can create, read, update, or delete tenants for that property.
+     * @description Rules for tenants associated with a property.
      * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) - User 'user123' creates a new tenant for their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (get) - User 'user123' reads a tenant associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates a tenant associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes a tenant associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create a tenant for user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @deny (get) - User 'user456' attempts to read a tenant associated with user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create a tenant for a property.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete a tenant for a property.
+     * @deny (create) - Authenticated user with non-matching userId cannot create a tenant for a property.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete a tenant for a property.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
       allow get: if isOwner(userId);
@@ -107,23 +93,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}` collection.
-     *  Enforces that only the owner of the property can create, read, update, or delete rental payments for that property.
+     * @description Rules for rental payments associated with a property.
      * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) - User 'user123' creates a new rental payment for their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (get) - User 'user123' reads a rental payment associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates a rental payment associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes a rental payment associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create a rental payment for user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @deny (get) - User 'user456' attempts to read a rental payment associated with user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create a rental payment for a property.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete a rental payment for a property.
+     * @deny (create) - Authenticated user with non-matching userId cannot create a rental payment for a property.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete a rental payment for a property.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
       allow get: if isOwner(userId);
@@ -134,23 +110,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/properties/{propertyId}/expenses/{expenseId}` collection.
-     *  Enforces that only the owner of the property can create, read, update, or delete expenses for that property.
+     * @description Rules for expenses associated with a property.
      * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) - User 'user123' creates a new expense for their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (get) - User 'user123' reads an expense associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates an expense associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes an expense associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create an expense for user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @deny (get) - User 'user456' attempts to read an expense associated with user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create an expense for a property.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete an expense for a property.
+     * @deny (create) - Authenticated user with non-matching userId cannot create an expense for a property.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete an expense for a property.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
       allow get: if isOwner(userId);
@@ -161,23 +127,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/properties/{propertyId}/appointments/{appointmentId}` collection.
-     *  Enforces that only the owner of the property can create, read, update, or delete appointments for that property.
+     * @description Rules for appointments associated with a property.
      * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) - User 'user123' creates a new appointment for their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (get) - User 'user123' reads an appointment associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates an appointment associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes an appointment associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create an appointment for user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @deny (get) - User 'user456' attempts to read an appointment associated with user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create an appointment for a property.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete an appointment for a property.
+     * @deny (create) - Authenticated user with non-matching userId cannot create an appointment for a property.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete an appointment for a property.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
       allow get: if isOwner(userId);
@@ -188,23 +144,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/properties/{propertyId}/alerts/{alertId}` collection.
-     *  Enforces that only the owner of the property can create, read, update, or delete alerts for that property.
+     * @description Rules for alerts associated with a property.
      * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) - User 'user123' creates a new alert for their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (get) - User 'user123' reads an alert associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates an alert associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes an alert associated with their property.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create an alert for user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @deny (get) - User 'user456' attempts to read an alert associated with user 'user123''s property.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create an alert for a property.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete an alert for a property.
+     * @deny (create) - Authenticated user with non-matching userId cannot create an alert for a property.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete an alert for a property.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
       allow get: if isOwner(userId);
@@ -215,25 +161,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description
-     *  Rules for documents in the `/users/{userId}/maintenanceRequests/{maintenanceRequestId}` collection.
-     *  Enforces that only the owner can create, read, update, or delete their own maintenance requests.
+     * @description Rules for maintenance requests.
      * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) - User 'user123' creates a new maintenance request under their user ID.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (get) - User 'user123' reads a maintenance request they own.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (update) - User 'user123' updates a maintenance request they own.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @allow (delete) - User 'user123' deletes a maintenance request they own.
-     *   Request: `{ "auth": { "uid": "user123" } }`
-     * @deny (create) - User 'user456' attempts to create a maintenance request under user 'user123''s ID.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @deny (get) - User 'user456' attempts to read a maintenance request owned by user 'user123'.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     *  @deny (list) - User 'user456' attempts to list maintenance requests owned by user 'user123'.
-     *   Request: `{ "auth": { "uid": "user456" } }`
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - Authenticated user with matching userId can create a maintenance request.
+     * @allow (get, list, update, delete) - Authenticated user with matching userId can read, update, or delete a maintenance request.
+     * @deny (create) - Authenticated user with non-matching userId cannot create a maintenance request.
+     * @deny (update, delete) - Authenticated user with non-matching userId cannot update or delete a maintenance request.
+     * @principle Enforces document ownership for writes and restricts access to a user's own data tree.
      */
     match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
       allow get: if isOwner(userId);
