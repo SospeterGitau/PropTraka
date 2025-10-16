@@ -70,7 +70,7 @@ export function useCollection<T = any>(
     // If there's no query, we are not loading and there's no data.
     if (!targetRefOrQuery) {
       setData(null);
-      setIsLoading(false);
+      setIsLoading(false); // Set loading to false if no query
       setError(null);
       return;
     }

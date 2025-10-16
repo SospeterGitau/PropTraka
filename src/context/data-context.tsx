@@ -150,6 +150,8 @@ async function seedDatabase(
 export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
   const { user, isUserLoading: isAuthLoading } = useUser();
+  const [hasSeedingBeenChecked, setHasSeedingBeenChecked] = useState(false);
+
 
   // Firestore collection references that depend on the user.
   // These are memoized and will be null until the user is authenticated.
@@ -180,24 +182,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
-    // Only proceed if we are done authenticating and have a user, and Firestore is available.
-    if (!isAuthLoading && user && firestore) {
-      // Check if all data collections have finished loading.
-      const allCollectionsLoaded = !loadingProperties && !loadingRevenue && !loadingExpenses && !loadingMaintenance;
-      
-      if (allCollectionsLoaded) {
-        const shouldSeed = 
-            properties?.length === 0 &&
-            revenue?.length === 0 &&
-            expenses?.length === 0 &&
-            maintenanceRequests?.length === 0;
-
-        if (shouldSeed) {
-            seedDatabase(firestore, user);
-        }
-      }
+    // This effect should only run once after the initial data load has completed.
+    if (isDataLoading || !user || hasSeedingBeenChecked) {
+      return;
     }
-  }, [isAuthLoading, user, firestore, properties, revenue, expenses, maintenanceRequests, loadingProperties, loadingRevenue, loadingExpenses, loadingMaintenance]);
+
+    // `isDataLoading` is false here, which means all `useCollection` hooks have had their first run.
+    // We can now safely check if the collections are empty.
+    const allCollectionsLoadedAndEmpty =
+      properties?.length === 0 &&
+      revenue?.length === 0 &&
+      expenses?.length === 0 &&
+      maintenanceRequests?.length === 0;
+
+    if (allCollectionsLoadedAndEmpty) {
+      seedDatabase(firestore, user);
+    }
+    
+    // Mark that we've performed the seeding check to prevent this from running again.
+    setHasSeedingBeenChecked(true);
+
+  }, [isDataLoading, user, properties, revenue, expenses, maintenanceRequests, firestore, hasSeedingBeenChecked]);
+
 
   // --- MUTATION FUNCTIONS ---
 
