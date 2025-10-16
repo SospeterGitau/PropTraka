@@ -1,16 +1,38 @@
+/**
+ * @file Overview
+ * This ruleset enforces a strict user-ownership model for managing rental property data.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, ensuring private data is scoped to individual users.
+ * - /users/{userId}/properties/{propertyId}:  Represents properties owned by a user.
+ * - /users/{userId}/properties/{propertyId}/tenants/{tenantId}: Represents tenants associated with a specific property.
+ * - /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}: Represents rental payments for a property.
+ * - /users/{userId}/properties/{propertyId}/expenses/{expenseId}: Represents expenses for a property.
+ * - /users/{userId}/properties/{propertyId}/appointments/{appointmentId}: Represents appointments for a property.
+ * - /users/{userId}/properties/{propertyId}/alerts/{alertId}: Represents alerts related to a property.
+ * - /users/{userId}/maintenanceRequests/{maintenanceRequestId}: Represents maintenance requests submitted by a user.
+ *
+ * Key Security Decisions:
+ * - Strict Ownership: All data access is restricted to the owning user, identified by their UID.
+ * - No Public Listing: User-specific data collections (e.g., properties, expenses) cannot be listed publicly. Only the owner can list these collections.
+ * - Authorization Independence: Subcollections contain a denormalized `ownerId` field, copied from the parent `property` document. This eliminates the need for `get()` calls in security rules, ensuring authorization independence.
+ *
+ * Denormalization for Authorization:
+ * To simplify and optimize security rules, the `ownerId` is denormalized into subcollection documents (`tenants`, `rentalPayments`, `expenses`, `appointments`, `alerts`). This avoids costly `get()` calls to parent documents during authorization checks.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by a signed-in user.
+     * @description Checks if the request is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @description Checks if the authenticated user's UID matches the provided userId.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
@@ -24,99 +46,173 @@ service cloud.firestore {
     }
 
     /**
-     * @description Properties owned by a specific user.
+     * @description
+     * Secures the properties collection to ensure that only the owner can create, read, update, or delete properties.
+     *
      * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) User 'user123' can create a new property under their user ID.
-     * @deny (create) User 'user456' cannot create a property under user 'user123's ID.
+     * @allow (create) - An authenticated user with UID 'user123' can create a property document under /users/user123/properties/property456 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read a property document under /users/user123/properties/property456 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update a property document under /users/user123/properties/property456 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete a property document under /users/user123/properties/property456 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create a property document under /users/user123/properties/property456 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read a property document under /users/user123/properties/property456 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Tenants related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures the tenants collection to ensure that only the owner can create, read, update, or delete tenants.
+     * Access is restricted based on ownership of the parent property.
+     *
      * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) User 'user123' can create a new tenant under their property.
-     * @deny (create) User 'user456' cannot create a tenant under user 'user123's property.
+     * @allow (create) - An authenticated user with UID 'user123' can create a tenant document under /users/user123/properties/property456/tenants/tenant789 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read a tenant document under /users/user123/properties/property456/tenants/tenant789 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update a tenant document under /users/user123/properties/property456/tenants/tenant789 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete a tenant document under /users/user123/properties/property456/tenants/tenant789 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create a tenant document under /users/user123/properties/property456/tenants/tenant789 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read a tenant document under /users/user123/properties/property456/tenants/tenant789 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Rental payments made for a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures the rental payments collection to ensure that only the owner can create, read, update, or delete rental payments.
+     * Access is restricted based on ownership of the parent property.
+     *
      * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) User 'user123' can create a new rental payment under their property.
-     * @deny (create) User 'user456' cannot create a rental payment under user 'user123's property.
+     * @allow (create) - An authenticated user with UID 'user123' can create a rental payment document under /users/user123/properties/property456/rentalPayments/payment789 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read a rental payment document under /users/user123/properties/property456/rentalPayments/payment789 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update a rental payment document under /users/user123/properties/property456/rentalPayments/payment789 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete a rental payment document under /users/user123/properties/property456/rentalPayments/payment789 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create a rental payment document under /users/user123/properties/property456/rentalPayments/payment789 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read a rental payment document under /users/user123/properties/property456/rentalPayments/payment789 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Expenses related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures the expenses collection to ensure that only the owner can create, read, update, or delete expenses.
+     * Access is restricted based on ownership of the parent property.
+     *
      * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) User 'user123' can create a new expense under their property.
-     * @deny (create) User 'user456' cannot create an expense under user 'user123's property.
+     * @allow (create) - An authenticated user with UID 'user123' can create an expense document under /users/user123/properties/property456/expenses/expense789 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read an expense document under /users/user123/properties/property456/expenses/expense789 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update an expense document under /users/user123/properties/property456/expenses/expense789 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete an expense document under /users/user123/properties/property456/expenses/expense789 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create an expense document under /users/user123/properties/property456/expenses/expense789 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read an expense document under /users/user123/properties/property456/expenses/expense789 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Appointments related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures the appointments collection to ensure that only the owner can create, read, update, or delete appointments.
+     * Access is restricted based on ownership of the parent property.
+     *
      * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) User 'user123' can create a new appointment under their property.
-     * @deny (create) User 'user456' cannot create an appointment under user 'user123's property.
+     * @allow (create) - An authenticated user with UID 'user123' can create an appointment document under /users/user123/properties/property456/appointments/appointment789 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read an appointment document under /users/user123/properties/property456/appointments/appointment789 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update an appointment document under /users/user123/properties/property456/appointments/appointment789 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete an appointment document under /users/user123/properties/property456/appointments/appointment789 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create an appointment document under /users/user123/properties/property456/appointments/appointment789 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read an appointment document under /users/user123/properties/property456/appointments/appointment789 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Alerts related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures the alerts collection to ensure that only the owner can create, read, update, or delete alerts.
+     * Access is restricted based on ownership of the parent property.
+     *
      * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) User 'user123' can create a new alert under their property.
-     * @deny (create) User 'user456' cannot create an alert under user 'user123's property.
+     * @allow (create) - An authenticated user with UID 'user123' can create an alert document under /users/user123/properties/property456/alerts/alert789 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read an alert document under /users/user123/properties/property456/alerts/alert789 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update an alert document under /users/user123/properties/property456/alerts/alert789 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete an alert document under /users/user123/properties/property456/alerts/alert789 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create an alert document under /users/user123/properties/property456/alerts/alert789 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read an alert document under /users/user123/properties/property456/alerts/alert789 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Maintenance requests for properties owned by a specific user.
+     * @description
+     * Secures the maintenance requests collection to ensure that only the owner can create, read, update, or delete maintenance requests.
+     *
      * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) User 'user123' can create a new maintenance request under their user ID.
-     * @deny (create) User 'user456' cannot create a maintenance request under user 'user123's ID.
+     * @allow (create) - An authenticated user with UID 'user123' can create a maintenance request document under /users/user123/maintenanceRequests/request456 if request.auth.uid == 'user123'.
+     * @allow (get) - An authenticated user with UID 'user123' can read a maintenance request document under /users/user123/maintenanceRequests/request456 if request.auth.uid == 'user123'.
+     * @allow (update) - An authenticated user with UID 'user123' can update a maintenance request document under /users/user123/maintenanceRequests/request456 if request.auth.uid == 'user123'.
+     * @allow (delete) - An authenticated user with UID 'user123' can delete a maintenance request document under /users/user123/maintenanceRequests/request456 if request.auth.uid == 'user123'.
+     * @deny (create) - An authenticated user with UID 'user456' cannot create a maintenance request document under /users/user123/maintenanceRequests/request456 because request.auth.uid != 'user123'.
+     * @deny (get) - An unauthenticated user cannot read a maintenance request document under /users/user123/maintenanceRequests/request456 because request.auth is null.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Fixes: Missing or insufficient permissions to list changelog
-     * @path /users/{userId}/changelog
-     * @allow (list) User 'user123' can list their own changelog
-     * @deny (list) User 'user456' cannot list the changelog for 'user123'
-     * @principle Grants the owner list permissions for user scoped subcollections
+     * @description
+     * This rule explicitly denies access to the /users/{userId}/expenses collection because the original error indicates a permissions issue during a "list" operation on this path.
+     * The previous rules did not explicitly define a "list" rule for this collection, leading to the default "deny" behavior.
+     * This rule explicitly denies access to prevent unauthorized listing of expenses.
+     *
+     * @path /users/{userId}/expenses
+     * @deny (list) - Any user, even the owner, is denied listing expenses directly under the user ID. This prevents accidental or unintended access.
+     * @principle Explicitly denies access to a potentially sensitive collection to prevent unauthorized listing.
      */
-    match /users/{userId}/changelog/{documentId} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId);
+    match /users/{userId}/expenses {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
