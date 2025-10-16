@@ -43,12 +43,12 @@ const coreNavItems = [
   { href: '/properties', label: 'Properties', icon: Building2 },
   { href: '/revenue', label: 'Revenue', icon: TrendingUp },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+  { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/maintenance', label: 'Maintenance', icon: Wrench },
 ];
 
 const analysisNavItems = [
   { href: '/reports', label: 'Reports', icon: LineChart },
-  { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
 ];
 
