@@ -58,6 +58,108 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+// --- Sample Data Seeding ---
+async function seedDatabase(
+  firestore: any, 
+  user: any, 
+  existingProperties: number,
+  existingRevenue: number,
+  existingExpenses: number,
+  existingMaintenance: number
+) {
+  const shouldSeed = 
+    existingProperties === 0 &&
+    existingRevenue === 0 &&
+    existingExpenses === 0 &&
+    existingMaintenance === 0;
+
+  if (!shouldSeed) {
+    console.log("Data exists, skipping seed.");
+    return;
+  }
+  console.log("No data found. Seeding database...");
+
+  const batch = writeBatch(firestore);
+
+  // 1. Properties
+  const propertiesToCreate: Omit<Property, 'id' | 'ownerId'>[] = [
+    {
+      addressLine1: '456 Oak Avenue', city: 'Nairobi', state: 'Nairobi', postalCode: '00200',
+      propertyType: 'Domestic', buildingType: 'Detached House', bedrooms: 4, bathrooms: 3, size: 250, sizeUnit: 'sqm',
+      purchasePrice: 20000000, mortgage: 15000000, currentValue: 22000000, rentalValue: 120000, purchaseTaxes: 800000,
+      imageUrl: 'https://picsum.photos/seed/p1/600/400', imageHint: 'detached house'
+    },
+    {
+      addressLine1: '789 Pine Lane', city: 'Mombasa', state: 'Mombasa', postalCode: '80100',
+      propertyType: 'Domestic', buildingType: 'Flat', bedrooms: 2, bathrooms: 1, size: 80, sizeUnit: 'sqm',
+      purchasePrice: 8000000, mortgage: 6000000, currentValue: 9000000, rentalValue: 50000, purchaseTaxes: 320000,
+      imageUrl: 'https://picsum.photos/seed/p2/600/400', imageHint: 'apartment flat'
+    },
+    {
+      addressLine1: '101 Biashara St', city: 'Nairobi', state: 'Nairobi', postalCode: '00100',
+      propertyType: 'Commercial', buildingType: 'Office', bedrooms: 0, bathrooms: 2, size: 500, sizeUnit: 'sqm',
+      purchasePrice: 30000000, mortgage: 20000000, currentValue: 35000000, rentalValue: 250000, purchaseTaxes: 1200000,
+      imageUrl: 'https://picsum.photos/seed/p3/600/400', imageHint: 'commercial office'
+    }
+  ];
+  
+  const propertyDocs = propertiesToCreate.map(p => {
+    const docRef = doc(collection(firestore, 'users', user.uid, 'properties'));
+    batch.set(docRef, { ...p, ownerId: user.uid });
+    return { ...p, id: docRef.id };
+  });
+
+  // 2. Tenancies (Revenue)
+  const tenancy1Id = `t${Date.now()}`;
+  const startDate1 = new Date();
+  startDate1.setMonth(startDate1.getMonth() - 4);
+  const endDate1 = new Date(startDate1);
+  endDate1.setFullYear(endDate1.getFullYear() + 1);
+
+  for (let i = 0; i < 12; i++) {
+    const dueDate = new Date(startDate1);
+    dueDate.setMonth(startDate1.getMonth() + i);
+    const revDocRef = doc(collection(firestore, 'users', user.uid, 'revenue'));
+    batch.set(revDocRef, {
+      tenancyId: tenancy1Id,
+      date: dueDate.toISOString().split('T')[0],
+      amount: 120000, amountPaid: i < 4 ? 120000 : 0, // Pay first 4 months
+      propertyId: propertyDocs[0].id, propertyName: `${propertyDocs[0].addressLine1}, ${propertyDocs[0].city}`,
+      tenant: 'Alice Johnson', tenantEmail: 'alice@example.com', type: 'revenue',
+      deposit: i === 0 ? 120000 : 0, ownerId: user.uid,
+      tenancyStartDate: startDate1.toISOString().split('T')[0],
+      tenancyEndDate: endDate1.toISOString().split('T')[0],
+    });
+  }
+
+  // 3. Expenses
+  const expensesToCreate = [
+    { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocs[0].id, propertyName: `${propertyDocs[0].addressLine1}, ${propertyDocs[0].city}`, category: 'Maintenance', vendor: 'FixIt Bros', expenseType: 'one-off' },
+    { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocs[1].id, propertyName: `${propertyDocs[1].addressLine1}, ${propertyDocs[1].city}`, category: 'Repairs', vendor: 'PlumbPerfect', expenseType: 'one-off' },
+    { date: new Date().toISOString().split('T')[0], amount: 25000, category: 'Insurance', propertyName: 'General Expense', vendor: 'InsuCo', expenseType: 'recurring', frequency: 'yearly' },
+  ];
+
+  expensesToCreate.forEach(e => {
+    const expDocRef = doc(collection(firestore, 'users', user.uid, 'expenses'));
+    batch.set(expDocRef, { ...e, ownerId: user.uid, type: 'expense' });
+  });
+
+  // 4. Maintenance Requests
+  const maintenanceToCreate = [
+    { propertyId: propertyDocs[0].id, propertyName: `${propertyDocs[0].addressLine1}, ${propertyDocs[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0] },
+    { propertyId: propertyDocs[1].id, propertyName: `${propertyDocs[1].addressLine1}, ${propertyDocs[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0] },
+    { propertyName: 'General Task', description: 'Annual fire safety inspection for all properties', status: 'To Do', priority: 'Medium', reportedDate: new Date().toISOString().split('T')[0] },
+  ];
+
+  maintenanceToCreate.forEach(m => {
+    const maintDocRef = doc(collection(firestore, 'users', user.uid, 'maintenanceRequests'));
+    batch.set(maintDocRef, { ...m, ownerId: user.uid });
+  });
+
+  await batch.commit();
+  console.log("Database seeded successfully.");
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
   const { user } = useUser();
@@ -86,6 +188,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('non-resident');
   const [isPnlReportEnabled, setIsPnlReportEnabled] = useState(true);
   const [isMarketResearchEnabled, setIsMarketResearchEnabled] = useState(true);
+
+  // --- DATA SEEDING EFFECT ---
+  useEffect(() => {
+    // Only run this effect when all data sources have finished loading and we have a user.
+    if (!isDataLoading && firestore && user && properties !== null && revenue !== null && expenses !== null && maintenanceRequests !== null) {
+      seedDatabase(
+        firestore,
+        user,
+        properties.length,
+        revenue.length,
+        expenses.length,
+        maintenanceRequests.length
+      );
+    }
+  }, [isDataLoading, firestore, user, properties, revenue, expenses, maintenanceRequests]);
 
   // --- MUTATION FUNCTIONS ---
 
@@ -295,3 +412,5 @@ export function useDataContext() {
   }
   return context;
 }
+
+    
