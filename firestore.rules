@@ -1,208 +1,178 @@
-/**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for rental property data.
- *
- * Data Structure:
- * - /users/{userId}/properties/{propertyId}: Properties owned by a specific user.
- * - /users/{userId}/properties/{propertyId}/tenants/{tenantId}: Tenants related to a specific property. Includes denormalized `ownerId`.
- * - /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}: Rental payments for a property. Includes denormalized `ownerId`.
- * - /users/{userId}/properties/{propertyId}/expenses/{expenseId}: Expenses for a property. Includes denormalized `ownerId`.
- * - /users/{userId}/properties/{propertyId}/appointments/{appointmentId}: Appointments for a property. Includes denormalized `ownerId`.
- * - /users/{userId}/properties/{propertyId}/alerts/{alertId}: Alerts for a property. Includes denormalized `ownerId`.
- * - /users/{userId}/maintenanceRequests/{maintenanceRequestId}: Maintenance requests, owned by a user.
- *
- * Key Security Decisions:
- * - All data is nested under /users/{userId}, enforcing user-based ownership.
- * - Subcollections include denormalized `ownerId` fields to avoid costly `get()` calls in rules.
- * - List operations are restricted to the owner for user-scoped subcollections.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Checks if the current user is signed in.
-     * @path N/A (Helper function)
-     * @allow N/A (Helper function)
-     * @deny N/A (Helper function)
-     * @principle Requires user authentication for data access.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the provided userId matches the authenticated user's ID.
-     * @path N/A (Helper function)
-     * @allow N/A (Helper function)
-     * @deny N/A (Helper function)
-     * @principle Enforces user-specific data access.
-     */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Checks if the user is the owner of the existing document.
-     * @path N/A (Helper function)
-     * @allow N/A (Helper function)
-     * @deny N/A (Helper function)
-     * @principle Ensures existence and ownership for updates and deletes.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-    
-    /**
-     * @description Rules for properties owned by a specific user.
+     * @description Enforces that only the owner can create, read, update, or delete a property.
      * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId} if request.resource.data.id == "Tu5oCEPnGXat4Rl6iLHUU0DxL4j1".
-     * @allow (get) Any signed in user can get any property
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list properties under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties
-     * @deny (create) User abc cannot create a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId} because they are not the owner.
-     * @deny (update) User abc cannot update a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId} because they are not the owner.
-     * @deny (delete) User abc cannot delete a property under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId} because they are not the owner.
-     * @principle Enforces document ownership for writes, allows owner-only listing.
+     * @allow (create) - User 'user123' can create a new property with ownerId: 'user123'.
+     * @allow (get) - User 'user123' can read property 'property456' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update property 'property456' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete property 'property456' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create a property under /users/user123/properties.
+     * @deny (get) - User 'user456' cannot read property 'property456' under /users/user123/properties.
+     * @deny (update) - User 'user456' cannot update property 'property456' under /users/user123/properties.
+     * @deny (delete) - User 'user456' cannot delete property 'property456' under /users/user123/properties.
+     * @principle Enforces document ownership for all operations on properties.
      */
     match /users/{userId}/properties/{propertyId} {
-      allow get: if isSignedIn();
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && resource.data.id == request.resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Rules for tenants related to a specific property, owned by a user.
+     * @description Enforces that only the owner can create, read, update, or delete a tenant for a specific property.
      * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create a tenant under their property if they are the owner.
-     * @allow (get) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can get a tenant under their property if they are the owner.
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list tenants under their property if they are the owner.
-     * @deny (create) User abc cannot create a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/tenants/{tenantId} because they are not the owner.
-     * @deny (update) User abc cannot update a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/tenants/{tenantId} because they are not the owner.
-     * @deny (delete) User abc cannot delete a tenant under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/tenants/{tenantId} because they are not the owner.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User 'user123' can create a new tenant for property 'property456' if userId is 'user123'.
+     * @allow (get) - User 'user123' can read tenant 'tenant789' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update tenant 'tenant789' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete tenant 'tenant789' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create a tenant under /users/user123/properties/property456/tenants.
+     * @deny (get) - User 'user456' cannot read tenant 'tenant789' under /users/user123/properties/property456/tenants.
+     * @deny (update) - User 'user456' cannot update tenant 'tenant789' under /users/user123/properties/property456/tenants.
+     * @deny (delete) - User 'user456' cannot delete tenant 'tenant789' under /users/user123/properties/property456/tenants.
+     * @principle Enforces document ownership for all operations on tenants.
      */
     match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Rules for rental payments made for a specific property, owned by a user.
+     * @description Enforces that only the owner can create, read, update, or delete a rental payment for a specific property.
      * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create a rental payment under their property if they are the owner.
-     * @allow (get) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can get a rental payment under their property if they are the owner.
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list rental payments under their property if they are the owner.
-     * @deny (create) User abc cannot create a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/rentalPayments/{rentalPaymentId} because they are not the owner.
-     * @deny (update) User abc cannot update a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/rentalPayments/{rentalPaymentId} because they are not the owner.
-     * @deny (delete) User abc cannot delete a rental payment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/rentalPayments/{rentalPaymentId} because they are not the owner.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User 'user123' can create a new rental payment for property 'property456' if userId is 'user123'.
+     * @allow (get) - User 'user123' can read rental payment 'payment789' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update rental payment 'payment789' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete rental payment 'payment789' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create a rental payment under /users/user123/properties/property456/rentalPayments.
+     * @deny (get) - User 'user456' cannot read rental payment 'payment789' under /users/user123/properties/property456/rentalPayments.
+     * @deny (update) - User 'user456' cannot update rental payment 'payment789' under /users/user123/properties/property456/rentalPayments.
+     * @deny (delete) - User 'user456' cannot delete rental payment 'payment789' under /users/user123/properties/property456/rentalPayments.
+     * @principle Enforces document ownership for all operations on rental payments.
      */
     match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Rules for expenses related to a specific property, owned by a user.
+     * @description Enforces that only the owner can create, read, update, or delete an expense for a specific property.
      * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create an expense under their property if they are the owner.
-     * @allow (get) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can get an expense under their property if they are the owner.
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list expenses under their property if they are the owner.
-     * @deny (create) User abc cannot create an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/expenses/{expenseId} because they are not the owner.
-     * @deny (update) User abc cannot update an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/expenses/{expenseId} because they are not the owner.
-     * @deny (delete) User abc cannot delete an expense under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/expenses/{expenseId} because they are not the owner.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User 'user123' can create a new expense for property 'property456' if userId is 'user123'.
+     * @allow (get) - User 'user123' can read expense 'expense789' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update expense 'expense789' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete expense 'expense789' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create an expense under /users/user123/properties/property456/expenses.
+     * @deny (get) - User 'user456' cannot read expense 'expense789' under /users/user123/properties/property456/expenses.
+     * @deny (update) - User 'user456' cannot update expense 'expense789' under /users/user123/properties/property456/expenses.
+     * @deny (delete) - User 'user456' cannot delete expense 'expense789' under /users/user123/properties/property456/expenses.
+     * @principle Enforces document ownership for all operations on expenses.
      */
     match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Rules for appointments related to a specific property, owned by a user.
+     * @description Enforces that only the owner can create, read, update, or delete an appointment for a specific property.
      * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create an appointment under their property if they are the owner.
-     * @allow (get) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can get an appointment under their property if they are the owner.
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list appointments under their property if they are the owner.
-     * @deny (create) User abc cannot create an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/appointments/{appointmentId} because they are not the owner.
-     * @deny (update) User abc cannot update an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/appointments/{appointmentId} because they are not the owner.
-     * @deny (delete) User abc cannot delete an appointment under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/appointments/{appointmentId} because they are not the owner.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User 'user123' can create a new appointment for property 'property456' if userId is 'user123'.
+     * @allow (get) - User 'user123' can read appointment 'appointment789' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update appointment 'appointment789' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete appointment 'appointment789' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create an appointment under /users/user123/properties/property456/appointments.
+     * @deny (get) - User 'user456' cannot read appointment 'appointment789' under /users/user123/properties/property456/appointments.
+     * @deny (update) - User 'user456' cannot update appointment 'appointment789' under /users/user123/properties/property456/appointments.
+     * @deny (delete) - User 'user456' cannot delete appointment 'appointment789' under /users/user123/properties/property456/appointments.
+     * @principle Enforces document ownership for all operations on appointments.
      */
     match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Rules for alerts related to a specific property, owned by a user.
+     * @description Enforces that only the owner can create, read, update, or delete an alert for a specific property.
      * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create an alert under their property if they are the owner.
-     * @allow (get) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can get an alert under their property if they are the owner.
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list alerts under their property if they are the owner.
-     * @deny (create) User abc cannot create an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/alerts/{alertId} because they are not the owner.
-     * @deny (update) User abc cannot update an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/alerts/{alertId} because they are not the owner.
-     * @deny (delete) User abc cannot delete an alert under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/properties/{propertyId}/alerts/{alertId} because they are not the owner.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User 'user123' can create a new alert for property 'property456' if userId is 'user123'.
+     * @allow (get) - User 'user123' can read alert 'alert789' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update alert 'alert789' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete alert 'alert789' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create an alert under /users/user123/properties/property456/alerts.
+     * @deny (get) - User 'user456' cannot read alert 'alert789' under /users/user123/properties/property456/alerts.
+     * @deny (update) - User 'user456' cannot update alert 'alert789' under /users/user123/properties/property456/alerts.
+     * @deny (delete) - User 'user456' cannot delete alert 'alert789' under /users/user123/properties/property456/alerts.
+     * @principle Enforces document ownership for all operations on alerts.
      */
     match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Rules for maintenance requests for properties owned by a specific user.
+     * @description Enforces that only the owner can create, read, update, or delete a maintenance request.
      * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can create a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests/{maintenanceRequestId}.
-     * @allow (get) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can get a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests/{maintenanceRequestId}.
-     * @allow (list) User Tu5oCEPnGXat4Rl6iLHUU0DxL4j1 can list maintenance requests under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests.
-     * @deny (create) User abc cannot create a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests/{maintenanceRequestId} because they are not the owner.
-     * @deny (update) User abc cannot update a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests/{maintenanceRequestId} because they are not the owner.
-     * @deny (delete) User abc cannot delete a maintenance request under /users/Tu5oCEPnGXat4Rl6iLHUU0DxL4j1/maintenanceRequests/{maintenanceRequestId} because they are not the owner.
-     * @principle Enforces document ownership for writes, allows owner-only listing.
+     * @allow (create) - User 'user123' can create a new maintenance request with userId 'user123'.
+     * @allow (get) - User 'user123' can read maintenance request 'request456' if userId is 'user123'.
+     * @allow (update) - User 'user123' can update maintenance request 'request456' if userId is 'user123'.
+     * @allow (delete) - User 'user123' can delete maintenance request 'request456' if userId is 'user123'.
+     * @deny (create) - User 'user456' cannot create a maintenance request under /users/user123/maintenanceRequests.
+     * @deny (get) - User 'user456' cannot read maintenance request 'request456' under /users/user123/maintenanceRequests.
+     * @deny (update) - User 'user456' cannot update maintenance request 'request456' under /users/user123/maintenanceRequests.
+     * @deny (delete) - User 'user456' cannot delete maintenance request 'request456' under /users/user123/maintenanceRequests.
+     * @principle Enforces document ownership for all operations on maintenance requests.
      */
     match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
-     /**
-      * @description Denies access to the top-level 'maintenanceRequests' collection directly.  Maintenance Requests must be accessed via the `/users/{userId}` subcollection.
-      * @path /maintenanceRequests/{maintenanceRequestId}
-      * @allow N/A
-      * @deny (get) Any user cannot get a maintenance request at the top-level collection /maintenanceRequests/{maintenanceRequestId}.
-      * @deny (list) Any user cannot list maintenance requests at the top-level collection /maintenanceRequests.
-      * @deny (create) Any user cannot create a maintenance request at the top-level collection /maintenanceRequests/{maintenanceRequestId}.
-      * @deny (update) Any user cannot update a maintenance request at the top-level collection /maintenanceRequests/{maintenanceRequestId}.
-      * @deny (delete) Any user cannot delete a maintenance request at the top-level collection /maintenanceRequests/{maintenanceRequestId}.
-      * @principle Prevents accidental access to a collection that should be user-scoped.  Ensures that all requests come through the `/users/{userId}` path.
-      */
-    match /maintenanceRequests/{maintenanceRequestId} {
-        allow get: if false;
-        allow list: if false;
-        allow create: if false;
-        allow update: if false;
-        allow delete: if false;
+    /**
+     * @description Denies listing of properties to fix the error reported by NextJS.
+     * @path /properties
+     * @deny (list) - Any user cannot list properties.
+     * @principle Denies listing of properties.
+     */
+    match /properties {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
