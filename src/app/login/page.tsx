@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
 import { signInAnonymously } from 'firebase/auth';
@@ -10,41 +10,53 @@ import { Wallet, Loader2 } from 'lucide-react';
 
 function LoginButton() {
   const auth = useAuth();
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      router.push('/');
-    }
-  }, [user, router]);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
     if (!auth) return;
+    setIsLoggingIn(true);
+    setError(null);
     try {
       await signInAnonymously(auth);
+      // The onAuthStateChanged listener in FirebaseProvider will handle the redirect
     } catch (error) {
       console.error("Anonymous sign-in failed", error);
+      setError("Sign-in failed. Please try again.");
+      setIsLoggingIn(false);
     }
   };
 
-  if (isUserLoading || user) {
-    return (
-        <Button className="w-full" disabled>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Redirecting...
-        </Button>
-    );
-  }
-
   return (
-    <Button className="w-full" onClick={handleLogin}>
-      Sign In Anonymously
-    </Button>
+    <>
+      <Button className="w-full" onClick={handleLogin} disabled={isLoggingIn}>
+        {isLoggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Sign In Anonymously
+      </Button>
+      {error && <p className="text-sm text-center text-destructive mt-2">{error}</p>}
+    </>
   );
 }
 
 export default function LoginPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/');
+    }
+  }, [user, isUserLoading, router]);
+  
+  // Show a loading indicator while checking auth state
+  if (isUserLoading || user) {
+     return (
+        <div className="flex min-h-screen items-center justify-center bg-muted/40">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+     )
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/40">
       <Card className="w-full max-w-sm">

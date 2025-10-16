@@ -3,8 +3,8 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc, getDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
 
 
@@ -59,7 +59,7 @@ async function seedDatabase(
   firestore: any, 
   user: any
 ) {
-  console.log("Seeding database...");
+  console.log("Seeding database for user:", user.uid);
 
   const batch = writeBatch(firestore);
 
@@ -85,13 +85,15 @@ async function seedDatabase(
     }
   ];
   
+  const propertiesCollectionRef = collection(firestore, 'users', user.uid, 'properties');
   const propertyDocsData = await Promise.all(propertiesToCreate.map(async (p) => {
-    const docRef = doc(collection(firestore, 'users', user.uid, 'properties'));
+    const docRef = doc(propertiesCollectionRef);
     batch.set(docRef, { ...p, ownerId: user.uid });
     return { ...p, id: docRef.id };
   }));
 
   // 2. Tenancies (Revenue)
+  const revenueCollectionRef = collection(firestore, 'users', user.uid, 'revenue');
   const tenancy1Id = `t${Date.now()}`;
   const startDate1 = new Date();
   startDate1.setMonth(startDate1.getMonth() - 4);
@@ -101,7 +103,7 @@ async function seedDatabase(
   for (let i = 0; i < 12; i++) {
     const dueDate = new Date(startDate1);
     dueDate.setMonth(startDate1.getMonth() + i);
-    const revDocRef = doc(collection(firestore, 'users', user.uid, 'revenue'));
+    const revDocRef = doc(revenueCollectionRef);
     batch.set(revDocRef, {
       tenancyId: tenancy1Id,
       date: dueDate.toISOString().split('T')[0],
@@ -115,6 +117,7 @@ async function seedDatabase(
   }
 
   // 3. Expenses
+  const expensesCollectionRef = collection(firestore, 'users', user.uid, 'expenses');
   const expensesToCreate = [
     { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', vendor: 'FixIt Bros', expenseType: 'one-off' },
     { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, category: 'Repairs', vendor: 'PlumbPerfect', expenseType: 'one-off' },
@@ -122,11 +125,12 @@ async function seedDatabase(
   ];
 
   expensesToCreate.forEach(e => {
-    const expDocRef = doc(collection(firestore, 'users', user.uid, 'expenses'));
+    const expDocRef = doc(expensesCollectionRef);
     batch.set(expDocRef, { ...e, ownerId: user.uid, type: 'expense' });
   });
 
   // 4. Maintenance Requests
+  const maintenanceCollectionRef = collection(firestore, 'users', user.uid, 'maintenanceRequests');
   const maintenanceToCreate = [
     { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0] },
     { propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0] },
@@ -134,7 +138,7 @@ async function seedDatabase(
   ];
 
   maintenanceToCreate.forEach(m => {
-    const maintDocRef = doc(collection(firestore, 'users', user.uid, 'maintenanceRequests'));
+    const maintDocRef = doc(maintenanceCollectionRef);
     batch.set(maintDocRef, { ...m, ownerId: user.uid });
   });
 
@@ -144,14 +148,14 @@ async function seedDatabase(
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading: isAuthLoading } = useUser();
 
-  // Firestore collections
-  const propertiesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'properties') : null, [firestore, user]);
-  const revenueRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'revenue') : null, [firestore, user]);
-  const expensesRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'expenses') : null, [firestore, user]);
-  const maintenanceRequestsRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'maintenanceRequests') : null, [firestore, user]);
-  const changelogRef = useMemoFirebase(() => user ? collection(firestore, 'users', user.uid, 'changelog') : null, [firestore, user]);
+  // Firestore collection references that depend on the user
+  const propertiesRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'properties') : null, [firestore, user]);
+  const revenueRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'revenue') : null, [firestore, user]);
+  const expensesRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'expenses') : null, [firestore, user]);
+  const maintenanceRequestsRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'maintenanceRequests') : null, [firestore, user]);
+  const changelogRef = useMemo(() => user ? collection(firestore, 'users', user.uid, 'changelog') : null, [firestore, user]);
 
   const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesRef);
   const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueRef);
@@ -161,8 +165,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     sortField: 'date',
     sortDirection: 'desc',
   });
-
-  const isDataLoading = loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance;
+  
+  // Overall data loading status
+  const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance;
 
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
@@ -173,7 +178,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
-    if (!isDataLoading && firestore && user) {
+    // Only proceed if we are done authenticating and have a user, and Firestore is available.
+    if (!isAuthLoading && user && firestore) {
+      // Check if all data collections have finished loading.
+      const allCollectionsLoaded = !loadingProperties && !loadingRevenue && !loadingExpenses && !loadingMaintenance;
+      
+      if (allCollectionsLoaded) {
         const shouldSeed = 
             properties?.length === 0 &&
             revenue?.length === 0 &&
@@ -183,8 +193,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (shouldSeed) {
             seedDatabase(firestore, user);
         }
+      }
     }
-  }, [isDataLoading, firestore, user, properties, revenue, expenses, maintenanceRequests]);
+  }, [isAuthLoading, user, firestore, properties, revenue, expenses, maintenanceRequests, loadingProperties, loadingRevenue, loadingExpenses, loadingMaintenance]);
 
   // --- MUTATION FUNCTIONS ---
 
@@ -232,7 +243,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // Get all existing transactions for this tenancy
     const q = query(revenueRef, where('tenancyId', '==', transactions[0].tenancyId));
     const querySnapshot = await getDocs(q);
-    const existingIds = new Set(querySnapshot.docs.map(d => d.id));
     const newIds = new Set(transactions.filter(t => t.id).map(t => t.id));
 
     // Delete transactions that are no longer in the updated date range
@@ -435,5 +445,3 @@ export function useDataContext() {
   }
   return context;
 }
-
-    

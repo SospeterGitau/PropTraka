@@ -50,61 +50,58 @@ interface UseCollectionOptions {
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
  * 
- *
- * IMPORTANT! YOU MUST MEMOIZE the inputted memoizedTargetRefOrQuery or BAD THINGS WILL HAPPEN
- * use useMemo to memoize it per React guidence.  Also make sure that it's dependencies are stable
- * references
- *  
  * @template T Optional type for document data. Defaults to any.
  * @param {CollectionReference<DocumentData> | Query<DocumentData> | null | undefined} targetRefOrQuery -
  * The Firestore CollectionReference or Query. Waits if null/undefined.
  * @returns {UseCollectionResult<T>} Object with data, isLoading, error.
  */
 export function useCollection<T = any>(
-    memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>))  | null | undefined,
+    targetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>))  | null | undefined,
     options: UseCollectionOptions = {},
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Start as loading
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    if (!memoizedTargetRefOrQuery) {
+    // If there's no query, we are not loading and there's no data.
+    if (!targetRefOrQuery) {
       setData(null);
-      setIsLoading(false); // Not loading if there's no query
+      setIsLoading(false);
       setError(null);
       return;
     }
 
+    // Start loading and clear previous errors when a new query is provided.
     setIsLoading(true);
     setError(null);
     
-    let finalQuery: Query<DocumentData> = memoizedTargetRefOrQuery;
+    let finalQuery: Query<DocumentData> = targetRefOrQuery;
     if (options.sortField) {
-      finalQuery = query(memoizedTargetRefOrQuery, orderBy(options.sortField, options.sortDirection || 'asc'));
+      finalQuery = query(targetRefOrQuery, orderBy(options.sortField, options.sortDirection || 'asc'));
     }
-
 
     const unsubscribe = onSnapshot(
       finalQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        const results: ResultItemType[] = [];
-        for (const doc of snapshot.docs) {
-          results.push({ ...(doc.data() as T), id: doc.id });
-        }
+        const results: ResultItemType[] = snapshot.docs.map(doc => ({
+            ...(doc.data() as T),
+            id: doc.id
+        }));
         setData(results);
         setError(null);
         setIsLoading(false);
       },
       (error: FirestoreError) => {
+        console.error("useCollection error:", error);
         // This logic extracts the path from either a ref or a query
         const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+          targetRefOrQuery.type === 'collection'
+            ? (targetRefOrQuery as CollectionReference).path
+            : (targetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
 
         const contextualError = new FirestorePermissionError({
           operation: 'list',
@@ -121,7 +118,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery, options.sortField, options.sortDirection]); // Re-run if the target query/reference changes.
+  }, [targetRefOrQuery, options.sortField, options.sortDirection]);
   
   return { data, isLoading, error };
 }
