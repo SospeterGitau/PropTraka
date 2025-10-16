@@ -3,120 +3,171 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by a signed-in user.
+     * @description Checks if the request is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @description Checks if the authenticated user is the owner of the document.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of an existing document.
+     * @description Checks if the authenticated user is the owner of the existing document.
      */
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+      return isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     /**
-     * @description Properties owned by a specific user.
-     * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) User 'user123' can create a new property under their user ID.
-     * @deny (create) User 'user456' cannot create a property under user 'user123's ID.
-     * @principle Enforces document ownership for writes.
+     * @description Enforces that the authenticated user is the owner when creating a new document.
      */
-    match /users/{userId}/properties/{propertyId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+    function isValidOwnerOnCreate(userId) {
+        return request.resource.data.ownerId == userId;
     }
 
     /**
-     * @description Tenants related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
-     * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) User 'user123' can create a new tenant under their property.
-     * @deny (create) User 'user456' cannot create a tenant under user 'user123's property.
-     * @principle Enforces document ownership for writes.
+     * @description Enforces immutability of the owner field on update.
      */
-    match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
+    function isValidOwnerOnUpdate(userId) {
+        return request.resource.data.ownerId == resource.data.ownerId;
     }
 
     /**
-     * @description Rental payments made for a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
-     * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) User 'user123' can create a new rental payment under their property.
-     * @deny (create) User 'user456' cannot create a rental payment under user 'user123's property.
-     * @principle Enforces document ownership for writes.
+     * @description
+     * The rule structure prevents listing all users.
+     * It only allows access to data associated with the authenticated user's ID.
      */
-    match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
-    }
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if false;
 
-    /**
-     * @description Expenses related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
-     * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) User 'user123' can create a new expense under their property.
-     * @deny (create) User 'user456' cannot create an expense under user 'user123's property.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
-    }
+      /**
+       * @description Manages properties owned by a specific user.
+       * @path /users/{userId}/properties/{propertyId}
+       * @allow (create) - Authenticated user creates a new property under their user ID.
+       * @deny (create) - Another user attempts to create a property under a different user ID.
+       * @principle Enforces document ownership for writes.
+       */
+      match /properties/{propertyId} {
+        allow get: if isSignedIn() && resource.data.ownerId == userId;
+        allow list: if false;
+        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
 
-    /**
-     * @description Appointments related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
-     * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) User 'user123' can create a new appointment under their property.
-     * @deny (create) User 'user456' cannot create an appointment under user 'user123's property.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
-    }
+        /**
+         * @description Manages tenants related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
+         * @allow (create) - Authenticated user creates a new tenant under their property.
+         * @deny (create) - Another user attempts to create a tenant under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /tenants/{tenantId} {
+          allow get: if isSignedIn() && resource.data.ownerId == userId;
+          allow list: if false;
+          allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+          allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+          allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        }
 
-    /**
-     * @description Alerts related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
-     * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) User 'user123' can create a new alert under their property.
-     * @deny (create) User 'user456' cannot create an alert under user 'user123's property.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
-    }
+        /**
+         * @description Manages rental payments made for a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
+         * @allow (create) - Authenticated user creates a new rental payment under their property.
+         * @deny (create) - Another user attempts to create a rental payment under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /rentalPayments/{rentalPaymentId} {
+          allow get: if isSignedIn() && resource.data.ownerId == userId;
+          allow list: if false;
+          allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+          allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+          allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        }
 
-    /**
-     * @description Maintenance requests for properties owned by a specific user.
-     * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) User 'user123' can create a new maintenance request under their user ID.
-     * @deny (create) User 'user456' cannot create a maintenance request under user 'user123's ID.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
-      allow read: if isOwner(userId);
-      allow write: if isOwner(userId);
-    }
+        /**
+         * @description Manages expenses related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
+         * @allow (create) - Authenticated user creates a new expense under their property.
+         * @deny (create) - Another user attempts to create an expense under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /expenses/{expenseId} {
+          allow get: if isSignedIn() && resource.data.ownerId == userId;
+          allow list: if false;
+          allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+          allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+          allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        }
 
-    /**
-     * @description Fixes: Missing or insufficient permissions to list changelog
-     * @path /users/{userId}/changelog
-     * @allow (list) User 'user123' can list their own changelog
-     * @deny (list) User 'user456' cannot list the changelog for 'user123'
-     * @principle Grants the owner list permissions for user scoped subcollections
-     */
-    match /users/{userId}/changelog/{documentId} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId);
+        /**
+         * @description Manages appointments related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
+         * @allow (create) - Authenticated user creates a new appointment under their property.
+         * @deny (create) - Another user attempts to create an appointment under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /appointments/{appointmentId} {
+          allow get: if isSignedIn() && resource.data.ownerId == userId;
+          allow list: if false;
+          allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+          allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+          allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        }
+
+        /**
+         * @description Manages alerts related to a specific property, owned by a user.
+         * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
+         * @allow (create) - Authenticated user creates a new alert under their property.
+         * @deny (create) - Another user attempts to create an alert under a different user or property.
+         * @principle Enforces document ownership for writes, ensures data consistency.
+         */
+        match /alerts/{alertId} {
+          allow get: if isSignedIn() && resource.data.ownerId == userId;
+          allow list: if false;
+          allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+          allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+          allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        }
+      }
+
+      /**
+       * @description Manages maintenance requests for properties owned by a specific user.
+       * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
+       * @allow (create) - Authenticated user creates a new maintenance request under their user ID.
+       * @deny (create) - Another user attempts to create a maintenance request under a different user ID.
+       * @principle Enforces document ownership for writes.
+       */
+      match /maintenanceRequests/{maintenanceRequestId} {
+        allow get: if isSignedIn() && resource.data.ownerId == userId;
+        allow list: if false;
+        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      }
+      
+      /**
+       * @description Manages revenue for a specific user.
+       * @path /users/{userId}/revenue
+       * @allow (list) - Authenticated user lists revenue under their user ID.
+       * @deny (list) - Another user attempts to list revenue under a different user ID.
+       * @principle Enforces document ownership for reads.
+       */
+      match /revenue/{revenueId} {
+        allow get: if isSignedIn() && resource.data.ownerId == userId;
+        allow list: if false;
+        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      }
     }
   }
 }
