@@ -1,8 +1,9 @@
+
 'use client';
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   Building2,
   Calendar,
@@ -13,13 +14,11 @@ import {
   Wallet,
   LineChart,
   Settings,
-  LogOut,
   HelpCircle,
   Shield,
   History,
   Wrench,
 } from 'lucide-react';
-import { useAuth } from '@/firebase';
 
 import {
   SidebarProvider,
@@ -61,18 +60,6 @@ const utilityNavItems = [
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const auth = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    if (auth) {
-        await auth.signOut();
-        // After signing out, we might want to sign in again anonymously
-        // or redirect to a logged-out page if one existed.
-        // For now, we'll just refresh to get a new anonymous user.
-        router.refresh();
-    }
-  };
 
   return (
     <SidebarProvider>
@@ -157,21 +144,14 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter>
           <SidebarSeparator />
-          <div className="p-2">
-             <Button onClick={handleLogout} className="justify-start w-full text-base h-12" variant="ghost">
-                <LogOut />
-                <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-              </Button>
+          <div className="p-2 h-[56px]">
+            {/* Placeholder for potential footer content */}
           </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex items-center justify-between h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
+        <header className="sticky top-0 z-10 flex items-center justify-start h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
           <SidebarTrigger />
-          <Button onClick={handleLogout} variant="ghost" size="icon">
-            <LogOut />
-            <span className="sr-only">Logout</span>
-          </Button>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">
           {children}
