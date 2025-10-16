@@ -59,7 +59,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="propertyId">Property</Label>
-                <Select name="propertyId" defaultValue={request?.propertyId || ''} required>
+                <Select name="propertyId" defaultValue={request?.propertyId} required>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a property" />
                     </SelectTrigger>
