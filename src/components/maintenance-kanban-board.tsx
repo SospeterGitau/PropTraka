@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, FilePlus2, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle } from 'lucide-react';
 import type { MaintenanceRequest } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 
@@ -25,14 +29,15 @@ type KanbanColumnProps = {
   onEditRequest: (request: MaintenanceRequest) => void;
   onDeleteRequest: (request: MaintenanceRequest) => void;
   onCreateExpense: (request: MaintenanceRequest) => void;
+  onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
   formattedDates: Record<string, string>;
 };
 
-const statusColors = {
-  'To Do': 'bg-gray-500',
-  'In Progress': 'bg-blue-500',
-  Done: 'bg-green-500',
-  Cancelled: 'bg-red-500',
+const statusConfig = {
+  'To Do': { icon: Circle, color: 'text-gray-500' },
+  'In Progress': { icon: Clock, color: 'text-blue-500' },
+  Done: { icon: CheckCircle, color: 'text-green-500' },
+  Cancelled: { icon: XCircle, color: 'text-red-500' },
 };
 
 const priorityColors = {
@@ -46,13 +51,15 @@ function KanbanCard({
     request, 
     onEdit, 
     onDelete, 
-    onCreateExpense, 
+    onCreateExpense,
+    onStatusChange, 
     formattedDate 
 }: { 
     request: MaintenanceRequest;
     onEdit: (request: MaintenanceRequest) => void;
     onDelete: (request: MaintenanceRequest) => void;
     onCreateExpense: (request: MaintenanceRequest) => void;
+    onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
     formattedDate: string;
 }) {
   return (
@@ -73,14 +80,30 @@ function KanbanCard({
                     <Edit className="mr-2 h-4 w-4" />
                     Edit Request
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onDelete(request)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Request
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Change Status</DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      {Object.keys(statusConfig).map(status => (
+                        <DropdownMenuItem 
+                          key={status} 
+                          onSelect={() => onStatusChange(request, status as MaintenanceRequest['status'])}
+                          disabled={request.status === status}
+                        >
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={request.status !== 'Done'}>
+                    <FilePlus2 className="mr-2 h-4 w-4" />
+                    Create Expense
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={request.status !== 'Done'}>
-                <FilePlus2 className="mr-2 h-4 w-4" />
-                Create Expense
+                <DropdownMenuItem onSelect={() => onDelete(request)} className="text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Request
                 </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>
@@ -95,11 +118,13 @@ function KanbanCard({
   );
 }
 
-function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, formattedDates }: KanbanColumnProps) {
+function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, onStatusChange, formattedDates }: KanbanColumnProps) {
+  const Icon = statusConfig[title].icon;
+  
   return (
     <div className="flex-1 flex flex-col gap-4">
       <div className="flex items-center gap-2 px-1">
-        <div className={cn("w-3 h-3 rounded-full", statusColors[title])} />
+        <Icon className={cn("w-5 h-5", statusConfig[title].color)} />
         <h2 className="font-semibold text-lg">{title}</h2>
         <Badge variant="secondary" className="rounded-full">{requests.length}</Badge>
       </div>
@@ -112,6 +137,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
                 onEdit={onEditRequest}
                 onDelete={onDeleteRequest}
                 onCreateExpense={onCreateExpense}
+                onStatusChange={onStatusChange}
                 formattedDate={formattedDates[request.id] || ''}
             />
           ))
@@ -130,6 +156,7 @@ interface MaintenanceKanbanBoardProps {
   onEditRequest: (request: MaintenanceRequest) => void;
   onDeleteRequest: (request: MaintenanceRequest) => void;
   onCreateExpense: (request: MaintenanceRequest) => void;
+  onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
   locale: string;
 }
 
@@ -138,6 +165,7 @@ export function MaintenanceKanbanBoard({
   onEditRequest,
   onDeleteRequest,
   onCreateExpense,
+  onStatusChange,
   locale
 }: MaintenanceKanbanBoardProps) {
 
@@ -178,6 +206,7 @@ export function MaintenanceKanbanBoard({
           onEditRequest={onEditRequest}
           onDeleteRequest={onDeleteRequest}
           onCreateExpense={onCreateExpense}
+          onStatusChange={onStatusChange}
           formattedDates={formattedDates}
         />
       ))}

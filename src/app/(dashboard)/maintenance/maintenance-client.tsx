@@ -73,6 +73,20 @@ function MaintenanceClient() {
       setSelectedRequest(null);
     }
   };
+  
+  const handleStatusChange = (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => {
+    const updatedRequest = { ...request, status: newStatus };
+    if (newStatus === 'Done' && !updatedRequest.completedDate) {
+      updatedRequest.completedDate = new Date().toISOString().split('T')[0];
+    }
+    updateMaintenanceRequest(updatedRequest);
+    addChangeLogEntry({
+      type: 'Maintenance',
+      action: 'Updated',
+      description: `Status for "${request.description}" changed to ${newStatus}.`,
+      entityId: request.id,
+    });
+  };
 
   const handleFormSubmit = (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => {
     const isEditing = 'id' in data;
@@ -139,6 +153,7 @@ function MaintenanceClient() {
         onEditRequest={handleEdit}
         onDeleteRequest={handleDelete}
         onCreateExpense={handleCreateExpense}
+        onStatusChange={handleStatusChange}
         locale={locale}
       />
       
