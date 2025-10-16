@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase/provider';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
-export default function HomePage() {
+function HomePageContent() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -40,4 +41,13 @@ export default function HomePage() {
       </main>
     </div>
   );
+}
+
+
+export default function HomePage() {
+  return (
+    <FirebaseClientProvider>
+      <HomePageContent />
+    </FirebaseClientProvider>
+  )
 }

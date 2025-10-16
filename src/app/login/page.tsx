@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -26,7 +27,7 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -101,4 +102,12 @@ export default function LoginPage() {
       </Card>
     </div>
   );
+}
+
+export default function LoginPage() {
+  return (
+    <FirebaseClientProvider>
+      <LoginPageContent />
+    </FirebaseClientProvider>
+  )
 }
