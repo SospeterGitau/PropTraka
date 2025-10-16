@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import type { Property } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -29,13 +30,12 @@ import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser } from '@/firebase';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-function PropertiesPage() {
+function PropertiesPageContent() {
   const { properties, addProperty, updateProperty, deleteProperty, revenue, formatCurrency, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -269,5 +269,14 @@ function PropertiesPage() {
     </>
   );
 }
+
+function PropertiesPage() {
+    return (
+        <DataProvider>
+            <PropertiesPageContent />
+        </DataProvider>
+    )
+}
+
 
 export default memo(PropertiesPage);

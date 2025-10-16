@@ -5,7 +5,7 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format, startOfToday, isAfter } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -106,7 +106,7 @@ function PaymentForm({
 }
 
 
-function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
+function TenancyDetailPageContent({ params }: { params: { tenancyId: string } }) {
   const { tenancyId } = params;
   const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry, endTenancy } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
@@ -397,6 +397,12 @@ function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
   );
 }
 
-export default memo(TenancyDetailPage);
+function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
+    return (
+        <DataProvider>
+            <TenancyDetailPageContent params={params} />
+        </DataProvider>
+    )
+}
 
-    
+export default memo(TenancyDetailPage);

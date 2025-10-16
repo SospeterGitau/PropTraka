@@ -1,10 +1,11 @@
+
 'use client';
 
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { CalendarView } from '@/components/calendar-view';
 
-export default function CalendarPage() {
+function CalendarPageContent() {
   const { calendarEvents } = useDataContext();
 
   return (
@@ -12,5 +13,14 @@ export default function CalendarPage() {
       <PageHeader title="Calendar" />
       <CalendarView events={calendarEvents} />
     </>
+  );
+}
+
+
+export default function CalendarPage() {
+  return (
+    <DataProvider>
+      <CalendarPageContent />
+    </DataProvider>
   );
 }

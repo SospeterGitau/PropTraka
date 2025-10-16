@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -28,7 +28,7 @@ function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-export default function PropertyDetailPage() {
+function PropertyDetailPageContent() {
   const { propertyId } = useParams();
   const router = useRouter();
   const { properties, revenue, formatCurrency, updateProperty, deleteProperty, addChangeLogEntry, isDataLoading } = useDataContext();
@@ -232,4 +232,10 @@ export default function PropertyDetailPage() {
   );
 }
 
-    
+export default function PropertyDetailPage() {
+    return (
+        <DataProvider>
+            <PropertyDetailPageContent />
+        </DataProvider>
+    )
+}

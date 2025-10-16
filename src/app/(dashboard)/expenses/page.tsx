@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { ChevronRight, FileText, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 
@@ -163,7 +164,7 @@ function ExpensesTable({
   )
 }
 
-function ExpensesPage() {
+function ExpensesPageContent() {
   const { properties, expenses, addExpense, updateExpense, deleteExpense, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -316,6 +317,15 @@ function ExpensesPage() {
       />
     </>
   );
+}
+
+
+function ExpensesPage() {
+    return (
+        <DataProvider>
+            <ExpensesPageContent />
+        </DataProvider>
+    )
 }
 
 export default memo(ExpensesPage);

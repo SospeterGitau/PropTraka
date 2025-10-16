@@ -5,7 +5,7 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
 import { format, startOfToday, eachMonthOfInterval, isAfter, isBefore } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -250,7 +250,7 @@ const RevenueForm = memo(function RevenueForm({
 });
 
 
-function RevenuePage() {
+function RevenuePageContent() {
   const { properties, revenue, addTenancy, updateTenancy, deleteTenancy, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -497,6 +497,12 @@ function RevenuePage() {
   );
 }
 
-export default memo(RevenuePage);
+function RevenuePage() {
+    return (
+        <DataProvider>
+            <RevenuePageContent />
+        </DataProvider>
+    )
+}
 
-    
+export default memo(RevenuePage);

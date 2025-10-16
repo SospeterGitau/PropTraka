@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useDataContext } from '@/context/data-context';
+import { useDataContext, DataProvider } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
@@ -19,7 +19,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
     Maintenance: <Wrench className="h-4 w-4" />,
 };
 
-function ChangelogPage() {
+function ChangelogPageContent() {
   const { changelog, locale, isDataLoading } = useDataContext();
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -97,6 +97,10 @@ function ChangelogPage() {
   );
 }
 
-export default ChangelogPage;
-
-    
+export default function ChangelogPage() {
+    return (
+        <DataProvider>
+            <ChangelogPageContent />
+        </DataProvider>
+    )
+}
