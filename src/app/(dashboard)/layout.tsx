@@ -7,11 +7,7 @@ import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { DataProvider } from '@/context/data-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
 
@@ -22,7 +18,7 @@ export default function DashboardLayout({
     }
   }, [user, isUserLoading, router]);
 
-  // While loading, you can show a loader or a blank screen.
+  // While loading auth state, or if there is no user, show a loader.
   if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -31,10 +27,23 @@ export default function DashboardLayout({
     );
   }
 
-  // If user is authenticated, render the dashboard layout.
+  // If user is authenticated, render the dashboard layout with data.
   return (
     <DataProvider>
       <DashboardNavigation>{children}</DashboardNavigation>
     </DataProvider>
+  );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <FirebaseClientProvider>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </FirebaseClientProvider>
   );
 }
