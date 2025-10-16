@@ -91,7 +91,7 @@ async function seedDatabase(
   const propertyDocsData = await Promise.all(propertiesToCreate.map(async (p) => {
     const docRef = doc(propertiesCollectionRef);
     batch.set(docRef, { ...p, ownerId: user.uid });
-    return { ...p, id: docRef.id };
+    return { ...p, id: docRef.id, ownerId: user.uid };
   }));
 
   // 2. Tenancies (Revenue)
@@ -121,27 +121,27 @@ async function seedDatabase(
   // 3. Expenses
   const expensesCollectionRef = collection(firestore, 'users', user.uid, 'expenses');
   const expensesToCreate = [
-    { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', vendor: 'FixIt Bros', expenseType: 'one-off' },
-    { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, category: 'Repairs', vendor: 'PlumbPerfect', expenseType: 'one-off' },
-    { date: new Date().toISOString().split('T')[0], amount: 25000, category: 'Insurance', propertyName: 'General Expense', vendor: 'InsuCo', expenseType: 'recurring', frequency: 'yearly' },
+    { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', vendor: 'FixIt Bros', expenseType: 'one-off', ownerId: user.uid },
+    { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, category: 'Repairs', vendor: 'PlumbPerfect', expenseType: 'one-off', ownerId: user.uid },
+    { date: new Date().toISOString().split('T')[0], amount: 25000, category: 'Insurance', propertyName: 'General Expense', vendor: 'InsuCo', expenseType: 'recurring', frequency: 'yearly', ownerId: user.uid },
   ];
 
   expensesToCreate.forEach(e => {
     const expDocRef = doc(expensesCollectionRef);
-    batch.set(expDocRef, { ...e, ownerId: user.uid, type: 'expense' });
+    batch.set(expDocRef, { ...e, type: 'expense' });
   });
 
   // 4. Maintenance Requests
   const maintenanceCollectionRef = collection(firestore, 'users', user.uid, 'maintenanceRequests');
   const maintenanceToCreate = [
-    { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0] },
-    { propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0] },
-    { propertyName: 'General Business Task', description: 'Annual fire safety inspection for all properties', status: 'To Do', priority: 'Medium', reportedDate: new Date().toISOString().split('T')[0] },
+    { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0], ownerId: user.uid },
+    { propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0], ownerId: user.uid },
+    { propertyName: 'General Business Task', description: 'Annual fire safety inspection for all properties', status: 'To Do', priority: 'Medium', reportedDate: new Date().toISOString().split('T')[0], ownerId: user.uid },
   ];
 
   maintenanceToCreate.forEach(m => {
     const maintDocRef = doc(maintenanceCollectionRef);
-    batch.set(maintDocRef, { ...m, ownerId: user.uid });
+    batch.set(maintDocRef, { ...m });
   });
 
   await batch.commit();
