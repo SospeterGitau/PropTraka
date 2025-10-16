@@ -1,13 +1,11 @@
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
-import { Check, ChevronsUpDown, MoreHorizontal, MessageSquare, ChevronRight, FileText } from 'lucide-react';
+import { ChevronRight, FileText, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { getLocale } from '@/lib/locales';
 
 import { PageHeader } from '@/components/page-header';
@@ -27,232 +25,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ExpenseForm } from '@/components/expense-form';
 
-const defaultCategories = [
-  'Accounting',
-  'Insurance',
-  'Legal Fees',
-  'Maintenance',
-  'Management Fees',
-  'Marketing',
-  'Office Supplies',
-  'Repairs',
-  'Salaries',
-  'Subscriptions',
-  'Travel',
-  'Utilities',
-];
-
-const frequencies = [
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'bi-weekly', label: 'Bi-weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'yearly', label: 'Yearly' },
-];
-
-function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
-}
-
-function ExpenseForm({
-  isOpen,
-  onClose,
-  onSubmit,
-  transaction,
-  properties,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: Transaction) => void;
-  transaction?: Transaction | null;
-  properties: Property[];
-}) {
-  const [category, setCategory] = useState(transaction?.category || '');
-  const [expenseType, setExpenseType] = useState<Transaction['expenseType']>(transaction?.expenseType || 'one-off');
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    // Sync state if the transaction prop changes (e.g., when opening the modal for a different item)
-    setCategory(transaction?.category || '');
-    setExpenseType(transaction?.expenseType || 'one-off');
-  }, [transaction]);
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const propertyId = formData.get('propertyId') as string;
-    const selectedProperty = properties.find(p => p.id === propertyId);
-    
-    const data: Transaction = {
-      id: transaction?.id || `e${Date.now()}`,
-      date: formData.get('date') as string,
-      amount: Number(formData.get('amount')),
-      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Expense',
-      propertyId: propertyId !== 'none' ? propertyId : undefined,
-      category: category,
-      vendor: formData.get('vendor') as string,
-      notes: formData.get('notes') as string,
-      type: 'expense',
-      expenseType: expenseType,
-      frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
-      receiptUrl: formData.get('receiptUrl') as string,
-    };
-    onSubmit(data);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-card p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">{transaction ? 'Edit' : 'Add'} Expense</h2>
-        <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Input name="date" type="date" defaultValue={transaction?.date.split('T')[0]} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Property (optional)</Label>
-            <Select name="propertyId" defaultValue={transaction?.propertyId || 'none'}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a property" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None (General Business Expense)</SelectItem>
-                {properties.map(property => (
-                  <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
-                  {category ? defaultCategories.find((c) => c.toLowerCase() === category.toLowerCase()) || category : "Select a category..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                <Command>
-                  <CommandInput 
-                    placeholder="Select or create category..." 
-                    onValueChange={(currentValue) => setCategory(currentValue)}
-                  />
-                  <CommandList>
-                    <CommandEmpty>No category found. Type to create.</CommandEmpty>
-                    <CommandGroup>
-                      {defaultCategories.map((cat) => (
-                        <CommandItem
-                          key={cat}
-                          value={cat}
-                          onSelect={(currentValue) => {
-                            setCategory(currentValue === category ? "" : currentValue);
-                            setOpen(false);
-                          }}
-                        >
-                          <Check className={cn("mr-2 h-4 w-4", category.toLowerCase() === cat.toLowerCase() ? "opacity-100" : "opacity-0")} />
-                          {cat}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-              <Label>Expense Type</Label>
-              <RadioGroup
-                defaultValue={expenseType}
-                onValueChange={(value: Transaction['expenseType']) => setExpenseType(value)}
-                className="flex gap-4 pt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="one-off" id="r1" />
-                  <Label htmlFor="r1">One-off</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="recurring" id="r2" />
-                  <Label htmlFor="r2">Recurring</Label>
-                </div>
-              </RadioGroup>
-          </div>
-          
-          {expenseType === 'recurring' && (
-            <div className="space-y-2">
-              <Label>Frequency</Label>
-              <Select name="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {frequencies.map(f => (
-                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Vendor</Label>
-            <Input name="vendor" defaultValue={transaction?.vendor} />
-          </div>
-          <div className="space-y-2">
-            <Label>Amount</Label>
-            <Input name="amount" type="number" defaultValue={transaction?.amount} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Receipt/File Link (optional)</Label>
-            <Input name="receiptUrl" type="url" defaultValue={transaction?.receiptUrl} placeholder="https://example.com/receipt.pdf" />
-          </div>
-          <div className="space-y-2">
-            <Label>Notes (optional)</Label>
-            <Textarea name="notes" defaultValue={transaction?.notes} />
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Save</Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 function ExpensesTable({ 
   expenses,

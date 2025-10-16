@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, FilePlus2 } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
-import type { MaintenanceRequest } from '@/lib/types';
+import type { MaintenanceRequest, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 
 import { PageHeader } from '@/components/page-header';
@@ -23,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +32,8 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { MaintenanceForm } from '@/components/maintenance-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { ExpenseForm } from '@/components/expense-form';
+
 
 const priorityColors = {
   Low: 'bg-blue-100 text-blue-800',
@@ -53,14 +57,18 @@ function MaintenanceClient() {
     addMaintenanceRequest, 
     updateMaintenanceRequest, 
     deleteMaintenanceRequest, 
+    addExpense,
+    formatCurrency,
     locale, 
     addChangeLogEntry, 
     isDataLoading 
   } = useDataContext();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
+  const [expenseFromMaintenance, setExpenseFromMaintenance] = useState<Partial<Transaction> | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
@@ -89,6 +97,16 @@ function MaintenanceClient() {
   const handleDelete = (request: MaintenanceRequest) => {
     setSelectedRequest(request);
     setIsDeleteDialogOpen(true);
+  };
+  
+  const handleCreateExpense = (request: MaintenanceRequest) => {
+    setExpenseFromMaintenance({
+        propertyId: request.propertyId,
+        date: request.completedDate || request.reportedDate,
+        category: 'Maintenance',
+        notes: `Maintenance: ${request.description}`
+    });
+    setIsExpenseFormOpen(true);
   };
 
   const confirmDelete = () => {
@@ -125,6 +143,17 @@ function MaintenanceClient() {
         entityId: `temp-id-${Date.now()}`,
       });
     }
+  };
+  
+  const handleExpenseFormSubmit = (data: Transaction) => {
+    const { id, type, ...expenseData } = data;
+    addExpense(expenseData);
+    addChangeLogEntry({
+      type: 'Expense',
+      action: 'Created',
+      description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was logged from a maintenance task.`,
+      entityId: data.id,
+    });
   };
 
   if (isDataLoading || !properties) {
@@ -191,6 +220,11 @@ function MaintenanceClient() {
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem onSelect={() => handleEdit(request)}>Edit</DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => handleDelete(request)}>Delete</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => handleCreateExpense(request)} disabled={request.status !== 'Done'}>
+                            <FilePlus2 className="mr-2 h-4 w-4" />
+                            Create Expense
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -216,6 +250,14 @@ function MaintenanceClient() {
         properties={properties}
       />
       
+      {properties && <ExpenseForm
+        isOpen={isExpenseFormOpen}
+        onClose={() => setIsExpenseFormOpen(false)}
+        onSubmit={handleExpenseFormSubmit}
+        transaction={expenseFromMaintenance}
+        properties={properties}
+      />}
+      
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
@@ -227,5 +269,3 @@ function MaintenanceClient() {
 }
 
 export default memo(MaintenanceClient);
-
-    
