@@ -459,7 +459,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }), [
     properties, revenue, expenses, maintenanceRequests, changelog, calendarEvents,
     currency, locale, companyName, residencyStatus, isPnlReportEnabled,
-    isMarketResearchEnabled, isDataLoading, user
+    isMarketResearchEnabled, isDataLoading, user?.uid
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
@@ -472,3 +472,5 @@ export function useDataContext() {
   }
   return context;
 }
+
+    
