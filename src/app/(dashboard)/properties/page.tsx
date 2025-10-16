@@ -2,6 +2,7 @@
 
 import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
 import type { Property } from '@/lib/types';
@@ -193,7 +194,7 @@ function PropertiesPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{formatAddress(property)}</div>
+                      <Link href={`/properties/${property.id}`} className="font-medium hover:underline">{formatAddress(property)}</Link>
                       <div className="text-sm text-muted-foreground">{property.buildingType}</div>
                       <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
                          <div className="flex items-center gap-1">

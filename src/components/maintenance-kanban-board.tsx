@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,7 +68,7 @@ function KanbanCard({
         <div className="flex justify-between items-start">
             <CardTitle className="text-base font-semibold leading-tight">
               {request.propertyId ? (
-                <Link href={`/properties#${request.propertyId}`} className="hover:underline">
+                <Link href={`/properties/${request.propertyId}`} className="hover:underline">
                   {request.propertyName}
                 </Link>
               ) : (
