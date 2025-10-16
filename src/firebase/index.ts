@@ -12,12 +12,15 @@ export function initializeFirebase() {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   
   if (typeof window !== 'undefined') {
+    // This allows App Check to work in a local development environment.
+    // DO NOT a-commit this to your repository.
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     
     initializeAppCheck(app, {
-      // Replace with your actual reCAPTCHA v3 site key in production
+      // IMPORTANT: Replace this placeholder with your actual reCAPTCHA v3 site key
+      // from the Firebase console before deploying to production.
       provider: new ReCaptchaV3Provider("6Ld-............-...."), 
       isTokenAutoRefreshEnabled: true
     });
