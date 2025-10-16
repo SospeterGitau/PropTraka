@@ -3,12 +3,10 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
-import { useUser, useFirestore, useAuth } from '@/firebase/provider';
+import { useUser, useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
-import { signInAnonymously } from 'firebase/auth';
-
 
 interface DataContextType {
   properties: Property[] | null;
@@ -150,20 +148,9 @@ async function seedDatabase(
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
-  const auth = useAuth();
   const { user, isUserLoading: isAuthLoading } = useUser();
   const [hasSeedingBeenChecked, setHasSeedingBeenChecked] = useState(false);
-
-  // Automatically sign in the user anonymously
-  useEffect(() => {
-      if (auth && !user && !isAuthLoading) {
-          signInAnonymously(auth).catch(error => {
-              console.error("Anonymous sign-in failed", error);
-          });
-      }
-  }, [auth, user, isAuthLoading]);
-
-
+  
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
@@ -191,17 +178,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
-    // Don't run if still loading, no user, or seeding already checked
     if (isAuthLoading || !user || !firestore || hasSeedingBeenChecked) {
       return;
     }
 
-    // This checks if all data collections have finished their initial load.
-    // We can't check for emptiness until loading is complete.
     const allCollectionsLoaded = !loadingProperties && !loadingRevenue && !loadingExpenses && !loadingMaintenance;
 
     if (allCollectionsLoaded) {
-      // Mark as checked to prevent re-seeding on subsequent data changes
       setHasSeedingBeenChecked(true); 
 
       const shouldSeed =
@@ -472,5 +455,3 @@ export function useDataContext() {
   }
   return context;
 }
-
-    

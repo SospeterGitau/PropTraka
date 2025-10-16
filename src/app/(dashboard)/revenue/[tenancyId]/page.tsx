@@ -4,7 +4,7 @@
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { format, startOfToday, isAfter } from 'date-fns';
+import { format, startOfToday, isBefore } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -223,7 +223,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
   const today = startOfToday();
 
   // Calculate KPIs based on transactions due up to today
-  const dueTransactions = tenancy.transactions.filter(tx => new Date(tx.date) <= today);
+  const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
   const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
   const currentBalance = totalDueToDate - totalPaid;
@@ -231,7 +231,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
   const firstTransaction = tenancy.transactions[0];
   const depositAmount = firstTransaction.deposit || 0;
   const isDepositReturned = firstTransaction.depositReturned || false;
-  const isTenancyEnded = tenancy.tenancyEndDate ? new Date(tenancy.tenancyEndDate) < today : false;
+  const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
 
 
   return (
@@ -330,7 +330,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
                   const due = tx.amount + (tx.deposit ?? 0);
                   const paid = tx.amountPaid ?? 0;
                   const balance = due - paid;
-                  const isOverdue = dueDate < today && balance > 0;
+                  const isOverdue = isBefore(dueDate, today) && balance > 0;
                   const daysOverdue = isOverdue 
                     ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
                     : 0;

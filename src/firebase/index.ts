@@ -13,7 +13,7 @@ export function initializeFirebase() {
   
   if (typeof window !== 'undefined') {
     // This allows App Check to work in a local development environment.
-    // DO NOT a-commit this to your repository.
+    // DO NOT commit this to your repository if it's public.
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;

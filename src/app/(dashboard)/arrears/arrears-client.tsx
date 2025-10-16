@@ -165,7 +165,10 @@ function ArrearsClient() {
                         <TableCell>{arrear.daysOverdue} days</TableCell>
                         <TableCell>
                           {arrear.rentOwed > 0 && arrear.depositOwed > 0 ? (
-                            <Badge variant="outline">Rent & Deposit</Badge>
+                            <div className="flex flex-col items-start">
+                              <Badge variant="outline">Rent</Badge>
+                              <Badge variant="outline" className="mt-1">Deposit</Badge>
+                            </div>
                           ) : arrear.rentOwed > 0 ? (
                             <Badge variant="outline">Rent</Badge>
                           ) : (
@@ -195,5 +198,3 @@ function ArrearsClient() {
 }
 
 export default memo(ArrearsClient);
-
-    
