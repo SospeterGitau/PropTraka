@@ -3,144 +3,129 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by a signed-in user.
+     * @description Checks if the request is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @description Checks if the authenticated user is the owner of the document.
      */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return isSignedIn() && userId == request.auth.uid;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of an existing document.
+     * @description Checks if the authenticated user is the owner of the existing document.
      */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource.data.ownerId == userId;
+    function isExistingOwner() {
+      return isSignedIn() && resource.data.ownerId == request.auth.uid;
     }
 
     /**
-     * @description Properties owned by a specific user.
+     * @description Enforces that the creatorId cannot be changed after creation.
+     */
+    function creatorIdIsImmutable(userId) {
+      return resource.data.ownerId == userId;
+    }
+
+    /**
+     * @description
+     * Secures access to property documents owned by a specific user.
+     *
      * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) User 'user123' can create a new property under their user ID.
-     * @deny (create) User 'user456' cannot create a property under user 'user123's ID.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
 
     /**
-     * @description Tenants related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures access to tenant documents related to a specific property, owned by a user.
+     *
      * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) User 'user123' can create a new tenant under their property.
-     * @deny (create) User 'user456' cannot create a tenant under user 'user123's property.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
 
     /**
-     * @description Rental payments made for a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures access to rental payment documents related to a specific property, owned by a user.
+     *
      * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) User 'user123' can create a new rental payment under their property.
-     * @deny (create) User 'user456' cannot create a rental payment under user 'user123's property.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
 
     /**
-     * @description Expenses related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures access to expense documents related to a specific property, owned by a user.
+     *
      * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) User 'user123' can create a new expense under their property.
-     * @deny (create) User 'user456' cannot create an expense under user 'user123's property.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
 
     /**
-     * @description Appointments related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures access to appointment documents related to a specific property, owned by a user.
+     *
      * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) User 'user123' can create a new appointment under their property.
-     * @deny (create) User 'user456' cannot create an appointment under user 'user123's property.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
 
     /**
-     * @description Alerts related to a specific property, owned by a user. Includes denormalized `ownerId` from the parent property document.
+     * @description
+     * Secures access to alert documents related to a specific property, owned by a user.
+     *
      * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) User 'user123' can create a new alert under their property.
-     * @deny (create) User 'user456' cannot create an alert under user 'user123's property.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
 
     /**
-     * @description Maintenance requests for properties owned by a specific user.
+     * @description
+     * Secures access to maintenance request documents owned by a specific user.
+     *
      * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) User 'user123' can create a new maintenance request under their user ID.
-     * @deny (create) User 'user456' cannot create a maintenance request under user 'user123's ID.
-     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
-    }
-
-    /**
-     * @description Fixes: Missing or insufficient permissions to list changelog
-     * @path /users/{userId}/changelog
-     * @allow (list) User 'user123' can list their own changelog
-     * @deny (list) User 'user456' cannot list the changelog for 'user123'
-     * @principle Grants the owner list permissions for user scoped subcollections
-     */
-    match /users/{userId}/changelog/{documentId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isOwner(userId);
-        allow delete: if isOwner(userId);
+      allow get: if isOwner(userId) && userId == request.auth.uid;
+      allow list: if isOwner(userId) && userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && userId == request.auth.uid;
+      allow update: if isExistingOwner() && userId == request.auth.uid;
+      allow delete: if isExistingOwner() && userId == request.auth.uid;
     }
   }
 }
