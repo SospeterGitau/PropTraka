@@ -48,7 +48,7 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
   
-  // Show a loading indicator while checking auth state
+  // Show a loading indicator while checking auth state or if user exists
   if (isUserLoading || user) {
      return (
         <div className="flex min-h-screen items-center justify-center bg-muted/40">

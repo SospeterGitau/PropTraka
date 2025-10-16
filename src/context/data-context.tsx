@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
@@ -183,12 +183,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
     // This effect should only run once after the initial data load has completed.
-    if (isDataLoading || !user || hasSeedingBeenChecked) {
+    if (isDataLoading || !user || !firestore || hasSeedingBeenChecked) {
       return;
     }
 
-    // `isDataLoading` is false here, which means all `useCollection` hooks have had their first run.
-    // We can now safely check if the collections are empty.
+    // All hooks have run at least once. Now check if collections are empty.
     const allCollectionsLoadedAndEmpty =
       properties?.length === 0 &&
       revenue?.length === 0 &&
