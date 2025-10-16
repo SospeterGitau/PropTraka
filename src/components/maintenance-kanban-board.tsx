@@ -1,0 +1,186 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { MoreHorizontal, FilePlus2, Edit, Trash2 } from 'lucide-react';
+import type { MaintenanceRequest } from '@/lib/types';
+import { getLocale } from '@/lib/locales';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Button } from './ui/button';
+
+type KanbanColumnProps = {
+  title: MaintenanceRequest['status'];
+  requests: MaintenanceRequest[];
+  onEditRequest: (request: MaintenanceRequest) => void;
+  onDeleteRequest: (request: MaintenanceRequest) => void;
+  onCreateExpense: (request: MaintenanceRequest) => void;
+  formattedDates: Record<string, string>;
+};
+
+const statusColors = {
+  'To Do': 'bg-gray-500',
+  'In Progress': 'bg-blue-500',
+  Done: 'bg-green-500',
+  Cancelled: 'bg-red-500',
+};
+
+const priorityColors = {
+  Low: 'bg-blue-100 text-blue-800 border-blue-300',
+  Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  High: 'bg-orange-100 text-orange-800 border-orange-300',
+  Emergency: 'bg-red-200 text-red-900 border-red-400 font-bold',
+};
+
+function KanbanCard({ 
+    request, 
+    onEdit, 
+    onDelete, 
+    onCreateExpense, 
+    formattedDate 
+}: { 
+    request: MaintenanceRequest;
+    onEdit: (request: MaintenanceRequest) => void;
+    onDelete: (request: MaintenanceRequest) => void;
+    onCreateExpense: (request: MaintenanceRequest) => void;
+    formattedDate: string;
+}) {
+  return (
+    <Card>
+      <CardHeader className="p-4">
+        <div className="flex justify-between items-start">
+            <CardTitle className="text-base font-semibold leading-tight">{request.propertyName}</CardTitle>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button aria-haspopup="true" size="icon" variant="ghost" className="h-6 w-6">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Toggle menu</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onSelect={() => onEdit(request)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Request
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => onDelete(request)}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Request
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={request.status !== 'Done'}>
+                <FilePlus2 className="mr-2 h-4 w-4" />
+                Create Expense
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+        <p className="text-sm text-muted-foreground">{request.description}</p>
+      </CardHeader>
+      <CardFooter className="p-4 flex justify-between items-center text-sm">
+        <Badge className={cn("text-xs", priorityColors[request.priority])}>{request.priority}</Badge>
+        <span className="text-muted-foreground">{formattedDate}</span>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, formattedDates }: KanbanColumnProps) {
+  return (
+    <div className="flex-1 flex flex-col gap-4">
+      <div className="flex items-center gap-2 px-1">
+        <div className={cn("w-3 h-3 rounded-full", statusColors[title])} />
+        <h2 className="font-semibold text-lg">{title}</h2>
+        <Badge variant="secondary" className="rounded-full">{requests.length}</Badge>
+      </div>
+      <div className="bg-muted/50 rounded-lg p-2 flex-1 flex flex-col gap-4 h-full min-h-[150px] overflow-y-auto">
+        {requests.length > 0 ? (
+          requests.map(request => (
+            <KanbanCard 
+                key={request.id} 
+                request={request}
+                onEdit={onEditRequest}
+                onDelete={onDeleteRequest}
+                onCreateExpense={onCreateExpense}
+                formattedDate={formattedDates[request.id] || ''}
+            />
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+            No requests here.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface MaintenanceKanbanBoardProps {
+  requests: MaintenanceRequest[];
+  onEditRequest: (request: MaintenanceRequest) => void;
+  onDeleteRequest: (request: MaintenanceRequest) => void;
+  onCreateExpense: (request: MaintenanceRequest) => void;
+  locale: string;
+}
+
+export function MaintenanceKanbanBoard({
+  requests,
+  onEditRequest,
+  onDeleteRequest,
+  onCreateExpense,
+  locale
+}: MaintenanceKanbanBoardProps) {
+
+  const [formattedDates, setFormattedDates] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const formatAllDates = async () => {
+      const localeData = await getLocale(locale);
+      const newFormattedDates: Record<string, string> = {};
+      for (const item of requests) {
+        newFormattedDates[item.id] = format(new Date(item.reportedDate), 'MMM dd', { locale: localeData });
+      }
+      setFormattedDates(newFormattedDates);
+    };
+    if (requests.length > 0) {
+        formatAllDates();
+    }
+  }, [requests, locale]);
+
+  const columns: MaintenanceRequest['status'][] = ['To Do', 'In Progress', 'Done', 'Cancelled'];
+
+  const requestsByStatus = requests.reduce((acc, request) => {
+    const status = request.status;
+    if (!acc[status]) {
+      acc[status] = [];
+    }
+    acc[status].push(request);
+    return acc;
+  }, {} as Record<MaintenanceRequest['status'], MaintenanceRequest[]>);
+
+  return (
+    <div className="flex gap-6 h-full flex-grow">
+      {columns.map(status => (
+        <KanbanColumn
+          key={status}
+          title={status}
+          requests={requestsByStatus[status] || []}
+          onEditRequest={onEditRequest}
+          onDeleteRequest={onDeleteRequest}
+          onCreateExpense={onCreateExpense}
+          formattedDates={formattedDates}
+        />
+      ))}
+    </div>
+  );
+}

@@ -2,52 +2,17 @@
 'use client';
 
 import { useState, useEffect, memo } from 'react';
-import { format } from 'date-fns';
-import { MoreHorizontal, FilePlus2 } from 'lucide-react';
 import { useDataContext } from '@/context/data-context';
 import type { MaintenanceRequest, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { MaintenanceForm } from '@/components/maintenance-form';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { ExpenseForm } from '@/components/expense-form';
-
-
-const priorityColors = {
-  Low: 'bg-blue-100 text-blue-800',
-  Medium: 'bg-yellow-100 text-yellow-800',
-  High: 'bg-orange-100 text-orange-800',
-  Emergency: 'bg-red-200 text-red-900 font-bold',
-};
-
-const statusColors = {
-  'To Do': 'bg-gray-200 text-gray-800',
-  'In Progress': 'bg-blue-200 text-blue-800',
-  Done: 'bg-green-200 text-green-800',
-  Cancelled: 'bg-red-200 text-red-800',
-};
+import { Skeleton } from '@/components/ui/skeleton';
+import { MaintenanceKanbanBoard } from '@/components/maintenance-kanban-board';
 
 
 function MaintenanceClient() {
@@ -69,20 +34,6 @@ function MaintenanceClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [expenseFromMaintenance, setExpenseFromMaintenance] = useState<Partial<Transaction> | null>(null);
-  const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
-
-  useEffect(() => {
-    const formatAllDates = async () => {
-      if (!maintenanceRequests) return;
-      const localeData = await getLocale(locale);
-      const newFormattedDates: { [key: string]: string } = {};
-      for (const item of maintenanceRequests) {
-        newFormattedDates[item.id] = format(new Date(item.reportedDate), 'MMMM dd, yyyy', { locale: localeData });
-      }
-      setFormattedDates(newFormattedDates);
-    };
-    formatAllDates();
-  }, [maintenanceRequests, locale]);
 
   const handleAdd = () => {
     setSelectedRequest(null);
@@ -156,18 +107,23 @@ function MaintenanceClient() {
     });
   };
 
-  if (isDataLoading || !properties) {
+  if (isDataLoading || !properties || !maintenanceRequests) {
     return (
       <>
         <PageHeader title="Maintenance">
           <Button disabled>Add Request</Button>
         </PageHeader>
-        <Card>
-          <CardHeader><CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle></CardHeader>
-          <CardContent>
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
+        <div className="flex gap-4 h-[calc(100vh-200px)]">
+          {['To Do', 'In Progress', 'Done', 'Cancelled'].map(status => (
+            <div key={status} className="flex-1">
+              <Skeleton className="h-8 w-1/2 mb-4" />
+              <div className="space-y-4">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
+              </div>
+            </div>
+          ))}
+        </div>
       </>
     );
   }
@@ -177,70 +133,14 @@ function MaintenanceClient() {
       <PageHeader title="Maintenance">
         <Button onClick={handleAdd}>Add Request</Button>
       </PageHeader>
-      <Card>
-        <CardHeader>
-          <CardTitle>Maintenance Requests</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Property</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Reported</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {maintenanceRequests && maintenanceRequests.length > 0 ? (
-                maintenanceRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium">{request.propertyName}</TableCell>
-                    <TableCell>{request.description}</TableCell>
-                    <TableCell>
-                      <Badge className={cn(priorityColors[request.priority])}>{request.priority}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={cn(statusColors[request.status])}>{request.status}</Badge>
-                    </TableCell>
-                    <TableCell>{formattedDates[request.id]}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => handleEdit(request)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleDelete(request)}>Delete</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => handleCreateExpense(request)} disabled={request.status !== 'Done'}>
-                            <FilePlus2 className="mr-2 h-4 w-4" />
-                            Create Expense
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    No maintenance requests found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      
+      <MaintenanceKanbanBoard
+        requests={maintenanceRequests}
+        onEditRequest={handleEdit}
+        onDeleteRequest={handleDelete}
+        onCreateExpense={handleCreateExpense}
+        locale={locale}
+      />
       
       <MaintenanceForm
         isOpen={isFormOpen}
