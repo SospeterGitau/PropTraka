@@ -20,7 +20,6 @@ import {
   Wrench,
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import {
   SidebarProvider,
   Sidebar,
@@ -32,27 +31,33 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/firebase';
 
-const navItems = [
+const coreNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/properties', label: 'Properties', icon: Building2 },
   { href: '/revenue', label: 'Revenue', icon: TrendingUp },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
-  { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/maintenance', label: 'Maintenance', icon: Wrench },
-  { href: '/reports', label: 'Financial Reports', icon: LineChart },
+];
+
+const analysisNavItems = [
+  { href: '/reports', label: 'Reports', icon: LineChart },
+  { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
 ];
 
-const secondaryNavItems = [
+const utilityNavItems = [
     { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/settings', label: 'Settings', icon: Settings },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
-]
+];
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -60,7 +65,9 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await auth.signOut();
+    if (auth) {
+        await auth.signOut();
+    }
     router.push('/login');
   };
 
@@ -79,32 +86,59 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
           </div>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  className="justify-start text-base h-12"
-                  tooltip={item.label}
-                >
-                  <Link href={item.href}>
-                    <span className="inline-flex items-center justify-center w-6 h-6">
-                      <item.icon />
-                    </span>
-                    <span>{item.label}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-           <SidebarMenu className="mt-auto">
-            {secondaryNavItems.map((item) => (
+          <SidebarGroup>
+            <SidebarGroupLabel>Core Operations</SidebarGroupLabel>
+            <SidebarMenu>
+                {coreNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
                     isActive={pathname === item.href}
-                    className="justify-start text-base h-12"
+                    className="justify-start"
+                    tooltip={item.label}
+                    >
+                    <Link href={item.href}>
+                        <span className="inline-flex items-center justify-center w-6 h-6">
+                        <item.icon />
+                        </span>
+                        <span>{item.label}</span>
+                    </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarGroup>
+             <SidebarGroupLabel>Analysis & Reporting</SidebarGroupLabel>
+             <SidebarMenu>
+                {analysisNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    className="justify-start"
+                    tooltip={item.label}
+                    >
+                    <Link href={item.href}>
+                        <span className="inline-flex items-center justify-center w-6 h-6">
+                        <item.icon />
+                        </span>
+                        <span>{item.label}</span>
+                    </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+                ))}
+            </SidebarMenu>
+          </SidebarGroup>
+          
+           <SidebarMenu className="mt-auto">
+            {utilityNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    className="justify-start text-sm h-10"
                     tooltip={item.label}
                     >
                     <Link href={item.href}>
@@ -119,6 +153,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
            </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
+          <SidebarSeparator />
           <div className="p-2">
              <Button onClick={handleLogout} className="justify-start w-full text-base h-12" variant="ghost">
                 <LogOut />
@@ -142,5 +177,3 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
