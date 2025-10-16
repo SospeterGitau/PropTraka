@@ -59,7 +59,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="propertyId">Property</Label>
-                <Select name="propertyId" defaultValue={request?.propertyId} required>
+                <Select name="propertyId" defaultValue={request?.propertyId || ''} required>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a property" />
                     </SelectTrigger>
@@ -110,11 +110,11 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="reportedDate">Date Reported</Label>
-                    <Input id="reportedDate" name="reportedDate" type="date" defaultValue={request?.reportedDate.split('T')[0] || new Date().toISOString().split('T')[0]} required />
+                    <Input id="reportedDate" name="reportedDate" type="date" defaultValue={request?.reportedDate ? request.reportedDate.split('T')[0] : new Date().toISOString().split('T')[0]} required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="completedDate">Date Completed</Label>
-                    <Input id="completedDate" name="completedDate" type="date" defaultValue={request?.completedDate?.split('T')[0]} />
+                    <Input id="completedDate" name="completedDate" type="date" defaultValue={request?.completedDate ? request.completedDate.split('T')[0] : ''} />
                 </div>
             </div>
           
@@ -129,5 +129,3 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
     </Dialog>
   );
 }
-
-    
