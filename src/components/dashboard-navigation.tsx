@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -40,7 +39,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 const coreNavItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/properties', label: 'Properties', icon: Building2 },
   { href: '/revenue', label: 'Revenue', icon: TrendingUp },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
@@ -85,7 +84,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href || (item.href === '/' && pathname.startsWith('/dashboard'))}
+                    isActive={pathname === item.href || (item.href === '/dashboard' && pathname.startsWith('/'))}
                     className="justify-start"
                     tooltip={item.label}
                     >
