@@ -1,21 +1,21 @@
 /**
- * @fileOverview
- * This ruleset enforces a strict user-ownership model for a rental property management application.
- * All data is nested under /users/{userId}, ensuring that only the authenticated user can access their own data.
+ * @fileoverview Firestore Security Rules for Rental Property Management App.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for all data. Each user can only
+ * access the data they own, based on their authenticated UID. Data is segregated by
+ * user ID in the Firestore paths, ensuring that users cannot access each other's data.
  *
  * Data Structure:
- * - /users/{userId}/properties/{propertyId}: Stores property details, owned by the user.
- * - /users/{userId}/properties/{propertyId}/tenants/{tenantId}: Stores tenant details for a specific property.
- * - /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}: Stores rental payment information for a specific property.
- * - /users/{userId}/properties/{propertyId}/expenses/{expenseId}: Stores expense records for a specific property.
- * - /users/{userId}/properties/{propertyId}/appointments/{appointmentId}: Stores appointment details for a specific property.
- * - /users/{userId}/properties/{propertyId}/alerts/{alertId}: Stores alerts generated for a specific property.
- * - /users/{userId}/maintenanceRequests/{maintenanceRequestId}: Stores maintenance requests across all properties.
+ * The database is structured with user-owned data nested under `/users/{userId}`.
+ * Properties, Tenants, Rental Payments, Expenses, Appointments, Alerts, and Maintenance Requests
+ * are all stored under user-specific paths.
  *
  * Key Security Decisions:
- * - Strict Ownership: All documents are owned by a specific user, identified by their UID.
- * - No User Listing: Listing all users is not permitted.
- * - Authorization Independence: All subcollections include a `ownerId` field, copied from the parent `property`. This eliminates the need for `get()` calls in security rules.
+ * - Users can only access data explicitly associated with their UID.
+ * - Listing other users' data is disallowed.
+ * - All write operations require a verified, authenticated user.
+ * - Subcollections contain denormalized ownerId values to prevent needing get() calls.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -23,205 +23,169 @@ service cloud.firestore {
 
     /**
      * @description Checks if the request is made by a signed-in user.
-     * @returns {boolean} True if the user is signed in, false otherwise.
+     * @return {bool} True if the user is signed in, false otherwise.
      */
     function isSignedIn() {
       return request.auth != null;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the resource.
-     * @param {string} userId The user ID to compare against the authenticated user's ID.
-     * @returns {boolean} True if the authenticated user's ID matches the provided userId, false otherwise.
+     * @description Checks if the authenticated user ID matches the provided user ID.
+     * @param {string} userId The user ID to compare against.
+     * @return {bool} True if the user is the owner, false otherwise.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the existing resource.
-     *              This function combines the ownership check with a resource existence check.
-     * @param {string} userId The user ID to compare against the authenticated user's ID.
-     * @returns {boolean} True if the authenticated user's ID matches the provided userId and the resource exists.
+     * @description Checks if the authenticated user is the existing owner of the document.
+     * @param {string} userId The user ID to compare against.
+     * @return {bool} True if the user is the existing owner and the document exists, false otherwise.
      */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
-    
-    /**
-     * @description Allows the creation of a user document if the authenticated user's ID matches the document ID.
-     * @path /users/{userId}
-     * @allow (create) User with UID 'user123' can create /users/user123.
-     * @deny (create) User with UID 'user123' cannot create /users/anotherUser.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId} {
-        allow get: if false;
-        allow list: if false;
-        allow create: if isOwner(userId);
-        allow update: if false;
-        allow delete: if false;
-    }
 
     /**
-     * @description Manages properties owned by a specific user.
+     * @description Rules for user properties.
      * @path /users/{userId}/properties/{propertyId}
-     * @allow (create) User with UID 'user123' can create /users/user123/properties/property456.
-     * @allow (get) User with UID 'user123' can get /users/user123/properties/property456.
-     * @allow (list) User with UID 'user123' can list /users/user123/properties.
-     * @allow (update) User with UID 'user123' can update /users/user123/properties/property456.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/properties/property456.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/properties/property456.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/properties/property456.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/properties.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/properties/property456.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/properties/property456.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages tenants related to a specific property, owned by a user.
+     * @description Rules for tenants within a property.
      * @path /users/{userId}/properties/{propertyId}/tenants/{tenantId}
-     * @allow (create) User with UID 'user123' can create /users/user123/properties/property456/tenants/tenant789.
-     * @allow (get) User with UID 'user123' can get /users/user123/properties/property456/tenants/tenant789.
-     * @allow (list) User with UID 'user123' can list /users/user123/properties/property456/tenants.
-     * @allow (update) User with UID 'user123' can update /users/user123/properties/property456/tenants/tenant789.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/properties/property456/tenants/tenant789.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/properties/property456/tenants/tenant789.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/properties/property456/tenants/tenant789.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/properties/property456/tenants.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/properties/property456/tenants/tenant789.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/properties/property456/tenants/tenant789.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/tenants/{tenantId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages rental payments made for a specific property, owned by a user.
+     * @description Rules for rental payments within a property.
      * @path /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId}
-     * @allow (create) User with UID 'user123' can create /users/user123/properties/property456/rentalPayments/payment789.
-     * @allow (get) User with UID 'user123' can get /users/user123/properties/property456/rentalPayments/payment789.
-     * @allow (list) User with UID 'user123' can list /users/user123/properties/property456/rentalPayments.
-     * @allow (update) User with UID 'user123' can update /users/user123/properties/property456/rentalPayments/payment789.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/properties/property456/rentalPayments/payment789.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/properties/property456/rentalPayments/payment789.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/properties/property456/rentalPayments/payment789.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/properties/property456/rentalPayments.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/properties/property456/rentalPayments/payment789.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/properties/property456/rentalPayments/payment789.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/rentalPayments/{rentalPaymentId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages expenses related to a specific property, owned by a user.
+     * @description Rules for expenses within a property.
      * @path /users/{userId}/properties/{propertyId}/expenses/{expenseId}
-     * @allow (create) User with UID 'user123' can create /users/user123/properties/property456/expenses/expense789.
-     * @allow (get) User with UID 'user123' can get /users/user123/properties/property456/expenses/expense789.
-     * @allow (list) User with UID 'user123' can list /users/user123/properties/property456/expenses.
-     * @allow (update) User with UID 'user123' can update /users/user123/properties/property456/expenses/expense789.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/properties/property456/expenses/expense789.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/properties/property456/expenses/expense789.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/properties/property456/expenses/expense789.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/properties/property456/expenses.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/properties/property456/expenses/expense789.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/properties/property456/expenses/expense789.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/expenses/{expenseId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages appointments related to a specific property, owned by a user.
+     * @description Rules for appointments within a property.
      * @path /users/{userId}/properties/{propertyId}/appointments/{appointmentId}
-     * @allow (create) User with UID 'user123' can create /users/user123/properties/property456/appointments/appointment789.
-     * @allow (get) User with UID 'user123' can get /users/user123/properties/property456/appointments/appointment789.
-     * @allow (list) User with UID 'user123' can list /users/user123/properties/property456/appointments.
-     * @allow (update) User with UID 'user123' can update /users/user123/properties/property456/appointments/appointment789.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/properties/property456/appointments/appointment789.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/properties/property456/appointments/appointment789.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/properties/property456/appointments/appointment789.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/properties/property456/appointments.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/properties/property456/appointments/appointment789.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/properties/property456/appointments/appointment789.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/appointments/{appointmentId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages alerts related to a specific property, owned by a user.
+     * @description Rules for alerts within a property.
      * @path /users/{userId}/properties/{propertyId}/alerts/{alertId}
-     * @allow (create) User with UID 'user123' can create /users/user123/properties/property456/alerts/alert789.
-     * @allow (get) User with UID 'user123' can get /users/user123/properties/property456/alerts/alert789.
-     * @allow (list) User with UID 'user123' can list /users/user123/properties/property456/alerts.
-     * @allow (update) User with UID 'user123' can update /users/user123/properties/property456/alerts/alert789.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/properties/property456/alerts/alert789.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/properties/property456/alerts/alert789.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/properties/property456/alerts/alert789.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/properties/property456/alerts.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/properties/property456/alerts/alert789.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/properties/property456/alerts/alert789.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/properties/{propertyId}/alerts/{alertId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages maintenance requests for properties owned by a specific user.
+     * @description Rules for maintenance requests.
      * @path /users/{userId}/maintenanceRequests/{maintenanceRequestId}
-     * @allow (create) User with UID 'user123' can create /users/user123/maintenanceRequests/request456.
-     * @allow (get) User with UID 'user123' can get /users/user123/maintenanceRequests/request456.
-     * @allow (list) User with UID 'user123' can list /users/user123/maintenanceRequests.
-     * @allow (update) User with UID 'user123' can update /users/user123/maintenanceRequests/request456.
-     * @allow (delete) User with UID 'user123' can delete /users/user123/maintenanceRequests/request456.
-     * @deny (create) User with UID 'anotherUser' cannot create /users/user123/maintenanceRequests/request456.
-     * @deny (get) User with UID 'anotherUser' cannot get /users/user123/maintenanceRequests/request456.
-     * @deny (list) User with UID 'anotherUser' cannot list /users/user123/maintenanceRequests.
-     * @deny (update) User with UID 'anotherUser' cannot update /users/user123/maintenanceRequests/request456.
-     * @deny (delete) User with UID 'anotherUser' cannot delete /users/user123/maintenanceRequests/request456.
+     * @allow (create) Signed-in user with matching userId in the path and request.auth.uid.
+     * @allow (get, update, delete) Signed-in user with matching userId in the path and request.auth.uid, document must exist for update and delete.
+     * @deny (create) Mismatched userId in the path and request.auth.uid.
+     * @deny (get, update, delete) Request from a different user, or non-existent document.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/maintenanceRequests/{maintenanceRequestId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
+
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
+    }
+    
+    /**
+     * @description Rules for Revenue subcollection.
+     * @path /users/{userId}/revenue
+     * @allow (list) Signed-in user with matching userId in the path and request.auth.uid.
+     * @principle Enforces document ownership for reads.
+     */
+    match /users/{userId}/revenue {
+        allow get: if false;
+        allow list: if isOwner(userId);
+
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
     }
   }
 }
