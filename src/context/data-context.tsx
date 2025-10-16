@@ -3,10 +3,11 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
-import { useUser, useFirestore } from '@/firebase/provider';
+import { useUser, useFirestore, useAuth } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
+import { signInAnonymously } from 'firebase/auth';
 
 
 interface DataContextType {
@@ -149,8 +150,18 @@ async function seedDatabase(
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const firestore = useFirestore();
+  const auth = useAuth();
   const { user, isUserLoading: isAuthLoading } = useUser();
   const [hasSeedingBeenChecked, setHasSeedingBeenChecked] = useState(false);
+
+  // Automatically sign in the user anonymously
+  useEffect(() => {
+      if (auth && !user && !isAuthLoading) {
+          signInAnonymously(auth).catch(error => {
+              console.error("Anonymous sign-in failed", error);
+          });
+      }
+  }, [auth, user, isAuthLoading]);
 
 
   // Firestore collection references that depend on the user.
@@ -182,26 +193,35 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
-    // This effect should only run once after the initial data load has completed.
-    if (isDataLoading || !user || !firestore || hasSeedingBeenChecked) {
+    // Don't run if still loading, no user, or seeding already checked
+    if (isAuthLoading || !user || !firestore || hasSeedingBeenChecked) {
       return;
     }
 
-    // All hooks have run at least once. Now check if collections are empty.
-    const allCollectionsLoadedAndEmpty =
-      properties?.length === 0 &&
-      revenue?.length === 0 &&
-      expenses?.length === 0 &&
-      maintenanceRequests?.length === 0;
+    // This checks if all data collections have finished their initial load.
+    // We can't check for emptiness until loading is complete.
+    const allCollectionsLoaded = !loadingProperties && !loadingRevenue && !loadingExpenses && !loadingMaintenance;
 
-    if (allCollectionsLoadedAndEmpty) {
-      seedDatabase(firestore, user);
+    if (allCollectionsLoaded) {
+      // Mark as checked to prevent re-seeding on subsequent data changes
+      setHasSeedingBeenChecked(true); 
+
+      const shouldSeed =
+        properties?.length === 0 &&
+        revenue?.length === 0 &&
+        expenses?.length === 0 &&
+        maintenanceRequests?.length === 0;
+
+      if (shouldSeed) {
+        seedDatabase(firestore, user);
+      }
     }
-    
-    // Mark that we've performed the seeding check to prevent this from running again.
-    setHasSeedingBeenChecked(true);
-
-  }, [isDataLoading, user, properties, revenue, expenses, maintenanceRequests, firestore, hasSeedingBeenChecked]);
+  }, [
+    isAuthLoading, user, firestore, 
+    properties, revenue, expenses, maintenanceRequests,
+    loadingProperties, loadingRevenue, loadingExpenses, loadingMaintenance,
+    hasSeedingBeenChecked
+  ]);
 
 
   // --- MUTATION FUNCTIONS ---

@@ -1,21 +1,25 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
-
-// This middleware is no longer the primary guard for auth.
-// Firebase auth state is checked on the client.
-// This middleware is simplified to not interfere with the build process.
-export async function middleware(request: NextRequest) {
-  return NextResponse.next();
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+ 
+// This function can be marked `async` if using `await` inside
+export function middleware(request: NextRequest) {
+    // The root of the app is now the dashboard
+    if (request.nextUrl.pathname === '/login') {
+        return NextResponse.redirect(new URL('/', request.url))
+    }
+    return NextResponse.next()
 }
-
+ 
 // See "Matching Paths" below to learn more
 export const config = {
-  /*
-   * Match all request paths except for the ones starting with:
-   * - api (API routes)
-   * - _next/static (static files)
-   * - _next/image (image optimization files)
-   * - favicon.ico (favicon file)
-   */
-  matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',
-};
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
+}

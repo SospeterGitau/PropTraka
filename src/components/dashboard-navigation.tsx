@@ -19,6 +19,7 @@ import {
   History,
   Wrench,
 } from 'lucide-react';
+import { useAuth } from '@/firebase';
 
 import {
   SidebarProvider,
@@ -36,7 +37,6 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/firebase';
 
 const coreNavItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -67,8 +67,11 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
   const handleLogout = async () => {
     if (auth) {
         await auth.signOut();
+        // After signing out, we might want to sign in again anonymously
+        // or redirect to a logged-out page if one existed.
+        // For now, we'll just refresh to get a new anonymous user.
+        router.refresh();
     }
-    router.push('/login');
   };
 
   return (
