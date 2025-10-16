@@ -63,14 +63,14 @@ export function useCollection<T = any>(
   type StateDataType = ResultItemType[] | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Start as loading
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
     // If there's no query, we are not loading and there's no data.
     if (!targetRefOrQuery) {
       setData(null);
-      setIsLoading(false); // Set loading to false if no query
+      setIsLoading(false);
       setError(null);
       return;
     }
@@ -96,7 +96,6 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        console.error("useCollection error:", error);
         // This logic extracts the path from either a ref or a query
         const path: string =
           targetRefOrQuery.type === 'collection'
