@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase/provider';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
+import { DataProvider } from '@/context/data-context';
 
 export default function DashboardLayout({
   children,
@@ -30,5 +31,9 @@ export default function DashboardLayout({
   }
 
   // If user is authenticated, render the dashboard layout.
-  return <DashboardNavigation>{children}</DashboardNavigation>;
+  return (
+    <DataProvider>
+      <DashboardNavigation>{children}</DashboardNavigation>
+    </DataProvider>
+  );
 }
