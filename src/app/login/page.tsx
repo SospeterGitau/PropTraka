@@ -18,7 +18,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseClientProvider, useAuth } from '@/firebase/client-provider';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { initializeFirebase } from '@/firebase';
+
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,6 +33,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 function LoginPageContent() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const auth = useAuth();
 
   const {
     register,
@@ -44,11 +48,37 @@ function LoginPageContent() {
 
   const onSubmit = (data: LoginFormValues) => {
     startTransition(async () => {
+      // We still need to sign in on the client to get the auth state
+      try {
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+      } catch (signInError: any) {
+        if (signInError.code === 'auth/user-not-found') {
+          try {
+             await createUserWithEmailAndPassword(auth, data.email, data.password);
+          } catch(signUpError: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Sign-up Failed',
+                description: signUpError.message,
+             });
+             return;
+          }
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: signInError.message,
+            });
+            return;
+        }
+      }
+
+      // Concurrently, run the server action to set the session
       const result = await login(data);
       if (result?.error) {
         toast({
           variant: 'destructive',
-          title: 'Login Failed',
+          title: 'Server Error',
           description: result.error,
         });
       }
