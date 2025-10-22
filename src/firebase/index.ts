@@ -5,7 +5,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -19,9 +19,7 @@ export function initializeFirebase() {
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     
     initializeAppCheck(app, {
-      // IMPORTANT: Replace this placeholder with your actual reCAPTCHA v3 site key
-      // from the Firebase console before deploying to production.
-      provider: new ReCaptchaV3Provider("6Ld-............-...."), 
+      provider: new ReCaptchaEnterpriseProvider("6Ld-............-...."), 
       isTokenAutoRefreshEnabled: true
     });
   }
