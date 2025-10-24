@@ -13,14 +13,18 @@ export function initializeFirebase() {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   
   if (typeof window !== 'undefined') {
+    // This block runs only in the browser
     if (process.env.NODE_ENV !== 'production') {
-      // For development, use the debug token.
+      // In development, we'll use the debug token.
+      // This global flag tells the Firebase SDK to log the token to the console.
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
     
+    // Initialize App Check
     initializeAppCheck(app, {
+      // In production, use reCAPTCHA. In development, the debug token flag above takes precedence.
       provider: new ReCaptchaV3Provider("6Le-............-...."),
       isTokenAutoRefreshEnabled: true
     });
