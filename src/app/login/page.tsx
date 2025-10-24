@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useTransition } from 'react';
@@ -19,7 +18,11 @@ import {
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { getAuth } from 'firebase/auth';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from 'firebase/auth';
 
 
 const loginSchema = z.object({
@@ -46,13 +49,38 @@ function LoginPageContent() {
 
   const onSubmit = (data: LoginFormValues) => {
     startTransition(async () => {
-      const result = await login(data);
-      if (result?.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Authentication Error',
-          description: result.error,
-        });
+      const auth = getAuth();
+      try {
+        // Try to sign in first
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+        // If successful, the onAuthStateChanged listener in the layout will handle the redirect.
+        
+      } catch (signInError: any) {
+        // If sign-in fails because the user doesn't exist, try to create a new account.
+        if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
+          try {
+            await createUserWithEmailAndPassword(auth, data.email, data.password);
+            // New user created, onAuthStateChanged will handle the redirect.
+          } catch (signUpError: any) {
+            // Handle specific sign-up errors
+            toast({
+              variant: 'destructive',
+              title: 'Sign Up Error',
+              description: signUpError.message,
+            });
+          }
+        } else {
+          // Handle other sign-in errors (like wrong password)
+          toast({
+            variant: 'destructive',
+            title: 'Authentication Error',
+            description: signInError.message,
+          });
+        }
+      } finally {
+        // After either sign-in or sign-up, create a server-side session.
+        // The redirect is now handled by the useUser hook in the layout.
+        await login();
       }
     });
   };
