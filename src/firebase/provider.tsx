@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -164,21 +165,6 @@ export const useFirebaseApp = (): FirebaseApp => {
 export const useAnalytics = (): Analytics | null => {
   const { analytics } = useFirebase();
   return analytics;
-};
-
-/**
- * Hook specifically for accessing the authenticated user's state.
- */
-export const useUser = (): UserHookResult => {
-  const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a FirebaseProvider.');
-  }
-  return { 
-    user: context.user, 
-    isUserLoading: context.isUserLoading, 
-    userError: context.userError 
-  };
 };
 
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T {
