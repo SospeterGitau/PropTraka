@@ -6,7 +6,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -20,7 +20,7 @@ export function initializeFirebase() {
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     
     initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider("6Ld-............-...."), 
+      provider: new ReCaptchaV3Provider("6Le-............-...."), 
       isTokenAutoRefreshEnabled: true
     });
   }
