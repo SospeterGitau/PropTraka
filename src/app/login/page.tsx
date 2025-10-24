@@ -18,9 +18,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { FirebaseClientProvider, useAuth } from '@/firebase/client-provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { useAuth } from '@/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
 
 
 const loginSchema = z.object({

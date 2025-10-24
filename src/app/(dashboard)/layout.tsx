@@ -2,7 +2,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase/provider';
+import { useUser } from '@/firebase';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { DataProvider } from '@/context/data-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';

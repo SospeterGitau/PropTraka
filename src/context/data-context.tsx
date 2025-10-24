@@ -3,8 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
-import { useUser, useFirestore } from '@/firebase/provider';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
 
