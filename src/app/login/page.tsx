@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { useAuth } from '@/firebase';
 import { getAuth } from 'firebase/auth';
 
 
@@ -54,13 +53,6 @@ function LoginPageContent() {
           title: 'Authentication Error',
           description: result.error,
         });
-      } else {
-        // After the server has set the session, force the client to refresh its auth state.
-        // This ensures the client-side user object is immediately available.
-        const auth = getAuth();
-        if (auth.currentUser) {
-          await auth.currentUser.reload();
-        }
       }
     });
   };
