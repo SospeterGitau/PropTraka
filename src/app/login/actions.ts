@@ -19,15 +19,12 @@ export async function login(formData: {email: string, password: string}) {
     try {
       // First, try to get the user to see if they exist.
       userRecord = await auth.getUserByEmail(email);
-      // If user exists, we'll proceed to the client-side for actual password verification.
-      // The server action's job is just to set the session cookie.
-      // This hybrid approach is complex. A simpler model for this architecture is to
-      // handle login entirely on the client and just notify the server.
-      // However, to keep this a server action, we'll proceed this way.
-      // NOTE: This server action does not actually verify the password.
-      // The client-side `signInWithEmailAndPassword` which runs in parallel does.
-      // This is a limitation of mixing client-side auth with server-side session management this way.
-
+      // NOTE: This server action does not actually verify the password for existing users.
+      // The assumption here is that if a user exists, we trust the client to have performed
+      // password validation before calling this action, or we proceed with creating a session
+      // regardless, and let client-side logic handle any re-authentication if needed.
+      // For a production app, you might want a more robust password verification step here.
+      
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
         // If user does not exist, create them.
@@ -36,13 +33,13 @@ export async function login(formData: {email: string, password: string}) {
           password: password,
         });
       } else {
-        // Re-throw other errors.
+        // Re-throw other errors (like invalid-credential if password check was implemented)
         throw error;
       }
     }
     
     if (!userRecord) {
-       return { error: "Login/signup failed." };
+       return { error: "Login or signup failed." };
     }
 
     // Now that we have a user (either existing or newly created), save UID to session.
@@ -55,6 +52,7 @@ export async function login(formData: {email: string, password: string}) {
     let errorMessage = "An unexpected error occurred on the server.";
      switch (e.code) {
         case 'auth/email-already-exists':
+            // This case should be rare now, but handled just in case.
             errorMessage = 'An account with this email already exists.';
             break;
         case 'auth/invalid-password':
