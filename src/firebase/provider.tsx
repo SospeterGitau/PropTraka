@@ -8,6 +8,20 @@ import { Firestore } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
+/**
+ * @fileoverview This file defines the core Firebase React provider and associated hooks.
+ * 
+ * The `FirebaseProvider` is a React component that uses the Context API to make Firebase
+ * services (like Auth, Firestore, Analytics) and the current user's authentication state
+ * available to all child components in the component tree.
+ * 
+ * It is responsible for:
+ * 1. Holding the initialized Firebase App, Auth, Firestore, and Analytics instances.
+ * 2. Subscribing to Firebase's `onAuthStateChanged` to listen for login/logout events.
+ * 3. Providing the user object, loading state, and any authentication errors to the rest of the app.
+ * 4. Rendering the `FirebaseErrorListener` to catch and handle global permission errors.
+ */
+
 interface FirebaseProviderProps {
   children: ReactNode;
   firebaseApp: FirebaseApp;

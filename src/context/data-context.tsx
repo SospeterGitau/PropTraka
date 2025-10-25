@@ -1,6 +1,26 @@
 
 'use client';
 
+/**
+ * @fileoverview This file defines the primary data management context for the application.
+ *
+ * The `DataProvider` component is a crucial part of the app's architecture. It sits
+ * just inside the main authentication layout and acts as the central hub for all
+ * business data.
+ *
+ * It is responsible for:
+ * 1. Using the `useUser` hook to get the currently authenticated user.
+ * 2. Using the user's ID to construct and execute Firestore queries for all relevant
+ *    data collections (properties, revenue, expenses, etc.) via the `useCollection` hook.
+ * 3. Providing the fetched data (properties, revenue, etc.) and loading states to all
+ *    child components through the `DataContext`.
+ * 4. Exposing a set of memoized functions (`addProperty`, `deleteTenancy`, etc.) that
+ *    allow child components to perform CRUD (Create, Read, Update, Delete) operations
+ *    on the Firestore database.
+ * 5. Handling local application state, such as currency and locale preferences.
+ * 6. Implementing the one-time database seeding logic for new users.
+ */
+
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
 import { useUser, useFirestore, useCollection } from '@/firebase';
