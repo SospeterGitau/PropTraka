@@ -66,6 +66,9 @@ const utilityNavItems = [
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { logoUrl, companyName } = useDataContext();
+  
+  // Fallback to default logo if the custom one is not set or invalid
+  const displayLogoUrl = logoUrl || '/logo.png';
 
   return (
     <SidebarProvider>
@@ -77,18 +80,22 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             </Button>
              <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-[140px] h-[40px] relative">
                <Image
-                src={logoUrl}
+                src={displayLogoUrl}
                 alt={`${companyName} Logo`}
                 fill
                 className="object-contain"
+                unoptimized // This can help with external/data URLs
+                onError={(e) => { e.currentTarget.src = '/logo.png'; }} // Fallback on error
               />
             </div>
              <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
                <Image
-                src={logoUrl}
+                src={displayLogoUrl}
                 alt={`${companyName} Logo`}
                 fill
                 className="object-contain"
+                unoptimized
+                onError={(e) => { e.currentTarget.src = '/logo.png'; }}
               />
             </div>
           </div>
