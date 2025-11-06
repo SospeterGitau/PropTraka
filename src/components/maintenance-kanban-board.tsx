@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle } from 'lucide-react';
+import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle, X } from 'lucide-react';
 import type { MaintenanceRequest } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
@@ -31,6 +31,8 @@ type KanbanColumnProps = {
   onCreateExpense: (request: MaintenanceRequest) => void;
   onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
   formattedDates: Record<string, string>;
+  isFocused: boolean;
+  onFocus: () => void;
 };
 
 const statusConfig = {
@@ -126,17 +128,20 @@ function KanbanCard({
   );
 }
 
-function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, onStatusChange, formattedDates }: KanbanColumnProps) {
+function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, onStatusChange, formattedDates, isFocused, onFocus }: KanbanColumnProps) {
   const Icon = statusConfig[title].icon;
   
   return (
-    <div className="flex-1 flex flex-col gap-4">
-      <div className="flex items-center gap-2 px-1">
+    <div className={cn("flex flex-col gap-4", isFocused ? "flex-[4]" : "flex-[1]")}>
+      <button 
+        className="flex items-center gap-2 px-1 rounded-md py-1 -mx-1 hover:bg-muted transition-colors"
+        onClick={onFocus}
+      >
         <Icon className={cn("w-5 h-5", statusConfig[title].color)} />
         <h2 className="font-semibold text-lg">{title}</h2>
         <Badge variant="secondary" className="rounded-full">{requests.length}</Badge>
-      </div>
-      <div className="bg-muted/50 rounded-lg p-2 flex-1 flex flex-col gap-4 h-full min-h-[150px] overflow-y-auto">
+      </button>
+      <div className={cn("bg-muted/50 rounded-lg p-2 flex-1 flex flex-col gap-4 h-full min-h-[150px] overflow-y-auto transition-opacity", !isFocused && "opacity-50")}>
         {requests.length > 0 ? (
           requests.map(request => (
             <KanbanCard 
@@ -178,6 +183,7 @@ export function MaintenanceKanbanBoard({
 }: MaintenanceKanbanBoardProps) {
 
   const [formattedDates, setFormattedDates] = useState<Record<string, string>>({});
+  const [focusedColumn, setFocusedColumn] = useState<MaintenanceRequest['status'] | null>(null);
 
   useEffect(() => {
     const formatAllDates = async () => {
@@ -204,20 +210,40 @@ export function MaintenanceKanbanBoard({
     return acc;
   }, {} as Record<MaintenanceRequest['status'], MaintenanceRequest[]>);
 
+  const handleFocus = (status: MaintenanceRequest['status']) => {
+    setFocusedColumn(status);
+  };
+  
+  const clearFocus = () => {
+    setFocusedColumn(null);
+  }
+
   return (
-    <div className="flex gap-6 h-full flex-grow">
-      {columns.map(status => (
-        <KanbanColumn
-          key={status}
-          title={status}
-          requests={requestsByStatus[status] || []}
-          onEditRequest={onEditRequest}
-          onDeleteRequest={onDeleteRequest}
-          onCreateExpense={onCreateExpense}
-          onStatusChange={onStatusChange}
-          formattedDates={formattedDates}
-        />
-      ))}
+    <div className="flex flex-col h-full flex-grow">
+      {focusedColumn && (
+        <div className="mb-2 flex justify-end">
+          <Button variant="outline" size="sm" onClick={clearFocus}>
+            <X className="mr-2 h-4 w-4" />
+            Clear Focus
+          </Button>
+        </div>
+      )}
+      <div className="flex gap-6 h-full flex-grow transition-all duration-300">
+        {columns.map(status => (
+          <KanbanColumn
+            key={status}
+            title={status}
+            requests={requestsByStatus[status] || []}
+            onEditRequest={onEditRequest}
+            onDeleteRequest={onDeleteRequest}
+            onCreateExpense={onCreateExpense}
+            onStatusChange={onStatusChange}
+            formattedDates={formattedDates}
+            isFocused={focusedColumn === status || focusedColumn === null}
+            onFocus={() => handleFocus(status)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
