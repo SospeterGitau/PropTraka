@@ -45,7 +45,7 @@ export function ReportSummary({ data }: ReportSummaryProps) {
           {isPending && (
             <>
               <Loader2 className="mx-auto h-10 w-10 animate-spin" />
-              <p className="mt-4">Analyzing your report...</p>
+              <p className="mt-4">Analysing your report...</p>
             </>
           )}
           {!isPending && !summary && (

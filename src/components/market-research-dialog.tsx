@@ -105,7 +105,7 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
             {isPending ? (
               <>
                 <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                <p className="mt-4 text-muted-foreground">Analyzing market data, please wait...</p>
+                <p className="mt-4 text-muted-foreground">Analysing market data, please wait...</p>
                 <p className="text-xs text-muted-foreground">(This can take up to a minute)</p>
               </>
             ) : error ? (
@@ -120,7 +120,7 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
               <div className="text-center">
                  <Lightbulb className="mx-auto h-12 w-12 text-muted-foreground" />
                  <p className="mt-4 max-w-md text-muted-foreground">
-                    This tool will use AI to analyze your portfolio based on market data. The generated report will assess if your rental prices are competitive and provide recommendations.
+                    This tool will use AI to analyse your portfolio based on market data. The generated report will assess if your rental prices are competitive and provide recommendations.
                  </p>
               </div>
             )}

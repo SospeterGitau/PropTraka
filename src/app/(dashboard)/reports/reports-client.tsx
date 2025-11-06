@@ -165,7 +165,7 @@ function RevenueAnalysisTab() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle>Actual vs. Projected Revenue</CardTitle>
-            <CardDescription>Analyze revenue performance including vacancy and credit losses.</CardDescription>
+            <CardDescription>Analyse revenue performance including vacancy and credit losses.</CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
              <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
@@ -337,7 +337,7 @@ function PnlStatementTab() {
   const isProfit = netProfitAfterTax >= 0;
   
   const expenseCategories = filteredExpenses.reduce((acc, expense) => {
-    const category = expense.category || 'Uncategorized';
+    const category = expense.category || 'Uncategorised';
     if (!acc[category]) {
       acc[category] = 0;
     }

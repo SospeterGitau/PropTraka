@@ -17,7 +17,7 @@ export async function getReportSummary(data: any): Promise<GenerateReportSummary
         .join('\n');
       
       summary = `
-Analyze the financial report for the year ${data.period}.
+Analyse the financial report for the year ${data.period}.
 Overall Projected Revenue: ${data.projectedRevenue}
 Overall Actual Revenue: ${data.actualRevenue}
 Overall Arrears: ${data.totalArrears}
@@ -29,7 +29,7 @@ Comment on the overall performance for the year and highlight any months that st
 `;
     } else { // month view
       summary = `
-Analyze the financial report for the month of ${data.period}.
+Analyse the financial report for the month of ${data.period}.
 Projected Revenue: ${data.projectedRevenue}
 Actual Revenue: ${data.actualRevenue}
 Arrears (unpaid): ${data.totalArrears}

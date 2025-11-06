@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
         <p>
           This Privacy Policy outlines how RentVision ("the App") collects, uses, and manages personal data. 
           The user of this app ("you", "the Landlord") acts as the <strong>Data Controller</strong> for the personal data you enter into the App. 
-          This app acts as a <strong>Data Processor</strong> on your behalf. This policy is designed to inform you of your responsibilities and how the App processes data.
+          This app acts as a _Data Processor_ on your behalf. This policy is designed to inform you of your responsibilities and how the App processes data.
         </p>
 
         <h2 className="pt-4 font-bold">2. Data We Process</h2>
@@ -62,12 +62,12 @@ export default function PrivacyPolicyPage() {
         
         <h2 className="pt-4 font-bold">6. Data Retention</h2>
         <p>
-          The App will retain tenant data as long as their tenancy records exist within the App. It is your responsibility as the Data Controller to remove or anonymize personal data when it is no longer needed for the purposes for which it was collected. You can delete a tenancy at any time, which will remove all associated personal information from the App's storage.
+          The App will retain tenant data as long as their tenancy records exist within the App. It is your responsibility as the Data Controller to remove or anonymise personal data when it is no longer needed for the purposes for which it was collected. You can delete a tenancy at any time, which will remove all associated personal information from the App's storage.
         </p>
 
         <h2 className="pt-4 font-bold">7. Data Subject Rights</h2>
         <p>
-          Under the DPA, tenants have rights over their personal data. As the Data Controller, you are responsible for handling their requests. The App enables you to fulfill these rights:
+          Under the DPA, tenants have rights over their personal data. As the Data Controller, you are responsible for handling their requests. The App enables you to fulfil these rights:
         </p>
         <ul>
           <li><strong>Right to Access:</strong> You can access tenant data via the Revenue and Arrears pages.</li>

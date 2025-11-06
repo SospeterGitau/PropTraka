@@ -213,7 +213,7 @@ function SettingsPage() {
             </div>
 
             <div>
-              <h3 className="text-lg font-medium">Localization</h3>
+              <h3 className="text-lg font-medium">Localisation</h3>
               <Separator className="my-2" />
               <div className="space-y-4 pt-2">
                 <div className="space-y-2">

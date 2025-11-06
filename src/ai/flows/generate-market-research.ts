@@ -30,7 +30,7 @@ const marketResearchPrompt = ai.definePrompt({
   name: 'marketResearchPrompt',
   input: { schema: GenerateMarketResearchInputSchema },
   output: { schema: GenerateMarketResearchOutputSchema },
-  prompt: `You are an expert real estate market analyst specializing in competitive rental pricing within the Kenyan market. Your goal is to conduct a deep-dive analysis of the provided rental property portfolio to determine if their current pricing is competitive within their respective local markets.
+  prompt: `You are an expert real estate market analyst specialising in competitive rental pricing within the Kenyan market. Your goal is to conduct a deep-dive analysis of the provided rental property portfolio to determine if their current pricing is competitive within their respective local markets.
 
 **Context:**
 The user's rental property portfolio data is provided below. This data will serve as the baseline for your analysis. All financial figures, including current rents, market averages, and recommendations, must be presented in {{currency}}.
@@ -57,10 +57,10 @@ e) **Recommendation:**
 Provide a specific new rental price recommendation (e.g., '{{currency}} 1950') or a percentage adjustment (e.g., 'Increase by 8%') to align it with competitive market rates. Justify your recommendation briefly.
 
 **Data Sources & Key Information (MANDATORY):**
-You must prioritize and reference the following Kenyan sources. Utilize robust market data from the last 6-12 months.
+You must prioritise and reference the following Kenyan sources. Utilise robust market data from the last 6-12 months.
 
 **1. Official Government Sources:**
-- **Kenya National Bureau of Statistics (KNBS):** Prioritize the official Real Estate Survey Report and the Kenya Housing Survey for critical data on residential/commercial markets, rental trends, and pricing variations.
+- **Kenya National Bureau of Statistics (KNBS):** Prioritise the official Real Estate Survey Report and the Kenya Housing Survey for critical data on residential/commercial markets, rental trends, and pricing variations.
 - **Central Bank of Kenya (CBK):** Use annual reports for broad economic and financial indicators that influence market conditions.
 
 **2. Private Sector Reports:**
@@ -69,7 +69,7 @@ You must prioritize and reference the following Kenyan sources. Utilize robust m
 - **BuyRentKenya & Other Portals:** Use reports from major property portals for market trends and activity.
 - **KMRC & Business Publications:** Consult the KMRC Housing Market Trends and Forecasts report and publications like Business Daily for additional data on market dynamics.
 
-**3. Key Information to Extract and Analyze:**
+**3. Key Information to Extract and Analyse:**
 When reviewing these sources, you must look for and use the following metrics in your analysis:
 - **Rental Yields:** The return on investment from rental properties.
 - **Rental Rates:** The average price per square meter/foot for different property types and grades.

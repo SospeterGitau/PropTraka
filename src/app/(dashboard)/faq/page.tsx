@@ -18,7 +18,7 @@ export default function FaqPage() {
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-lg font-semibold">About RentVision: What is it and who is it for?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              RentVision is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales efficiently oversee their rental portfolios. It provides a centralized dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of RentVision is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place.
+              RentVision is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales—from those with a single unit to those overseeing large portfolios—efficiently manage their rental properties. It provides a centralised dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of RentVision is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place.
             </AccordionContent>
           </AccordionItem>
 
@@ -26,7 +26,7 @@ export default function FaqPage() {
           <AccordionItem value="item-2">
             <AccordionTrigger className="text-lg font-semibold">How does the Dashboard work?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              The <Link href="/dashboard" className="text-primary underline">Dashboard</Link> provides a high-level overview of your entire portfolio's financial health. It features Key Performance Indicators (KPIs) like Total Property Value, Portfolio Equity, and monthly Revenue, Expenses, and Net Operating Income. It also includes charts that visualize your cash flow trends over the last six months and show a year-to-date profit breakdown by property.
+              The <Link href="/dashboard" className="text-primary underline">Dashboard</Link> provides a high-level overview of your entire portfolio's financial health. It features Key Performance Indicators (KPIs) like Total Property Value, Portfolio Equity, and monthly Revenue, Expenses, and Net Operating Income. It also includes charts that visualise your cash flow trends over the last six months and show a year-to-date profit breakdown by property.
             </AccordionContent>
           </AccordionItem>
           
@@ -65,7 +65,7 @@ export default function FaqPage() {
           <AccordionItem value="item-12">
             <AccordionTrigger className="text-lg font-semibold">How do I manage contractors and vendors?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              You can maintain a directory of your trusted contractors and service providers on the <Link href="/contractors" className="text-primary underline">Contractors</Link> page. For each contractor, you can store their name, specialty, contact details (email and phone), and any relevant notes. This list is then used to assign jobs in the Maintenance section, keeping your records organized.
+              You can maintain a directory of your trusted contractors and service providers on the <Link href="/contractors" className="text-primary underline">Contractors</Link> page. For each contractor, you can store their name, specialty, contact details (email and phone), and any relevant notes. This list is then used to assign jobs in the Maintenance section, keeping your records organised.
             </AccordionContent>
           </AccordionItem>
 
@@ -73,7 +73,7 @@ export default function FaqPage() {
           <AccordionItem value="item-5">
             <AccordionTrigger className="text-lg font-semibold">How do I manage expenses?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              Use the <Link href="/expenses" className="text-primary underline">Expenses</Link> page to log all costs. You can categorize each expense (e.g., Repairs, Insurance), assign it to a property, link it to a contractor from your list, and add notes or a URL to a receipt. The system supports both "One-off" and "Recurring" expenses, helping you track everything from a single repair to monthly management fees.
+              Use the <Link href="/expenses" className="text-primary underline">Expenses</Link> page to log all costs. You can categorise each expense (e.g., Repairs, Insurance), assign it to a property, link it to a contractor from your list, and add notes or a URL to a receipt. The system supports both "One-off" and "Recurring" expenses, helping you track everything from a single repair to monthly management fees.
             </AccordionContent>
           </AccordionItem>
 
@@ -83,7 +83,7 @@ export default function FaqPage() {
             <AccordionContent className="text-base leading-relaxed">
               The <Link href="/reports" className="text-primary underline">Financial Reports</Link> page provides powerful tools to understand your business's performance.
               <br /><br />
-              - **Interactive Dashboards:** Switch between a "Revenue Analysis" view to compare projected vs. actual income, and a "P&L Statement" view that summarizes your income and expenses for any period. You can toggle between monthly and yearly views and navigate through different periods.
+              - **Interactive Dashboards:** Switch between a "Revenue Analysis" view to compare projected vs. actual income, and a "P&L Statement" view that summarises your income and expenses for any period. You can toggle between monthly and yearly views and navigate through different periods.
               <br /><br />
               - **AI-Powered P&L Statements:** For a more formal report, use the "P&L Statement" generator. This AI tool creates a professional Profit and Loss statement with an executive summary, suitable for sharing with banks or investors.
               <br /><br />
@@ -111,7 +111,7 @@ export default function FaqPage() {
           <AccordionItem value="item-9">
             <AccordionTrigger className="text-lg font-semibold">Can I change the currency or other settings?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              Yes. In the <Link href="/settings" className="text-primary underline">Settings</Link> page, you can customize the currency, date format (e.g., DD/MM/YYYY), and color theme (light/dark). You can also set your company name for reports, define your tax residency status (which affects P&L report calculations), and enable or disable the AI-powered reporting features.
+              Yes. In the <Link href="/settings" className="text-primary underline">Settings</Link> page, you can customise the currency, date format (e.g., DD/MM/YYYY), and colour theme (light/dark). You can also set your company name for reports, define your tax residency status (which affects P&L report calculations), and enable or disable the AI-powered reporting features.
             </AccordionContent>
           </AccordionItem>
         </Accordion>

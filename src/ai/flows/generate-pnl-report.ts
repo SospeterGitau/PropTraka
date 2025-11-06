@@ -8,7 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import type { GeneratePnlReportInput, GeneratePnlReportOutput, ResidencyStatus } from '@/lib/types';
 
 // Define the input schema for the P&L report
@@ -43,7 +43,7 @@ const pnlReportPrompt = ai.definePrompt({
   name: 'pnlReportPrompt',
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
-  prompt: `You are an expert financial analyst AI specializing in Kenyan real estate accounting. Your primary task is to generate a professional, well-structured Profit and Loss (P&L) Statement for {{companyName}} covering the period from {{startDate}} to {{endDate}}.
+  prompt: `You are an expert financial analyst AI specialising in Kenyan real estate accounting. Your primary task is to generate a professional, well-structured Profit and Loss (P&L) Statement for {{companyName}} covering the period from {{startDate}} to {{endDate}}.
 
 **Critical Tax Rules:**
 - The landlord's residency status is: **{{residencyStatus}}**.

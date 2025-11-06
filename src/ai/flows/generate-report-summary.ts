@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import type { GenerateReportSummaryInput, GenerateReportSummaryOutput } from '@/lib/types';
 
 // Define the input schema for a simple summary string
@@ -37,9 +37,9 @@ const reportSummaryPrompt = ai.definePrompt({
   output: {
     schema: GenerateReportSummaryOutputSchema,
   },
-  prompt: `You are an AI assistant designed to analyze financial data for a property manager and provide a clear, narrative summary.
+  prompt: `You are an AI assistant designed to analyse financial data for a property manager and provide a clear, narrative summary.
   
-  Analyze the following data summary for the given period. Highlight the key differences between projected and actual revenue, and comment on the significance of any arrears.
+  Analyse the following data summary for the given period. Highlight the key differences between projected and actual revenue, and comment on the significance of any arrears.
   Keep the summary concise and to the point, aiming for 2-3 sentences.
 
   Data Summary:
