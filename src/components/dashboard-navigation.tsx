@@ -7,7 +7,6 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Building,
-  Building2,
   Calendar,
   CircleAlert,
   CreditCard,
@@ -32,6 +31,8 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -43,7 +44,7 @@ import { Button } from '@/components/ui/button';
 
 const coreNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/properties', label: 'Properties', icon: Building2 },
+  { href: '/properties', label: 'Properties', icon: Building },
   { href: '/revenue', label: 'Revenue', icon: TrendingUp },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
