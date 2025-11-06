@@ -67,9 +67,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { logoUrl, companyName } = useDataContext();
   
-  // Robust check for a valid logo. Fallback to default if not a valid data URI.
   const isValidDataUri = logoUrl && logoUrl.startsWith('data:image/');
-  const displayLogoUrl = isValidDataUri ? logoUrl : '/logo.png';
 
   return (
     <SidebarProvider>
@@ -79,23 +77,36 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             <Button asChild variant="ghost" size="icon" className="shrink-0 md:hidden">
               <SidebarTrigger />
             </Button>
-             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-[140px] h-[40px] relative">
-               <Image
-                src={displayLogoUrl}
-                alt={`${companyName} Logo`}
-                fill
-                className="object-contain"
-                unoptimized
-              />
+            <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-full">
+              {isValidDataUri ? (
+                <div className="w-[140px] h-[40px] relative">
+                  <Image
+                    src={logoUrl}
+                    alt={`${companyName} Logo`}
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-8 h-8 text-primary" />
+                  <span className="font-semibold text-lg">{companyName}</span>
+                </div>
+              )}
             </div>
-             <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
-               <Image
-                src={displayLogoUrl}
-                alt={`${companyName} Logo`}
-                fill
-                className="object-contain"
-                unoptimized
-              />
+            <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
+              {isValidDataUri ? (
+                <Image
+                  src={logoUrl}
+                  alt={`${companyName} Logo`}
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              ) : (
+                <Building2 className="w-6 h-6 text-primary" />
+              )}
             </div>
           </div>
         </SidebarHeader>
