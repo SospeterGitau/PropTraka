@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -26,11 +27,11 @@ const supportedCurrencies = [
 ];
 
 const supportedLocales = [
-  { code: 'en-US', name: 'English (United States)' },
-  { code: 'en-GB', name: 'English (United Kingdom)' },
-  { code: 'de-DE', name: 'German (Germany)' },
-  { code: 'fr-FR', name: 'French (France)' },
-  { code: 'ja-JP', name: 'Japanese (Japan)' },
+  { code: 'en-GB', name: 'DD/MM/YYYY (UK)' },
+  { code: 'en-US', name: 'MM/DD/YYYY (US)' },
+  { code: 'de-DE', name: 'DD.MM.YYYY (DE)' },
+  { code: 'fr-FR', name: 'DD/MM/YYYY (FR)' },
+  { code: 'ja-JP', name: 'YYYY/MM/DD (JP)' },
 ];
 
 function SettingsPage() {
@@ -234,10 +235,10 @@ function SettingsPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="locale-select">Locale</Label>
+                  <Label htmlFor="locale-select">Date Format</Label>
                   <Select value={tempLocale} onValueChange={setTempLocale}>
                     <SelectTrigger id="locale-select" className="w-[280px]">
-                      <SelectValue placeholder="Select a locale" />
+                      <SelectValue placeholder="Select a format" />
                     </SelectTrigger>
                     <SelectContent>
                       {supportedLocales.map((l) => (
