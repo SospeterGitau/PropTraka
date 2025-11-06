@@ -3,7 +3,7 @@
 
 import { useState, useEffect, memo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth, differenceInCalendarMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -157,6 +157,10 @@ function RevenueAnalysisTab() {
     ];
   }
   
+  const isFuture = isAfter(periodStart, new Date());
+  const isCurrentPeriod = viewMode === 'month' ? isSameMonth(currentDate, new Date()) : isSameYear(currentDate, new Date());
+
+
   const chartHeight = '350px';
 
   return (
@@ -177,7 +181,7 @@ function RevenueAnalysisTab() {
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="font-semibold text-center w-32 shrink-0">{dateDisplayFormat}</span>
-              <Button variant="outline" size="icon" onClick={handleNext}>
+              <Button variant="outline" size="icon" onClick={handleNext} disabled={isFuture || isCurrentPeriod}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -296,6 +300,8 @@ function PnlStatementTab() {
   
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
 
+  const periodStart = viewMode === 'month' ? startOfMonth(currentDate) : financialYearStart;
+
   const filteredRevenue = revenue.filter(t => {
     const tDate = new Date(t.date);
     const hasBeenPaid = (t.amountPaid ?? 0) > 0;
@@ -345,6 +351,9 @@ function PnlStatementTab() {
     return acc;
   }, {} as Record<string, number>);
 
+  const isFuture = isAfter(periodStart, new Date());
+  const isCurrentPeriod = viewMode === 'month' ? isSameMonth(currentDate, new Date()) : isSameYear(currentDate, new Date());
+
   return (
     <div className="space-y-6">
       <Card>
@@ -366,7 +375,7 @@ function PnlStatementTab() {
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <span className="font-semibold text-center w-32 shrink-0">{dateDisplayFormat}</span>
-                    <Button variant="outline" size="icon" onClick={handleNext}>
+                    <Button variant="outline" size="icon" onClick={handleNext} disabled={isFuture || isCurrentPeriod}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>

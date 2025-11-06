@@ -164,7 +164,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
-                    isActive={pathname.startsWith(item.href)}
+                    isActive={pathname === item.href}
                     className="justify-start text-sm h-10"
                     tooltip={item.label}
                     >

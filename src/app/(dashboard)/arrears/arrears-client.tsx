@@ -3,7 +3,7 @@
 
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, startOfToday } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,7 @@ const ArrearsClient = memo(function ArrearsClient() {
 
   useEffect(() => {
     if (!revenue) return;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+    const today = startOfToday();
 
     const calculatedArrears = revenue
       .filter(transaction => {
@@ -42,7 +41,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         const amountDue = transaction.rent + serviceChargesTotal + (transaction.deposit ?? 0);
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
-        return amountPaid < amountDue && dueDate < today;
+        return amountPaid < amountDue && dueDate <= today; // Include today's date
       })
       .map(transaction => {
         const rentDue = transaction.rent;
