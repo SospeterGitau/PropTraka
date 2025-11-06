@@ -22,6 +22,13 @@ export default function FaqPage() {
             </AccordionContent>
           </AccordionItem>
 
+          <AccordionItem value="item-13">
+            <AccordionTrigger className="text-lg font-semibold">How do I sign up or log in?</AccordionTrigger>
+            <AccordionContent className="text-base leading-relaxed">
+              LeaseLync uses a simplified authentication system. Simply use the <Link href="/login" className="text-primary underline">Login</Link> page to enter your email and a password. If an account with that email already exists, you will be logged in. If not, a new account will be created for you automatically with those credentials. If you forget your password, you can use the "Forgot Password?" link on the login page to securely reset it via email.
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Dashboard Section */}
           <AccordionItem value="item-2">
             <AccordionTrigger className="text-lg font-semibold">How does the Dashboard work?</AccordionTrigger>
@@ -95,7 +102,11 @@ export default function FaqPage() {
           <AccordionItem value="item-7">
             <AccordionTrigger className="text-lg font-semibold">How can I see who is behind on rent?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              The <Link href="/arrears" className="text-primary underline">Arrears</Link> page automatically lists all tenants with outstanding balances on payments that are past their due date. It shows how much is owed (including rent, deposits, and service charges), how many days the payment is overdue, and provides a "Send Reminder" button to easily open a pre-filled email to the tenant.
+              The <Link href="/arrears" className="text-primary underline">Arrears</Link> page automatically lists all tenants with outstanding balances on payments that are past their due date. It shows how much is owed, how many days the payment is overdue, and provides two actions:
+              <br /><br />
+              - **Send Reminder:** This button opens a pre-filled email to the tenant, which you can send from your own email client.
+              <br /><br />
+              - **Request Payment:** This button opens a dialog to initiate a payment request. This feature is designed for future integration with payment gateways like Pesapal or InstaSend to automate M-Pesa payment requests.
             </AccordionContent>
           </AccordionItem>
           
@@ -107,11 +118,15 @@ export default function FaqPage() {
             </AccordionContent>
           </AccordionItem>
           
-           {/* Settings Section */}
+           {/* Account Section */}
           <AccordionItem value="item-9">
             <AccordionTrigger className="text-lg font-semibold">Can I change the currency or other settings?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              Yes. In the <Link href="/settings" className="text-primary underline">Settings</Link> page, you can customise the currency, date format (e.g., DD/MM/YYYY), and colour theme (light/dark). You can also set your company name for reports, define your tax residency status (which affects P&L report calculations), and enable or disable the AI-powered reporting features.
+              Yes. The <Link href="/settings" className="text-primary underline">Account</Link> page is where you manage all your personal and application-wide settings. It is organized into two tabs:
+              <br /><br />
+              - **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name and logo for reports, define your tax residency status (which affects P&L report calculations), enable or disable AI features, and change your password.
+              <br /><br />
+              - **Subscription & Billing:** Manage your LeaseLync subscription plan. When you first sign up, you will be directed here to choose a plan.
             </AccordionContent>
           </AccordionItem>
         </Accordion>

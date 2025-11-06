@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
+import Link from 'next/link';
 
 export default function PrivacyPolicyPage() {
   const [lastUpdated, setLastUpdated] = useState('');
@@ -32,9 +33,10 @@ export default function PrivacyPolicyPage() {
         <ul>
           <li><strong>Tenant Name:</strong> To identify the individual associated with a tenancy.</li>
           <li><strong>Tenant Email Address:</strong> To facilitate communication, such as sending rent reminders.</li>
+          <li><strong>Tenant Phone Number:</strong> (Optional) To be used for payment gateway integrations.</li>
         </ul>
         <p>
-          This data is provided by you, the Landlord. It is your responsibility to ensure you have a lawful basis for processing this data, such as the tenant's consent or a contractual necessity.
+          This data is provided by you, the Landlord. It is your responsibility to ensure you have a lawful basis for processing this data, such as the tenant's consent or a contractual necessity. You can find more details in the <Link href="/faq" className="text-primary underline">FAQ page</Link>.
         </p>
 
         <h2 className="pt-4 font-bold">3. Purpose of Data Processing</h2>
@@ -45,6 +47,7 @@ export default function PrivacyPolicyPage() {
           <li>To associate revenue transactions (rent payments) with a specific tenant and property.</li>
           <li>To track payments and manage arrears.</li>
           <li>To enable you to send rent reminders via your own email client.</li>
+          <li>To facilitate payment requests through integrated payment gateways.</li>
         </ul>
 
         <h2 className="pt-4 font-bold">4. Lawful Basis for Processing</h2>
@@ -54,10 +57,10 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">5. Data Storage and Security</h2>
         <p>
-          All data you enter into LeaseLync, including personal data, is stored locally within your browser's storage on your device. It is not transmitted to or stored on any external servers owned or managed by LeaseLync.
+          All data you enter into LeaseLync, including personal data, is stored securely in Google Cloud Firestore and is protected by Firestore Security Rules. These rules ensure that only you, the authenticated owner of the data, can access or modify your information.
         </p>
         <p>
-          You are responsible for securing the device on which you use this App.
+          You are responsible for securing your account credentials and the devices on which you use this App.
         </p>
         
         <h2 className="pt-4 font-bold">6. Data Retention</h2>
