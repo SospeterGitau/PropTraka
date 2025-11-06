@@ -3,6 +3,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Building2,
@@ -74,8 +75,22 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
               <SidebarTrigger />
             </Button>
             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-              <Wallet className="w-6 h-6 text-primary" />
-              <h2 className="text-lg font-semibold font-headline">LeaseLync</h2>
+               <Image
+                src="/logo.png"
+                alt="LeaseLync Logo"
+                width={120}
+                height={30}
+                className="object-contain"
+              />
+            </div>
+             <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex">
+               <Image
+                src="/logo.png"
+                alt="LeaseLync Logo"
+                width={24}
+                height={24}
+                className="object-contain"
+              />
             </div>
           </div>
         </SidebarHeader>
