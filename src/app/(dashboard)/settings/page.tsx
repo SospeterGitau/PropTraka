@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { ResidencyStatus } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 const supportedCurrencies = [
   { code: 'USD', name: 'United States Dollar' },
@@ -120,16 +121,16 @@ const SettingsPage = memo(function SettingsPage() {
                     </p>
                   </div>
                    <div className="space-y-2">
-                    <Label htmlFor="logo-url">Logo URL</Label>
-                    <Input
+                    <Label htmlFor="logo-url">Logo Data URI</Label>
+                    <Textarea
                       id="logo-url"
                       value={tempLogoUrl}
                       onChange={(e) => setTempLogoUrl(e.target.value)}
-                      className="w-full max-w-sm"
-                      placeholder="https://example.com/logo.png"
+                      className="w-full max-w-lg min-h-[100px] font-mono text-xs"
+                      placeholder="data:image/png;base64,iVBORw0KGgo..."
                     />
                     <p className="text-sm text-muted-foreground">
-                      Paste a public URL to your company logo.
+                      Paste a Data URI for your logo. You can use a free online "image to Data URI" converter.
                     </p>
                   </div>
                </div>
@@ -316,3 +317,5 @@ const SettingsPage = memo(function SettingsPage() {
 
 
 export default SettingsPage;
+
+    
