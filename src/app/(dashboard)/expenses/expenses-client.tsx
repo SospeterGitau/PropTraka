@@ -57,6 +57,7 @@ function ExpensesTable({
           <TableHead>Date</TableHead>
           <TableHead>Property</TableHead>
           <TableHead>Category</TableHead>
+          <TableHead>Vendor</TableHead>
           {showFrequency && <TableHead>Frequency</TableHead>}
           <TableHead className="text-right">Amount</TableHead>
           <TableHead>
@@ -89,6 +90,7 @@ function ExpensesTable({
                   <TableCell>
                     <Badge variant="secondary">{item.category}</Badge>
                   </TableCell>
+                  <TableCell>{item.contractorName}</TableCell>
                   {showFrequency && (
                     <TableCell className="capitalize">{item.frequency}</TableCell>
                   )}
@@ -111,7 +113,7 @@ function ExpensesTable({
                 </TableRow>
                 <CollapsibleContent asChild>
                   <TableRow>
-                    <TableCell colSpan={showFrequency ? 6 : 5} className="py-2 px-4 bg-muted/50">
+                    <TableCell colSpan={showFrequency ? 7 : 6} className="py-2 px-4 bg-muted/50">
                       <div className="flex items-start gap-2">
                         <MessageSquare className="h-4 w-4 mt-1 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{item.notes}</p>
@@ -137,6 +139,7 @@ function ExpensesTable({
               <TableCell>
                 <Badge variant="secondary">{item.category}</Badge>
               </TableCell>
+              <TableCell>{item.contractorName}</TableCell>
               {showFrequency && (
                 <TableCell className="capitalize">{item.frequency}</TableCell>
               )}
@@ -165,7 +168,7 @@ function ExpensesTable({
 }
 
 function ExpensesClient() {
-  const { properties, expenses, addExpense, updateExpense, deleteExpense, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
+  const { properties, expenses, contractors, addExpense, updateExpense, deleteExpense, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -301,12 +304,13 @@ function ExpensesClient() {
         </TabsContent>
       </Tabs>
       
-      {properties && <ExpenseForm
+      {properties && contractors && <ExpenseForm
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleFormSubmit}
         transaction={selectedTransaction}
         properties={properties}
+        contractors={contractors}
       />}
       
       <DeleteConfirmationDialog

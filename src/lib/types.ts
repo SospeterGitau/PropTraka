@@ -35,7 +35,8 @@ export interface Transaction {
   tenant?: string;
   tenantEmail?: string;
   tenantPhone?: string;
-  vendor?: string;
+  contractorId?: string;
+  contractorName?: string;
   deposit?: number;
   depositReturned?: boolean;
   amountPaid?: number;
@@ -49,6 +50,31 @@ export interface Transaction {
   receiptUrl?: string;
   transactions?: Transaction[]; 
   nextDueDate?: string;
+}
+
+export interface MaintenanceRequest {
+  id: string;
+  ownerId: string; // Foreign key to the user
+  propertyId?: string;
+  propertyName: string;
+  description: string;
+  status: 'To Do' | 'In Progress' | 'Done' | 'Cancelled';
+  priority: 'Low' | 'Medium' | 'High' | 'Emergency';
+  reportedDate: string;
+  completedDate?: string;
+  cost?: number;
+  contractorId?: string;
+  contractorName?: string;
+}
+
+export interface Contractor {
+  id: string;
+  ownerId: string; // Foreign key to the user
+  name: string;
+  specialty: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
 }
 
 export interface Arrear {
@@ -69,23 +95,10 @@ export interface ChangeLogEntry {
   id: string;
   ownerId: string; // Foreign key to the user
   date: string;
-  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance';
+  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance' | 'Contractor';
   action: 'Created' | 'Updated' | 'Deleted';
   description: string;
   entityId: string;
-}
-
-export interface MaintenanceRequest {
-  id: string;
-  ownerId: string; // Foreign key to the user
-  propertyId?: string;
-  propertyName: string;
-  description: string;
-  status: 'To Do' | 'In Progress' | 'Done' | 'Cancelled';
-  priority: 'Low' | 'Medium' | 'High' | 'Emergency';
-  reportedDate: string;
-  completedDate?: string;
-  cost?: number;
 }
 
 // AI Flow Types

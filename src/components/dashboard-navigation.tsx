@@ -19,6 +19,7 @@ import {
   History,
   Wrench,
   LogOut,
+  Users,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
 
@@ -46,6 +47,7 @@ const coreNavItems = [
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
   { href: '/maintenance', label: 'Maintenance', icon: Wrench },
+  { href: '/contractors', label: 'Contractors', icon: Users },
 ];
 
 const analysisNavItems = [

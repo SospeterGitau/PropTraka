@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle, X } from 'lucide-react';
+import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle, X, User } from 'lucide-react';
 import type { MaintenanceRequest } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ import {
   DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type KanbanColumnProps = {
   title: MaintenanceRequest['status'];
@@ -122,7 +124,21 @@ function KanbanCard({
       </CardHeader>
       <CardFooter className="p-4 flex justify-between items-center text-sm">
         <Badge className={cn("text-xs", priorityColors[request.priority])}>{request.priority}</Badge>
-        <span className="text-muted-foreground">{formattedDate}</span>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          {request.contractorName && (
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <User className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Assigned to: {request.contractorName}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          <span>{formattedDate}</span>
+        </div>
       </CardFooter>
     </Card>
   );

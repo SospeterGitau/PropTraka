@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Property, MaintenanceRequest } from '@/lib/types';
+import type { Property, MaintenanceRequest, Contractor } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,18 +22,21 @@ interface MaintenanceFormProps {
   onSubmit: (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => void;
   request?: MaintenanceRequest | null;
   properties: Property[];
+  contractors: Contractor[];
 }
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties }: MaintenanceFormProps) {
+export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties, contractors }: MaintenanceFormProps) {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const propertyId = formData.get('propertyId') as string;
     const selectedProperty = properties.find(p => p.id === propertyId);
+    const contractorId = formData.get('contractorId') as string;
+    const selectedContractor = contractors.find(c => c.id === contractorId);
 
     const data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest = {
       ...(request ? { id: request.id } : {}), // include id if editing
@@ -45,6 +48,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
       reportedDate: formData.get('reportedDate') as string,
       completedDate: (formData.get('completedDate') as string) || undefined,
       cost: Number(formData.get('cost')) || undefined,
+      contractorId: contractorId !== 'none' ? contractorId : undefined,
+      contractorName: selectedContractor ? selectedContractor.name : undefined,
     };
     onSubmit(data);
     onClose();
@@ -77,6 +82,21 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
             <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" defaultValue={request?.description} required />
+            </div>
+            
+             <div className="space-y-2">
+                <Label htmlFor="contractorId">Assigned Contractor (Optional)</Label>
+                <Select name="contractorId" defaultValue={request?.contractorId || 'none'}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a contractor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {contractors.map(contractor => (
+                            <SelectItem key={contractor.id} value={contractor.id}>{contractor.name} ({contractor.specialty})</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

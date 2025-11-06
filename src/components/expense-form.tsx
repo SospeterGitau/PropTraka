@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import type { Property, Transaction } from '@/lib/types';
+import type { Property, Transaction, Contractor } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,18 +60,21 @@ export function ExpenseForm({
   onSubmit,
   transaction,
   properties,
+  contractors,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Transaction) => void;
   transaction?: Partial<Transaction> | null;
   properties: Property[];
+  contractors: Contractor[];
 }) {
   const [category, setCategory] = useState('');
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [expenseType, setExpenseType] = useState<Transaction['expenseType']>('one-off');
+  const [contractorId, setContractorId] = useState('');
+  const [isContractorOpen, setIsContractorOpen] = useState(false);
   
-  // Memoize custom categories to avoid re-calculating on every render
   const allCategories = useMemo(() => {
     const customCategory = category && !defaultCategories.includes(category) ? [category] : [];
     return [...defaultCategories, ...customCategory];
@@ -81,6 +84,7 @@ export function ExpenseForm({
     if (isOpen) {
       setCategory(transaction?.category || 'Maintenance');
       setExpenseType(transaction?.expenseType || 'one-off');
+      setContractorId(transaction?.contractorId || '');
     }
   }, [isOpen, transaction]);
 
@@ -89,6 +93,7 @@ export function ExpenseForm({
     const formData = new FormData(event.currentTarget);
     const propertyId = formData.get('propertyId') as string;
     const selectedProperty = properties.find(p => p.id === propertyId);
+    const selectedContractor = contractors.find(c => c.id === contractorId);
     
     const data: Transaction = {
       id: transaction?.id || `e${Date.now()}`,
@@ -97,7 +102,8 @@ export function ExpenseForm({
       propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Expense',
       propertyId: propertyId !== 'none' ? propertyId : undefined,
       category: category,
-      vendor: formData.get('vendor') as string,
+      contractorId: contractorId || undefined,
+      contractorName: selectedContractor?.name,
       notes: formData.get('notes') as string,
       type: 'expense',
       expenseType: expenseType,
@@ -208,11 +214,44 @@ export function ExpenseForm({
               </Select>
             </div>
           )}
-
+          
           <div className="space-y-2">
-            <Label>Vendor</Label>
-            <Input name="vendor" defaultValue={transaction?.vendor} />
+            <Label>Vendor / Contractor</Label>
+             <Popover open={isContractorOpen} onOpenChange={setIsContractorOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={isContractorOpen} className="w-full justify-between">
+                  {contractorId
+                    ? contractors.find(c => c.id === contractorId)?.name
+                    : "Select a contractor..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                  <CommandInput placeholder="Search contractors..." />
+                  <CommandList>
+                    <CommandEmpty>No contractor found.</CommandEmpty>
+                    <CommandGroup>
+                      {contractors.map((c) => (
+                        <CommandItem
+                          key={c.id}
+                          value={c.name}
+                          onSelect={() => {
+                            setContractorId(c.id === contractorId ? "" : c.id);
+                            setIsContractorOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />
+                          {c.name} ({c.specialty})
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
+
           <div className="space-y-2">
             <Label>Amount</Label>
             <Input name="amount" type="number" step="0.01" defaultValue={transaction?.amount} required />

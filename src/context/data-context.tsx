@@ -22,7 +22,7 @@
  */
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
-import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest } from '@/lib/types';
+import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest, Contractor } from '@/lib/types';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
@@ -49,6 +49,11 @@ interface DataContextType {
   addMaintenanceRequest: (request: Omit<MaintenanceRequest, 'id' | 'ownerId'>) => Promise<void>;
   updateMaintenanceRequest: (request: MaintenanceRequest) => Promise<void>;
   deleteMaintenanceRequest: (requestId: string) => Promise<void>;
+
+  contractors: Contractor[] | null;
+  addContractor: (contractor: Omit<Contractor, 'id' | 'ownerId'>) => Promise<void>;
+  updateContractor: (contractor: Contractor) => Promise<void>;
+  deleteContractor: (contractorId: string) => Promise<void>;
 
   changelog: ChangeLogEntry[] | null;
   addChangeLogEntry: (entry: Omit<ChangeLogEntry, 'id' | 'date'|'ownerId'>) => void;
@@ -111,7 +116,20 @@ async function seedDatabase(
     return { ...p, id: docRef.id, ownerId: user.uid };
   }));
 
-  // 2. Tenancies (Revenue)
+  // 2. Contractors
+  const contractorsCollectionRef = collection(firestore, 'contractors');
+  const contractorsToCreate = [
+    { name: 'FixIt Bros', specialty: 'General Maintenance', email: 'contact@fixit.com', phone: '0712345678', ownerId: user.uid },
+    { name: 'PlumbPerfect', specialty: 'Plumbing', email: 'hello@plumbperfect.co.ke', phone: '0787654321', ownerId: user.uid },
+    { name: 'Sparky Electricals', specialty: 'Electrical', email: 'sparky@gmail.com', phone: '0711223344', ownerId: user.uid },
+  ];
+   const contractorDocsData = await Promise.all(contractorsToCreate.map(async (c) => {
+    const docRef = doc(contractorsCollectionRef);
+    batch.set(docRef, { ...c, ownerId: user.uid });
+    return { ...c, id: docRef.id, ownerId: user.uid };
+  }));
+
+  // 3. Tenancies (Revenue)
   const revenueCollectionRef = collection(firestore, 'revenue');
   const tenancy1Id = `t${Date.now()}`;
   const startDate1 = new Date();
@@ -135,12 +153,12 @@ async function seedDatabase(
     });
   }
 
-  // 3. Expenses
+  // 4. Expenses
   const expensesCollectionRef = collection(firestore, 'expenses');
   const expensesToCreate = [
-    { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', vendor: 'FixIt Bros', expenseType: 'one-off', ownerId: user.uid },
-    { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, category: 'Repairs', vendor: 'PlumbPerfect', expenseType: 'one-off', ownerId: user.uid },
-    { date: new Date().toISOString().split('T')[0], amount: 25000, category: 'Insurance', propertyName: 'General Expense', vendor: 'InsuCo', expenseType: 'recurring', frequency: 'yearly', ownerId: user.uid },
+    { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', contractorId: contractorDocsData[0].id, contractorName: contractorDocsData[0].name, expenseType: 'one-off', ownerId: user.uid },
+    { date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0], amount: 5000, propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, category: 'Repairs', contractorId: contractorDocsData[1].id, contractorName: contractorDocsData[1].name, expenseType: 'one-off', ownerId: user.uid },
+    { date: new Date().toISOString().split('T')[0], amount: 25000, category: 'Insurance', propertyName: 'General Expense', expenseType: 'recurring', frequency: 'yearly', ownerId: user.uid },
   ];
 
   expensesToCreate.forEach(e => {
@@ -148,11 +166,11 @@ async function seedDatabase(
     batch.set(expDocRef, { ...e, type: 'expense' });
   });
 
-  // 4. Maintenance Requests
+  // 5. Maintenance Requests
   const maintenanceCollectionRef = collection(firestore, 'maintenanceRequests');
   const maintenanceToCreate = [
-    { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0], ownerId: user.uid },
-    { propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0], ownerId: user.uid },
+    { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0], contractorId: contractorDocsData[0].id, contractorName: contractorDocsData[0].name, cost: 15000, ownerId: user.uid },
+    { propertyId: propertyDocsData[1].id, propertyName: `${propertyDocsData[1].addressLine1}, ${propertyDocsData[1].city}`, description: 'Repaint bedroom walls', status: 'In Progress', priority: 'Medium', reportedDate: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString().split('T')[0], contractorId: contractorDocsData[0].id, contractorName: contractorDocsData[0].name, ownerId: user.uid },
     { propertyName: 'General Business Task', description: 'Annual fire safety inspection for all properties', status: 'To Do', priority: 'Medium', reportedDate: new Date().toISOString().split('T')[0], ownerId: user.uid },
   ];
 
@@ -174,19 +192,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
   const expensesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
   const maintenanceRequestsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
+  const contractorsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
   const changelogQuery = useMemo(() => user?.uid ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
 
   const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesQuery);
   const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueQuery);
   const { data: expenses, isLoading: loadingExpenses } = useCollection<Transaction>(expensesQuery);
   const { data: maintenanceRequests, isLoading: loadingMaintenance } = useCollection<MaintenanceRequest>(maintenanceRequestsQuery);
+  const { data: contractors, isLoading: loadingContractors } = useCollection<Contractor>(contractorsQuery);
   const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogQuery, {
     sortField: 'date',
     sortDirection: 'desc',
   });
   
   // Overall data loading status
-  const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance;
+  const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance || loadingContractors;
 
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
@@ -201,7 +221,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const allCollectionsLoaded = !loadingProperties && !loadingRevenue && !loadingExpenses && !loadingMaintenance;
+    const allCollectionsLoaded = !loadingProperties && !loadingRevenue && !loadingExpenses && !loadingMaintenance && !loadingContractors;
 
     if (allCollectionsLoaded) {
       setHasSeedingBeenChecked(true); 
@@ -210,7 +230,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         properties?.length === 0 &&
         revenue?.length === 0 &&
         expenses?.length === 0 &&
-        maintenanceRequests?.length === 0;
+        maintenanceRequests?.length === 0 &&
+        contractors?.length === 0;
 
       if (shouldSeed) {
         seedDatabase(firestore, user);
@@ -218,8 +239,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [
     isAuthLoading, user, firestore, 
-    properties, revenue, expenses, maintenanceRequests,
-    loadingProperties, loadingRevenue, loadingExpenses, loadingMaintenance,
+    properties, revenue, expenses, maintenanceRequests, contractors,
+    loadingProperties, loadingRevenue, loadingExpenses, loadingMaintenance, loadingContractors,
     hasSeedingBeenChecked
   ]);
 
@@ -363,6 +384,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const reqDocRef = doc(firestore, 'maintenanceRequests', requestId);
     await deleteDoc(reqDocRef);
   };
+  
+  // Contractors
+  const addContractor = async (contractor: Omit<Contractor, 'id' | 'ownerId'>) => {
+    if (!user) return;
+    const contractorsCollection = collection(firestore, 'contractors');
+    const newContractor = { ...contractor, ownerId: user.uid };
+    await addDoc(contractorsCollection, newContractor);
+  };
+  const updateContractor = async (contractor: Contractor) => {
+    if (!user) return;
+    const conDocRef = doc(firestore, 'contractors', contractor.id);
+    await setDoc(conDocRef, contractor, { merge: true });
+  };
+  const deleteContractor = async (contractorId: string) => {
+    if (!user) return;
+    const conDocRef = doc(firestore, 'contractors', contractorId);
+    await deleteDoc(conDocRef);
+  };
 
 
   const formatCurrency = (amount: number) => {
@@ -428,7 +467,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         details: {
             Property: item.propertyName,
             Category: item.category,
-            Vendor: item.vendor,
+            Vendor: item.contractorName,
             Amount: formatCurrencyWithCents(item.amount),
         }
       });
@@ -446,6 +485,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addExpense, updateExpense, deleteExpense,
     maintenanceRequests,
     addMaintenanceRequest, updateMaintenanceRequest, deleteMaintenanceRequest,
+    contractors,
+    addContractor, updateContractor, deleteContractor,
     changelog,
     addChangeLogEntry,
     calendarEvents,
@@ -459,7 +500,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     formatCurrencyForAxis,
     isDataLoading
   }), [
-    properties, revenue, expenses, maintenanceRequests, changelog, calendarEvents,
+    properties, revenue, expenses, maintenanceRequests, contractors, changelog, calendarEvents,
     currency, locale, companyName, residencyStatus, isPnlReportEnabled,
     isMarketResearchEnabled, isDataLoading, user?.uid
   ]);

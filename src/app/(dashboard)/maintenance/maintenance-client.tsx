@@ -22,7 +22,8 @@ function formatAddress(property: Property) {
 function MaintenanceClient() {
   const { 
     properties,
-    maintenanceRequests, 
+    maintenanceRequests,
+    contractors,
     addMaintenanceRequest, 
     updateMaintenanceRequest, 
     deleteMaintenanceRequest, 
@@ -62,7 +63,8 @@ function MaintenanceClient() {
         date: request.completedDate || request.reportedDate,
         category: 'Maintenance',
         notes: `Maintenance: ${request.description}`,
-        amount: request.cost
+        amount: request.cost,
+        contractorId: request.contractorId,
     });
     setIsExpenseFormOpen(true);
   };
@@ -143,7 +145,7 @@ function MaintenanceClient() {
     return maintenanceRequests.filter(req => req.propertyId === propertyFilter);
   }, [maintenanceRequests, propertyFilter]);
 
-  if (isDataLoading || !properties || !maintenanceRequests) {
+  if (isDataLoading || !properties || !maintenanceRequests || !contractors) {
     return (
       <>
         <PageHeader title="Maintenance">
@@ -202,15 +204,17 @@ function MaintenanceClient() {
         onSubmit={handleFormSubmit}
         request={selectedRequest}
         properties={properties}
+        contractors={contractors}
       />
       
-      {properties && <ExpenseForm
+      <ExpenseForm
         isOpen={isExpenseFormOpen}
         onClose={() => setIsExpenseFormOpen(false)}
         onSubmit={handleExpenseFormSubmit}
         transaction={expenseFromMaintenance}
         properties={properties}
-      />}
+        contractors={contractors}
+      />
       
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}

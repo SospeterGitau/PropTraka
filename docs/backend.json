@@ -31,7 +31,7 @@
     "transaction": {
       "title": "Transaction",
       "description": "A financial transaction, either revenue or expense.",
-      "type": "object",
+      "type": "object"
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
@@ -44,7 +44,8 @@
         "tenant": { "type": "string" },
         "tenantEmail": { "type": "string" },
         "tenantPhone": { "type": "string" },
-        "vendor": { "type": "string" },
+        "contractorId": { "type": "string" },
+        "contractorName": { "type": "string" },
         "deposit": { "type": "number" },
         "depositReturned": { "type": "boolean" },
         "amountPaid": { "type": "number" },
@@ -73,9 +74,26 @@
             "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Emergency"] },
             "reportedDate": { "type": "string", "format": "date" },
             "completedDate": { "type": "string", "format": "date" },
-            "cost": { "type": "number" }
+            "cost": { "type": "number" },
+            "contractorId": { "type": "string" },
+            "contractorName": { "type": "string" }
         },
         "required": ["propertyName", "description", "status", "priority", "reportedDate", "ownerId"]
+    },
+    "contractor": {
+      "title": "Contractor",
+      "description": "A contractor or vendor who provides services.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "specialty": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["name", "specialty", "ownerId"]
     },
     "changeLogEntry": {
         "title": "Change Log Entry",
@@ -112,6 +130,10 @@
     "/maintenanceRequests/{requestId}": {
         "schema": { "$ref": "#/entities/maintenanceRequest" },
         "description": "Stores maintenance requests."
+    },
+    "/contractors/{contractorId}": {
+      "schema": { "$ref": "#/entities/contractor" },
+      "description": "Stores contractor and vendor information."
     },
     "/changelog/{logId}": {
         "schema": { "$ref": "#/entities/changeLogEntry" },
