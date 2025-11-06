@@ -56,8 +56,8 @@ const analysisNavItems = [
 ];
 
 const utilityNavItems = [
-    { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
 ];
