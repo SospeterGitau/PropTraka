@@ -6,38 +6,38 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
+  Building,
   Building2,
   Calendar,
   CircleAlert,
+  HelpCircle,
+  History,
   LayoutDashboard,
+  LineChart,
+  LogOut,
+  Settings,
+  Shield,
   TrendingDown,
   TrendingUp,
-  LineChart,
-  Settings,
-  HelpCircle,
-  Shield,
-  History,
-  Wrench,
-  LogOut,
   Users,
+  Wrench,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
 import { useDataContext } from '@/context/data-context';
 
 import {
-  SidebarProvider,
   Sidebar,
-  SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
-  SidebarInset,
   SidebarGroup,
-  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
   SidebarSeparator,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 
@@ -90,7 +90,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Building2 className="w-8 h-8 text-primary" />
+                  <Building className="w-8 h-8 text-primary" />
                   <span className="font-semibold text-lg">{companyName}</span>
                 </div>
               )}
@@ -105,7 +105,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                   unoptimized
                 />
               ) : (
-                <Building2 className="w-6 h-6 text-primary" />
+                <Building className="w-6 h-6 text-primary" />
               )}
             </div>
           </div>
