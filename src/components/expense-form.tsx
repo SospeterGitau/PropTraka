@@ -79,7 +79,7 @@ export function ExpenseForm({
   
   useEffect(() => {
     if (isOpen) {
-      setCategory(transaction?.category || '');
+      setCategory(transaction?.category || 'Maintenance');
       setExpenseType(transaction?.expenseType || 'one-off');
     }
   }, [isOpen, transaction]);
@@ -234,5 +234,3 @@ export function ExpenseForm({
     </Dialog>
   );
 }
-
-    

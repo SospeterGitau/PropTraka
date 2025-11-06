@@ -4,6 +4,7 @@
 import { useState, useMemo, memo } from 'react';
 import { useDataContext } from '@/context/data-context';
 import type { MaintenanceRequest, Transaction, Property } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ function MaintenanceClient() {
     addChangeLogEntry, 
     isDataLoading 
   } = useDataContext();
+  const { toast } = useToast();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
@@ -59,7 +61,8 @@ function MaintenanceClient() {
         propertyId: request.propertyId,
         date: request.completedDate || request.reportedDate,
         category: 'Maintenance',
-        notes: `Maintenance: ${request.description}`
+        notes: `Maintenance: ${request.description}`,
+        amount: request.cost
     });
     setIsExpenseFormOpen(true);
   };
@@ -122,6 +125,10 @@ function MaintenanceClient() {
       action: 'Created',
       description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was logged from a maintenance task.`,
       entityId: data.id,
+    });
+     toast({
+      title: "Expense Created",
+      description: "The expense has been logged successfully.",
     });
   };
 

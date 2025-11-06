@@ -85,6 +85,7 @@ export interface MaintenanceRequest {
   priority: 'Low' | 'Medium' | 'High' | 'Emergency';
   reportedDate: string;
   completedDate?: string;
+  cost?: number;
 }
 
 // AI Flow Types
@@ -122,5 +123,3 @@ export interface GenerateMarketResearchOutput {
   error?: string | null;
   hint?: string | null;
 }
-
-    

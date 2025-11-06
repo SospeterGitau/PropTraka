@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Property, MaintenanceRequest } from '@/lib/types';
@@ -43,6 +44,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
       priority: formData.get('priority') as MaintenanceRequest['priority'],
       reportedDate: formData.get('reportedDate') as string,
       completedDate: (formData.get('completedDate') as string) || undefined,
+      cost: Number(formData.get('cost')) || undefined,
     };
     onSubmit(data);
     onClose();
@@ -117,6 +119,11 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
                     <Label htmlFor="completedDate">Date Completed</Label>
                     <Input id="completedDate" name="completedDate" type="date" defaultValue={request?.completedDate ? request.completedDate.split('T')[0] : ''} />
                 </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="cost">Cost (Optional)</Label>
+                <Input id="cost" name="cost" type="number" step="0.01" defaultValue={request?.cost} placeholder="Enter the final cost" />
             </div>
           
           <DialogFooter className="pt-6">
