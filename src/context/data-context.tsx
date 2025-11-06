@@ -1,3 +1,4 @@
+
 'use client';
 
 /**
@@ -135,20 +136,31 @@ async function seedDatabase(
 
   // 3. Tenancies (Revenue)
   const revenueCollectionRef = collection(firestore, 'revenue');
+  
+  // --- Tenancy 1: Domestic Property with Service Charges ---
   const tenancy1Id = `t${Date.now()}`;
   const startDate1 = new Date();
   startDate1.setMonth(startDate1.getMonth() - 4);
   const endDate1 = new Date(startDate1);
   endDate1.setFullYear(endDate1.getFullYear() + 1);
 
+  const serviceCharges1 = [
+    { name: 'Security', amount: 5000 },
+    { name: 'Water', amount: 2500 },
+  ];
+  
   for (let i = 0; i < 12; i++) {
     const dueDate = new Date(startDate1);
     dueDate.setMonth(startDate1.getMonth() + i);
     const revDocRef = doc(revenueCollectionRef);
+    const totalDue = 120000 + serviceCharges1.reduce((sum, sc) => sum + sc.amount, 0);
+
     batch.set(revDocRef, {
       tenancyId: tenancy1Id,
       date: dueDate.toISOString().split('T')[0],
-      amount: 120000, amountPaid: i < 4 ? 120000 : 0, // Pay first 4 months
+      rent: 120000,
+      serviceCharges: serviceCharges1,
+      amountPaid: i < 4 ? totalDue : 0, // Pay first 4 months in full
       propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`,
       tenant: 'Alice Johnson', tenantEmail: 'alice@example.com', type: 'revenue',
       deposit: i === 0 ? 120000 : 0, ownerId: user.uid,
@@ -156,6 +168,32 @@ async function seedDatabase(
       tenancyEndDate: endDate1.toISOString().split('T')[0],
     });
   }
+  
+  // --- Tenancy 2: Commercial Property ---
+  const tenancy2Id = `t${Date.now() + 1}`;
+  const startDate2 = new Date();
+  startDate2.setMonth(startDate2.getMonth() - 2);
+  const endDate2 = new Date(startDate2);
+  endDate2.setFullYear(endDate2.getFullYear() + 2); // 2-year lease
+
+  for (let i = 0; i < 24; i++) {
+    const dueDate = new Date(startDate2);
+    dueDate.setMonth(startDate2.getMonth() + i);
+    const revDocRef = doc(revenueCollectionRef);
+
+    batch.set(revDocRef, {
+      tenancyId: tenancy2Id,
+      date: dueDate.toISOString().split('T')[0],
+      rent: 250000,
+      amountPaid: i < 2 ? 250000 : 0, // Pay first 2 months
+      propertyId: propertyDocsData[2].id, propertyName: `${propertyDocsData[2].addressLine1}, ${propertyDocsData[2].city}`,
+      tenant: 'Innovate Corp', tenantEmail: 'accounts@innovate.com', type: 'revenue',
+      deposit: i === 0 ? 500000 : 0, ownerId: user.uid,
+      tenancyStartDate: startDate2.toISOString().split('T')[0],
+      tenancyEndDate: endDate2.toISOString().split('T')[0],
+    });
+  }
+
 
   // 4. Expenses
   const expensesCollectionRef = collection(firestore, 'expenses');
