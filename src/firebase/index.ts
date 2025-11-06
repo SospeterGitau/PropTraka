@@ -7,8 +7,7 @@
  * to provide a single, consistent import path for other parts of the app.
  *
  * It is responsible for:
- * 1. Initializing the Firebase app on the client side. This includes setting up App Check
- *    with reCAPTCHA for production or a debug token for development.
+ * 1. Initializing the Firebase app on the client side.
  * 2. Exporting the core Firebase services (Auth, Firestore, Analytics).
  * 3. Exporting all custom hooks related to Firebase, such as `useUser`, `useCollection`,
  *    and `useDoc`.
@@ -23,34 +22,12 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   
-  if (typeof window !== 'undefined') {
-    // This block runs only in the browser
-    
-    // For development, use a debug token. For production, use reCAPTCHA.
-    const provider = process.env.NODE_ENV !== 'production'
-      ? new ReCaptchaV3Provider('6Le-............-....') // This is a placeholder for the debug provider
-      : new ReCaptchaV3Provider("6Le-............-....");
-    
-    if (process.env.NODE_ENV !== 'production') {
-        // This global flag tells the Firebase SDK to log the debug token to the console.
-        // You would then add this token to the Firebase console for App Check.
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    }
-    
-    // Initialize App Check
-    initializeAppCheck(app, {
-      provider: provider,
-      isTokenAutoRefreshEnabled: true
-    });
-  }
+  // App Check is now initialized in FirebaseClientProvider to ensure it runs client-side only.
 
   return getSdks(app);
 }
