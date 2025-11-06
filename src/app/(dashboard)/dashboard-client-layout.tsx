@@ -12,7 +12,7 @@ function SubscriptionChecker({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    // If we are on the subscription page already, do nothing.
+    // If we are on the account/settings page already, do nothing.
     if (pathname === '/settings') {
       return;
     }
@@ -28,7 +28,7 @@ function SubscriptionChecker({ children }: { children: React.ReactNode }) {
     }
   }, [subscriptions, isDataLoading, router, pathname]);
   
-  // If we are on the subscription page, always show it.
+  // If we are on the settings page, always show it.
   if (pathname === '/settings') {
       return <>{children}</>;
   }
