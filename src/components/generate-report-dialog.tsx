@@ -172,104 +172,106 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
           </DialogDescription>
         </DialogHeader>
 
-        {report ? (
-          <div className="prose prose-sm max-w-none h-[60vh] overflow-y-auto border rounded-md p-4 bg-muted/50 whitespace-pre-wrap font-sans text-sm">
-            {report}
-          </div>
-        ) : (
-          <div className="space-y-6 py-4">
-            {isPending ? (
-              <div className="flex flex-col items-center justify-center min-h-[300px]">
-                <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-                <p className="mt-4 text-muted-foreground">Generating your report, please wait...</p>
-              </div>
-            ) : error ? (
-                <Alert variant="destructive" className="w-full">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Error: {error.code}</AlertTitle>
-                  <AlertDescription>
-                    {error.hint}
-                  </AlertDescription>
-                </Alert>
-            ) : (
-              <div className="space-y-4">
-                 <div className="flex flex-col sm:flex-row gap-2 items-center">
-                  <Label className="sm:w-32">Date Range:</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                          "w-full sm:w-[300px] justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date?.from ? (
-                          date.to ? (
-                            <>
-                              {format(date.from, "LLL dd, y")} -{" "}
-                              {format(date.to, "LLL dd, y")}
-                            </>
+        <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4">
+          {report ? (
+            <div className="prose prose-sm max-w-none whitespace-pre-wrap font-sans text-sm">
+              {report}
+            </div>
+          ) : (
+            <div className="space-y-6 py-4">
+              {isPending ? (
+                <div className="flex flex-col items-center justify-center min-h-[300px]">
+                  <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                  <p className="mt-4 text-muted-foreground">Generating your report, please wait...</p>
+                </div>
+              ) : error ? (
+                  <Alert variant="destructive" className="w-full">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Error: {error.code}</AlertTitle>
+                    <AlertDescription>
+                      {error.hint}
+                    </AlertDescription>
+                  </Alert>
+              ) : (
+                <div className="space-y-4">
+                   <div className="flex flex-col sm:flex-row gap-2 items-center">
+                    <Label className="sm:w-32">Date Range:</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="date"
+                          variant={"outline"}
+                          className={cn(
+                            "w-full sm:w-[300px] justify-start text-left font-normal",
+                            !date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {date?.from ? (
+                            date.to ? (
+                              <>
+                                {format(date.from, "LLL dd, y")} -{" "}
+                                {format(date.to, "LLL dd, y")}
+                              </>
+                            ) : (
+                              format(date.from, "LLL dd, y")
+                            )
                           ) : (
-                            format(date.from, "LLL dd, y")
-                          )
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={date?.from}
-                        selected={date}
-                        onSelect={setDate}
-                        numberOfMonths={2}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <Select onValueChange={handlePresetChange}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Select a preset" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="last-7-days">Last 7 Days</SelectItem>
-                      <SelectItem value="this-calendar-month">This Month</SelectItem>
-                      <SelectItem value="last-calendar-month">Last Month</SelectItem>
-                      <SelectItem value="this-financial-year">This Financial Year</SelectItem>
-                      <SelectItem value="last-financial-year">Last Financial Year</SelectItem>
-                      <SelectItem value="q1">Q1 (Jul-Sep)</SelectItem>
-                      <SelectItem value="q2">Q2 (Oct-Dec)</SelectItem>
-                      <SelectItem value="q3">Q3 (Jan-Mar)</SelectItem>
-                      <SelectItem value="q4">Q4 (Apr-Jun)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                 </div>
-
-                 <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="link" className="p-0 h-auto text-sm">
-                         <ChevronsUpDown className="mr-2 h-4 w-4" />
-                         View & Edit Prompt
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 space-y-2">
-                        <Label htmlFor="prompt-textarea">Report Generation Prompt</Label>
-                        <Textarea
-                            id="prompt-textarea"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            className="h-64 font-mono text-xs"
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          initialFocus
+                          mode="range"
+                          defaultMonth={date?.from}
+                          selected={date}
+                          onSelect={setDate}
+                          numberOfMonths={2}
                         />
-                    </CollapsibleContent>
-                 </Collapsible>
-              </div>
-            )}
-          </div>
-        )}
+                      </PopoverContent>
+                    </Popover>
+                    <Select onValueChange={handlePresetChange}>
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Select a preset" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="last-7-days">Last 7 Days</SelectItem>
+                        <SelectItem value="this-calendar-month">This Month</SelectItem>
+                        <SelectItem value="last-calendar-month">Last Month</SelectItem>
+                        <SelectItem value="this-financial-year">This Financial Year</SelectItem>
+                        <SelectItem value="last-financial-year">Last Financial Year</SelectItem>
+                        <SelectItem value="q1">Q1 (Jul-Sep)</SelectItem>
+                        <SelectItem value="q2">Q2 (Oct-Dec)</SelectItem>
+                        <SelectItem value="q3">Q3 (Jan-Mar)</SelectItem>
+                        <SelectItem value="q4">Q4 (Apr-Jun)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                   </div>
+
+                   <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="link" className="p-0 h-auto text-sm">
+                           <ChevronsUpDown className="mr-2 h-4 w-4" />
+                           View & Edit Prompt
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2 space-y-2">
+                          <Label htmlFor="prompt-textarea">Report Generation Prompt</Label>
+                          <Textarea
+                              id="prompt-textarea"
+                              value={prompt}
+                              onChange={(e) => setPrompt(e.target.value)}
+                              className="h-64 font-mono text-xs"
+                          />
+                      </CollapsibleContent>
+                   </Collapsible>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         
         <DialogFooter>
           {report && (
