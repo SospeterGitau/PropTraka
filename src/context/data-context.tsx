@@ -1,4 +1,3 @@
-
 'use client';
 
 /**
@@ -200,13 +199,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { data: expenses, isLoading: loadingExpenses } = useCollection<Transaction>(expensesQuery);
   const { data: maintenanceRequests, isLoading: loadingMaintenance } = useCollection<MaintenanceRequest>(maintenanceRequestsQuery);
   const { data: contractors, isLoading: loadingContractors } = useCollection<Contractor>(contractorsQuery);
-  const { data: rawChangelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogQuery);
+  const { data: changelog, isLoading: loadingChangelog } = useCollection<ChangeLogEntry>(changelogQuery, {
+    sortField: 'date',
+    sortDirection: 'desc',
+  });
 
-  const changelog = useMemo(() => {
-    if (!rawChangelog) return null;
-    return [...rawChangelog].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [rawChangelog]);
-  
   // Overall data loading status
   const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance || loadingContractors;
 
