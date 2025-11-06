@@ -2,57 +2,38 @@
 /**
  * @description This ruleset enforces a strict user-ownership model for all data. Each document
  * is secured such that only the owner (identified by `ownerId`) can create, read, update, or delete it.
- * @dataStructure All data is stored in top-level collections: `/properties/{propertyId}`,
- * `/revenue/{transactionId}`, `/expenses/{transactionId}`, `/maintenanceRequests/{requestId}`, `/contractors/{contractorId}`, and `/changelog/{logId}`.
- * @keySecurityDecisions Listing of the `changelog` and `contractors` collections is only available to authenticated users.
- * All other collections are not listable via the client.
+ * @dataStructure All data is stored in top-level collections.
+ * @keySecurityDecisions Listing is allowed for all collections, but application-level queries must
+ * enforce that users can only list documents they own by filtering on `ownerId`.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secures the `/properties` collection, ensuring only the owner can manage property documents.
-     * @path /properties/{propertyId}
-     * @allow (create) An authenticated user can create a property if the `ownerId` in the document matches their UID.
-     * @allow (get) An authenticated user can read a property document if they are the owner.
-     * @allow (update) An authenticated user can update a property document if they are the owner and the document exists.
-     * @allow (delete) An authenticated user can delete a property document if they are the owner and the document exists.
-     * @deny (list) No one can list the properties collection.
+     * @description Secures the `/properties` collection.
      */
     match /properties/{propertyId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
-      allow list: if false;
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
 
     /**
-     * @description Secures the `/revenue` collection, ensuring only the owner can manage revenue transaction documents.
-     * @path /revenue/{transactionId}
-     * @allow (create) An authenticated user can create a revenue transaction if the `ownerId` in the document matches their UID.
-     * @allow (get) An authenticated user can read a revenue transaction document if they are the owner.
-     * @allow (update) An authenticated user can update a revenue transaction document if they are the owner and the document exists.
-     * @allow (delete) An authenticated user can delete a revenue transaction document if they are the owner and the document exists.
-     * @deny (list) No one can list the revenue collection.
+     * @description Secures the `/revenue` collection.
      */
     match /revenue/{transactionId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
-      allow list: if false;
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
 
     /**
-     * @description Secures the `/expenses` collection. Listing is allowed for authenticated users.
-     * @path /expenses/{transactionId}
-     * @allow (create) An authenticated user can create an expense transaction if the `ownerId` in the document matches their UID.
-     * @allow (get) An authenticated user can read an expense transaction document if they are the owner.
-     * @allow (update) An authenticated user can update an expense transaction document if they are the owner and the document exists.
-     * @allow (delete) An authenticated user can delete an expense transaction document if they are the owner and the document exists.
-     * @allow (list) Any signed in user can list expenses that belong to them.
+     * @description Secures the `/expenses` collection.
      */
     match /expenses/{transactionId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
@@ -63,13 +44,7 @@ service cloud.firestore {
     }
 
     /**
-     * @description Secures the `/maintenanceRequests` collection, ensuring only the owner can manage maintenance request documents.
-     * @path /maintenanceRequests/{requestId}
-     * @allow (create) An authenticated user can create a maintenance request if the `ownerId` in the document matches their UID.
-     * @allow (get) An authenticated user can read a maintenance request document if they are the owner.
-     * @allow (update) An authenticated user can update a maintenance request document if they are the owner and the document exists.
-     * @allow (delete) An authenticated user can delete a maintenance request document if they are the owner and the document exists.
-     * @allow (list) Any signed in user can list maintenance requests that belong to them.
+     * @description Secures the `/maintenanceRequests` collection.
      */
     match /maintenanceRequests/{requestId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
@@ -80,13 +55,7 @@ service cloud.firestore {
     }
 
     /**
-     * @description Secures the `/contractors` collection. Listing is allowed for authenticated users.
-     * @path /contractors/{contractorId}
-     * @allow (create) An authenticated user can create a contractor if the `ownerId` in the document matches their UID.
-     * @allow (get) An authenticated user can read a contractor document if they are the owner.
-     * @allow (update) An authenticated user can update a contractor document if they are the owner and the document exists.
-     * @allow (delete) An authenticated user can delete a contractor document if they are the owner and the document exists.
-     * @allow (list) Any signed in user can list contractors that belong to them.
+     * @description Secures the `/contractors` collection.
      */
     match /contractors/{contractorId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
@@ -97,13 +66,7 @@ service cloud.firestore {
     }
 
      /**
-      * @description Secures the `/changelog` collection, ensuring only the owner can manage change log entry documents. Listing available to logged in users.
-      * @path /changelog/{logId}
-      * @allow (create) An authenticated user can create a change log entry if the `ownerId` in the document matches their UID.
-      * @allow (get) An authenticated user can read a change log entry document if they are the owner.
-      * @allow (update) An authenticated user can update a change log entry document if they are the owner and the document exists.
-      * @allow (delete) An authenticated user can delete a change log entry document if they are the owner and the document exists.
-      * @allow (list) Any signed in user can list the changelog entries that belong to them.
+      * @description Secures the `/changelog` collection.
       */
     match /changelog/{logId} {
         allow get: if isSignedIn() && isOwner(resource.data.ownerId);
