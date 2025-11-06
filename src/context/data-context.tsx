@@ -68,6 +68,8 @@ interface DataContextType {
   setLocale: (locale: string) => void;
   companyName: string;
   setCompanyName: (companyName: string) => void;
+  logoUrl: string;
+  setLogoUrl: (logoUrl: string) => void;
   residencyStatus: ResidencyStatus;
   setResidencyStatus: (status: ResidencyStatus) => void;
   isPnlReportEnabled: boolean;
@@ -82,6 +84,37 @@ interface DataContextType {
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
+
+// --- Local Storage Hooks ---
+function usePersistentState<T>(key: string, defaultValue: T): [T, (value: T) => void] {
+  const [state, setState] = useState<T>(() => {
+    if (typeof window === 'undefined') {
+      return defaultValue;
+    }
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : defaultValue;
+    } catch (error) {
+      console.error(error);
+      return defaultValue;
+    }
+  });
+
+  const setValue = (value: T) => {
+    try {
+      const valueToStore = value instanceof Function ? value(state) : value;
+      setState(valueToStore);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return [state, setValue];
+}
+
 
 // --- Sample Data Seeding ---
 async function seedDatabase(
@@ -250,13 +283,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Overall data loading status
   const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance || loadingContractors;
 
-  const [currency, setCurrency] = useState('KES');
-  const [locale, setLocale] = useState('en-GB');
-  const [companyName, setCompanyName] = useState('LeaseLync Ltd');
-  const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('non-resident');
-  const [isPnlReportEnabled, setIsPnlReportEnabled] = useState(true);
-  const [isMarketResearchEnabled, setIsMarketResearchEnabled] = useState(true);
+  // Persisted state
+  const [currency, setCurrency] = usePersistentState('app_currency', 'KES');
+  const [locale, setLocale] = usePersistentState('app_locale', 'en-GB');
+  const [companyName, setCompanyName] = usePersistentState('app_companyName', 'LeaseLync Ltd');
+  const [logoUrl, setLogoUrl] = usePersistentState('app_logoUrl', '/logo.png');
+  const [residencyStatus, setResidencyStatus] = usePersistentState<ResidencyStatus>('app_residency', 'non-resident');
+  const [isPnlReportEnabled, setIsPnlReportEnabled] = usePersistentState('app_pnlEnabled', true);
+  const [isMarketResearchEnabled, setIsMarketResearchEnabled] = usePersistentState('app_marketResearchEnabled', true);
   const { theme, setTheme } = useTheme();
+
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
@@ -550,6 +586,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     currency, setCurrency,
     locale, setLocale,
     companyName, setCompanyName,
+    logoUrl, setLogoUrl,
     residencyStatus, setResidencyStatus,
     isPnlReportEnabled, setIsPnlReportEnabled,
     isMarketResearchEnabled, setIsMarketResearchEnabled,
@@ -559,8 +596,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     isDataLoading
   }), [
     properties, revenue, expenses, maintenanceRequests, contractors, changelog, calendarEvents,
-    currency, locale, companyName, residencyStatus, isPnlReportEnabled,
-    isMarketResearchEnabled, isDataLoading, user?.uid, theme, setTheme
+    currency, locale, companyName, logoUrl, residencyStatus, isPnlReportEnabled,
+    isMarketResearchEnabled, isDataLoading, user?.uid, theme, setTheme,
+    setCurrency, setLocale, setCompanyName, setLogoUrl, setResidencyStatus, setIsPnlReportEnabled, setIsMarketResearchEnabled
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

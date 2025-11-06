@@ -12,7 +12,6 @@ import {
   LayoutDashboard,
   TrendingDown,
   TrendingUp,
-  Wallet,
   LineChart,
   Settings,
   HelpCircle,
@@ -23,6 +22,7 @@ import {
   Users,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
+import { useDataContext } from '@/context/data-context';
 
 import {
   SidebarProvider,
@@ -65,6 +65,7 @@ const utilityNavItems = [
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const { logoUrl, companyName } = useDataContext();
 
   return (
     <SidebarProvider>
@@ -74,21 +75,19 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             <Button asChild variant="ghost" size="icon" className="shrink-0 md:hidden">
               <SidebarTrigger />
             </Button>
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-[140px] h-[40px] relative">
                <Image
-                src="/logo.png"
-                alt="LeaseLync Logo"
-                width={120}
-                height={30}
+                src={logoUrl}
+                alt={`${companyName} Logo`}
+                fill
                 className="object-contain"
               />
             </div>
-             <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex">
+             <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
                <Image
-                src="/logo.png"
-                alt="LeaseLync Logo"
-                width={24}
-                height={24}
+                src={logoUrl}
+                alt={`${companyName} Logo`}
+                fill
                 className="object-contain"
               />
             </div>

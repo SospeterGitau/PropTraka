@@ -38,7 +38,8 @@ const SettingsPage = memo(function SettingsPage() {
   const { 
     currency, setCurrency, 
     locale, setLocale, 
-    companyName, setCompanyName, 
+    companyName, setCompanyName,
+    logoUrl, setLogoUrl,
     residencyStatus, setResidencyStatus,
     isPnlReportEnabled, setIsPnlReportEnabled,
     isMarketResearchEnabled, setIsMarketResearchEnabled,
@@ -51,6 +52,7 @@ const SettingsPage = memo(function SettingsPage() {
   const [tempCurrency, setTempCurrency] = useState(currency);
   const [tempLocale, setTempLocale] = useState(locale);
   const [tempCompanyName, setTempCompanyName] = useState(companyName);
+  const [tempLogoUrl, setTempLogoUrl] = useState(logoUrl);
   const [tempResidencyStatus, setTempResidencyStatus] = useState(residencyStatus);
   const [tempIsPnlReportEnabled, setTempIsPnlReportEnabled] = useState(isPnlReportEnabled);
   const [tempIsMarketResearchEnabled, setTempIsMarketResearchEnabled] = useState(isMarketResearchEnabled);
@@ -62,17 +64,19 @@ const SettingsPage = memo(function SettingsPage() {
       setTempCurrency(currency);
       setTempLocale(locale);
       setTempCompanyName(companyName);
+      setTempLogoUrl(logoUrl);
       setTempResidencyStatus(residencyStatus);
       setTempIsPnlReportEnabled(isPnlReportEnabled);
       setTempIsMarketResearchEnabled(isMarketResearchEnabled);
       setTempTheme(theme);
     }
-  }, [isEditing, currency, locale, companyName, residencyStatus, isPnlReportEnabled, isMarketResearchEnabled, theme]);
+  }, [isEditing, currency, locale, companyName, logoUrl, residencyStatus, isPnlReportEnabled, isMarketResearchEnabled, theme]);
 
   const handleSave = () => {
     setCurrency(tempCurrency);
     setLocale(tempLocale);
     setCompanyName(tempCompanyName);
+    setLogoUrl(tempLogoUrl);
     setResidencyStatus(tempResidencyStatus);
     setIsPnlReportEnabled(tempIsPnlReportEnabled);
     setIsMarketResearchEnabled(tempIsMarketResearchEnabled);
@@ -98,11 +102,44 @@ const SettingsPage = memo(function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <fieldset disabled={!isEditing} className="space-y-8">
+             <div>
+              <h3 className="text-lg font-medium">Branding</h3>
+              <Separator className="my-2" />
+               <div className="space-y-4 pt-2">
+                 <div className="space-y-2">
+                    <Label htmlFor="company-name">Company Name</Label>
+                    <Input
+                      id="company-name"
+                      value={tempCompanyName}
+                      onChange={(e) => setTempCompanyName(e.target.value)}
+                      className="w-full max-w-sm"
+                      placeholder="Your Company Name"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      This name will be used on generated reports.
+                    </p>
+                  </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="logo-url">Logo URL</Label>
+                    <Input
+                      id="logo-url"
+                      value={tempLogoUrl}
+                      onChange={(e) => setTempLogoUrl(e.target.value)}
+                      className="w-full max-w-sm"
+                      placeholder="https://example.com/logo.png"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Paste a public URL to your company logo.
+                    </p>
+                  </div>
+               </div>
+            </div>
+
             <div>
               <h3 className="text-lg font-medium">Appearance</h3>
               <Separator className="my-2" />
                <div className="space-y-2 pt-2">
-                <Label>Theme</Label>
+                <Label>Colour Scheme</Label>
                  <RadioGroup
                     value={tempTheme}
                     onValueChange={(value: "light" | "dark" | "system") => setTempTheme(value)}
@@ -171,24 +208,11 @@ const SettingsPage = memo(function SettingsPage() {
                   </RadioGroup>
                </div>
             </div>
+
             <div>
-              <h3 className="text-lg font-medium">Company &amp; Tax</h3>
+              <h3 className="text-lg font-medium">Tax</h3>
               <Separator className="my-2" />
                <div className="space-y-4 pt-2">
-                 <div className="space-y-2">
-                    <Label htmlFor="company-name">Company Name</Label>
-                    <Input
-                      id="company-name"
-                      value={tempCompanyName}
-                      onChange={(e) => setTempCompanyName(e.target.value)}
-                      className="w-[280px]"
-                      placeholder="Your Company Name"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      This name will be used on generated reports.
-                    </p>
-                  </div>
-
                   <div className="space-y-2">
                     <Label>Residency Status</Label>
                     <RadioGroup
