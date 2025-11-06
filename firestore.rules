@@ -69,11 +69,11 @@ service cloud.firestore {
      * @allow (get) An authenticated user can read a maintenance request document if they are the owner.
      * @allow (update) An authenticated user can update a maintenance request document if they are the owner and the document exists.
      * @allow (delete) An authenticated user can delete a maintenance request document if they are the owner and the document exists.
-     * @deny (list) No one can list the maintenance requests collection.
+     * @allow (list) Any signed in user can list maintenance requests that belong to them.
      */
     match /maintenanceRequests/{requestId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
-      allow list: if false;
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
