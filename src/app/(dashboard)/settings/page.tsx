@@ -34,7 +34,7 @@ const supportedLocales = [
   { code: 'ja-JP', name: 'YYYY/MM/DD (JP)' },
 ];
 
-function SettingsPage() {
+const SettingsPage = memo(function SettingsPage() {
   const { 
     currency, setCurrency, 
     locale, setLocale, 
@@ -288,7 +288,7 @@ function SettingsPage() {
       </Card>
     </>
   );
-}
+});
 
 
-export default memo(SettingsPage);
+export default SettingsPage;

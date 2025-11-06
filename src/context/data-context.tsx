@@ -252,7 +252,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [currency, setCurrency] = useState('KES');
   const [locale, setLocale] = useState('en-GB');
-  const [companyName, setCompanyName] = useState('RentVision Ltd');
+  const [companyName, setCompanyName] = useState('LeaseLync Ltd');
   const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('non-resident');
   const [isPnlReportEnabled, setIsPnlReportEnabled] = useState(true);
   const [isMarketResearchEnabled, setIsMarketResearchEnabled] = useState(true);

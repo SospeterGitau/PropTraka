@@ -15,7 +15,7 @@ export interface SessionData {
 }
 
 export const sessionOptions: IronSessionOptions = {
-  cookieName: 'rentvision_session',
+  cookieName: 'leaselync_session',
   password: sessionPassword,
   cookieOptions: {
     // Set secure to true, which is required for SameSite=None

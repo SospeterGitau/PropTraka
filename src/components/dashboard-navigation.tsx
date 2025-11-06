@@ -75,7 +75,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             </Button>
             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
               <Wallet className="w-6 h-6 text-primary" />
-              <h2 className="text-lg font-semibold font-headline">RentVision</h2>
+              <h2 className="text-lg font-semibold font-headline">LeaseLync</h2>
             </div>
           </div>
         </SidebarHeader>

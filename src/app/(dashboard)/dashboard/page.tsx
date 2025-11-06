@@ -12,8 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 // Dynamically import charts to prevent server-side rendering issues
-const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false });
-const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false });
+const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
+const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false, memo: true });
 
 const DashboardPageContent = memo(function DashboardPageContent() {
   const { properties, revenue, expenses, formatCurrency, isDataLoading } = useDataContext();
@@ -50,7 +50,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
         <>
             <PageHeader title="Dashboard" />
             <div className="text-center py-12">
-                <h2 className="text-2xl font-semibold mb-2">Welcome to RentVision</h2>
+                <h2 className="text-2xl font-semibold mb-2">Welcome to LeaseLync</h2>
                 <p className="text-muted-foreground">Get started by adding your first property.</p>
             </div>
         </>

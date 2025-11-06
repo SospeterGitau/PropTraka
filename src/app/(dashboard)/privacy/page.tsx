@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">1. Introduction</h2>
         <p>
-          This Privacy Policy outlines how RentVision ("the App") collects, uses, and manages personal data. 
+          This Privacy Policy outlines how LeaseLync ("the App") collects, uses, and manages personal data. 
           The user of this app ("you", "the Landlord") acts as the <strong>Data Controller</strong> for the personal data you enter into the App. 
           This app acts as a _Data Processor_ on your behalf. This policy is designed to inform you of your responsibilities and how the App processes data.
         </p>
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">5. Data Storage and Security</h2>
         <p>
-          All data you enter into RentVision, including personal data, is stored locally within your browser's storage on your device. It is not transmitted to or stored on any external servers owned or managed by RentVision.
+          All data you enter into LeaseLync, including personal data, is stored locally within your browser's storage on your device. It is not transmitted to or stored on any external servers owned or managed by LeaseLync.
         </p>
         <p>
           You are responsible for securing the device on which you use this App.

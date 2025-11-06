@@ -16,9 +16,9 @@ export default function FaqPage() {
         <Accordion type="single" collapsible className="w-full">
           {/* General Section */}
           <AccordionItem value="item-1">
-            <AccordionTrigger className="text-lg font-semibold">About RentVision: What is it and who is it for?</AccordionTrigger>
+            <AccordionTrigger className="text-lg font-semibold">About LeaseLync: What is it and who is it for?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              RentVision is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales—from those with a single unit to those overseeing large portfolios—efficiently manage their rental properties. It provides a centralised dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of RentVision is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place.
+              LeaseLync is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales—from those with a single unit to those overseeing large portfolios—efficiently manage their rental properties. It provides a centralised dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of LeaseLync is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place.
             </AccordionContent>
           </AccordionItem>
 
