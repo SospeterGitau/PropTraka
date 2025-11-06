@@ -10,6 +10,7 @@ import {
   Building2,
   Calendar,
   CircleAlert,
+  CreditCard,
   HelpCircle,
   History,
   LayoutDashboard,
@@ -31,8 +32,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -59,6 +58,7 @@ const analysisNavItems = [
 
 const utilityNavItems = [
     { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/settings/subscription', label: 'Subscription', icon: CreditCard },
     { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
@@ -163,7 +163,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
                 <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={pathname.startsWith(item.href)}
                     className="justify-start text-sm h-10"
                     tooltip={item.label}
                     >

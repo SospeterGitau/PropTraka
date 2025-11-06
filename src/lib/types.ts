@@ -1,6 +1,5 @@
 
 
-
 export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface Property {
@@ -60,6 +59,20 @@ export interface Transaction {
   nextDueDate?: string;
   amount?: number; // Legacy field for expenses, should be optional
 }
+
+export interface ArrearEntry {
+  tenant: string;
+  tenantEmail: string;
+  tenantPhone?: string;
+  propertyAddress: string;
+  amountOwed: number;
+  dueDate: string;
+  rentOwed: number;
+  depositOwed: number;
+  daysOverdue: number;
+  serviceChargesOwed: number;
+}
+
 
 export interface MaintenanceRequest {
   id: string;

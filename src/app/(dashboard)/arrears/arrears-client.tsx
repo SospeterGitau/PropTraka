@@ -19,23 +19,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getLocale } from '@/lib/locales';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PaymentRequestDialog } from '@/components/payment-request-dialog';
+import type { ArrearEntry } from '@/lib/types';
+import { CreditCard } from 'lucide-react';
 
-interface ArrearEntry {
-  tenant: string;
-  tenantEmail: string;
-  propertyAddress: string;
-  amountOwed: number;
-  dueDate: string;
-  rentOwed: number;
-  depositOwed: number;
-  daysOverdue: number;
-  serviceChargesOwed: number;
-}
 
 const ArrearsClient = memo(function ArrearsClient() {
   const { revenue, formatCurrency, locale, companyName, isDataLoading } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
+  const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
+  const [selectedArrear, setSelectedArrear] = useState<ArrearEntry | null>(null);
 
   useEffect(() => {
     if (!revenue) return;
@@ -73,6 +67,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         return {
           tenant: transaction.tenant!,
           tenantEmail: transaction.tenantEmail!,
+          tenantPhone: transaction.tenantPhone,
           propertyAddress: transaction.propertyName,
           amountOwed,
           dueDate: transaction.date,
@@ -102,6 +97,21 @@ const ArrearsClient = memo(function ArrearsClient() {
       formatAllDates();
     }
   }, [arrears, locale]);
+  
+  const handleRequestPayment = (arrear: ArrearEntry) => {
+    setSelectedArrear(arrear);
+    setIsPaymentRequestOpen(true);
+  };
+
+  const handlePaymentRequestSubmit = (details: { amount: number, method: string }) => {
+    console.log("Requesting payment:", {
+        ...details,
+        tenant: selectedArrear?.tenant,
+    });
+    // Here you would later integrate with Pesapal/Instasend API
+    setIsPaymentRequestOpen(false);
+  };
+
 
    if (isDataLoading) {
     return (
@@ -179,8 +189,12 @@ const ArrearsClient = memo(function ArrearsClient() {
                         <TableCell className="text-right font-semibold text-destructive">
                           {formatCurrency(arrear.amountOwed)}
                         </TableCell>
-                        <TableCell className="text-center">
-                          <Button size="sm" asChild>
+                        <TableCell className="text-center space-x-2">
+                           <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)}>
+                                <CreditCard className="mr-2 h-4 w-4"/>
+                                Request Payment
+                           </Button>
+                           <Button size="sm" asChild>
                             <Link href={`mailto:${arrear.tenantEmail}?subject=${encodeURIComponent(subject)}&body=${body}`}>
                               Send Reminder
                             </Link>
@@ -194,6 +208,14 @@ const ArrearsClient = memo(function ArrearsClient() {
             </Table>
         </CardContent>
       </Card>
+      
+      <PaymentRequestDialog
+        isOpen={isPaymentRequestOpen}
+        onClose={() => setIsPaymentRequestOpen(false)}
+        onSubmit={handlePaymentRequestSubmit}
+        arrear={selectedArrear}
+        formatCurrency={formatCurrency}
+      />
     </>
   );
 });

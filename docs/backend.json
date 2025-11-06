@@ -120,6 +120,39 @@
             "entityId": { "type": "string" }
         },
         "required": ["date", "type", "action", "description", "entityId", "ownerId"]
+    },
+    "subscription": {
+      "title": "Subscription",
+      "description": "Stores the user's subscription plan details.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "plan": { "type": "string", "enum": ["Free", "Pro"] },
+        "status": { "type": "string", "enum": ["active", "cancelled", "past_due"] },
+        "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
+        "currentPeriodStart": { "type": "string", "format": "date-time" },
+        "currentPeriodEnd": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "plan", "status", "billingCycle"]
+    },
+    "invoice": {
+      "title": "Invoice",
+      "description": "Represents a payment request sent to a tenant.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "tenancyId": { "type": "string" },
+        "revenueTransactionId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "paid", "failed", "cancelled"] },
+        "paymentGateway": { "type": "string", "enum": ["Pesapal", "InstaSend", "M-Pesa"] },
+        "gatewayTransactionId": { "type": "string" },
+        "dateCreated": { "type": "string", "format": "date-time" },
+        "datePaid": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
     }
   },
   "auth": {
@@ -149,6 +182,14 @@
     "/changelog/{logId}": {
         "schema": { "$ref": "#/entities/changeLogEntry" },
         "description": "Stores activity log entries."
+    },
+    "/subscriptions/{subscriptionId}": {
+        "schema": { "$ref": "#/entities/subscription" },
+        "description": "Stores user subscription details."
+    },
+    "/invoices/{invoiceId}": {
+        "schema": { "$ref": "#/entities/invoice" },
+        "description": "Stores tenant payment invoices."
     }
   }
 }
