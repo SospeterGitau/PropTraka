@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format, startOfToday, isBefore } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, ServiceCharge } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, FileText, MessageSquare, BadgeCheck, CircleDollarSign, CalendarX2 } from 'lucide-react';
+import { ArrowLeft, FileText, MessageSquare, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
@@ -67,7 +67,8 @@ function PaymentForm({
 
   if (!isOpen || !transaction) return null;
 
-  const totalDueForPeriod = (transaction.amount || 0) + (transaction.deposit || 0);
+  const totalServiceCharges = transaction.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+  const totalDueForPeriod = transaction.rent + totalServiceCharges + (transaction.deposit || 0);
   const alreadyPaid = transaction.amountPaid || 0;
   const balanceDue = totalDueForPeriod - alreadyPaid;
 
@@ -105,12 +106,124 @@ function PaymentForm({
   );
 }
 
+function InvoiceForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  transaction,
+  formatCurrency,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (transaction: Transaction) => void;
+  transaction: Transaction | null;
+  formatCurrency: (amount: number) => string;
+}) {
+  const [rent, setRent] = useState(0);
+  const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+
+  useEffect(() => {
+    if (transaction) {
+      setRent(transaction.rent || 0);
+      setServiceCharges(transaction.serviceCharges || []);
+    }
+  }, [transaction]);
+
+  const handleAddCharge = () => {
+    setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
+  };
+
+  const handleRemoveCharge = (index: number) => {
+    setServiceCharges(serviceCharges.filter((_, i) => i !== index));
+  };
+
+  const handleChargeChange = (index: number, field: keyof ServiceCharge, value: string | number) => {
+    const newCharges = [...serviceCharges];
+    if (field === 'name') {
+      newCharges[index].name = value as string;
+    } else {
+      newCharges[index].amount = Number(value);
+    }
+    setServiceCharges(newCharges);
+  };
+
+  const handleSubmit = () => {
+    if (!transaction) return;
+    const updatedTransaction = {
+      ...transaction,
+      rent,
+      serviceCharges,
+    };
+    onSubmit(updatedTransaction);
+  };
+
+  if (!isOpen || !transaction) return null;
+
+  const totalDue = rent + serviceCharges.reduce((sum, sc) => sum + sc.amount, 0) + (transaction.deposit || 0);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit Invoice for {format(new Date(transaction.date), 'MMMM yyyy')}</DialogTitle>
+        </DialogHeader>
+        <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+          <div className="space-y-2">
+            <Label htmlFor="rent">Base Rent</Label>
+            <Input id="rent" type="number" value={rent} onChange={(e) => setRent(Number(e.target.value))} />
+          </div>
+          <div className="space-y-2">
+            <Label>Service Charges</Label>
+            {serviceCharges.map((charge, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  placeholder="Charge Name (e.g., Water)"
+                  value={charge.name}
+                  onChange={(e) => handleChargeChange(index, 'name', e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  placeholder="Amount"
+                  value={charge.amount}
+                  onChange={(e) => handleChargeChange(index, 'amount', e.target.value)}
+                  className="w-32"
+                />
+                <Button variant="ghost" size="icon" onClick={() => handleRemoveCharge(index)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+            <Button variant="outline" size="sm" onClick={handleAddCharge}>
+              Add Service Charge
+            </Button>
+          </div>
+           <div className="!mt-6 text-sm space-y-1 bg-muted p-3 rounded-md">
+                <div className="flex justify-between"><span>Base Rent:</span> <span className="font-medium">{formatCurrency(rent)}</span></div>
+                {serviceCharges.map((sc, i) => (
+                    <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span className="font-medium">{formatCurrency(sc.amount)}</span></div>
+                ))}
+                {transaction.deposit && <div className="flex justify-between"><span>Deposit:</span> <span className="font-medium">{formatCurrency(transaction.deposit)}</span></div>}
+                <hr className="my-1 border-border" />
+                <div className="flex justify-between font-semibold"><span>Total Due:</span> <span>{formatCurrency(totalDue)}</span></div>
+            </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit}>Save Invoice</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function TenancyDetailPageContent({ params }: { params: { tenancyId: string } }) {
   const { tenancyId } = params;
   const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry, endTenancy } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
+  const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
@@ -155,6 +268,23 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
     setIsPaymentFormOpen(true);
   };
   
+  const handleEditInvoice = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsInvoiceFormOpen(true);
+  };
+
+  const handleInvoiceFormSubmit = async (transaction: Transaction) => {
+     await updateRevenueTransaction(transaction);
+     addChangeLogEntry({
+        type: 'Tenancy',
+        action: 'Updated',
+        description: `Invoice for ${format(new Date(transaction.date), 'MMMM yyyy')} updated for "${transaction.tenant}".`,
+        entityId: transaction.id,
+    });
+    setIsInvoiceFormOpen(false);
+    setSelectedTransaction(null);
+  };
+
   const handlePaymentFormSubmit = async (transactionId: string, amount: number) => {
     if (!revenue) return;
 
@@ -224,7 +354,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
 
   // Calculate KPIs based on transactions due up to today
   const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
-  const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
+  const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
   const currentBalance = totalDueToDate - totalPaid;
   
@@ -316,8 +446,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
               <TableHeader>
                 <TableRow>
                   <TableHead>Due Date</TableHead>
-                  <TableHead>Rent</TableHead>
-                  <TableHead>Deposit</TableHead>
+                  <TableHead>Total Due</TableHead>
                   <TableHead className="text-right">Amount Paid</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
                   <TableHead>Status</TableHead>
@@ -327,7 +456,8 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
               <TableBody>
                 {tenancy.transactions.map(tx => {
                   const dueDate = new Date(tx.date);
-                  const due = tx.amount + (tx.deposit ?? 0);
+                  const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+                  const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
                   const paid = tx.amountPaid ?? 0;
                   const balance = due - paid;
                   const isOverdue = isBefore(dueDate, today) && balance > 0;
@@ -337,23 +467,32 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
 
                   return (
                       <TableRow key={tx.id}>
-                        <TableCell className="flex items-center gap-2">
+                        <TableCell>
                           {formattedDates[tx.id]}
-                          {tx.notes && (
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                             {formatCurrency(due)}
                             <Popover>
                               <PopoverTrigger asChild>
                                 <button>
-                                  <MessageSquare className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                  <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                                 </button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-80">
-                                <p className="text-sm">{tx.notes}</p>
+                              <PopoverContent className="w-80 text-sm">
+                                <div className="space-y-2">
+                                  <h4 className="font-medium">Invoice Breakdown</h4>
+                                  <div className="flex justify-between"><span>Rent:</span> <span>{formatCurrency(tx.rent)}</span></div>
+                                  {tx.serviceCharges?.map((sc, i) => (
+                                     <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount)}</span></div>
+                                  ))}
+                                  {tx.deposit && tx.deposit > 0 && <div className="flex justify-between"><span>Deposit:</span> <span>{formatCurrency(tx.deposit)}</span></div>}
+                                  {tx.notes && <p className="text-xs text-muted-foreground pt-2 border-t mt-2">{tx.notes}</p>}
+                                </div>
                               </PopoverContent>
                             </Popover>
-                          )}
+                          </div>
                         </TableCell>
-                        <TableCell>{formatCurrency(tx.amount)}</TableCell>
-                        <TableCell>{formatCurrency(tx.deposit ?? 0)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
                         <TableCell className={cn("text-right font-medium", balance > 0 ? 'text-destructive' : 'text-primary')}>
                           {formatCurrency(balance)}
@@ -365,7 +504,10 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
                             <Badge variant="secondary">Paid</Badge>
                           ) : null}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center space-x-2">
+                           <Button size="sm" variant="outline" onClick={() => handleEditInvoice(tx)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)} disabled={balance <= 0}>
                             Record Payment
                           </Button>
@@ -384,6 +526,14 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
         onSubmit={handlePaymentFormSubmit}
         transaction={selectedTransaction}
         locale={locale}
+        formatCurrency={formatCurrency}
+      />
+      
+       <InvoiceForm
+        isOpen={isInvoiceFormOpen}
+        onClose={() => setIsInvoiceFormOpen(false)}
+        onSubmit={handleInvoiceFormSubmit}
+        transaction={selectedTransaction}
         formatCurrency={formatCurrency}
       />
       

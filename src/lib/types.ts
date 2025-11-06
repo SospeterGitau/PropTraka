@@ -1,4 +1,5 @@
 
+
 export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface Property {
@@ -23,11 +24,17 @@ export interface Property {
   imageHint: string;
 }
 
+export interface ServiceCharge {
+  name: string;
+  amount: number;
+}
+
 export interface Transaction {
   id: string;
   ownerId: string; // Foreign key to the user
   date: string;
-  amount: number;
+  rent: number; // Renamed from amount
+  serviceCharges?: ServiceCharge[];
   propertyId?: string;
   propertyName: string;
   type: 'revenue' | 'expense';
@@ -50,6 +57,7 @@ export interface Transaction {
   receiptUrl?: string;
   transactions?: Transaction[]; 
   nextDueDate?: string;
+  amount: number; // Legacy field for expenses, to be phased out
 }
 
 export interface MaintenanceRequest {

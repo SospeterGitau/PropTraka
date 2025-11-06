@@ -31,12 +31,23 @@
     "transaction": {
       "title": "Transaction",
       "description": "A financial transaction, either revenue or expense.",
-      "type": "object"
+      "type": "object",
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
         "date": { "type": "string", "format": "date" },
-        "amount": { "type": "number" },
+        "rent": { "type": "number" },
+        "serviceCharges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "amount": { "type": "number" }
+            },
+            "required": ["name", "amount"]
+          }
+        },
         "propertyId": { "type": "string" },
         "propertyName": { "type": "string" },
         "type": { "type": "string", "enum": ["revenue", "expense"] },
@@ -58,7 +69,7 @@
         "notes": { "type": "string" },
         "receiptUrl": { "type": "string" }
       },
-      "required": ["date", "amount", "propertyName", "type", "ownerId"]
+      "required": ["date", "rent", "propertyName", "type", "ownerId"]
     },
     "maintenanceRequest": {
         "title": "Maintenance Request",

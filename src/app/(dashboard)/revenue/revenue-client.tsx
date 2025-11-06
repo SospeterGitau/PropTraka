@@ -3,10 +3,10 @@
 
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2 } from 'lucide-react';
 import { format, startOfToday, eachMonthOfInterval, isAfter, isBefore } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
-import type { Property, Transaction } from '@/lib/types';
+import type { Property, Transaction, ServiceCharge } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,30 @@ const RevenueForm = memo(function RevenueForm({
   revenue: Transaction[],
 }) {
   const { toast } = useToast();
+  const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+
+  useEffect(() => {
+    if (tenancyToEdit) {
+      setServiceCharges(tenancyToEdit.serviceCharges || []);
+    } else {
+      setServiceCharges([]);
+    }
+  }, [tenancyToEdit]);
+  
+  const addServiceCharge = () => {
+    setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
+  };
+  
+  const removeServiceCharge = (index: number) => {
+    setServiceCharges(serviceCharges.filter((_, i) => i !== index));
+  };
+
+  const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
+    const newServiceCharges = [...serviceCharges];
+    newServiceCharges[index] = { ...newServiceCharges[index], [field]: field === 'amount' ? Number(value) : value };
+    setServiceCharges(newServiceCharges);
+  };
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,7 +95,7 @@ const RevenueForm = memo(function RevenueForm({
     const tenant = formData.get('tenantName') as string;
     const tenantEmail = formData.get('tenantEmail') as string;
     const tenantPhone = formData.get('tenantPhone') as string;
-    const amount = Number(formData.get('amount'));
+    const rent = Number(formData.get('rent'));
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
     const notes = formData.get('notes') as string;
@@ -142,7 +166,8 @@ const RevenueForm = memo(function RevenueForm({
             id: existingTx?.id, // Keep old ID if it exists
             tenancyId: tenancyId,
             date: dateStr,
-            amount: amount,
+            rent: rent,
+            serviceCharges: serviceCharges.filter(sc => sc.name && sc.amount > 0),
             amountPaid: existingTx?.amountPaid || 0, // Preserve payment status
             propertyId: propertyId,
             propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
@@ -167,7 +192,7 @@ const RevenueForm = memo(function RevenueForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>{tenancyToEdit ? 'Edit' : 'Add'} Tenancy</DialogTitle>
         </DialogHeader>
@@ -207,8 +232,26 @@ const RevenueForm = memo(function RevenueForm({
           </div>
           <div className="space-y-2">
             <Label>Monthly Rent</Label>
-            <Input name="amount" type="number" defaultValue={tenancyToEdit?.amount} required />
+            <Input name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
           </div>
+          
+          <div className="space-y-2">
+            <Label>Fixed Monthly Service Charges (optional)</Label>
+            <div className="space-y-2 rounded-md border p-4">
+              {serviceCharges.map((charge, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
+                  <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                  <Button variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Service Charge
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label>Deposit (due with first month's rent)</Label>
             <Input name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
@@ -364,7 +407,8 @@ function RevenueClient() {
       const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
       const unpaidTransactions = sortedTransactions.filter(tx => {
-        const due = tx.amount + (tx.deposit ?? 0);
+        const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+        const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
         const paid = tx.amountPaid ?? 0;
         return paid < due;
       });
@@ -405,7 +449,7 @@ function RevenueClient() {
             <TableBody>
                 {tenancies.length > 0 ? (
                     tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
-                        const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.amount + (tx.deposit ?? 0), 0);
+                        const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((sc, s) => sc + s.amount, 0) || 0) + (tx.deposit ?? 0), 0);
                         const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                         const totalBalance = totalDue - totalPaid;
                         
