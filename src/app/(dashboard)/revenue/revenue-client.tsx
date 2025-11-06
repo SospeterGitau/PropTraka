@@ -77,16 +77,13 @@ const RevenueForm = memo(function RevenueForm({
   };
 
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
-    const newCharges = serviceCharges.map((charge, i) => {
-        if (i === index) {
-            if (field === 'amount') {
-                const numericValue = value === '' ? '' : parseFloat(value);
-                return { ...charge, amount: numericValue as any };
-            }
-            return { ...charge, [field]: value };
-        }
-        return charge;
-    });
+    const newCharges = [...serviceCharges];
+    if (field === 'amount') {
+        const numericValue = value === '' ? '' : parseFloat(value);
+        (newCharges[index] as any)[field] = numericValue;
+    } else {
+        (newCharges[index] as any)[field] = value;
+    }
     setServiceCharges(newCharges);
   };
 
@@ -173,34 +170,37 @@ const RevenueForm = memo(function RevenueForm({
       .filter(sc => sc.name && sc.amount > 0);
 
     const newTransactions = months.map((monthStartDate, index) => {
-        const dateStr = format(monthStartDate, 'yyyy-MM-dd');
-        const existingTx = existingTransactions.find(tx => tx.date === dateStr);
+      const dateStr = format(monthStartDate, 'yyyy-MM-dd');
+      const existingTx = existingTransactions.find(tx => tx.date === dateStr);
 
-        const newTx: Omit<Transaction, 'id'> | Transaction = {
-            tenancyId: tenancyId,
-            date: dateStr,
-            rent: rent,
-            serviceCharges: finalServiceCharges,
-            amountPaid: existingTx?.amountPaid || 0,
-            propertyId: propertyId,
-            propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-            tenant: tenant,
-            tenantEmail: tenantEmail,
-            tenantPhone: tenantPhone,
-            type: 'revenue' as const,
-            deposit: index === 0 ? deposit : 0,
-            tenancyStartDate: tenancyStartDateStr,
-            tenancyEndDate: tenancyEndDateStr,
-            contractUrl: contractUrl,
-            notes: index === 0 ? notes : undefined,
-            ownerId: tenancyToEdit?.ownerId || '',
-        };
-        
-        if (existingTx?.id) {
-          (newTx as Transaction).id = existingTx.id;
-        }
-        
-        return newTx;
+      const newTx: Partial<Transaction> = {
+        tenancyId: tenancyId,
+        date: dateStr,
+        rent: rent,
+        serviceCharges: finalServiceCharges,
+        amountPaid: existingTx?.amountPaid || 0,
+        propertyId: propertyId,
+        propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
+        tenant: tenant,
+        tenantEmail: tenantEmail,
+        tenantPhone: tenantPhone,
+        type: 'revenue' as const,
+        deposit: index === 0 ? deposit : 0,
+        tenancyStartDate: tenancyStartDateStr,
+        tenancyEndDate: tenancyEndDateStr,
+        contractUrl: contractUrl,
+        ownerId: tenancyToEdit?.ownerId || '',
+      };
+      
+      if (existingTx?.id) {
+        newTx.id = existingTx.id;
+      }
+      
+      if (index === 0 && notes) {
+        newTx.notes = notes;
+      }
+
+      return newTx;
     });
 
     onSubmit(newTransactions as Transaction[]);
@@ -561,3 +561,5 @@ function RevenueClient() {
 }
 
 export default memo(RevenueClient);
+
+    
