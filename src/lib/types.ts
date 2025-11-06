@@ -1,5 +1,6 @@
 
 
+
 export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface Property {
@@ -57,7 +58,7 @@ export interface Transaction {
   receiptUrl?: string;
   transactions?: Transaction[]; 
   nextDueDate?: string;
-  amount?: number; // Legacy field for expenses, to be phased out
+  amount?: number; // Legacy field for expenses, should be optional
 }
 
 export interface MaintenanceRequest {
@@ -126,6 +127,7 @@ export interface GeneratePnlReportInput {
   currency: string;
   companyName?: string;
   residencyStatus: ResidencyStatus;
+  prompt: string;
 }
 
 export interface GeneratePnlReportOutput {
@@ -137,6 +139,7 @@ export interface GeneratePnlReportOutput {
 export interface GenerateMarketResearchInput {
   properties: string; // JSON string of Property[]
   currency: string;
+  prompt: string;
 }
 
 export interface GenerateMarketResearchOutput {

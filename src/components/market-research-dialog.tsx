@@ -2,10 +2,12 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Clipboard, Lightbulb, Loader2, AlertTriangle, FileText } from 'lucide-react';
+import { Clipboard, Lightbulb, Loader2, AlertTriangle, FileText, ChevronsUpDown } from 'lucide-react';
 import type { Property } from '@/lib/types';
 import { getMarketResearch } from '@/lib/actions';
 import { useDataContext } from '@/context/data-context';
+import { MARKET_RESEARCH_PROMPT } from '@/lib/prompts/market-research-prompt';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,6 +19,9 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Textarea } from './ui/textarea';
+import { Label } from './ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 interface MarketResearchDialogProps {
   properties: Property[];
@@ -29,13 +34,14 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
   const [isPending, startTransition] = useTransition();
   const [report, setReport] = useState<string | null>(null);
   const [error, setError] = useState<{ code: string; hint: string } | null>(null);
+  const [prompt, setPrompt] = useState(MARKET_RESEARCH_PROMPT);
 
   const handleGenerateAnalysis = () => {
     startTransition(async () => {
       setReport(null);
       setError(null);
       
-      const propertiesToAnalyze = properties.map(({ id, addressLine1, city, state, postalCode, propertyType, buildingType, bedrooms, bathrooms, size, sizeUnit, rentalValue }) => ({
+      const propertiesToAnalyse = properties.map(({ id, addressLine1, city, state, postalCode, propertyType, buildingType, bedrooms, bathrooms, size, sizeUnit, rentalValue }) => ({
         id,
         address: `${addressLine1}, ${city}, ${state} ${postalCode}`,
         propertyType,
@@ -47,8 +53,9 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
       }));
 
       const result = await getMarketResearch({
-        properties: JSON.stringify(propertiesToAnalyze, null, 2),
+        properties: JSON.stringify(propertiesToAnalyse, null, 2),
         currency: currency,
+        prompt: prompt,
       });
 
       if (result.error) {
@@ -74,6 +81,7 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
     if (!open) {
       setReport(null);
       setError(null);
+      setPrompt(MARKET_RESEARCH_PROMPT);
     }
   };
   
@@ -117,11 +125,28 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
                   </AlertDescription>
                 </Alert>
             ) : (
-              <div className="text-center">
+              <div className="text-center space-y-4">
                  <Lightbulb className="mx-auto h-12 w-12 text-muted-foreground" />
                  <p className="mt-4 max-w-md text-muted-foreground">
                     This tool will use AI to analyse your portfolio based on market data. The generated report will assess if your rental prices are competitive and provide recommendations.
                  </p>
+                 <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="link" className="p-0 h-auto text-sm">
+                         <ChevronsUpDown className="mr-2 h-4 w-4" />
+                         View & Edit Prompt
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2 space-y-2 text-left">
+                        <Label htmlFor="prompt-textarea">Market Research Prompt</Label>
+                        <Textarea
+                            id="prompt-textarea"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            className="h-64 font-mono text-xs"
+                        />
+                    </CollapsibleContent>
+                 </Collapsible>
               </div>
             )}
           </div>

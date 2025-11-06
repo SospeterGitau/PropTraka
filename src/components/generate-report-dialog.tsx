@@ -2,12 +2,13 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { FileText, Loader2, Calendar as CalendarIcon, AlertTriangle } from 'lucide-react';
-import { format, sub, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { FileText, Loader2, Calendar as CalendarIcon, AlertTriangle, ChevronsUpDown } from 'lucide-react';
+import { format, sub, startOfMonth, endOfMonth } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import type { Transaction } from '@/lib/types';
 import { getPnlReport } from '@/lib/actions';
 import { useDataContext } from '@/context/data-context';
+import { PNL_REPORT_PROMPT } from '@/lib/prompts/pnl-report-prompt';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +34,9 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { Textarea } from './ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { Label } from './ui/label';
 
 interface GenerateReportDialogProps {
   revenue: Transaction[];
@@ -45,6 +49,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
   const [isPending, startTransition] = useTransition();
   const [report, setReport] = useState<string | null>(null);
   const [error, setError] = useState<{ code: string; hint: string } | null>(null);
+  const [prompt, setPrompt] = useState(PNL_REPORT_PROMPT);
   const [date, setDate] = useState<DateRange | undefined>({
     from: sub(new Date(), {days: 29}),
     to: new Date(),
@@ -77,6 +82,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         currency: currency,
         companyName: companyName,
         residencyStatus: residencyStatus,
+        prompt: prompt,
       });
 
       if (result.error) {
@@ -99,6 +105,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     if (!open) {
       setReport(null); // Reset report when closing
       setError(null);
+      setPrompt(PNL_REPORT_PROMPT); // Reset prompt
     }
   };
 
@@ -159,7 +166,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
       </Button>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Generate P&L Report</DialogTitle>
+          <DialogTitle>Generate P&amp;L Report</DialogTitle>
           <DialogDescription>
             Select a date range to generate a comprehensive Profit &amp; Loss statement.
           </DialogDescription>
@@ -170,12 +177,12 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
             {report}
           </div>
         ) : (
-          <div className="py-8 flex flex-col items-center justify-center min-h-[300px]">
+          <div className="space-y-6 py-4">
             {isPending ? (
-              <>
+              <div className="flex flex-col items-center justify-center min-h-[300px]">
                 <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
                 <p className="mt-4 text-muted-foreground">Generating your report, please wait...</p>
-              </>
+              </div>
             ) : error ? (
                 <Alert variant="destructive" className="w-full">
                   <AlertTriangle className="h-4 w-4" />
@@ -185,16 +192,16 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                   </AlertDescription>
                 </Alert>
             ) : (
-              <div className="flex flex-col items-center gap-4">
-                 <p className="text-sm font-medium">Select Date Range:</p>
-                 <div className="flex gap-2 items-center">
+              <div className="space-y-4">
+                 <div className="flex flex-col sm:flex-row gap-2 items-center">
+                  <Label className="sm:w-32">Date Range:</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         id="date"
                         variant={"outline"}
                         className={cn(
-                          "w-[300px] justify-start text-left font-normal",
+                          "w-full sm:w-[300px] justify-start text-left font-normal",
                           !date && "text-muted-foreground"
                         )}
                       >
@@ -213,7 +220,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="center">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         initialFocus
                         mode="range"
@@ -225,7 +232,7 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                     </PopoverContent>
                   </Popover>
                   <Select onValueChange={handlePresetChange}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                       <SelectValue placeholder="Select a preset" />
                     </SelectTrigger>
                     <SelectContent>
@@ -241,6 +248,24 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
                     </SelectContent>
                   </Select>
                  </div>
+
+                 <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="link" className="p-0 h-auto text-sm">
+                         <ChevronsUpDown className="mr-2 h-4 w-4" />
+                         View & Edit Prompt
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2 space-y-2">
+                        <Label htmlFor="prompt-textarea">Report Generation Prompt</Label>
+                        <Textarea
+                            id="prompt-textarea"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            className="h-64 font-mono text-xs"
+                        />
+                    </CollapsibleContent>
+                 </Collapsible>
               </div>
             )}
           </div>
@@ -266,5 +291,3 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     </Dialog>
   );
 }
-
-    
