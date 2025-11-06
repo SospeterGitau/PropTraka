@@ -99,6 +99,30 @@ export interface Contractor {
   notes?: string;
 }
 
+export interface Subscription {
+  id: string;
+  ownerId: string;
+  plan: 'Free' | 'Pro';
+  status: 'active' | 'cancelled' | 'past_due';
+  billingCycle: 'monthly' | 'yearly';
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+}
+
+export interface Invoice {
+  id: string;
+  ownerId: string;
+  tenancyId: string;
+  revenueTransactionId: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'failed' | 'cancelled';
+  paymentGateway: 'Pesapal' | 'InstaSend' | 'M-Pesa';
+  gatewayTransactionId?: string;
+  dateCreated: string;
+  datePaid?: string;
+}
+
+
 export interface Arrear {
   tenant: string;
   propertyAddress: string;

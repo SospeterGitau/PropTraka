@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useTransition } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,14 @@ import type { ResidencyStatus } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { getAuth, updatePassword } from 'firebase/auth';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Loader2 } from 'lucide-react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
 
 const supportedCurrencies = [
   { code: 'USD', name: 'United States Dollar' },
@@ -35,6 +43,12 @@ const supportedLocales = [
   { code: 'ja-JP', name: 'YYYY/MM/DD (JP)' },
 ];
 
+const passwordSchema = z.object({
+  newPassword: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+
 const SettingsPage = memo(function SettingsPage() {
   const { 
     currency, setCurrency, 
@@ -48,8 +62,19 @@ const SettingsPage = memo(function SettingsPage() {
   } = useDataContext();
   
   const [isEditing, setIsEditing] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isPasswordPending, startPasswordTransition] = useTransition();
+  const { toast } = useToast();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+  });
   
-  // Temps states for editing
   const [tempCurrency, setTempCurrency] = useState(currency);
   const [tempLocale, setTempLocale] = useState(locale);
   const [tempCompanyName, setTempCompanyName] = useState(companyName);
@@ -83,10 +108,31 @@ const SettingsPage = memo(function SettingsPage() {
     setIsMarketResearchEnabled(tempIsMarketResearchEnabled);
     setTheme(tempTheme);
     setIsEditing(false);
+    toast({ title: "Settings Saved", description: "Your preferences have been updated." });
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+  };
+
+  const handleChangePassword = (data: PasswordFormValues) => {
+    startPasswordTransition(async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to change your password.' });
+        return;
+      }
+
+      try {
+        await updatePassword(user, data.newPassword);
+        toast({ title: 'Success', description: 'Your password has been updated.' });
+        setIsPasswordDialogOpen(false);
+        reset();
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error', description: error.message });
+      }
+    });
   };
 
   return (
@@ -211,6 +257,17 @@ const SettingsPage = memo(function SettingsPage() {
             </div>
 
             <div>
+              <h3 className="text-lg font-medium">Security</h3>
+              <Separator className="my-2" />
+              <div className="pt-2">
+                 <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)} disabled={isEditing}>
+                    Change Password
+                </Button>
+              </div>
+            </div>
+
+
+            <div>
               <h3 className="text-lg font-medium">Tax</h3>
               <Separator className="my-2" />
                <div className="space-y-4 pt-2">
@@ -311,11 +368,42 @@ const SettingsPage = memo(function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter a new password for your account. You will be logged out after changing it.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(handleChangePassword)}>
+            <div className="py-4">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                {...register('newPassword')}
+              />
+              {errors.newPassword && (
+                  <p className="text-sm text-destructive mt-2">{errors.newPassword.message}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isPasswordPending}>
+                {isPasswordPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Update Password
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 });
 
 
 export default SettingsPage;
-
-    

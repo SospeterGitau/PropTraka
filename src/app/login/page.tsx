@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,12 +16,22 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { Loader2 } from 'lucide-react';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 
 
@@ -32,8 +42,16 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+const passwordResetSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+type PasswordResetFormValues = z.infer<typeof passwordResetSchema>;
+
+
 function LoginPageContent() {
   const [isPending, startTransition] = useTransition();
+  const [isResetPending, startResetTransition] = useTransition();
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -47,22 +65,24 @@ function LoginPageContent() {
     }
   });
 
+   const passwordResetForm = useForm<PasswordResetFormValues>({
+    resolver: zodResolver(passwordResetSchema),
+  });
+
   const onSubmit = (data: LoginFormValues) => {
     startTransition(async () => {
       const auth = getAuth();
       try {
-        // Try to sign in first
         await signInWithEmailAndPassword(auth, data.email, data.password);
-        // If successful, the onAuthStateChanged listener in the layout will handle the redirect.
-        
       } catch (signInError: any) {
-        // If sign-in fails because the user doesn't exist, try to create a new account.
         if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
           try {
             await createUserWithEmailAndPassword(auth, data.email, data.password);
-            // New user created, onAuthStateChanged will handle the redirect.
+             toast({
+              title: "Account Created",
+              description: "Welcome! Your new account has been successfully created.",
+            });
           } catch (signUpError: any) {
-            // Handle specific sign-up errors
             toast({
               variant: 'destructive',
               title: 'Sign Up Error',
@@ -70,7 +90,6 @@ function LoginPageContent() {
             });
           }
         } else {
-          // Handle other sign-in errors (like wrong password)
           toast({
             variant: 'destructive',
             title: 'Authentication Error',
@@ -78,19 +97,38 @@ function LoginPageContent() {
           });
         }
       } finally {
-        // After either sign-in or sign-up, create a server-side session.
-        // The redirect is now handled by the useUser hook in the layout.
         await login();
       }
     });
   };
 
+  const handlePasswordReset = (data: PasswordResetFormValues) => {
+    startResetTransition(async () => {
+      const auth = getAuth();
+      try {
+        await sendPasswordResetEmail(auth, data.email);
+        toast({
+          title: "Password Reset Email Sent",
+          description: `If an account exists for ${data.email}, you will receive an email with instructions.`,
+        });
+        setIsResetDialogOpen(false);
+      } catch (error: any) {
+         toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        });
+      }
+    });
+  };
+
   return (
+    <>
     <div className="flex h-screen w-full items-center justify-center bg-muted/40">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
+          <CardTitle className="text-2xl">Welcome to LeaseLync</CardTitle>
+          <CardDescription>Enter your credentials to sign in or create an account.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -107,7 +145,17 @@ function LoginPageContent() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-xs"
+                  onClick={() => setIsResetDialogOpen(true)}
+                >
+                  Forgot Password?
+                </Button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -131,6 +179,41 @@ function LoginPageContent() {
         </CardContent>
       </Card>
     </div>
+
+    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Forgot Password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={passwordResetForm.handleSubmit(handlePasswordReset)}>
+            <div className="py-4">
+              <Label htmlFor="reset-email">Email Address</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="m@example.com"
+                {...passwordResetForm.register('email')}
+              />
+              {passwordResetForm.formState.errors.email && (
+                  <p className="text-sm text-destructive mt-2">{passwordResetForm.formState.errors.email.message}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isResetPending}>
+                {isResetPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Reset Link
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

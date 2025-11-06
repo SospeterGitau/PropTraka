@@ -22,7 +22,7 @@
  */
 
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
-import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest, Contractor } from '@/lib/types';
+import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEntry, MaintenanceRequest, Contractor, Subscription } from '@/lib/types';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
@@ -60,6 +60,9 @@ interface DataContextType {
 
   changelog: ChangeLogEntry[] | null;
   addChangeLogEntry: (entry: Omit<ChangeLogEntry, 'id' | 'date'|'ownerId'>) => void;
+
+  subscriptions: Subscription[] | null;
+  addSubscription: (subscription: Omit<Subscription, 'id' | 'ownerId'>) => Promise<void>;
   
   calendarEvents: CalendarEvent[];
   currency: string;
@@ -85,7 +88,6 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// --- Local Storage Hooks ---
 function usePersistentState<T>(key: string, defaultValue: T): [T, (value: T) => void] {
   const [state, setState] = useState<T>(() => {
     if (typeof window === 'undefined') {
@@ -116,7 +118,6 @@ function usePersistentState<T>(key: string, defaultValue: T): [T, (value: T) => 
 }
 
 
-// --- Sample Data Seeding ---
 async function seedDatabase(
   firestore: any, 
   user: any
@@ -125,7 +126,6 @@ async function seedDatabase(
 
   const batch = writeBatch(firestore);
 
-  // 1. Properties
   const propertiesToCreate: Omit<Property, 'id' | 'ownerId'>[] = [
     {
       addressLine1: '456 Oak Avenue', city: 'Nairobi', state: 'Nairobi', postalCode: '00200',
@@ -154,7 +154,6 @@ async function seedDatabase(
     return { ...p, id: docRef.id, ownerId: user.uid };
   }));
 
-  // 2. Contractors
   const contractorsCollectionRef = collection(firestore, 'contractors');
   const contractorsToCreate = [
     { name: 'FixIt Bros', specialty: 'General Maintenance', email: 'contact@fixit.com', phone: '0712345678', ownerId: user.uid },
@@ -167,10 +166,8 @@ async function seedDatabase(
     return { ...c, id: docRef.id, ownerId: user.uid };
   }));
 
-  // 3. Tenancies (Revenue)
   const revenueCollectionRef = collection(firestore, 'revenue');
   
-  // --- Tenancy 1: Domestic Property with Service Charges ---
   const tenancy1Id = `t${Date.now()}`;
   const startDate1 = new Date();
   startDate1.setMonth(startDate1.getMonth() - 4);
@@ -193,7 +190,7 @@ async function seedDatabase(
       date: dueDate.toISOString().split('T')[0],
       rent: 120000,
       serviceCharges: serviceCharges1,
-      amountPaid: i < 4 ? totalDue : 0, // Pay first 4 months in full
+      amountPaid: i < 4 ? totalDue : 0, 
       propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`,
       tenant: 'Alice Johnson', tenantEmail: 'alice@example.com', type: 'revenue',
       deposit: i === 0 ? 120000 : 0, ownerId: user.uid,
@@ -202,12 +199,11 @@ async function seedDatabase(
     });
   }
   
-  // --- Tenancy 2: Commercial Property ---
   const tenancy2Id = `t${Date.now() + 1}`;
   const startDate2 = new Date();
   startDate2.setMonth(startDate2.getMonth() - 2);
   const endDate2 = new Date(startDate2);
-  endDate2.setFullYear(endDate2.getFullYear() + 2); // 2-year lease
+  endDate2.setFullYear(endDate2.getFullYear() + 2);
 
   for (let i = 0; i < 24; i++) {
     const dueDate = new Date(startDate2);
@@ -218,7 +214,7 @@ async function seedDatabase(
       tenancyId: tenancy2Id,
       date: dueDate.toISOString().split('T')[0],
       rent: 250000,
-      amountPaid: i < 2 ? 250000 : 0, // Pay first 2 months
+      amountPaid: i < 2 ? 250000 : 0,
       propertyId: propertyDocsData[2].id, propertyName: `${propertyDocsData[2].addressLine1}, ${propertyDocsData[2].city}`,
       tenant: 'Innovate Corp', tenantEmail: 'accounts@innovate.com', type: 'revenue',
       deposit: i === 0 ? 500000 : 0, ownerId: user.uid,
@@ -228,7 +224,6 @@ async function seedDatabase(
   }
 
 
-  // 4. Expenses
   const expensesCollectionRef = collection(firestore, 'expenses');
   const expensesToCreate = [
     { date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], amount: 15000, propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, category: 'Maintenance', contractorId: contractorDocsData[0].id, contractorName: contractorDocsData[0].name, expenseType: 'one-off', ownerId: user.uid },
@@ -241,7 +236,6 @@ async function seedDatabase(
     batch.set(expDocRef, { ...e, type: 'expense' });
   });
 
-  // 5. Maintenance Requests
   const maintenanceCollectionRef = collection(firestore, 'maintenanceRequests');
   const maintenanceToCreate = [
     { propertyId: propertyDocsData[0].id, propertyName: `${propertyDocsData[0].addressLine1}, ${propertyDocsData[0].city}`, description: 'Fix leaking kitchen sink', status: 'Done', priority: 'High', reportedDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0], completedDate: new Date(new Date().setDate(new Date().getDate() - 20)).toISOString().split('T')[0], contractorId: contractorDocsData[0].id, contractorName: contractorDocsData[0].name, cost: 15000, ownerId: user.uid },
@@ -269,6 +263,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const maintenanceRequestsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
   const contractorsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
   const changelogQuery = useMemo(() => user?.uid ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
+  const subscriptionsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'subscriptions'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
+
 
   const { data: properties, isLoading: loadingProperties } = useCollection<Property>(propertiesQuery);
   const { data: revenue, isLoading: loadingRevenue } = useCollection<Transaction>(revenueQuery);
@@ -279,22 +275,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     sortField: 'date',
     sortDirection: 'desc',
   });
+  const { data: subscriptions, isLoading: loadingSubscriptions } = useCollection<Subscription>(subscriptionsQuery);
 
-  // Overall data loading status
-  const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance || loadingContractors;
 
-  // Persisted state
+  const isDataLoading = isAuthLoading || loadingProperties || loadingRevenue || loadingExpenses || loadingChangelog || loadingMaintenance || loadingContractors || loadingSubscriptions;
+
   const [currency, setCurrency] = usePersistentState('app_currency', 'KES');
   const [locale, setLocale] = usePersistentState('app_locale', 'en-GB');
   const [companyName, setCompanyName] = usePersistentState('app_companyName', 'LeaseLync Ltd');
-  const [logoUrl, setLogoUrl] = usePersistentState('app_logoUrl', '/logo.png');
+  const [logoUrl, setLogoUrl] = usePersistentState('app_logoUrl', '');
   const [residencyStatus, setResidencyStatus] = usePersistentState<ResidencyStatus>('app_residency', 'non-resident');
   const [isPnlReportEnabled, setIsPnlReportEnabled] = usePersistentState('app_pnlEnabled', true);
   const [isMarketResearchEnabled, setIsMarketResearchEnabled] = usePersistentState('app_marketResearchEnabled', true);
   const { theme, setTheme } = useTheme();
 
-
-  // --- DATA SEEDING EFFECT ---
   useEffect(() => {
     if (isAuthLoading || !user || !firestore || hasSeedingBeenChecked) {
       return;
@@ -324,8 +318,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   ]);
 
 
-  // --- MUTATION FUNCTIONS ---
-
   const addChangeLogEntry = async (entry: Omit<ChangeLogEntry, 'id' | 'date' | 'ownerId'>) => {
     if (!user) return;
     const changelogCollection = collection(firestore, 'changelog');
@@ -337,7 +329,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await addDoc(changelogCollection, newEntry);
   };
 
-  // Properties
   const addProperty = async (property: Omit<Property, 'id' | 'ownerId'>) => {
     if (!user) return;
     const propertiesCollection = collection(firestore, 'properties');
@@ -355,7 +346,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await deleteDoc(propDocRef);
   };
 
-  // Tenancy (Revenue)
   const addTenancy = async (transactions: Omit<Transaction, 'id' | 'ownerId'>[]) => {
     if (!user) return;
     const revenueCollection = collection(firestore, 'revenue');
@@ -428,7 +418,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await setDoc(txDocRef, transaction, { merge: true });
   };
 
-  // Expenses
   const addExpense = async (expense: Omit<Transaction, 'id'|'type'|'ownerId'>) => {
     if (!user) return;
     const expensesCollection = collection(firestore, 'expenses');
@@ -446,7 +435,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await deleteDoc(expDocRef);
   };
 
-  // Maintenance
   const addMaintenanceRequest = async (request: Omit<MaintenanceRequest, 'id'|'ownerId'>) => {
     if (!user) return;
     const maintenanceCollection = collection(firestore, 'maintenanceRequests');
@@ -464,7 +452,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await deleteDoc(reqDocRef);
   };
   
-  // Contractors
   const addContractor = async (contractor: Omit<Contractor, 'id' | 'ownerId'>) => {
     if (!user) return;
     const contractorsCollection = collection(firestore, 'contractors');
@@ -480,6 +467,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     const conDocRef = doc(firestore, 'contractors', contractorId);
     await deleteDoc(conDocRef);
+  };
+
+  const addSubscription = async (subscription: Omit<Subscription, 'id' | 'ownerId'>) => {
+    if (!user) return;
+    const subscriptionsCollection = collection(firestore, 'subscriptions');
+    const newSubscription = { ...subscription, ownerId: user.uid };
+    await addDoc(subscriptionsCollection, newSubscription);
   };
 
 
@@ -556,7 +550,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       events.push({
         date: item.reportedDate,
         title: `Maintenance: ${item.description.substring(0, 20)}...`,
-        type: 'appointment', // Using 'appointment' for maintenance
+        type: 'appointment',
         details: {
           Property: item.propertyName,
           Status: item.status,
@@ -582,6 +576,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addContractor, updateContractor, deleteContractor,
     changelog,
     addChangeLogEntry,
+    subscriptions,
+    addSubscription,
     calendarEvents,
     currency, setCurrency,
     locale, setLocale,
@@ -595,7 +591,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     formatCurrencyForAxis,
     isDataLoading
   }), [
-    properties, revenue, expenses, maintenanceRequests, contractors, changelog, calendarEvents,
+    properties, revenue, expenses, maintenanceRequests, contractors, changelog, calendarEvents, subscriptions,
     currency, locale, companyName, logoUrl, residencyStatus, isPnlReportEnabled,
     isMarketResearchEnabled, isDataLoading, user?.uid, theme, setTheme,
     setCurrency, setLocale, setCompanyName, setLogoUrl, setResidencyStatus, setIsPnlReportEnabled, setIsMarketResearchEnabled
