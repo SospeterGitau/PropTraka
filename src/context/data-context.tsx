@@ -25,6 +25,9 @@ import type { Property, Transaction, CalendarEvent, ResidencyStatus, ChangeLogEn
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { collection, doc, setDoc, deleteDoc, writeBatch, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { isAfter, format } from 'date-fns';
+import { useTheme } from '@/app/layout';
+
+type Theme = 'dark' | 'light' | 'system';
 
 interface DataContextType {
   properties: Property[] | null;
@@ -70,6 +73,8 @@ interface DataContextType {
   setIsPnlReportEnabled: (enabled: boolean) => void;
   isMarketResearchEnabled: boolean;
   setIsMarketResearchEnabled: (enabled: boolean) => void;
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
   formatCurrency: (amount: number) => string;
   formatCurrencyForAxis: (amount: number) => string;
   isDataLoading: boolean;
@@ -213,6 +218,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [residencyStatus, setResidencyStatus] = useState<ResidencyStatus>('non-resident');
   const [isPnlReportEnabled, setIsPnlReportEnabled] = useState(true);
   const [isMarketResearchEnabled, setIsMarketResearchEnabled] = useState(true);
+  const { theme, setTheme } = useTheme();
 
   // --- DATA SEEDING EFFECT ---
   useEffect(() => {
@@ -495,13 +501,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     residencyStatus, setResidencyStatus,
     isPnlReportEnabled, setIsPnlReportEnabled,
     isMarketResearchEnabled, setIsMarketResearchEnabled,
+    theme, setTheme,
     formatCurrency,
     formatCurrencyForAxis,
     isDataLoading
   }), [
     properties, revenue, expenses, maintenanceRequests, contractors, changelog, calendarEvents,
     currency, locale, companyName, residencyStatus, isPnlReportEnabled,
-    isMarketResearchEnabled, isDataLoading, user?.uid
+    isMarketResearchEnabled, isDataLoading, user?.uid, theme, setTheme
   ]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
