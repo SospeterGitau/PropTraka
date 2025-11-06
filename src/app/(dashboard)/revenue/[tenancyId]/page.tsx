@@ -298,7 +298,7 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
                                 Returned
                             </Badge>
                         ) : isTenancyEnded ? (
-                            <Button size="sm" onClick={handleReturnDeposit}>
+                            <Button size="sm" onClick={handleReturnDeposit} disabled={isDepositReturned}>
                                 <CircleDollarSign className="mr-2 h-4 w-4" />
                                 Return Deposit
                             </Button>

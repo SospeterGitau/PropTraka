@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { Property } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,25 @@ interface PropertyFormProps {
   property?: Property | null;
 }
 
+const domesticBuildingTypes = ['Studio', 'Terraced House', 'Semi-Detached House', 'Detached House', 'Bungalow', 'Flat', 'Maisonette'];
+const commercialBuildingTypes = ['Office', 'Retail', 'Industrial'];
+
 export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFormProps) {
+  const [propertyType, setPropertyType] = useState<Property['propertyType']>(property?.propertyType || 'Domestic');
+  const [buildingType, setBuildingType] = useState<Property['buildingType'] | undefined>(property?.buildingType);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPropertyType(property?.propertyType || 'Domestic');
+      setBuildingType(property?.buildingType);
+    }
+  }, [isOpen, property]);
+
+  const handlePropertyTypeChange = (value: Property['propertyType']) => {
+    setPropertyType(value);
+    setBuildingType(undefined); // Reset building type when property type changes
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -33,8 +52,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       city: formData.get('city') as string,
       state: formData.get('state') as string,
       postalCode: formData.get('postalCode') as string,
-      propertyType: formData.get('propertyType') as Property['propertyType'],
-      buildingType: formData.get('buildingType') as Property['buildingType'],
+      propertyType: propertyType,
+      buildingType: buildingType || 'Other',
       bedrooms: Number(formData.get('bedrooms')),
       bathrooms: Number(formData.get('bathrooms')),
       size: Number(formData.get('size')) || undefined,
@@ -82,7 +101,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                 <Label htmlFor="propertyType">Property Type</Label>
-                <Select name="propertyType" defaultValue={property?.propertyType || 'Domestic'} required>
+                <Select value={propertyType} onValueChange={handlePropertyTypeChange} required>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a type" />
                     </SelectTrigger>
@@ -94,29 +113,30 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                 </div>
                 <div className="space-y-2">
                 <Label htmlFor="buildingType">Building Type</Label>
-                <Select name="buildingType" defaultValue={property?.buildingType} required>
+                <Select value={buildingType} onValueChange={(value) => setBuildingType(value as Property['buildingType'])} required>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a type" />
                     </SelectTrigger>
                     <SelectContent>
+                        {propertyType === 'Domestic' && (
+                            <SelectGroup>
+                                <SelectLabel>Domestic</SelectLabel>
+                                {domesticBuildingTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        )}
+                         {propertyType === 'Commercial' && (
+                            <SelectGroup>
+                                <SelectLabel>Commercial</SelectLabel>
+                                {commercialBuildingTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                         )}
                         <SelectGroup>
-                        <SelectLabel>Domestic</SelectLabel>
-                        <SelectItem value="Studio">Studio</SelectItem>
-                        <SelectItem value="Terraced House">Terraced House</SelectItem>
-                        <SelectItem value="Semi-Detached House">Semi-Detached House</SelectItem>
-                        <SelectItem value="Detached House">Detached House</SelectItem>
-                        <SelectItem value="Bungalow">Bungalow</SelectItem>
-                        <SelectItem value="Flat">Flat</SelectItem>
-                        <SelectItem value="Maisonette">Maisonette</SelectItem>
-                        </SelectGroup>
-                        <SelectGroup>
-                        <SelectLabel>Commercial</SelectLabel>
-                        <SelectItem value="Office">Office</SelectItem>
-                        <SelectItem value="Retail">Retail</SelectItem>
-                        <SelectItem value="Industrial">Industrial</SelectItem>
-                        </SelectGroup>
-                        <SelectGroup>
-                        <SelectItem value="Other">Other</SelectItem>
+                            <SelectLabel>Other</SelectLabel>
+                            <SelectItem value="Other">Other</SelectItem>
                         </SelectGroup>
                     </SelectContent>
                     </Select>
@@ -156,7 +176,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                     <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} required />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="purchaseTaxes">Purchase Taxes &amp; Fees</Label>
+                    <Label htmlFor="purchaseTaxes">Purchase Taxes & Fees</Label>
                     <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} />
                 </div>
             </div>
@@ -178,7 +198,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
           
           <DialogFooter className="pt-6">
             <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             </DialogClose>
             <Button type="submit">Save</Button>
           </DialogFooter>
