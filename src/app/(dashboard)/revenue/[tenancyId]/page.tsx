@@ -420,7 +420,7 @@ function TenancyDetailPageContent() {
                         {formatCurrency(currentBalance)}
                     </div>
                 </div>
-                <div className="p-4 bg-muted rounded-lg">
+                <div className="p-4 bg-muted rounded-lg flex flex-col items-center justify-center">
                     <div className="text-sm text-muted-foreground">Deposit Status</div>
                     <div className="text-lg font-bold h-[32px] flex items-center justify-center">
                         {isDepositReturned ? (
@@ -434,9 +434,13 @@ function TenancyDetailPageContent() {
                                 Return Deposit
                             </Button>
                         ) : (
-                             <Badge className="text-base" variant="outline">
-                                {depositAmount > 0 ? `Held (${formatCurrency(depositAmount)})` : 'None'}
-                            </Badge>
+                             <div className="text-center">
+                                {depositAmount > 0 ? (
+                                    <span className="font-bold text-lg">Held <span className="text-base font-medium text-muted-foreground">({formatCurrency(depositAmount)})</span></span>
+                                ) : (
+                                    <span className="font-bold text-lg">None</span>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -553,4 +557,3 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
-
