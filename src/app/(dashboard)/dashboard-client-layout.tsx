@@ -1,7 +1,7 @@
 
 'use client';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { DataProvider, useDataContext } from '@/context/data-context';
@@ -9,8 +9,14 @@ import { DataProvider, useDataContext } from '@/context/data-context';
 function SubscriptionChecker({ children }: { children: React.ReactNode }) {
   const { subscriptions, isDataLoading } = useDataContext();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    // If we are on the subscription page already, do nothing.
+    if (pathname === '/settings/subscription') {
+      return;
+    }
+
     // Wait until data is loaded
     if (isDataLoading) {
       return;
@@ -20,8 +26,13 @@ function SubscriptionChecker({ children }: { children: React.ReactNode }) {
     if (!isDataLoading && (!subscriptions || subscriptions.length === 0)) {
       router.replace('/settings/subscription');
     }
-  }, [subscriptions, isDataLoading, router]);
+  }, [subscriptions, isDataLoading, router, pathname]);
   
+  // If we are on the subscription page, always show it.
+  if (pathname === '/settings/subscription') {
+      return <>{children}</>;
+  }
+
   // While loading or if user has a subscription, show the content
   if (isDataLoading || (subscriptions && subscriptions.length > 0)) {
     return <>{children}</>;
