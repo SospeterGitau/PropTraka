@@ -3,7 +3,7 @@
 
 import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { format, startOfToday, isBefore } from 'date-fns';
 import { useDataContext } from '@/context/data-context';
 import type { Transaction, ServiceCharge } from '@/lib/types';
@@ -201,7 +201,7 @@ function InvoiceForm({
            <div className="!mt-6 text-sm space-y-1 bg-muted p-3 rounded-md">
                 <div className="flex justify-between"><span>Base Rent:</span> <span className="font-medium">{formatCurrency(rent)}</span></div>
                 {serviceCharges.map((sc, i) => (
-                    <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span className="font-medium">{formatCurrency(sc.amount)}</span></div>
+                    <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount)}</span></div>
                 ))}
                 {transaction.deposit && <div className="flex justify-between"><span>Deposit:</span> <span className="font-medium">{formatCurrency(transaction.deposit)}</span></div>}
                 <hr className="my-1 border-border" />
@@ -218,8 +218,9 @@ function InvoiceForm({
 }
 
 
-function TenancyDetailPageContent({ params }: { params: { tenancyId: string } }) {
-  const { tenancyId } = params;
+function TenancyDetailPageContent() {
+  const params = useParams();
+  const tenancyId = params.tenancyId as string;
   const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry, endTenancy } = useDataContext();
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
@@ -547,10 +548,9 @@ function TenancyDetailPageContent({ params }: { params: { tenancyId: string } })
   );
 }
 
-function TenancyDetailPage({ params }: { params: { tenancyId: string } }) {
+export default function TenancyDetailPage() {
     return (
-        <TenancyDetailPageContent params={params} />
+        <TenancyDetailPageContent />
     )
 }
 
-export default memo(TenancyDetailPage);
