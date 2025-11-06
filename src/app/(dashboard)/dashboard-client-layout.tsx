@@ -13,7 +13,7 @@ function SubscriptionChecker({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // If we are on the subscription page already, do nothing.
-    if (pathname === '/settings/subscription') {
+    if (pathname === '/settings') {
       return;
     }
 
@@ -24,12 +24,12 @@ function SubscriptionChecker({ children }: { children: React.ReactNode }) {
 
     // If data is loaded and there are no subscriptions, redirect
     if (!isDataLoading && (!subscriptions || subscriptions.length === 0)) {
-      router.replace('/settings/subscription');
+      router.replace('/settings');
     }
   }, [subscriptions, isDataLoading, router, pathname]);
   
   // If we are on the subscription page, always show it.
-  if (pathname === '/settings/subscription') {
+  if (pathname === '/settings') {
       return <>{children}</>;
   }
 

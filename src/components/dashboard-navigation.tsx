@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Users,
   Wrench,
+  User,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
 import { useDataContext } from '@/context/data-context';
@@ -58,8 +59,7 @@ const analysisNavItems = [
 ];
 
 const utilityNavItems = [
-    { href: '/settings', label: 'Settings', icon: Settings },
-    { href: '/settings/subscription', label: 'Subscription', icon: CreditCard },
+    { href: '/settings', label: 'Account', icon: User },
     { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
