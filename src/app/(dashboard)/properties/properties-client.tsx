@@ -214,10 +214,10 @@ function PropertiesClient() {
                       </div>
                     </TableCell>
                     <TableCell>
-                       <Badge variant="outline">{property.propertyType}</Badge>
+                       <Badge variant="secondary">{property.propertyType}</Badge>
                     </TableCell>
                     <TableCell>
-                       <Badge variant={status === 'Occupied' ? 'secondary' : 'default'}>
+                       <Badge variant={status === 'Occupied' ? 'secondary' : 'outline'}>
                          {status}
                        </Badge>
                     </TableCell>

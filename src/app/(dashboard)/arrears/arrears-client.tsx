@@ -29,6 +29,7 @@ interface ArrearEntry {
   rentOwed: number;
   depositOwed: number;
   daysOverdue: number;
+  serviceChargesOwed: number;
 }
 
 function ArrearsClient() {
@@ -63,7 +64,9 @@ function ArrearsClient() {
         
         const depositOwed = depositDue - paidTowardsDeposit;
         const rentOwed = rentDue - paidTowardsRent;
-        const amountOwed = depositOwed + rentOwed + serviceChargesTotal;
+        const serviceChargesOwed = serviceChargesTotal; // Assuming service charges are paid last
+        
+        const amountOwed = rentOwed + depositOwed + serviceChargesOwed;
         
         const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
 
@@ -75,6 +78,7 @@ function ArrearsClient() {
           dueDate: transaction.date,
           rentOwed,
           depositOwed,
+          serviceChargesOwed,
           daysOverdue,
         };
       });
@@ -166,16 +170,11 @@ function ArrearsClient() {
                         </TableCell>
                         <TableCell>{arrear.daysOverdue} days</TableCell>
                         <TableCell>
-                          {arrear.rentOwed > 0 && arrear.depositOwed > 0 ? (
-                            <div className="flex flex-col items-start">
-                              <Badge variant="outline">Rent</Badge>
-                              <Badge variant="outline" className="mt-1">Deposit</Badge>
+                            <div className="flex flex-col items-start text-sm">
+                                {arrear.rentOwed > 0 && <span>Rent</span>}
+                                {arrear.depositOwed > 0 && <span>Deposit</span>}
+                                {arrear.serviceChargesOwed > 0 && <span>Service Charges</span>}
                             </div>
-                          ) : arrear.rentOwed > 0 ? (
-                            <Badge variant="outline">Rent</Badge>
-                          ) : (
-                            <Badge variant="outline">Deposit</Badge>
-                          )}
                         </TableCell>
                         <TableCell className="text-right font-semibold text-destructive">
                           {formatCurrency(arrear.amountOwed)}

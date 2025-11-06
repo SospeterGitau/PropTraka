@@ -129,7 +129,7 @@ function PropertyDetailPageContent() {
                             <CardTitle className="text-2xl">{formatAddress(property)}</CardTitle>
                             <CardDescription>{property.buildingType}</CardDescription>
                         </div>
-                        <Badge variant={status === 'Occupied' ? 'secondary' : 'default'}>{status}</Badge>
+                        <Badge variant={status === 'Occupied' ? 'secondary' : 'outline'}>{status}</Badge>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -165,7 +165,7 @@ function PropertyDetailPageContent() {
                          <div className="p-4 bg-muted rounded-lg">
                             <div className="text-sm text-muted-foreground">Type</div>
                             <div className="text-xl font-bold flex items-center justify-center h-full">
-                                <Badge variant="outline">{property.propertyType}</Badge>
+                                <Badge variant="secondary">{property.propertyType}</Badge>
                             </div>
                         </div>
                     </div>

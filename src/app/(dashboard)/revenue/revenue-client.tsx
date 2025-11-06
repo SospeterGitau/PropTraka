@@ -173,7 +173,7 @@ const RevenueForm = memo(function RevenueForm({
       const dateStr = format(monthStartDate, 'yyyy-MM-dd');
       const existingTx = existingTransactions.find(tx => tx.date === dateStr);
 
-      const newTx: Partial<Transaction> = {
+      const newTxData: Partial<Transaction> = {
         tenancyId: tenancyId,
         date: dateStr,
         rent: rent,
@@ -193,14 +193,14 @@ const RevenueForm = memo(function RevenueForm({
       };
       
       if (existingTx?.id) {
-        newTx.id = existingTx.id;
+        newTxData.id = existingTx.id;
       }
       
       if (index === 0 && notes) {
-        newTx.notes = notes;
+        newTxData.notes = notes;
       }
 
-      return newTx;
+      return newTxData;
     });
 
     onSubmit(newTransactions as Transaction[]);
@@ -476,15 +476,14 @@ function RevenueClient() {
                         const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
                         let statusBadge;
-                        if (tenancy.nextDueDate) {
-                            const isOverdue = isBefore(new Date(tenancy.nextDueDate), today);
-                            statusBadge = (
-                                <Badge variant={isOverdue ? "destructive" : "outline"}>
-                                    {isOverdue ? 'Overdue' : 'Upcoming'} {formattedDates[`${tenancy.tenancyId}-nextDue`]}
-                                </Badge>
-                            );
+                        const hasOverdue = isBefore(new Date(tenancy.nextDueDate!), today);
+                        
+                        if (tenancy.nextDueDate && hasOverdue) {
+                            statusBadge = <Badge variant="destructive">Overdue {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
+                        } else if (tenancy.nextDueDate && !hasOverdue) {
+                             statusBadge = <Badge variant="outline">Upcoming {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
                         } else if (!isTenancyActive && totalBalance <= 0) {
-                            statusBadge = <Badge variant="default">Completed</Badge>;
+                            statusBadge = <Badge variant="secondary">Completed</Badge>;
                         } else if (isTenancyActive && totalBalance <= 0) {
                             statusBadge = <Badge variant="secondary">Paid Up</Badge>;
                         } else {
