@@ -78,7 +78,16 @@ const RevenueForm = memo(function RevenueForm({
 
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
     const newServiceCharges = [...serviceCharges];
-    newServiceCharges[index] = { ...newServiceCharges[index], [field]: field === 'amount' ? Number(value) : value };
+    const newCharge = { ...newServiceCharges[index] };
+
+    if (field === 'amount') {
+      // Allow empty string for typing, but store as 0 if empty/invalid
+      newCharge.amount = value === '' ? '' : Number(value);
+    } else {
+      newCharge.name = value;
+    }
+
+    newServiceCharges[index] = newCharge;
     setServiceCharges(newServiceCharges);
   };
 
@@ -157,6 +166,13 @@ const RevenueForm = memo(function RevenueForm({
     const tenancyId = tenancyToEdit?.tenancyId || `t${Date.now()}`;
     const existingTransactions = isEditing ? revenue.filter(t => t.tenancyId === tenancyToEdit.tenancyId) : [];
 
+    const finalServiceCharges = serviceCharges
+      .map(sc => ({
+        name: sc.name,
+        amount: Number(sc.amount) || 0,
+      }))
+      .filter(sc => sc.name && sc.amount > 0);
+
     const newTransactions = months.map((monthStartDate, index) => {
         const dateStr = format(monthStartDate, 'yyyy-MM-dd');
         // Find if a transaction for this month already existed to preserve its paid amount
@@ -167,7 +183,7 @@ const RevenueForm = memo(function RevenueForm({
             tenancyId: tenancyId,
             date: dateStr,
             rent: rent,
-            serviceCharges: serviceCharges.filter(sc => sc.name && sc.amount > 0),
+            serviceCharges: finalServiceCharges,
             amountPaid: existingTx?.amountPaid || 0, // Preserve payment status
             propertyId: propertyId,
             propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
