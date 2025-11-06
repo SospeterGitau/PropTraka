@@ -77,18 +77,18 @@ const RevenueForm = memo(function RevenueForm({
   };
 
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
-    const newServiceCharges = [...serviceCharges];
-    const newCharge = { ...newServiceCharges[index] };
-
-    if (field === 'amount') {
-      // Allow empty string for typing, but store as 0 if empty/invalid
-      newCharge.amount = value === '' ? '' : Number(value);
-    } else {
-      newCharge.name = value;
-    }
-
-    newServiceCharges[index] = newCharge;
-    setServiceCharges(newServiceCharges);
+    const newCharges = serviceCharges.map((charge, i) => {
+        if (i === index) {
+            if (field === 'amount') {
+                // Allow empty string for typing, but treat as 0 for state
+                const numericValue = value === '' ? '' : parseFloat(value);
+                return { ...charge, amount: numericValue as any };
+            }
+            return { ...charge, [field]: value };
+        }
+        return charge;
+    });
+    setServiceCharges(newCharges);
   };
 
 
@@ -175,16 +175,14 @@ const RevenueForm = memo(function RevenueForm({
 
     const newTransactions = months.map((monthStartDate, index) => {
         const dateStr = format(monthStartDate, 'yyyy-MM-dd');
-        // Find if a transaction for this month already existed to preserve its paid amount
         const existingTx = existingTransactions.find(tx => tx.date === dateStr);
 
-        return {
-            id: existingTx?.id, // Keep old ID if it exists
+        const newTx = {
             tenancyId: tenancyId,
             date: dateStr,
             rent: rent,
             serviceCharges: finalServiceCharges,
-            amountPaid: existingTx?.amountPaid || 0, // Preserve payment status
+            amountPaid: existingTx?.amountPaid || 0,
             propertyId: propertyId,
             propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
             tenant: tenant,
@@ -197,7 +195,13 @@ const RevenueForm = memo(function RevenueForm({
             contractUrl: contractUrl,
             notes: index === 0 ? notes : undefined,
             ownerId: tenancyToEdit?.ownerId || '',
+        };
+        
+        if (existingTx?.id) {
+          return { ...newTx, id: existingTx.id };
         }
+        
+        return newTx;
     });
 
     onSubmit(newTransactions as Transaction[]);
