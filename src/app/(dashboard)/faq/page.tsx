@@ -18,7 +18,7 @@ export default function FaqPage() {
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-lg font-semibold">About RentVision: What is it and who is it for?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              RentVision is a comprehensive, mobile-first web application designed to help small-scale landlords and property managers efficiently oversee their rental portfolios. It provides a centralized dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of RentVision is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place.
+              RentVision is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales efficiently oversee their rental portfolios. It provides a centralized dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of RentVision is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place.
             </AccordionContent>
           </AccordionItem>
 
