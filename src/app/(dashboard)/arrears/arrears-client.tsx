@@ -32,7 +32,7 @@ interface ArrearEntry {
   serviceChargesOwed: number;
 }
 
-function ArrearsClient() {
+const ArrearsClient = memo(function ArrearsClient() {
   const { revenue, formatCurrency, locale, companyName, isDataLoading } = useDataContext();
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
@@ -196,6 +196,6 @@ function ArrearsClient() {
       </Card>
     </>
   );
-}
+});
 
-export default memo(ArrearsClient);
+export default ArrearsClient;

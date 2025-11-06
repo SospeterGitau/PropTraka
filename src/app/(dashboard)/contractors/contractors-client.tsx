@@ -29,7 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ContractorForm } from '@/components/contractor-form';
 import { Badge } from '@/components/ui/badge';
 
-function ContractorsClient() {
+const ContractorsClient = memo(function ContractorsClient() {
   const { contractors, addContractor, updateContractor, deleteContractor, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -194,6 +194,6 @@ function ContractorsClient() {
       />
     </>
   );
-}
+});
 
-export default memo(ContractorsClient);
+export default ContractorsClient;

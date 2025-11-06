@@ -218,7 +218,7 @@ function InvoiceForm({
 }
 
 
-function TenancyDetailPageContent() {
+const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const params = useParams();
   const tenancyId = params.tenancyId as string;
   const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry, endTenancy } = useDataContext();
@@ -550,7 +550,7 @@ function TenancyDetailPageContent() {
       />
     </>
   );
-}
+});
 
 export default function TenancyDetailPage() {
     return (

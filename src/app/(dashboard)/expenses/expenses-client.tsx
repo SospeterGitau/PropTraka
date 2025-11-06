@@ -167,7 +167,7 @@ function ExpensesTable({
   )
 }
 
-function ExpensesClient() {
+const ExpensesClient = memo(function ExpensesClient() {
   const { properties, expenses, contractors, addExpense, updateExpense, deleteExpense, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -321,6 +321,6 @@ function ExpensesClient() {
       />
     </>
   );
-}
+});
 
-export default memo(ExpensesClient);
+export default ExpensesClient;

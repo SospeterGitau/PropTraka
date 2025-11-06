@@ -19,7 +19,7 @@ function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-function MaintenanceClient() {
+const MaintenanceClient = memo(function MaintenanceClient() {
   const { 
     properties,
     maintenanceRequests,
@@ -125,7 +125,7 @@ function MaintenanceClient() {
     addChangeLogEntry({
       type: 'Expense',
       action: 'Created',
-      description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was logged from a maintenance task.`,
+      description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was logged from a maintenance task.`,
       entityId: data.id,
     });
      toast({
@@ -224,6 +224,6 @@ function MaintenanceClient() {
       />
     </>
   );
-}
+});
 
-export default memo(MaintenanceClient);
+export default MaintenanceClient;

@@ -477,7 +477,7 @@ function PnlStatementTab() {
 }
 
 
-function ReportsClient() {
+const ReportsClient = memo(function ReportsClient() {
   const { revenue, expenses, properties, isPnlReportEnabled, isMarketResearchEnabled } = useDataContext();
 
   if (!revenue || !expenses || !properties) {
@@ -526,6 +526,6 @@ function ReportsClient() {
       </Tabs>
     </>
   );
-}
+});
 
-export default memo(ReportsClient);
+export default ReportsClient;

@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false });
 const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false });
 
-function DashboardPageContent() {
+const DashboardPageContent = memo(function DashboardPageContent() {
   const { properties, revenue, expenses, formatCurrency, isDataLoading } = useDataContext();
 
   // Data might not be available on the first render, so we add a loading state.
@@ -129,12 +129,10 @@ function DashboardPageContent() {
       </div>
     </>
   );
-}
+});
 
-function DashboardPage() {
+export default function DashboardPage() {
     return (
         <DashboardPageContent />
     )
 }
-
-export default memo(DashboardPage);

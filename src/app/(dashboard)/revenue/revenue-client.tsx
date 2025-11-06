@@ -312,7 +312,7 @@ const RevenueForm = memo(function RevenueForm({
 });
 
 
-function RevenueClient() {
+const RevenueClient = memo(function RevenueClient() {
   const { properties, revenue, addTenancy, updateTenancy, deleteTenancy, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -476,9 +476,9 @@ function RevenueClient() {
                         const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
                         let statusBadge;
-                        const hasOverdue = isBefore(new Date(tenancy.nextDueDate!), today);
+                        const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
                         
-                        if (tenancy.nextDueDate && hasOverdue) {
+                        if (hasOverdue) {
                             statusBadge = <Badge variant="destructive">Overdue {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
                         } else if (tenancy.nextDueDate && !hasOverdue) {
                              statusBadge = <Badge variant="outline">Upcoming {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
@@ -557,8 +557,8 @@ function RevenueClient() {
       />
     </>
   );
-}
+});
 
-export default memo(RevenueClient);
+export default RevenueClient;
 
     

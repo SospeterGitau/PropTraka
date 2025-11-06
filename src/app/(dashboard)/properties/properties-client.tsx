@@ -35,7 +35,7 @@ function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
-function PropertiesClient() {
+const PropertiesClient = memo(function PropertiesClient() {
   const { properties, addProperty, updateProperty, deleteProperty, revenue, formatCurrency, addChangeLogEntry, isDataLoading } = useDataContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -268,6 +268,6 @@ function PropertiesClient() {
       />
     </>
   );
-}
+});
 
-export default memo(PropertiesClient);
+export default PropertiesClient;
