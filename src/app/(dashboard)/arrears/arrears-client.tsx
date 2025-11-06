@@ -43,13 +43,15 @@ function ArrearsClient() {
 
     const calculatedArrears = revenue
       .filter(transaction => {
-        const amountDue = transaction.rent + ((transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0)) + (transaction.deposit ?? 0);
+        const serviceChargesTotal = (transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
+        const amountDue = transaction.rent + serviceChargesTotal + (transaction.deposit ?? 0);
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
         return amountPaid < amountDue && dueDate < today;
       })
       .map(transaction => {
         const rentDue = transaction.rent;
+        const serviceChargesTotal = (transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
         const depositDue = transaction.deposit ?? 0;
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
@@ -61,7 +63,7 @@ function ArrearsClient() {
         
         const depositOwed = depositDue - paidTowardsDeposit;
         const rentOwed = rentDue - paidTowardsRent;
-        const amountOwed = depositOwed + rentOwed + ((transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0));
+        const amountOwed = depositOwed + rentOwed + serviceChargesTotal;
         
         const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
 

@@ -475,13 +475,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const calendarEvents = useMemo(() => {
-    if (!revenue || !expenses) return [];
-
+    if (!revenue || !expenses || !maintenanceRequests) return [];
+  
     const events: CalendarEvent[] = [];
     const processedTenancies = new Set<string>();
-
+  
     revenue.forEach(item => {
-       if (item.tenancyId && !processedTenancies.has(item.tenancyId)) {
+      if (item.tenancyId && !processedTenancies.has(item.tenancyId)) {
         if (item.tenancyStartDate) {
           events.push({
             date: item.tenancyStartDate,
@@ -499,25 +499,39 @@ export function DataProvider({ children }: { children: ReactNode }) {
           });
         }
         processedTenancies.add(item.tenancyId);
-       }
+      }
     });
-
+  
     expenses.forEach(item => {
       events.push({
         date: item.date,
         title: `Expense: ${item.category}`,
         type: 'expense',
         details: {
-            Property: item.propertyName,
-            Category: item.category,
-            Vendor: item.contractorName,
-            Amount: formatCurrencyWithCents(item.amount),
+          Property: item.propertyName,
+          Category: item.category,
+          Vendor: item.contractorName,
+          Amount: formatCurrencyWithCents(item.amount || 0),
         }
       });
     });
-
+  
+    maintenanceRequests.forEach(item => {
+      events.push({
+        date: item.reportedDate,
+        title: `Maintenance: ${item.description.substring(0, 20)}...`,
+        type: 'appointment', // Using 'appointment' for maintenance
+        details: {
+          Property: item.propertyName,
+          Status: item.status,
+          Priority: item.priority,
+          Vendor: item.contractorName,
+        }
+      });
+    });
+  
     return events;
-  }, [revenue, expenses, currency, locale]);
+  }, [revenue, expenses, maintenanceRequests, currency, locale]);
 
   const value = useMemo(() => ({
     properties,
