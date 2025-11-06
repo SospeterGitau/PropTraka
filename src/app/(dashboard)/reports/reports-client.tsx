@@ -121,10 +121,10 @@ function RevenueAnalysisTab() {
     return transactionDate >= periodStart && transactionDate <= periodEnd;
   });
   
-  const creditLoss = filteredTransactions.reduce((acc, t) => acc + (t.amount - (t.amountPaid ?? 0)), 0);
+  const creditLoss = filteredTransactions.reduce((acc, t) => acc + (t.rent - (t.amountPaid ?? 0)), 0);
   const totalLoss = creditLoss + vacancyLoss;
 
-  const grossPotentialFromTenancies = filteredTransactions.reduce((acc, t) => acc + t.amount, 0);
+  const grossPotentialFromTenancies = filteredTransactions.reduce((acc, t) => acc + t.rent, 0);
   const grossPotentialIncome = grossPotentialFromTenancies + potentialRentFromVacant;
   
   const netRentalIncome = filteredTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
@@ -142,7 +142,7 @@ function RevenueAnalysisTab() {
       const vacantPropsThisMonth = properties.filter(p => !activeTenancyIdsThisMonth.has(p.id));
       const vacantRentThisMonth = vacantPropsThisMonth.reduce((total, p) => total + p.rentalValue, 0);
 
-      const grossPotential = monthlyTransactions.reduce((acc, t) => acc + t.amount, 0) + vacantRentThisMonth;
+      const grossPotential = monthlyTransactions.reduce((acc, t) => acc + t.rent, 0) + vacantRentThisMonth;
       const netIncome = monthlyTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
       return {
         name: format(month, 'MMM'),
@@ -318,7 +318,7 @@ function PnlStatementTab() {
     : `${financialYearStart.getFullYear()}/${financialYearEnd.getFullYear()}`;
     
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
-  const totalExpenses = filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
+  const totalExpenses = filteredExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
   const netOperatingIncome = totalRevenue - totalExpenses;
   
   // Calculate estimated tax and net profit after tax
@@ -341,7 +341,7 @@ function PnlStatementTab() {
     if (!acc[category]) {
       acc[category] = 0;
     }
-    acc[category] += expense.amount;
+    acc[category] += (expense.amount || 0);
     return acc;
   }, {} as Record<string, number>);
 

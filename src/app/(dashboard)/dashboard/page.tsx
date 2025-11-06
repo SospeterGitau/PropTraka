@@ -66,16 +66,16 @@ function DashboardPageContent() {
     .reduce((acc, r) => acc + (r.amountPaid ?? 0), 0);
   const totalExpenses = expenses
     .filter(e => new Date(e.date).getMonth() === new Date().getMonth())
-    .reduce((acc, e) => acc + e.amount, 0);
+    .reduce((acc, e) => acc + (e.amount || 0), 0);
   
   const totalArrears = revenue
     .filter(r => {
-      const amountDue = r.amount + (r.deposit ?? 0);
+      const amountDue = r.rent + ((r.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0)) + (r.deposit ?? 0);
       const amountPaid = r.amountPaid ?? 0;
       return amountPaid < amountDue && new Date(r.date) < new Date();
     })
     .reduce((acc, r) => {
-      const amountDue = r.amount + (r.deposit ?? 0);
+      const amountDue = r.rent + ((r.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0)) + (r.deposit ?? 0);
       const amountPaid = r.amountPaid ?? 0;
       return acc + (amountDue - amountPaid);
     }, 0);

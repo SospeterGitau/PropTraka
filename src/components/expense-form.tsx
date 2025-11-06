@@ -110,6 +110,7 @@ export function ExpenseForm({
       frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
       receiptUrl: formData.get('receiptUrl') as string,
       ownerId: transaction?.ownerId || '', // This will be handled by context
+      rent: 0,
     };
     onSubmit(data);
     onClose();

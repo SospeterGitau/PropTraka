@@ -94,7 +94,7 @@ function ExpensesTable({
                   {showFrequency && (
                     <TableCell className="capitalize">{item.frequency}</TableCell>
                   )}
-                  <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -143,7 +143,7 @@ function ExpensesTable({
               {showFrequency && (
                 <TableCell className="capitalize">{item.frequency}</TableCell>
               )}
-              <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+              <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -208,7 +208,7 @@ function ExpensesClient() {
       addChangeLogEntry({
         type: 'Expense',
         action: 'Deleted',
-        description: `Expense for ${formatCurrency(selectedTransaction.amount)} (${selectedTransaction.category}) was deleted.`,
+        description: `Expense for ${formatCurrency(selectedTransaction.amount || 0)} (${selectedTransaction.category}) was deleted.`,
         entityId: selectedTransaction.id,
       });
       setIsDeleteDialogOpen(false);
@@ -224,7 +224,7 @@ function ExpensesClient() {
        addChangeLogEntry({
         type: 'Expense',
         action: 'Updated',
-        description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was updated.`,
+        description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was updated.`,
         entityId: data.id,
       });
     } else {
@@ -233,7 +233,7 @@ function ExpensesClient() {
       addChangeLogEntry({
         type: 'Expense',
         action: 'Created',
-        description: `Expense for ${formatCurrency(data.amount)} (${data.category}) was logged.`,
+        description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was logged.`,
         entityId: data.id,
       });
     }

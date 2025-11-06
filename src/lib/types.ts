@@ -57,7 +57,7 @@ export interface Transaction {
   receiptUrl?: string;
   transactions?: Transaction[]; 
   nextDueDate?: string;
-  amount: number; // Legacy field for expenses, to be phased out
+  amount?: number; // Legacy field for expenses, to be phased out
 }
 
 export interface MaintenanceRequest {

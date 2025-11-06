@@ -80,7 +80,6 @@ const RevenueForm = memo(function RevenueForm({
     const newCharges = serviceCharges.map((charge, i) => {
         if (i === index) {
             if (field === 'amount') {
-                // Allow empty string for typing, but treat as 0 for state
                 const numericValue = value === '' ? '' : parseFloat(value);
                 return { ...charge, amount: numericValue as any };
             }
@@ -177,7 +176,7 @@ const RevenueForm = memo(function RevenueForm({
         const dateStr = format(monthStartDate, 'yyyy-MM-dd');
         const existingTx = existingTransactions.find(tx => tx.date === dateStr);
 
-        const newTx = {
+        const newTx: Omit<Transaction, 'id'> | Transaction = {
             tenancyId: tenancyId,
             date: dateStr,
             rent: rent,
@@ -198,7 +197,7 @@ const RevenueForm = memo(function RevenueForm({
         };
         
         if (existingTx?.id) {
-          return { ...newTx, id: existingTx.id };
+          (newTx as Transaction).id = existingTx.id;
         }
         
         return newTx;
@@ -427,7 +426,7 @@ function RevenueClient() {
       const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
       const unpaidTransactions = sortedTransactions.filter(tx => {
-        const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+        const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
         const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
         const paid = tx.amountPaid ?? 0;
         return paid < due;
@@ -469,7 +468,7 @@ function RevenueClient() {
             <TableBody>
                 {tenancies.length > 0 ? (
                     tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
-                        const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((sc, s) => sc + s.amount, 0) || 0) + (tx.deposit ?? 0), 0);
+                        const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
                         const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                         const totalBalance = totalDue - totalPaid;
                         
