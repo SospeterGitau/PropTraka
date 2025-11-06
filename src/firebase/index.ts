@@ -31,18 +31,23 @@ export function initializeFirebase() {
   
   if (typeof window !== 'undefined') {
     // This block runs only in the browser
+    
+    // For development, use a debug token. For production, use reCAPTCHA.
+    const provider = process.env.NODE_ENV !== 'production'
+      ? new ReCaptchaV3Provider('6Le-............-....') // This is a placeholder for the debug provider
+      : new ReCaptchaV3Provider("6Le-............-....");
+    
     if (process.env.NODE_ENV !== 'production') {
-      // In development, we'll use the debug token.
-      // This global flag tells the Firebase SDK to log the token to the console.
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        // This global flag tells the Firebase SDK to log the debug token to the console.
+        // You would then add this token to the Firebase console for App Check.
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
     
     // Initialize App Check
     initializeAppCheck(app, {
-      // In production, use reCAPTCHA. In development, the debug token flag above takes precedence.
-      provider: new ReCaptchaV3Provider("6Le-............-...."),
+      provider: provider,
       isTokenAutoRefreshEnabled: true
     });
   }
