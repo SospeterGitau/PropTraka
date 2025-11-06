@@ -432,10 +432,10 @@ function RevenueClient() {
         return paid < due;
       });
 
-      const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
       const earliestOverdue = unpaidTransactions.find(tx => isBefore(new Date(tx.date), today));
+      const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
 
-      const nextDueTransaction = nextUpcoming || earliestOverdue;
+      const nextDueTransaction = earliestOverdue || nextUpcoming;
       
       return {
           ...tenancy,
