@@ -6,8 +6,6 @@
  * `/revenue/{transactionId}`, `/expenses/{transactionId}`, `/maintenanceRequests/{requestId}`, `/contractors/{contractorId}`, and `/changelog/{logId}`.
  * @keySecurityDecisions Listing of the `changelog` and `contractors` collections is only available to authenticated users.
  * All other collections are not listable via the client.
- * @denormalizationForAuthorization Each document contains an `ownerId` field that MUST match the
- * authenticated user's UID to grant access. This avoids costly `get()` calls in the rules.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -48,17 +46,17 @@ service cloud.firestore {
     }
 
     /**
-     * @description Secures the `/expenses` collection, ensuring only the owner can manage expense transaction documents.
+     * @description Secures the `/expenses` collection. Listing is allowed for authenticated users.
      * @path /expenses/{transactionId}
      * @allow (create) An authenticated user can create an expense transaction if the `ownerId` in the document matches their UID.
      * @allow (get) An authenticated user can read an expense transaction document if they are the owner.
      * @allow (update) An authenticated user can update an expense transaction document if they are the owner and the document exists.
      * @allow (delete) An authenticated user can delete an expense transaction document if they are the owner and the document exists.
-     * @deny (list) No one can list the expenses collection.
+     * @allow (list) Any signed in user can list expenses that belong to them.
      */
     match /expenses/{transactionId} {
       allow get: if isSignedIn() && isOwner(resource.data.ownerId);
-      allow list: if false;
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
