@@ -88,6 +88,17 @@ service cloud.firestore {
     }
 
     /**
+     * @description Secures the `/invoices` collection.
+     */
+    match /invoices/{invoiceId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
      * @description Secures chat messages within a user's subcollection.
      */
     match /users/{userId}/chatMessages/{messageId} {
