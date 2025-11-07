@@ -122,6 +122,14 @@ export interface Invoice {
   datePaid?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  ownerId: string; // Foreign key to the user
+  role: 'user' | 'model';
+  content: string;
+  timestamp: any; // Firestore ServerTimestamp
+}
+
 
 export interface Arrear {
   tenant: string;

@@ -1,0 +1,113 @@
+
+/**
+ * @description This ruleset enforces a strict user-ownership model for all data. Each document
+ * is secured such that only the owner (identified by `ownerId`) can create, read, update, or delete it.
+ * @dataStructure All data is stored in top-level collections.
+ * @keySecurityDecisions Listing is allowed for all collections, but application-level queries must
+ * enforce that users can only list documents they own by filtering on `ownerId`.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secures the `/properties` collection.
+     */
+    match /properties/{propertyId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Secures the `/revenue` collection.
+     */
+    match /revenue/{transactionId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Secures the `/expenses` collection.
+     */
+    match /expenses/{transactionId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Secures the `/maintenanceRequests` collection.
+     */
+    match /maintenanceRequests/{requestId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Secures the `/contractors` collection.
+     */
+    match /contractors/{contractorId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+     /**
+      * @description Secures the `/changelog` collection.
+      */
+    match /changelog/{logId} {
+        allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+        allow list: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+        allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+    
+    /**
+     * @description Secures the `/subscriptions` collection.
+     */
+    match /subscriptions/{subscriptionId} {
+      allow get: if isSignedIn() && isOwner(resource.data.ownerId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
+    }
+
+    /**
+     * @description Secures chat messages within a user's subcollection.
+     */
+    match /users/{userId}/chatMessages/{messageId} {
+        allow list, get, create: if isSignedIn() && request.auth.uid == userId;
+        // No updates or deletes allowed to preserve chat history integrity.
+        allow update, delete: if false;
+    }
+
+  }
+
+  // Helper functions
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return isSignedIn() && request.auth.uid == userId;
+  }
+
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
+  }
+}

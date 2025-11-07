@@ -1,6 +1,7 @@
 
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import DashboardClientLayout from './dashboard-client-layout';
+import { ChatBubble } from '@/components/chat-bubble';
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,10 @@ export default function DashboardLayout({
 }) {
   return (
     <FirebaseClientProvider>
-      <DashboardClientLayout>{children}</DashboardClientLayout>
+      <DashboardClientLayout>
+        {children}
+        <ChatBubble />
+      </DashboardClientLayout>
     </FirebaseClientProvider>
   );
 }
