@@ -9,8 +9,6 @@ import {
   FirestoreError,
   QuerySnapshot,
   CollectionReference,
-  orderBy,
-  query,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -40,12 +38,6 @@ export interface InternalQuery extends Query<DocumentData> {
   }
 }
 
-interface UseCollectionOptions {
-  sortField?: string;
-  sortDirection?: 'asc' | 'desc';
-}
-
-
 /**
  * React hook to subscribe to a Firestore collection or query in real-time.
  * Handles nullable references/queries.
@@ -57,7 +49,6 @@ interface UseCollectionOptions {
  */
 export function useCollection<T = any>(
     targetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>))  | null | undefined,
-    options: UseCollectionOptions = {},
 ): UseCollectionResult<T> {
   type ResultItemType = WithId<T>;
   type StateDataType = ResultItemType[] | null;
@@ -79,16 +70,8 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
     
-    let finalQuery: Query<DocumentData> = targetRefOrQuery;
-    
-    // The sorting options should be part of the query itself before being passed to this hook.
-    // This faulty logic has been removed to prevent unintended compound queries.
-    // if (options.sortField) {
-    //   finalQuery = query(targetRefOrQuery, orderBy(options.sortField, options.sortDirection || 'asc'));
-    // }
-
     const unsubscribe = onSnapshot(
-      finalQuery,
+      targetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
         const results: ResultItemType[] = snapshot.docs.map(doc => ({
             ...(doc.data() as T),
@@ -120,7 +103,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [targetRefOrQuery]); // Removed options from dependency array
+  }, [targetRefOrQuery]);
   
   return { data, isLoading, error };
 }
