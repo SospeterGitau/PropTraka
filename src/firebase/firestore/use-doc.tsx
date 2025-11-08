@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { getAuth } from 'firebase/auth';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -49,7 +50,12 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    if (!memoizedDocRef) {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    // If there's no docRef or no authenticated user, do not proceed.
+    // This prevents permission errors on initial load before auth state is ready.
+    if (!memoizedDocRef || !currentUser?.uid) {
       setData(null);
       setIsLoading(false);
       setError(null);

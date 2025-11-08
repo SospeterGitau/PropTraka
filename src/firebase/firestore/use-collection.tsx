@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { getAuth } from 'firebase/auth';
 
 /** Utility type to add an 'id' field to a given type T. */
 export type WithId<T> = T & { id: string };
@@ -58,8 +59,12 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If there's no query, we are not loading and there's no data.
-    if (!targetRefOrQuery) {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    // If there's no query or no authenticated user, do not proceed.
+    // This prevents permission errors on initial load before auth state is ready.
+    if (!targetRefOrQuery || !currentUser?.uid) {
       setData(null);
       setIsLoading(false);
       setError(null);
