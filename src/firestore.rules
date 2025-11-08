@@ -99,12 +99,11 @@ service cloud.firestore {
     }
 
     /**
-     * @description Secures chat messages within a user's subcollection.
-     * The user can list and create messages in their own chat history.
+     * @description Secures chat messages. A user can read their own message history
+     * and create new messages. They cannot update or delete history.
      */
     match /users/{userId}/chatMessages/{messageId} {
-      allow list, create: if isSignedIn() && request.auth.uid == userId;
-      // No updates or deletes allowed to preserve chat history integrity.
+      allow list, create: if request.auth.uid == userId;
       allow get, update, delete: if false;
     }
   }
