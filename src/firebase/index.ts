@@ -1,4 +1,5 @@
 
+
 'use client';
 
 /**
@@ -19,17 +20,38 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAnalytics, Analytics } from 'firebase/analytics';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
-export function initializeFirebase() {
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  
-  // App Check is now initialized in FirebaseClientProvider to ensure it runs client-side only.
+let app: FirebaseApp;
+let auth: Auth;
+let firestore: Firestore;
+let analytics: Analytics | null = null;
 
-  return getSdks(app);
+if (typeof window !== 'undefined' && !getApps().length) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  firestore = getFirestore(app);
+  analytics = getAnalytics(app);
+} else if (getApps().length) {
+  app = getApp();
+  auth = getAuth(app);
+  firestore = getFirestore(app);
+  if (typeof window !== 'undefined') {
+    analytics = getAnalytics(app);
+  }
+}
+
+// Export the initialized services
+export { app, auth, firestore, analytics };
+
+
+export function initializeFirebase() {
+  const appInstance = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  
+  return getSdks(appInstance);
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
@@ -37,7 +59,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
     firebaseApp,
     auth: getAuth(firebaseApp),
     firestore: getFirestore(firebaseApp),
-    // Conditionally get analytics only on the client
     analytics: typeof window !== 'undefined' ? getAnalytics(firebaseApp) : null,
   };
 }

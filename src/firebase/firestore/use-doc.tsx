@@ -11,7 +11,7 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { getAuth } from 'firebase/auth';
+import { useUser } from '@/firebase';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -48,14 +48,11 @@ export function useDoc<T = any>(
   const [data, setData] = useState<StateDataType>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<FirestoreError | Error | null>(null);
+  const { isUserLoading, user } = useUser();
 
   useEffect(() => {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    // If there's no docRef or no authenticated user, do not proceed.
-    // This prevents permission errors on initial load before auth state is ready.
-    if (!memoizedDocRef || !currentUser?.uid) {
+    // **GUARD CLAUSE:** If auth is loading, or there's no user, or no query, then wait.
+    if (isUserLoading || !user || !memoizedDocRef) {
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -94,7 +91,7 @@ export function useDoc<T = any>(
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+  }, [memoizedDocRef, isUserLoading, user]); // Re-run if the doc ref or auth state changes.
 
   return { data, isLoading, error };
 }
