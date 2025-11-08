@@ -52,11 +52,14 @@ export default function DashboardClientLayout({ children }: { children: React.Re
   const router = useRouter();
 
   useEffect(() => {
+    // If auth is done loading and there's still no user, redirect to login.
     if (!isUserLoading && !user) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router]);
 
+  // While the authentication state is being determined, show a loading spinner.
+  // This prevents any child components (and their data-fetching hooks) from running.
   if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -64,7 +67,8 @@ export default function DashboardClientLayout({ children }: { children: React.Re
       </div>
     );
   }
-
+  
+  // Once the user is confirmed, render the main dashboard content.
   return (
     <DataProvider>
       <DashboardNavigation>
