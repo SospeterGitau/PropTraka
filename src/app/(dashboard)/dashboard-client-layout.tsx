@@ -18,8 +18,8 @@ export default function DashboardClientLayout({ children }: { children: React.Re
     }
   }, [user, isUserLoading, router]);
   
-  // No need for a loading spinner here anymore, because the FirebaseProvider now handles that.
-  // If there's no user after loading, we'll redirect (or show nothing until redirect happens).
+  // The FirebaseProvider now handles the main loading spinner.
+  // We just need to prevent rendering anything if the user is not logged in.
   if (!user) {
     return null; 
   }

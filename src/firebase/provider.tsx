@@ -7,7 +7,7 @@ import { Firestore } from 'firebase/firestore';
 import { Analytics } from 'firebase/analytics';
 import { FirebaseApp } from 'firebase/app';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { getSdks, initializeFirebase } from './index';
+import { getSdks } from './index';
 
 // Define the shape of the context
 interface FirebaseContextValue {
@@ -16,7 +16,7 @@ interface FirebaseContextValue {
   analytics: Analytics | null;
   firebaseApp: FirebaseApp;
   user: User | null; // The authenticated user
-  isUserLoading: boolean; // The new loading state
+  isUserLoading: boolean; // The auth loading state
   userError: Error | null; // To hold any auth errors
 }
 
@@ -47,7 +47,7 @@ export function FirebaseProvider({
     // It waits for Firebase to initialize and check for a user.
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user); // Set the user (or null if logged out)
-      setIsUserLoading(false); // This is the "OK" signal
+      setIsUserLoading(false); // This is the "OK" signal, auth is ready
     }, (error) => {
       setUserError(error);
       setIsUserLoading(false);
@@ -57,7 +57,7 @@ export function FirebaseProvider({
     return () => unsubscribe();
   }, [auth]); // Run this effect only once
 
-  // THE GATE: While the bouncer is checking the ID, show a loader.
+  // THE GATE: While the bouncer is checking the auth state, show a loader.
   if (isUserLoading) {
     return (
       <div
@@ -76,8 +76,7 @@ export function FirebaseProvider({
     );
   }
 
-  // The Club: The bouncer is done, and we can now safely render
-  // the rest of the app, passing down the user (or null).
+  // Auth is ready. Now we can render the app.
   return (
     <FirebaseContext.Provider value={{ auth, firestore, analytics, firebaseApp, user, isUserLoading, userError }}>
       <FirebaseErrorListener />
@@ -95,14 +94,12 @@ export const useFirebase = () => {
   return context;
 };
 
-// Hook for accessing the user state
 export interface UserHookResult {
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// Custom hook to get user and auth loading state
 export const useUser = (): UserHookResult => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
