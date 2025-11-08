@@ -31,7 +31,7 @@ export function useChat() {
     }
 
     setIsLoading(true);
-    // Simple query without ordering
+    // Simple query without ordering, as requested.
     const simpleQuery = query(chatCollectionRef);
 
     const unsubscribe = onSnapshot(simpleQuery, 
@@ -41,7 +41,7 @@ export function useChat() {
           ...doc.data()
         } as ChatMessage));
 
-        // Manually sort messages on the client-side
+        // Manually sort messages on the client-side by timestamp.
         const sortedMessages = unsortedMessages.sort((a, b) => {
           const aTime = a.timestamp?.toMillis() || 0;
           const bTime = b.timestamp?.toMillis() || 0;
