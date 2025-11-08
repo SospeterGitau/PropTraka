@@ -80,8 +80,9 @@ export function useCollection<T = any>(
     setError(null);
     
     let finalQuery: Query<DocumentData> = targetRefOrQuery;
+    
     // The sorting options should be part of the query itself before being passed to this hook.
-    // This logic is removed to prevent unintended compound queries.
+    // This faulty logic has been removed to prevent unintended compound queries.
     // if (options.sortField) {
     //   finalQuery = query(targetRefOrQuery, orderBy(options.sortField, options.sortDirection || 'asc'));
     // }
@@ -119,7 +120,7 @@ export function useCollection<T = any>(
     );
 
     return () => unsubscribe();
-  }, [targetRefOrQuery, options.sortField, options.sortDirection]);
+  }, [targetRefOrQuery]); // Removed options from dependency array
   
   return { data, isLoading, error };
 }
