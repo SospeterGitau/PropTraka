@@ -97,14 +97,22 @@ service cloud.firestore {
       allow update: if isSignedIn() && isExistingOwner(resource.data.ownerId);
       allow delete: if isSignedIn() && isExistingOwner(resource.data.ownerId);
     }
-
+    
     /**
      * @description Secures chat messages. A user can read their own message history
      * and create new messages. They cannot update or delete history.
      */
-    match /users/{userId}/chatMessages/{messageId} {
-      allow list, create: if request.auth.uid == userId;
-      allow get, update, delete: if false;
+    match /users/{userId} {
+        // This rule allows a user to list documents in their own `chatMessages` subcollection.
+        allow list: if request.auth.uid == userId;
+
+        match /chatMessages/{messageId} {
+          // This rule allows a user to create documents in their own `chatMessages` subcollection.
+          allow create: if request.auth.uid == userId;
+          
+          // Explicitly deny direct read, update, or delete of individual messages.
+          allow get, update, delete: if false;
+        }
     }
   }
 
