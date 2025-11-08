@@ -1,51 +1,10 @@
 
 'use client';
 import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
-import { DataProvider, useDataContext } from '@/context/data-context';
-
-function SubscriptionChecker({ children }: { children: React.ReactNode }) {
-  const { subscriptions, isDataLoading } = useDataContext();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    // If we are on the account/settings page already, do nothing.
-    if (pathname === '/settings') {
-      return;
-    }
-
-    // Wait until data is loaded
-    if (isDataLoading) {
-      return;
-    }
-
-    // If data is loaded and there are no subscriptions, redirect
-    if (!isDataLoading && (!subscriptions || subscriptions.length === 0)) {
-      router.replace('/settings');
-    }
-  }, [subscriptions, isDataLoading, router, pathname]);
-  
-  // If we are on the settings page, always show it.
-  if (pathname === '/settings') {
-      return <>{children}</>;
-  }
-
-  // While loading or if user has a subscription, show the content
-  if (isDataLoading || (subscriptions && subscriptions.length > 0)) {
-    return <>{children}</>;
-  }
-
-  // If redirecting, show a loader
-  return (
-     <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-  )
-}
-
+import { DataProvider } from '@/context/data-context';
 
 export default function DashboardClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -68,9 +27,7 @@ export default function DashboardClientLayout({ children }: { children: React.Re
   return (
     <DataProvider>
       <DashboardNavigation>
-        <SubscriptionChecker>
-          {children}
-        </SubscriptionChecker>
+        {children}
       </DashboardNavigation>
     </DataProvider>
   );
