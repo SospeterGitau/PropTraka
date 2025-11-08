@@ -18,12 +18,24 @@ export function useChat() {
     [firestore, user]
   );
   
+  // Removed orderBy to simplify the query and avoid indexing issues.
   const chatQuery = useMemo(() => 
-    chatCollectionRef ? query(chatCollectionRef, orderBy('timestamp', 'asc')) : null,
+    chatCollectionRef ? query(chatCollectionRef) : null,
     [chatCollectionRef]
   );
 
-  const { data: messages, isLoading } = useCollection<ChatMessage>(chatQuery);
+  const { data: unsortedMessages, isLoading } = useCollection<ChatMessage>(chatQuery);
+
+  // Manually sort messages on the client-side.
+  const messages = useMemo(() => {
+    if (!unsortedMessages) return [];
+    return [...unsortedMessages].sort((a, b) => {
+      const aTime = a.timestamp?.toMillis() || 0;
+      const bTime = b.timestamp?.toMillis() || 0;
+      return aTime - bTime;
+    });
+  }, [unsortedMessages]);
+
 
   const [isSending, setIsSending] = useState(false);
 
