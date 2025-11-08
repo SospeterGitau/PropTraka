@@ -4,7 +4,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { askAiAgent } from '@/ai/flows/ask-ai-agent';
-import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { useToast } from './use-toast';
 import type { ChatMessage } from '@/lib/types';
 
@@ -44,7 +44,10 @@ export function useChat() {
       role: 'user',
       content,
     };
-    await addDoc(chatCollectionRef, { ...userMessage, timestamp: serverTimestamp() });
+    // Create a new doc ref to get an ID
+    const userMessageRef = doc(chatCollectionRef);
+    // Use setDoc to correctly handle serverTimestamp
+    await setDoc(userMessageRef, { ...userMessage, timestamp: serverTimestamp() });
     
     // The useCollection hook will automatically update the local `messages` state.
     // We create a temporary history for the AI call.
@@ -60,7 +63,9 @@ export function useChat() {
         role: 'model',
         content: aiResponse.content,
       };
-      await addDoc(chatCollectionRef, { ...modelMessage, timestamp: serverTimestamp() });
+      const modelMessageRef = doc(chatCollectionRef);
+      await setDoc(modelMessageRef, { ...modelMessage, timestamp: serverTimestamp() });
+
     } catch (error) {
       console.error('Error calling AI agent:', error);
       toast({
@@ -73,7 +78,8 @@ export function useChat() {
         role: 'model',
         content: 'Sorry, I encountered an error. Please try again.',
       };
-      await addDoc(chatCollectionRef, { ...errorMessage, timestamp: serverTimestamp() });
+      const errorMessageRef = doc(chatCollectionRef);
+      await setDoc(errorMessageRef, { ...errorMessage, timestamp: serverTimestamp() });
     } finally {
       setIsSending(false);
     }
