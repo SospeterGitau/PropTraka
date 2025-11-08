@@ -81,7 +81,7 @@ export function useCollection<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
+      async (serverError: FirestoreError) => {
         // This logic extracts the path from either a ref or a query
         const path: string =
           targetRefOrQuery.type === 'collection'
@@ -93,11 +93,11 @@ export function useCollection<T = any>(
           path,
         })
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
+        setError(contextualError); // Set local error state for the hook consumer
+        setData(null);
+        setIsLoading(false);
 
-        // trigger global error propagation
+        // trigger global error propagation for the Next.js overlay
         errorEmitter.emit('permission-error', contextualError);
       }
     );
