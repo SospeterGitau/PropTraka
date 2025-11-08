@@ -57,17 +57,8 @@ export default function DashboardClientLayout({ children }: { children: React.Re
       router.replace('/login');
     }
   }, [user, isUserLoading, router]);
-
-  // While the authentication state is being determined, show a loading spinner.
-  // This prevents any child components (and their data-fetching hooks) from running.
-  if (isUserLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
   
+  // No need for a loading spinner here anymore, because the FirebaseProvider now handles that.
   // If there's no user after loading, we'll redirect (or show nothing until redirect happens).
   if (!user) {
     return null; 
