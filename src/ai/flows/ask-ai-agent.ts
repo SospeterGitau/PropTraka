@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A conversational AI agent for LeaseLync customer support.
@@ -51,12 +50,18 @@ const askAiAgentFlow = ai.defineFlow(
     outputSchema: AskAiAgentOutputSchema,
   },
   async (input) => {
-    const llmResponse = await ai.generate({
-      prompt: supportAgentPrompt(input.history),
-      history: input.history,
-      model: 'googleai/gemini-2.5-flash',
-    });
+    try {
+      const llmResponse = await ai.generate({
+        prompt: supportAgentPrompt(input.history),
+        history: input.history,
+        model: 'googleai/gemini-2.5-flash',
+      });
 
-    return { content: llmResponse.text };
+      const content = llmResponse.text ?? 'Sorry, I could not generate a response. Please try again.';
+      return { content };
+    } catch (e) {
+        console.error("Error in askAiAgentFlow: ", e);
+        return { content: 'An error occurred while processing your request. Please try again later.' };
+    }
   }
 );
