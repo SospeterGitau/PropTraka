@@ -89,13 +89,11 @@ export const useChat = () => {
         content: text,
     };
     
-    // Optimistically update UI with user's message
-    setMessages(prev => [...prev, userMessage]);
-    
     try {
-        // Save user message to Firestore
+        // Save user message to Firestore. The onSnapshot listener will update the UI.
         await addDoc(chatCollectionRef, { ...userMessage, ownerId: user.uid, timestamp: Timestamp.now() });
 
+        // Get the history *after* the user message has been saved to ensure it's included.
         const currentHistory = [...messages, userMessage];
 
         const aiInput: AskAiAgentInput = {
@@ -108,18 +106,13 @@ export const useChat = () => {
             role: 'model',
             content: aiResponse.content,
         };
-        
-        // Optimistically update UI with AI's message
-        setMessages(prev => [...prev, aiMessage]);
 
-        // Save AI message to Firestore
+        // Save AI message to Firestore. The onSnapshot listener will update the UI.
         await addDoc(chatCollectionRef, { ...aiMessage, ownerId: user.uid, timestamp: Timestamp.now() });
 
     } catch (e) {
         console.error("Failed to send message or get AI response:", e);
         setError(e instanceof Error ? e : new Error("An unknown error occurred."));
-        // Optional: remove optimistic message on error
-        setMessages(prev => prev.filter(m => m !== userMessage));
     } finally {
         setIsSending(false);
     }
