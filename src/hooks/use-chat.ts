@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -46,10 +45,6 @@ export const useChat = () => {
       return;
     }
     
-    // If a message is currently being sent, don't update from the snapshot
-    // to prevent the optimistic update from being overwritten.
-    if (isSending) return;
-
     setIsLoading(true);
 
     const chatQuery = query(
@@ -78,7 +73,7 @@ export const useChat = () => {
     );
 
     return () => unsubscribe();
-  }, [chatCollectionRef, user, isUserLoading, isSending]);
+  }, [chatCollectionRef, user, isUserLoading]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!chatCollectionRef || !user) {
@@ -95,15 +90,10 @@ export const useChat = () => {
     };
     
     // Optimistic update for the user's message
-    setMessages(prev => [...prev, userMessage]);
+    const currentHistory = [...messages, userMessage];
+    setMessages(currentHistory);
 
     try {
-        // Save user message to Firestore.
-        const userMessageForDb = { role: 'user', content: text, ownerId: user.uid, timestamp: Timestamp.now() };
-        addDoc(chatCollectionRef, userMessageForDb);
-
-        const currentHistory = [...messages, userMessage];
-
         const aiInput: AskAiAgentInput = {
             history: currentHistory.map(({ role, content }) => ({ role, content })),
         };
@@ -115,20 +105,28 @@ export const useChat = () => {
             role: 'model',
             content: aiResponse.content,
         };
+        
+        // Save both messages to Firestore
+        const userMessageForDb = { role: 'user', content: text, ownerId: user.uid, timestamp: Timestamp.now() };
+        const aiMessageForDb = { role: 'model', content: aiResponse.content, ownerId: user.uid, timestamp: Timestamp.now() };
 
-        // Save AI message to Firestore.
-        const aiMessageForDb = { ...aiMessage, ownerId: user.uid, timestamp: Timestamp.now() };
-        addDoc(chatCollectionRef, aiMessageForDb);
-
-        // Optimistic update for the AI's message
-        setMessages(prev => [...prev.filter(m => m.id !== userMessage.id), { ...userMessageForDb, id: userMessage.id }, aiMessage]);
-
+        await addDoc(chatCollectionRef, userMessageForDb);
+        await addDoc(chatCollectionRef, aiMessageForDb);
+        
+        // The onSnapshot listener will now handle the final state update.
 
     } catch (e) {
         console.error("Failed to send message or get AI response:", e);
-        setError(e instanceof Error ? e : new Error("An unknown error occurred."));
-        // Revert optimistic update on error
-        setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+        const errMessage = e instanceof Error ? e : new Error("An unknown error occurred.");
+        setError(errMessage);
+        
+        // Add an error message to the chat
+        const errorMessage: ChatMessage = {
+          id: `temp-error-${Date.now()}`,
+          role: 'model',
+          content: 'An error occurred while processing your request. Please try again later.'
+        };
+        setMessages(prev => [...prev, errorMessage]);
 
     } finally {
         setIsSending(false);

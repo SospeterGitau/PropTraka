@@ -30,8 +30,7 @@ export async function askAiAgent(input: AskAiAgentInput): Promise<AskAiAgentOutp
 }
 
 // Define the Genkit prompt with a system message to set the AI's persona
-const supportAgentPrompt = ai.definePrompt({
-  name: 'supportAgentPrompt',
+const supportAgentPrompt = {
   system: `You are "LeaseLync Support AI", a helpful and friendly expert on the LeaseLync application.
 Your role is to assist landlords and property managers.
 You have deep knowledge of all app features, including property management, financial tracking (revenue, expenses, arrears), maintenance requests, contractor management, and report generation.
@@ -39,7 +38,7 @@ You are an expert in Kenyan real estate finance and accounting principles.
 Always be encouraging and guide users on how to best use the app to manage their property portfolio efficiently.
 `,
   history: z.array(ChatMessageSchema),
-});
+};
 
 
 // Define the main Genkit flow
@@ -52,11 +51,10 @@ const askAiAgentFlow = ai.defineFlow(
   async (input) => {
     try {
       const llmResponse = await ai.generate({
-        prompt: {
-            ...supportAgentPrompt,
-            history: input.history,
-        },
         model: 'googleai/gemini-2.5-flash',
+        ...supportAgentPrompt, // Spread the prompt object
+        prompt: input.history.at(-1)?.content, // The prompt is the last user message
+        history: input.history.slice(0, -1), // History is everything before the last message
       });
 
       const content = llmResponse.text ?? 'Sorry, I could not generate a response. Please try again.';
