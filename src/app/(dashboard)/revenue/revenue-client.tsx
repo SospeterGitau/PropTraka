@@ -391,7 +391,7 @@ const RevenueClient = memo(function RevenueClient() {
   const confirmDelete = async () => {
     if (selectedTransaction?.tenancyId) {
       const batch = writeBatch(firestore);
-      const q = query(collection(firestore, 'revenue'), where('tenancyId', '==', selectedTransaction.tenancyId));
+      const q = query(collection(firestore, 'revenue'), where('tenancyId', '==', selectedTransaction.tenancyId), where('ownerId', '==', user.uid));
       const snapshot = await getDocs(q);
       snapshot.forEach(doc => {
         batch.delete(doc.ref);

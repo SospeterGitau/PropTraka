@@ -41,7 +41,7 @@ function PropertyDetailPageContent() {
 
   // Data Fetching
   const propertyRef = useMemo(() => propertyId ? doc(firestore, 'properties', propertyId as string) : null, [firestore, propertyId]);
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid), where('propertyId', '==', propertyId)) : null, [firestore, user, propertyId]);
   
   const { data: property, isLoading: isPropertyLoading } = useDoc<Property>(propertyRef);
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);

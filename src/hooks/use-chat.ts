@@ -24,7 +24,7 @@ export interface ChatMessage {
 }
 
 export const useChat = () => {
-  const { user, isAuthLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -36,7 +36,7 @@ export const useChat = () => {
   }, [user]);
 
   useEffect(() => {
-    if (isAuthLoading) {
+    if (isUserLoading) {
       setIsLoading(true);
       return;
     }
@@ -75,7 +75,7 @@ export const useChat = () => {
     );
 
     return () => unsubscribe();
-  }, [chatCollectionRef, user, isAuthLoading]);
+  }, [chatCollectionRef, user, isUserLoading]);
 
   const sendMessage = async (text: string) => {
     if (!chatCollectionRef || !user) {
