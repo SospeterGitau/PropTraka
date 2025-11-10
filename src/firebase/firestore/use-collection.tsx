@@ -18,7 +18,7 @@ export const useCollection = <T>(
   const [data, setData] = useState<T[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useFirebase();
+  const { user, isUserLoading } = useFirebase();
 
   // Memoize the query to prevent re-renders from creating new query objects
   const memoizedQuery = useMemo(() => {
@@ -32,7 +32,7 @@ export const useCollection = <T>(
   useEffect(() => {
     // The Auth Gate: Do not proceed if there is no user object.
     // The FirebaseProvider ensures this hook only runs after the initial auth check.
-    if (!user) {
+    if (isUserLoading || !user) {
       setLoading(false);
       return;
     }
@@ -74,7 +74,7 @@ export const useCollection = <T>(
     );
 
     return () => unsubscribe();
-  }, [memoizedQuery, user]); // Re-run only when the query or user changes
+  }, [memoizedQuery, user, isUserLoading]); // Re-run only when the query or user changes
 
   return { data, error, loading };
 };

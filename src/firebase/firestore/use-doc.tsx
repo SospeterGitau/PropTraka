@@ -16,7 +16,7 @@ export const useDoc = <T>(
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useFirebase();
+  const { user, isUserLoading } = useFirebase();
   
   const memoizedRef = useMemo(() => {
     if (!targetRefOrPath) return null;
@@ -28,7 +28,7 @@ export const useDoc = <T>(
 
 
   useEffect(() => {
-    if (!user) {
+    if (isUserLoading || !user) {
       setLoading(false);
       return;
     }
@@ -69,7 +69,7 @@ export const useDoc = <T>(
     );
 
     return () => unsubscribe();
-  }, [memoizedRef, user]);
+  }, [memoizedRef, user, isUserLoading]);
 
   return { data, error, loading };
 };
