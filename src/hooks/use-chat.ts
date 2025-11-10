@@ -11,18 +11,21 @@ import {
 } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import { useFirebase } from '../firebase/provider';
+import { askAiAgent, type AskAiAgentInput } from '@/ai/flows/ask-ai-agent';
+import { addDoc } from 'firebase/firestore';
 
 export interface ChatMessage {
   id?: string;
-  sender: 'user' | 'ai';
-  text: string;
-  timestamp: Timestamp;
+  role: 'user' | 'model';
+  content: string;
+  timestamp?: Timestamp;
 }
 
 export const useChat = () => {
   const { user, isAuthLoading } = useFirebase();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const chatCollectionRef = useMemo(() => {
@@ -31,22 +34,19 @@ export const useChat = () => {
   }, [user]);
 
   useEffect(() => {
-    // Auth Gate: Wait for authentication to be ready
     if (isAuthLoading) {
-      setLoading(true);
+      setIsLoading(true);
       return;
     }
 
-    // If there's no user or no collection reference, we're done.
     if (!user || !chatCollectionRef) {
-      setLoading(false);
+      setIsLoading(false);
       setMessages([]);
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
 
-    // Use a simple query as instructed
     const chatQuery = query(chatCollectionRef);
 
     const unsubscribe = onSnapshot(
@@ -55,27 +55,67 @@ export const useChat = () => {
         const fetchedMessages = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as ChatMessage[];
+        })) as (ChatMessage & { timestamp: Timestamp })[];
 
-        // Perform client-side sorting as instructed
         fetchedMessages.sort(
           (a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()
         );
 
         setMessages(fetchedMessages);
         setError(null);
-        setLoading(false);
+        setIsLoading(false);
       },
       (err) => {
         console.error('Error in useChat (onSnapshot):', err);
         setError(err);
-        setLoading(false);
+        setIsLoading(false);
       }
     );
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [chatCollectionRef, user, isAuthLoading]);
 
-  return { messages, error, loading };
+  const sendMessage = async (text: string) => {
+    if (!chatCollectionRef || !user) {
+        setError(new Error("User or chat collection not available."));
+        return;
+    }
+
+    setIsSending(true);
+
+    const userMessage: Omit<ChatMessage, 'id'> = {
+        role: 'user',
+        content: text,
+        timestamp: Timestamp.now(),
+    };
+
+    try {
+        await addDoc(chatCollectionRef, userMessage);
+        
+        const currentHistory = [...messages, userMessage as ChatMessage];
+
+        const aiInput: AskAiAgentInput = {
+            history: currentHistory.map(({ role, content }) => ({ role, content })),
+        };
+        
+        const aiResponse = await askAiAgent(aiInput);
+
+        const aiMessage: Omit<ChatMessage, 'id'> = {
+            role: 'model',
+            content: aiResponse.content,
+            timestamp: Timestamp.now(),
+        };
+
+        await addDoc(chatCollectionRef, aiMessage);
+
+    } catch (e) {
+        console.error("Failed to send message or get AI response:", e);
+        setError(e instanceof Error ? e : new Error("An unknown error occurred."));
+    } finally {
+        setIsSending(false);
+    }
+  };
+
+
+  return { messages, error, isLoading, isSending, sendMessage };
 };
