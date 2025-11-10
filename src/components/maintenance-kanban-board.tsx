@@ -148,7 +148,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
   const Icon = statusConfig[title].icon;
   
   return (
-    <div className={cn("flex flex-col gap-4", isFocused ? "flex-[4]" : "flex-[1]")}>
+    <div className={cn("flex flex-col gap-4 transition-all duration-300", isFocused ? "flex-[4]" : "flex-[1] min-w-[200px]")}>
       <button 
         className="flex items-center gap-2 px-1 rounded-md py-1 -mx-1 hover:bg-muted transition-colors"
         onClick={onFocus}
@@ -157,7 +157,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
         <h2 className="font-semibold text-lg">{title}</h2>
         <Badge variant="secondary" className="rounded-full">{requests.length}</Badge>
       </button>
-      <div className={cn("bg-muted/50 rounded-lg p-2 flex-1 flex flex-col gap-4 h-full min-h-[150px] overflow-y-auto transition-opacity", !isFocused && "opacity-50")}>
+      <div className={cn("bg-muted/50 rounded-lg p-2 flex-1 flex flex-col gap-4 h-full min-h-[150px] overflow-x-hidden overflow-y-auto", !isFocused && "opacity-50")}>
         {requests.length > 0 ? (
           requests.map(request => (
             <KanbanCard 
@@ -244,7 +244,7 @@ export function MaintenanceKanbanBoard({
           </Button>
         </div>
       )}
-      <div className="flex gap-6 h-full flex-grow transition-all duration-300">
+      <div className="flex gap-6 h-full flex-grow">
         {columns.map(status => (
           <KanbanColumn
             key={status}
