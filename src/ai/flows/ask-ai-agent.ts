@@ -31,25 +31,16 @@ export async function askAiAgent(input: AskAiAgentInput): Promise<AskAiAgentOutp
 }
 
 // Define the Genkit prompt with a system message to set the AI's persona
-const supportAgentPrompt = ai.definePrompt(
-  {
-    name: 'supportAgentPrompt',
-    input: { schema: AskAiAgentInputSchema },
-    output: { schema: AskAiAgentOutputSchema },
-    system: `You are "LeaseLync Support AI", a helpful and friendly expert on the LeaseLync application.
+const supportAgentPrompt = ai.definePrompt({
+  name: 'supportAgentPrompt',
+  system: `You are "LeaseLync Support AI", a helpful and friendly expert on the LeaseLync application.
 Your role is to assist landlords and property managers.
 You have deep knowledge of all app features, including property management, financial tracking (revenue, expenses, arrears), maintenance requests, contractor management, and report generation.
 You are an expert in Kenyan real estate finance and accounting principles.
 Always be encouraging and guide users on how to best use the app to manage their property portfolio efficiently.
 `,
-  },
-  async (input) => {
-    // We can augment the history here if needed in the future
-    return {
-      history: input.history,
-    };
-  }
-);
+  history: z.array(ChatMessageSchema),
+});
 
 
 // Define the main Genkit flow
@@ -60,7 +51,12 @@ const askAiAgentFlow = ai.defineFlow(
     outputSchema: AskAiAgentOutputSchema,
   },
   async (input) => {
-    const { output } = await supportAgentPrompt(input);
-    return output!;
+    const llmResponse = await ai.generate({
+      prompt: supportAgentPrompt(input.history),
+      history: input.history,
+      model: 'googleai/gemini-2.5-flash',
+    });
+
+    return { content: llmResponse.text };
   }
 );
