@@ -16,13 +16,15 @@ import {
   LineChart,
   LogOut,
   Shield,
-  TrendingDown,
   TrendingUp,
+  TrendingDown,
   Users,
   Wrench,
   User,
+  Sparkles,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
+import { useDataContext } from '@/context/data-context';
 
 import {
   Sidebar,
@@ -40,6 +42,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const coreNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -62,6 +65,24 @@ const utilityNavItems = [
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
 ];
+
+function UpgradeBanner() {
+  const { settings } = useDataContext();
+  const pathname = usePathname();
+
+  if (settings.subscription?.plan !== 'Free' || pathname === '/settings') {
+    return null;
+  }
+  
+  return (
+      <Alert className="mb-4 bg-primary/10 border-primary/50 text-primary-foreground">
+        <Sparkles className="h-4 w-4" />
+        <AlertDescription className="text-primary">
+            You are on the Free Plan. <Link href="/settings" className="font-bold underline hover:text-primary/90">Upgrade to Pro</Link> to unlock AI-powered reports and more features.
+        </AlertDescription>
+      </Alert>
+  )
+}
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -169,6 +190,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
           <SidebarTrigger />
         </header>
         <main className="p-4 sm:p-6 lg:p-8">
+          <UpgradeBanner />
           {children}
         </main>
       </SidebarInset>

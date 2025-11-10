@@ -3,41 +3,16 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCollection, useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { Subscription } from '@/lib/types';
-import { collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/firebase/provider';
+import { useDataContext } from '@/context/data-context';
 
 export function SubscriptionChecker({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
-  const router = useRouter();
+  const { isLoading } = useDataContext();
   const pathname = usePathname();
 
-  const subscriptionsQuery = user ? query(collection(firestore, 'subscriptions'), where('ownerId', '==', user.uid)) : null;
-
-  const { data: subscriptions, isLoading: isSubscriptionLoading } = useCollection<Subscription>(subscriptionsQuery);
-
-
-  useEffect(() => {
-    const isDataLoading = isUserLoading || isSubscriptionLoading;
-    // Don't do anything while data is loading or if we are already on the settings page
-    if (isDataLoading || pathname === '/settings') {
-      return;
-    }
-
-    // REDIRECT LOGIC IS NOW DISABLED
-    // If data is loaded and there are no subscriptions, redirect to settings
-    // if (!isDataLoading && (!subscriptions || subscriptions.length === 0)) {
-    //   router.replace('/settings');
-    // }
-  }, [subscriptions, isUserLoading, isSubscriptionLoading, router, pathname]);
-
-  const isLoading = isUserLoading || isSubscriptionLoading;
-
-  // While loading, show a full-screen spinner to prevent showing content prematurely
-  // We still show loading on initial auth/sub check to prevent flashes of content
+  // While the DataContext is loading settings AND subscription, show a spinner.
+  // This prevents any premature rendering of content that might depend on subscription status.
+  // We exclude /settings because that page should always be accessible.
   if (isLoading && pathname !== '/settings') {
     return (
       <div className="flex h-[calc(100vh-200px)] w-full items-center justify-center">
@@ -46,5 +21,8 @@ export function SubscriptionChecker({ children }: { children: React.ReactNode })
     );
   }
 
+  // Once loading is complete, render the children.
+  // The logic for displaying prompts (like the UpgradeBanner) is now handled
+  // within the DashboardNavigation component, based on the loaded context data.
   return <>{children}</>;
 }

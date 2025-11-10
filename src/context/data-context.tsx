@@ -3,8 +3,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useUser, useFirebase } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { ResidencyStatus } from '@/lib/types';
+import { doc, getDoc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import type { ResidencyStatus, Subscription } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export interface UserSettings {
@@ -14,6 +14,7 @@ export interface UserSettings {
   residencyStatus: ResidencyStatus;
   isPnlReportEnabled: boolean;
   isMarketResearchEnabled: boolean;
+  subscription?: Subscription | null; // Add subscription to settings
 }
 
 interface DataContextValue {
@@ -22,7 +23,7 @@ interface DataContextValue {
   isLoading: boolean;
 }
 
-const defaultSettings: UserSettings = {
+const defaultSettings: Omit<UserSettings, 'subscription'> = {
   currency: 'KES',
   locale: 'en-GB',
   companyName: 'My Property Portfolio',
@@ -38,41 +39,66 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { firestore } = useFirebase();
   const { toast } = useToast();
 
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
+  const [settings, setSettings] = useState<UserSettings>({ ...defaultSettings, subscription: null });
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchSettings = useCallback(async () => {
-    if (!user || !firestore) return; // Guard against uninitialized user/firestore
-    
+  const fetchAppData = useCallback(async () => {
+    if (!user || !firestore) return;
+
     setIsLoading(true);
-    const settingsRef = doc(firestore, 'userSettings', user.uid);
+    
     try {
-      const docSnap = await getDoc(settingsRef);
-      if (docSnap.exists()) {
-        setSettings({ ...defaultSettings, ...docSnap.data() });
-      } else {
-        // No settings found, create with defaults for the logged-in user
-        await setDoc(settingsRef, { ...defaultSettings, ownerId: user.uid });
-        setSettings(defaultSettings);
-      }
+        // Fetch Settings
+        const settingsRef = doc(firestore, 'userSettings', user.uid);
+        const settingsSnap = await getDoc(settingsRef);
+        let userSettings: UserSettings;
+        
+        if (settingsSnap.exists()) {
+            userSettings = { ...defaultSettings, ...settingsSnap.data() } as UserSettings;
+        } else {
+            userSettings = defaultSettings as UserSettings;
+            await setDoc(settingsRef, { ...defaultSettings, ownerId: user.uid });
+        }
+
+        // Fetch Subscription
+        const subsQuery = query(collection(firestore, 'subscriptions'), where('ownerId', '==', user.uid));
+        const subsSnap = await getDocs(subsQuery);
+        
+        if (subsSnap.empty) {
+            // No subscription found, create a default "Free" one
+            const subRef = doc(collection(firestore, 'subscriptions'));
+            const newSub: Subscription = {
+                id: subRef.id,
+                ownerId: user.uid,
+                plan: 'Free',
+                status: 'active',
+                billingCycle: 'monthly',
+                currentPeriodStart: new Date().toISOString(),
+                currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+            };
+            await setDoc(subRef, newSub);
+            userSettings.subscription = newSub;
+        } else {
+            userSettings.subscription = subsSnap.docs[0].data() as Subscription;
+        }
+
+        setSettings(userSettings);
+
     } catch (error) {
-      console.error("Error fetching user settings:", error);
-      // Fallback to defaults on error, but do not attempt to write again
-      setSettings(defaultSettings);
+        console.error("Error fetching app data (settings/subscription):", error);
+        setSettings({ ...defaultSettings, subscription: null });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   }, [user, firestore]);
 
   useEffect(() => {
-    // Only fetch settings when the user is authenticated and not loading
     if (!isUserLoading && user) {
-        fetchSettings();
+        fetchAppData();
     } else if (!isUserLoading && !user) {
-        // If auth is done and there's no user, we are done loading.
         setIsLoading(false);
     }
-  }, [isUserLoading, user, fetchSettings]);
+  }, [isUserLoading, user, fetchAppData]);
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
     if (!user) {
@@ -85,9 +111,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
     const settingsRef = doc(firestore, 'userSettings', user.uid);
     try {
-      const updatedSettings = { ...settings, ...newSettings };
-      await setDoc(settingsRef, updatedSettings, { merge: true });
+      // Don't save subscription data to the userSettings document
+      const { subscription, ...settingsToSave } = newSettings;
+      const updatedSettings = { ...settings, ...settingsToSave };
+      
+      await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true });
       setSettings(updatedSettings);
+      
     } catch (error) {
       console.error("Error updating settings:", error);
       toast({
