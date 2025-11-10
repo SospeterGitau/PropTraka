@@ -1,3 +1,4 @@
+
 "use client"; // <-- THIS IS THE CRITICAL FIX
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
@@ -5,7 +6,6 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { app } from './index';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export interface FirebaseContextValue {
   auth: Auth;
@@ -25,13 +25,14 @@ export type UserHookResult = {
 
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefined);
 
-export function FirebaseProvider({ children }: { children: ReactNode }) {
+export function FirebaseProvider({ children, firebaseApp, auth: authProp, firestore: firestoreProp, analytics: analyticsProp }: { children: ReactNode, firebaseApp?: any, auth?: Auth, firestore?: Firestore, analytics?: Analytics | null }) {
   const [user, setUser] = useState<User | null>(null);
   const [userError, setUserError] = useState<Error | null>(null);
   const [isUserLoading, setIsUserLoading] = useState(true);
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-  const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+  
+  const auth = authProp || getAuth(app);
+  const firestore = firestoreProp || getFirestore(app);
+  const analytics = analyticsProp !== undefined ? analyticsProp : (typeof window !== 'undefined' ? getAnalytics(app) : null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
@@ -61,8 +62,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FirebaseContext.Provider value={{ firebaseApp: app, auth, firestore, analytics, user, isUserLoading, userError }}>
-      <FirebaseErrorListener />
+    <FirebaseContext.Provider value={{ auth, firestore, analytics, user, isUserLoading, userError }}>
       {children}
     </FirebaseContext.Provider>
   );

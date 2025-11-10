@@ -1,7 +1,8 @@
 
-import { FirebaseProvider } from '@/firebase/provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 import DashboardClientLayout from './dashboard-client-layout';
 import { ChatBubble } from '@/components/chat-bubble';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export default function DashboardLayout({
   children,
@@ -9,11 +10,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FirebaseProvider>
+    <FirebaseClientProvider>
       <DashboardClientLayout>
         {children}
         <ChatBubble />
       </DashboardClientLayout>
-    </FirebaseProvider>
+      <FirebaseErrorListener />
+    </FirebaseClientProvider>
   );
 }
