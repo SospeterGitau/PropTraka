@@ -45,6 +45,10 @@ export const useChat = () => {
       setMessages([]);
       return;
     }
+    
+    // If a message is currently being sent, don't update from the snapshot
+    // to prevent the optimistic update from being overwritten.
+    if (isSending) return;
 
     setIsLoading(true);
 
@@ -74,7 +78,7 @@ export const useChat = () => {
     );
 
     return () => unsubscribe();
-  }, [chatCollectionRef, user, isUserLoading]);
+  }, [chatCollectionRef, user, isUserLoading, isSending]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!chatCollectionRef || !user) {
@@ -85,15 +89,19 @@ export const useChat = () => {
     setIsSending(true);
 
     const userMessage: ChatMessage = {
+        id: `temp-user-${Date.now()}`,
         role: 'user',
         content: text,
     };
     
-    try {
-        // Save user message to Firestore. The onSnapshot listener will update the UI.
-        await addDoc(chatCollectionRef, { ...userMessage, ownerId: user.uid, timestamp: Timestamp.now() });
+    // Optimistic update for the user's message
+    setMessages(prev => [...prev, userMessage]);
 
-        // Get the history *after* the user message has been saved to ensure it's included.
+    try {
+        // Save user message to Firestore.
+        const userMessageForDb = { role: 'user', content: text, ownerId: user.uid, timestamp: Timestamp.now() };
+        addDoc(chatCollectionRef, userMessageForDb);
+
         const currentHistory = [...messages, userMessage];
 
         const aiInput: AskAiAgentInput = {
@@ -103,16 +111,25 @@ export const useChat = () => {
         const aiResponse = await askAiAgent(aiInput);
 
         const aiMessage: ChatMessage = {
+            id: `temp-ai-${Date.now()}`,
             role: 'model',
             content: aiResponse.content,
         };
 
-        // Save AI message to Firestore. The onSnapshot listener will update the UI.
-        await addDoc(chatCollectionRef, { ...aiMessage, ownerId: user.uid, timestamp: Timestamp.now() });
+        // Save AI message to Firestore.
+        const aiMessageForDb = { ...aiMessage, ownerId: user.uid, timestamp: Timestamp.now() };
+        addDoc(chatCollectionRef, aiMessageForDb);
+
+        // Optimistic update for the AI's message
+        setMessages(prev => [...prev.filter(m => m.id !== userMessage.id), { ...userMessageForDb, id: userMessage.id }, aiMessage]);
+
 
     } catch (e) {
         console.error("Failed to send message or get AI response:", e);
         setError(e instanceof Error ? e : new Error("An unknown error occurred."));
+        // Revert optimistic update on error
+        setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+
     } finally {
         setIsSending(false);
     }
