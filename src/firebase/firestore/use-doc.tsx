@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   doc,
   onSnapshot,
@@ -7,51 +7,41 @@ import {
 } from 'firebase/firestore';
 import { useFirebase } from '../provider';
 import { firestore } from '../index';
-import { errorEmitter } from '../error-emitter';
-import { FirestorePermissionError } from '../errors';
 
 export const useDoc = <T>(
   targetRefOrPath: string | DocumentReference | null
-): { data: T | null; error: Error | null; loading: boolean } => {
+) => {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user, isAuthLoading } = useFirebase();
-  
-  // This is the critical fix. The memoized ref now DEPENDS on the user object.
-  // This ensures that if a path is constructed with a user ID, it will be
-  // re-evaluated when the user logs in.
-  const memoizedRef = useMemo(() => {
-    if (!user || !targetRefOrPath) return null; // Guard against running without a user
-
-    if (typeof targetRefOrPath === 'string') {
-      return doc(firestore, targetRefOrPath);
-    }
-    return targetRefOrPath;
-  }, [targetRefOrPath, user]); // CRITICAL: Added `user` as a dependency.
-
+  const { isAuthLoading, user } = useFirebase(); // Get auth state
 
   useEffect(() => {
-    // Auth Gate: Wait until Firebase has confirmed the auth state.
-    if (isAuthLoading) {
-      setLoading(true);
+    // **THE GUARD:** Do not do anything until Firebase Auth is 100% ready
+    if (isAuthLoading || !user) {
+      setLoading(false);
       return;
     }
 
-    // If there's no user or no document to fetch, we are done.
-    if (!user || !memoizedRef) {
+    let docRef: DocumentReference;
+
+    if (typeof targetRefOrPath === 'string') {
+      docRef = doc(firestore, targetRefOrPath);
+    } else if (targetRefOrPath) {
+      docRef = targetRefOrPath;
+    } else {
       setLoading(false);
-      setData(null);
       return;
     }
 
     setLoading(true);
 
     const unsubscribe = onSnapshot(
-      memoizedRef,
-      (doc) => {
-        if (doc.exists()) {
-          setData({ ...doc.data(), id: doc.id } as T);
+      docRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const docData = { ...snapshot.data(), id: snapshot.id } as T;
+          setData(docData);
         } else {
           setData(null);
         }
@@ -61,21 +51,13 @@ export const useDoc = <T>(
       (err) => {
         console.error('Error in useDoc:', err);
         setError(err);
-        
-        if (err.code === 'permission-denied') {
-            const permissionError = new FirestorePermissionError({
-                path: memoizedRef.path,
-                operation: 'get',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        }
-
         setLoading(false);
       }
     );
 
+    // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [memoizedRef, user, isAuthLoading]); // Effect now correctly re-runs when memoizedRef changes.
+  }, [targetRefOrPath, isAuthLoading, user]); // Re-run if path or auth state changes
 
   return { data, error, loading };
 };
