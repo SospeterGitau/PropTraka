@@ -56,3 +56,9 @@ export const useUser = () => {
   const { user, isAuthLoading } = useFirebase();
   return { user, isAuthLoading };
 };
+
+// NEWLY ADDED HOOK TO FIX THE TypeError
+export const useFirestore = () => {
+  const { firestore } = useFirebase();
+  return firestore;
+};
