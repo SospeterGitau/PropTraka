@@ -18,26 +18,29 @@ export const useCollection = <T>(
   const [data, setData] = useState<T[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user, isUserLoading } = useFirebase();
+  const { user, isAuthLoading } = useFirebase();
 
-  // Memoize the query to prevent re-renders from creating new query objects
+  // This is the critical fix. The memoized query now DEPENDS on the user object.
+  // When the user logs in (or out), this memo is re-evaluated, creating a new,
+  // correct query object. This new object instance triggers the useEffect below.
   const memoizedQuery = useMemo(() => {
-    if (!targetRefOrQuery) return null;
+    if (!user || !targetRefOrQuery) return null; // Guard against running without a user
+
     if (typeof targetRefOrQuery === 'string') {
       return query(collection(firestore, targetRefOrQuery));
     }
     return targetRefOrQuery;
-  }, [targetRefOrQuery]);
+  }, [targetRefOrQuery, user]); // CRITICAL: Added `user` as a dependency.
 
   useEffect(() => {
-    // The Auth Gate: Do not proceed if there is no user object.
-    // The FirebaseProvider ensures this hook only runs after the initial auth check.
-    if (isUserLoading || !user) {
-      setLoading(false);
+    // Auth Gate: Wait until Firebase has confirmed the auth state.
+    if (isAuthLoading) {
+      setLoading(true);
       return;
     }
-
-    if (!memoizedQuery) {
+    
+    // If there's no user or no query to run, we are done.
+    if (!user || !memoizedQuery) {
       setLoading(false);
       setData([]);
       return;
@@ -60,10 +63,9 @@ export const useCollection = <T>(
         console.error('Error in useCollection:', err);
         setError(err);
         
-        // Emit a structured permission error for better debugging
         if (err.code === 'permission-denied') {
           const permissionError = new FirestorePermissionError({
-            path: 'path' in memoizedQuery ? memoizedQuery.path : 'unknown',
+            path: 'path' in memoizedQuery ? (memoizedQuery as any).path : 'unknown',
             operation: 'list',
           });
           errorEmitter.emit('permission-error', permissionError);
@@ -74,7 +76,7 @@ export const useCollection = <T>(
     );
 
     return () => unsubscribe();
-  }, [memoizedQuery, user, isUserLoading]); // Re-run only when the query or user changes
+  }, [memoizedQuery, user, isAuthLoading]); // Effect now correctly re-runs when memoizedQuery changes.
 
   return { data, error, loading };
 };

@@ -16,24 +16,30 @@ export const useDoc = <T>(
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user, isUserLoading } = useFirebase();
+  const { user, isAuthLoading } = useFirebase();
   
+  // This is the critical fix. The memoized ref now DEPENDS on the user object.
+  // This ensures that if a path is constructed with a user ID, it will be
+  // re-evaluated when the user logs in.
   const memoizedRef = useMemo(() => {
-    if (!targetRefOrPath) return null;
+    if (!user || !targetRefOrPath) return null; // Guard against running without a user
+
     if (typeof targetRefOrPath === 'string') {
       return doc(firestore, targetRefOrPath);
     }
     return targetRefOrPath;
-  }, [targetRefOrPath]);
+  }, [targetRefOrPath, user]); // CRITICAL: Added `user` as a dependency.
 
 
   useEffect(() => {
-    if (isUserLoading || !user) {
-      setLoading(false);
+    // Auth Gate: Wait until Firebase has confirmed the auth state.
+    if (isAuthLoading) {
+      setLoading(true);
       return;
     }
 
-    if (!memoizedRef) {
+    // If there's no user or no document to fetch, we are done.
+    if (!user || !memoizedRef) {
       setLoading(false);
       setData(null);
       return;
@@ -69,7 +75,7 @@ export const useDoc = <T>(
     );
 
     return () => unsubscribe();
-  }, [memoizedRef, user, isUserLoading]);
+  }, [memoizedRef, user, isAuthLoading]); // Effect now correctly re-runs when memoizedRef changes.
 
   return { data, error, loading };
 };
