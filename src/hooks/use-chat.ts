@@ -8,6 +8,7 @@ import {
   onSnapshot,
   Timestamp,
   DocumentData,
+  where,
 } from 'firebase/firestore';
 import { firestore } from '../firebase';
 import { useFirebase } from '../firebase/provider';
@@ -30,7 +31,7 @@ export const useChat = () => {
 
   const chatCollectionRef = useMemo(() => {
     if (!user) return null;
-    return collection(firestore, `users/${user.uid}/chatMessages`);
+    return collection(firestore, 'chatMessages');
   }, [user]);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export const useChat = () => {
 
     setIsLoading(true);
 
-    const chatQuery = query(chatCollectionRef);
+    const chatQuery = query(chatCollectionRef, where('ownerId', '==', user.uid));
 
     const unsubscribe = onSnapshot(
       chatQuery,
@@ -83,10 +84,11 @@ export const useChat = () => {
 
     setIsSending(true);
 
-    const userMessage: Omit<ChatMessage, 'id'> = {
+    const userMessage: Omit<ChatMessage, 'id'> & { ownerId: string } = {
         role: 'user',
         content: text,
         timestamp: Timestamp.now(),
+        ownerId: user.uid,
     };
 
     try {
@@ -100,10 +102,11 @@ export const useChat = () => {
         
         const aiResponse = await askAiAgent(aiInput);
 
-        const aiMessage: Omit<ChatMessage, 'id'> = {
+        const aiMessage: Omit<ChatMessage, 'id'> & { ownerId: string } = {
             role: 'model',
             content: aiResponse.content,
             timestamp: Timestamp.now(),
+            ownerId: user.uid,
         };
 
         await addDoc(chatCollectionRef, aiMessage);

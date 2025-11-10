@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { format, startOfToday, isBefore } from 'date-fns';
@@ -229,7 +229,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid), where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
@@ -243,10 +243,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
   
   useEffect(() => {
+    if (isRevenueLoading) return;
     if (!revenue || revenue.length === 0) {
-      if(!isRevenueLoading) {
-        //notFound();
-      }
+      // It might take a moment for useCollection to return data, so we don't call notFound() immediately
       return;
     };
     
@@ -375,9 +374,18 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     setIsEndTenancyOpen(false);
   };
 
-  if (isRevenueLoading || isPropertiesLoading || !tenancy || !properties) {
+  if (isRevenueLoading || isPropertiesLoading || !properties) {
     return <div>Loading...</div>;
   }
+  
+  if (!tenancy) {
+      if (!isRevenueLoading) {
+          // If loading is done and still no tenancy, then it's a 404
+          notFound();
+      }
+      return <div>Loading...</div>;
+  }
+
 
   const property = properties.find(p => p.id === tenancy.propertyId);
   const today = startOfToday();

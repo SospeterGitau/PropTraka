@@ -30,9 +30,9 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const { toast } = useToast();
 
   // Data Fetching
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const maintenanceQuery = useMemo(() => user ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const contractorsQuery = useMemo(() => user ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const maintenanceQuery = useMemo(() => user?.uid ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const contractorsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
   const { data: maintenanceRequests, loading: isMaintenanceLoading } = useCollection<MaintenanceRequest>(maintenanceQuery);

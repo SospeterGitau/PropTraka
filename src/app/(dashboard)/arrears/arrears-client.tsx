@@ -37,6 +37,10 @@ const ArrearsClient = memo(function ArrearsClient() {
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
 
   useEffect(() => {
+    if (!user) {
+        setIsDataLoading(false);
+        return;
+    }
     if (revenueQuery) {
       const unsubscribe = onSnapshot(revenueQuery, (snapshot) => {
         const revenueData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
@@ -48,9 +52,10 @@ const ArrearsClient = memo(function ArrearsClient() {
       });
       return () => unsubscribe();
     } else {
+      // If there's a user but the query is null for some reason, stop loading.
       setIsDataLoading(false);
     }
-  }, [revenueQuery]);
+  }, [revenueQuery, user]);
 
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);

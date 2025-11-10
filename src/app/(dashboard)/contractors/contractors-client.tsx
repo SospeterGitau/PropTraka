@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, memo, useMemo } from 'react';
@@ -33,7 +34,7 @@ const ContractorsClient = memo(function ContractorsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const contractorsQuery = useMemo(() => user ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const contractorsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const { data: contractors, loading: isDataLoading } = useCollection<Contractor>(contractorsQuery);
 
   const [isFormOpen, setIsFormOpen] = useState(false);

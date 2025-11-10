@@ -29,7 +29,7 @@ import type { Property, Transaction, ResidencyStatus } from '@/lib/types';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where } from 'firebase/firestore';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 
 type ViewMode = 'month' | 'year';
@@ -48,10 +48,11 @@ function getFinancialYear(date: Date) {
 function RevenueAnalysisTab() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { currency, locale } = useTheme();
+  const { settings } = useDataContext();
+  const { currency, locale } = settings;
 
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
@@ -271,11 +272,12 @@ function RevenueAnalysisTab() {
 function PnlStatementTab() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { currency, locale, residencyStatus } = useTheme();
+  const { settings } = useDataContext();
+  const { currency, locale, residencyStatus } = settings;
 
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
@@ -533,15 +535,16 @@ const ReportsClient = memo(function ReportsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
   const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
   
-  const { isPnlReportEnabled, isMarketResearchEnabled } = useTheme();
+  const { settings } = useDataContext();
+  const { isPnlReportEnabled, isMarketResearchEnabled } = settings;
 
 
   if (isRevenueLoading || isExpensesLoading || isPropertiesLoading) {

@@ -21,6 +21,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
     Expense: <Receipt className="h-4 w-4" />,
     Payment: <HandCoins className="h-4 w-4" />,
     Maintenance: <Wrench className="h-4 w-4" />,
+    Contractor: <Wrench className="h-4 w-4" />,
 };
 
 function ChangelogPage() {
@@ -29,7 +30,7 @@ function ChangelogPage() {
   const { settings } = useDataContext();
   const { locale } = settings;
 
-  const changelogQuery = useMemo(() => user ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
+  const changelogQuery = useMemo(() => user?.uid ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
   const { data: changelog, loading: isDataLoading } = useCollection<ChangeLogEntry>(changelogQuery);
 
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});

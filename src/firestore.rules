@@ -4,92 +4,22 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secures the `/properties` collection.
+     * @description Enforces a strict user-ownership model. Each document is secured
+     * such that only the owner (identified by `ownerId`) can access it.
+     * IMPORTANT: `list` is only allowed if the query includes a `where('ownerId', '==', request.auth.uid)` clause.
      */
-    match /properties/{propertyId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
 
-    /**
-     * @description Secures the `/revenue` collection.
-     */
-    match /revenue/{transactionId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Secures the `/expenses` collection.
-     */
-    match /expenses/{transactionId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Secures the `/maintenanceRequests` collection.
-     */
-    match /maintenanceRequests/{requestId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Secures the `/contractors` collection.
-     */
-    match /contractors/{contractorId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
-
-     /**
-      * @description Secures the `/changelog` collection.
-      */
-    match /changelog/{logId} {
-        allow get, list: if isSignedIn();
-        allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-        allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
-    
-    /**
-     * @description Secures the `/subscriptions` collection.
-     */
-    match /subscriptions/{subscriptionId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Secures the `/invoices` collection.
-     */
-    match /invoices/{invoiceId} {
-      allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-      allow update, delete: if isSignedIn() && isOwner(resource.data.ownerId);
+    match /{collection}/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
     }
 
     /**
      * @description Secures user settings. Users can read and write their own settings document.
      */
     match /userSettings/{userId} {
-      allow get, create, update: if request.auth.uid == userId;
-      allow list, delete: if false;
+      allow read, create, update, delete: if request.auth.uid == userId;
+      allow list: if false; // List should not be allowed for user settings
     }
-  }
-
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return isSignedIn() && request.auth.uid == userId;
   }
 }
