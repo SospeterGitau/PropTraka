@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   collection,
   query,
@@ -9,37 +9,44 @@ import {
 } from 'firebase/firestore';
 import { useFirebase } from '../provider';
 import { firestore } from '../index';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 export const useCollection = <T>(
   targetRefOrQuery: string | Query | CollectionReference | null
-) => {
+): { data: T[]; error: Error | null; loading: boolean } => {
   const [data, setData] = useState<T[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isAuthLoading, user } = useFirebase();
+  const { user } = useFirebase();
+
+  // Memoize the query to prevent re-renders from creating new query objects
+  const memoizedQuery = useMemo(() => {
+    if (!targetRefOrQuery) return null;
+    if (typeof targetRefOrQuery === 'string') {
+      return query(collection(firestore, targetRefOrQuery));
+    }
+    return targetRefOrQuery;
+  }, [targetRefOrQuery]);
 
   useEffect(() => {
-    // **THE GUARD:** Do not do anything until Firebase Auth is 100% ready
-    if (isAuthLoading || !user) {
+    // The Auth Gate: Do not proceed if there is no user object.
+    // The FirebaseProvider ensures this hook only runs after the initial auth check.
+    if (!user) {
       setLoading(false);
       return;
     }
 
-    let queryRef: Query | CollectionReference;
-
-    if (typeof targetRefOrQuery === 'string') {
-      queryRef = collection(firestore, targetRefOrQuery);
-    } else if (targetRefOrQuery) {
-      queryRef = targetRefOrQuery;
-    } else {
+    if (!memoizedQuery) {
       setLoading(false);
+      setData([]);
       return;
     }
 
     setLoading(true);
 
     const unsubscribe = onSnapshot(
-      queryRef,
+      memoizedQuery,
       (snapshot) => {
         const docs = snapshot.docs.map((doc) => ({
           ...doc.data(),
@@ -52,12 +59,22 @@ export const useCollection = <T>(
       (err) => {
         console.error('Error in useCollection:', err);
         setError(err);
+        
+        // Emit a structured permission error for better debugging
+        if (err.code === 'permission-denied') {
+          const permissionError = new FirestorePermissionError({
+            path: 'path' in memoizedQuery ? memoizedQuery.path : 'unknown',
+            operation: 'list',
+          });
+          errorEmitter.emit('permission-error', permissionError);
+        }
+
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [targetRefOrQuery, isAuthLoading, user]);
+  }, [memoizedQuery, user]); // Re-run only when the query or user changes
 
   return { data, error, loading };
 };

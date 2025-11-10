@@ -1,47 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   doc,
   onSnapshot,
   DocumentReference,
   DocumentData,
 } from 'firebase/firestore';
-import { useFirebase } from '../provider'; // Import from our new provider
-import { firestore } from '../index'; // Import the firestore instance
+import { useFirebase } from '../provider';
+import { firestore } from '../index';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
-// This hook is for fetching a SINGLE document
 export const useDoc = <T>(
   targetRefOrPath: string | DocumentReference | null
-) => {
+): { data: T | null; error: Error | null; loading: boolean } => {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useFirebase();
+  
+  const memoizedRef = useMemo(() => {
+    if (!targetRefOrPath) return null;
+    if (typeof targetRefOrPath === 'string') {
+      return doc(firestore, targetRefOrPath);
+    }
+    return targetRefOrPath;
+  }, [targetRefOrPath]);
 
-  // Get the auth state from our new provider
-  const { isAuthLoading, user } = useFirebase();
 
   useEffect(() => {
-    // **THE GUARD:** Do not do anything until Firebase Auth is 100% ready
-    // and has confirmed we have a user.
-    if (isAuthLoading || !user) {
+    if (!user) {
       setLoading(false);
-      return; // Do not run the query
+      return;
     }
 
-    let docRef: DocumentReference;
-
-    if (typeof targetRefOrPath === 'string') {
-      docRef = doc(firestore, targetRefOrPath);
-    } else if (targetRefOrPath) {
-      docRef = targetRefOrPath;
-    } else {
+    if (!memoizedRef) {
       setLoading(false);
-      return; // No valid path provided
+      setData(null);
+      return;
     }
 
     setLoading(true);
 
     const unsubscribe = onSnapshot(
-      docRef,
+      memoizedRef,
       (doc) => {
         if (doc.exists()) {
           setData({ ...doc.data(), id: doc.id } as T);
@@ -53,14 +54,22 @@ export const useDoc = <T>(
       },
       (err) => {
         console.error('Error in useDoc:', err);
-        setError(err); // This will now show the REAL error
+        setError(err);
+        
+        if (err.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: memoizedRef.path,
+                operation: 'get',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
+
         setLoading(false);
       }
     );
 
-    // Cleanup subscription
     return () => unsubscribe();
-  }, [targetRefOrPath, isAuthLoading, user]); // Re-run if query or auth state changes
+  }, [memoizedRef, user]);
 
   return { data, error, loading };
 };

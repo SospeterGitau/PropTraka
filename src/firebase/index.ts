@@ -1,6 +1,3 @@
-
-'use client';
-
 /**
  * @fileoverview This file serves as the primary entry point for all Firebase-related
  * functionality in the application. It acts as a "barrel" file, re-exporting modules
@@ -58,8 +55,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
 export * from './provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
-export * from './auth/use-user';
 export * from './errors';
 export * from './error-emitter';
 export * from './analytics';
-
