@@ -3,70 +3,60 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { getAnalytics, Analytics } from 'firebase/analytics';
+import { getFunctions, Functions } from 'firebase/functions';
 import { app } from './index';
 
-export interface FirebaseContextValue {
+interface FirebaseContextValue {
   auth: Auth;
   firestore: Firestore;
-  analytics: Analytics | null;
+  functions: Functions;
   user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
+  isAuthLoading: boolean;
 }
-
-export type UserHookResult = {
-  user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
-};
 
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefined);
 
 export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [userError, setUserError] = useState<Error | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
-  
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
-  const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+  const functions = getFunctions(app);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        setUser(user);
-        setUserError(null);
-        setIsUserLoading(false);
-      },
-      (error) => {
-        console.error('Authentication Error:', error);
-        setUser(null);
-        setUserError(error);
-        setIsUserLoading(false);
-      }
-    );
-
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setIsAuthLoading(false);
+    });
     return () => unsubscribe();
   }, [auth]);
 
-  if (isUserLoading) {
+  if (isAuthLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', backgroundColor: '#1a1a1a', color: 'white', fontFamily: 'sans-serif', fontSize: '1.2rem' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        width: '100vw',
+        backgroundColor: '#1a1a1a',
+        color: 'white',
+        fontFamily: 'sans-serif',
+        fontSize: '1.2rem'
+      }}>
         Loading Your Application...
       </div>
     );
   }
 
   return (
-    <FirebaseContext.Provider value={{ auth, firestore, analytics, user, isUserLoading, userError }}>
+    <FirebaseContext.Provider value={{ auth, firestore, functions, user, isAuthLoading }}>
       {children}
     </FirebaseContext.Provider>
   );
 }
 
-export const useFirebase = (): FirebaseContextValue => {
+export const useFirebase = () => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
     throw new Error('useFirebase must be used within a FirebaseProvider');
@@ -74,15 +64,12 @@ export const useFirebase = (): FirebaseContextValue => {
   return context;
 };
 
-export const useFirestore = (): Firestore => {
+export const useUser = () => {
+  const { user, isAuthLoading } = useFirebase();
+  return { user, isAuthLoading };
+};
+
+export const useFirestore = () => {
   const { firestore } = useFirebase();
   return firestore;
 };
-
-export const useAnalytics = (): Analytics | null => {
-    const context = useContext(FirebaseContext);
-    if (context === undefined) {
-        throw new Error('useAnalytics must be used within a FirebaseProvider');
-    }
-    return context.analytics;
-}

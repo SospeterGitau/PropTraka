@@ -1,4 +1,3 @@
-
 import { type ReactNode } from 'react';
 import { PT_Sans } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster"

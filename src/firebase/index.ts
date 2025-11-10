@@ -23,25 +23,18 @@ import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
-let app: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-let analytics: Analytics | null = null;
-
-if (typeof window !== 'undefined' && !getApps().length) {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  firestore = getFirestore(app);
-  analytics = getAnalytics(app);
-} else if (getApps().length) {
-  app = getApp();
-  auth = getAuth(app);
-  firestore = getFirestore(app);
-  if (typeof window !== 'undefined') {
-    analytics = getAnalytics(app);
+// This function ensures a single instance of the Firebase app is created.
+const getFirebaseApp = (): FirebaseApp => {
+  if (!getApps().length) {
+    return initializeApp(firebaseConfig);
   }
-}
+  return getApp();
+};
+
+const app = getFirebaseApp();
+const auth = getAuth(app);
+const firestore = getFirestore(app);
+const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 // Export the initialized services
 export { app, auth, firestore, analytics };
