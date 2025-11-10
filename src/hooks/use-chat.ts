@@ -7,13 +7,14 @@ import {
   query,
   onSnapshot,
   Timestamp,
-  DocumentData,
   where,
+  orderBy,
+  addDoc
 } from 'firebase/firestore';
 import { firestore } from '../firebase';
-import { useFirebase } from '../firebase/provider';
+import { useUser } from '../firebase/provider';
 import { askAiAgent, type AskAiAgentInput } from '@/ai/flows/ask-ai-agent';
-import { addDoc } from 'firebase/firestore';
+
 
 export interface ChatMessage {
   id?: string;
@@ -23,7 +24,7 @@ export interface ChatMessage {
 }
 
 export const useChat = () => {
-  const { user, isAuthLoading } = useFirebase();
+  const { user, isAuthLoading } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -48,7 +49,11 @@ export const useChat = () => {
 
     setIsLoading(true);
 
-    const chatQuery = query(chatCollectionRef, where('ownerId', '==', user.uid));
+    const chatQuery = query(
+        chatCollectionRef, 
+        where('ownerId', '==', user.uid),
+        orderBy('timestamp', 'asc')
+    );
 
     const unsubscribe = onSnapshot(
       chatQuery,
@@ -57,11 +62,7 @@ export const useChat = () => {
           id: doc.id,
           ...doc.data(),
         })) as (ChatMessage & { timestamp: Timestamp })[];
-
-        fetchedMessages.sort(
-          (a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()
-        );
-
+        
         setMessages(fetchedMessages);
         setError(null);
         setIsLoading(false);
@@ -84,7 +85,7 @@ export const useChat = () => {
 
     setIsSending(true);
 
-    const userMessage: Omit<ChatMessage, 'id'> & { ownerId: string } = {
+    const userMessage: Omit<ChatMessage, 'id'> & { ownerId: string, timestamp: Timestamp } = {
         role: 'user',
         content: text,
         timestamp: Timestamp.now(),
@@ -102,7 +103,7 @@ export const useChat = () => {
         
         const aiResponse = await askAiAgent(aiInput);
 
-        const aiMessage: Omit<ChatMessage, 'id'> & { ownerId: string } = {
+        const aiMessage: Omit<ChatMessage, 'id'> & { ownerId: string, timestamp: Timestamp } = {
             role: 'model',
             content: aiResponse.content,
             timestamp: Timestamp.now(),

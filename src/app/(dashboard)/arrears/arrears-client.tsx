@@ -22,40 +22,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentRequestDialog } from '@/components/payment-request-dialog';
 import type { ArrearEntry, Transaction } from '@/lib/types';
 import { CreditCard } from 'lucide-react';
-import { useUser } from '@/firebase';
-import { useFirestore } from '@/firebase/provider';
-import { collection, query, where, onSnapshot, DocumentData } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, DocumentData } from 'firebase/firestore';
 
 
 const ArrearsClient = memo(function ArrearsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const [revenue, setRevenue] = useState<Transaction[] | null>(null);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-
-  useEffect(() => {
-    if (!user) {
-        setIsDataLoading(false);
-        return;
-    }
-    if (revenueQuery) {
-      const unsubscribe = onSnapshot(revenueQuery, (snapshot) => {
-        const revenueData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
-        setRevenue(revenueData);
-        setIsDataLoading(false);
-      }, (error) => {
-        console.error("Error fetching revenue data: ", error);
-        setIsDataLoading(false);
-      });
-      return () => unsubscribe();
-    } else {
-      // If there's a user but the query is null for some reason, stop loading.
-      setIsDataLoading(false);
-    }
-  }, [revenueQuery, user]);
+  const { data: revenue, loading: isDataLoading } = useCollection<Transaction>(revenueQuery);
 
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
