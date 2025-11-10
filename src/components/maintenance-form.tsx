@@ -66,7 +66,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="propertyId">Property (Optional)</Label>
-                <Select name="propertyId" defaultValue={request?.propertyId || 'none'}>
+                <Select name="propertyId" id="propertyId" defaultValue={request?.propertyId || 'none'}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a property" />
                     </SelectTrigger>
@@ -86,7 +86,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
             
              <div className="space-y-2">
                 <Label htmlFor="contractorId">Assigned Contractor (Optional)</Label>
-                <Select name="contractorId" defaultValue={request?.contractorId || 'none'}>
+                <Select name="contractorId" id="contractorId" defaultValue={request?.contractorId || 'none'}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a contractor" />
                     </SelectTrigger>
@@ -102,7 +102,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="priority">Priority</Label>
-                    <Select name="priority" defaultValue={request?.priority || 'Medium'} required>
+                    <Select name="priority" id="priority" defaultValue={request?.priority || 'Medium'} required>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a priority" />
                         </SelectTrigger>
@@ -116,7 +116,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
-                    <Select name="status" defaultValue={request?.status || 'To Do'} required>
+                    <Select name="status" id="status" defaultValue={request?.status || 'To Do'} required>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a status" />
                         </SelectTrigger>

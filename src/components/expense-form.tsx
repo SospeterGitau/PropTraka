@@ -126,12 +126,12 @@ export function ExpenseForm({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
           <div className="space-y-2">
-            <Label>Date</Label>
-            <Input name="date" type="date" defaultValue={transaction?.date ? transaction.date.split('T')[0] : new Date().toISOString().split('T')[0]} required />
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" name="date" type="date" defaultValue={transaction?.date ? transaction.date.split('T')[0] : new Date().toISOString().split('T')[0]} required />
           </div>
           <div className="space-y-2">
-            <Label>Property (optional)</Label>
-            <Select name="propertyId" defaultValue={transaction?.propertyId || 'none'}>
+            <Label htmlFor="propertyId">Property (optional)</Label>
+            <Select name="propertyId" id="propertyId" defaultValue={transaction?.propertyId || 'none'}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a property" />
               </SelectTrigger>
@@ -202,8 +202,8 @@ export function ExpenseForm({
           
           {expenseType === 'recurring' && (
             <div className="space-y-2">
-              <Label>Frequency</Label>
-              <Select name="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
+              <Label htmlFor="frequency">Frequency</Label>
+              <Select name="frequency" id="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a frequency" />
                 </SelectTrigger>
@@ -254,16 +254,16 @@ export function ExpenseForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Amount</Label>
-            <Input name="amount" type="number" step="0.01" defaultValue={transaction?.amount} required />
+            <Label htmlFor="amount">Amount</Label>
+            <Input id="amount" name="amount" type="number" step="0.01" defaultValue={transaction?.amount} required />
           </div>
           <div className="space-y-2">
-            <Label>Receipt/File Link (optional)</Label>
-            <Input name="receiptUrl" type="url" defaultValue={transaction?.receiptUrl} placeholder="https://example.com/receipt.pdf" />
+            <Label htmlFor="receiptUrl">Receipt/File Link (optional)</Label>
+            <Input id="receiptUrl" name="receiptUrl" type="url" defaultValue={transaction?.receiptUrl} placeholder="https://example.com/receipt.pdf" />
           </div>
           <div className="space-y-2">
-            <Label>Notes (optional)</Label>
-            <Textarea name="notes" defaultValue={transaction?.notes} />
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Textarea id="notes" name="notes" defaultValue={transaction?.notes} />
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

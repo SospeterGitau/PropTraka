@@ -83,7 +83,7 @@ const RevenueForm = memo(function RevenueForm({
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
     const newCharges = [...serviceCharges];
     if (field === 'amount') {
-        const numericValue = value === '' ? '' : parseFloat(value);
+        const numericValue = value === '' ? 0 : parseFloat(value);
         (newCharges[index] as any)[field] = numericValue;
     } else {
         (newCharges[index] as any)[field] = value;
@@ -119,21 +119,23 @@ const RevenueForm = memo(function RevenueForm({
         return;
     }
     
-    const existingTenancy = revenue.find(
-      (t) =>
-        t.tenant?.toLowerCase() === tenant.toLowerCase() &&
-        t.propertyId === propertyId &&
-        (!isEditing || t.tenancyId !== tenancyToEdit.tenancyId)
-    );
+    if (!isEditing) {
+      const existingTenancy = revenue.find(
+        (t) =>
+          t.tenant?.toLowerCase() === tenant.toLowerCase() &&
+          t.propertyId === propertyId
+      );
 
-    if (existingTenancy) {
-      toast({
-        variant: "destructive",
-        title: "Duplicate Tenancy",
-        description: `A tenancy for "${tenant}" already exists at this property.`,
-      });
-      return;
+      if (existingTenancy) {
+        toast({
+          variant: "destructive",
+          title: "Duplicate Tenancy",
+          description: `A tenancy for "${tenant}" already exists at this property.`,
+        });
+        return;
+      }
     }
+
 
     if (!tenancyStartDateStr || !tenancyEndDateStr) {
        toast({
@@ -175,7 +177,8 @@ const RevenueForm = memo(function RevenueForm({
 
     const newTransactions = months.map((monthStartDate, index) => {
       const dateStr = format(monthStartDate, 'yyyy-MM-dd');
-      const existingTx = existingTransactions.find(tx => tx.date === dateStr);
+      const existingTx = isEditing ? existingTransactions.find(tx => format(new Date(tx.date), 'yyyy-MM') === format(monthStartDate, 'yyyy-MM')) : undefined;
+
 
       const newTxData: Partial<Transaction> = {
         tenancyId: tenancyId,
@@ -221,8 +224,8 @@ const RevenueForm = memo(function RevenueForm({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-2">
            <div className="space-y-2">
-            <Label>Property</Label>
-             <Select name="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
+            <Label htmlFor="propertyId">Property</Label>
+             <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
               <SelectTrigger>
                 <SelectValue placeholder="Select a property" />
               </SelectTrigger>
@@ -234,28 +237,28 @@ const RevenueForm = memo(function RevenueForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Tenant Name</Label>
-            <Input name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
+            <Label htmlFor="tenantName">Tenant Name</Label>
+            <Input id="tenantName" name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
           </div>
            <div className="space-y-2">
-            <Label>Tenant Email</Label>
-            <Input name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
+            <Label htmlFor="tenantEmail">Tenant Email</Label>
+            <Input id="tenantEmail" name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
           </div>
           <div className="space-y-2">
-            <Label>Tenant Phone</Label>
-            <Input name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
+            <Label htmlFor="tenantPhone">Tenant Phone</Label>
+            <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
           </div>
            <div className="space-y-2">
-            <Label>Tenancy Start Date</Label>
-            <Input name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
+            <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
+            <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
           </div>
           <div className="space-y-2">
-            <Label>Tenancy End Date</Label>
-            <Input name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
+            <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
+            <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
           </div>
           <div className="space-y-2">
-            <Label>Monthly Rent</Label>
-            <Input name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
+            <Label htmlFor="rent">Monthly Rent</Label>
+            <Input id="rent" name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
           </div>
           
           <div className="space-y-2">
@@ -265,7 +268,7 @@ const RevenueForm = memo(function RevenueForm({
                 <div key={index} className="flex items-center gap-2">
                   <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
                   <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
-                  <Button variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
@@ -276,16 +279,16 @@ const RevenueForm = memo(function RevenueForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Deposit (due with first month's rent)</Label>
-            <Input name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
+            <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
+            <Input id="deposit" name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
           </div>
           <div className="space-y-2">
-            <Label>Contract Link (optional)</Label>
-            <Input name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
+            <Label htmlFor="contractUrl">Contract Link (optional)</Label>
+            <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
           </div>
           <div className="space-y-2">
-            <Label>Notes (optional)</Label>
-            <Textarea name="notes" defaultValue={tenancyToEdit?.notes} />
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes} />
           </div>
            {!tenancyToEdit && (
             <div className="items-top flex space-x-2 pt-2">
@@ -414,14 +417,14 @@ const RevenueClient = memo(function RevenueClient() {
     const batch = writeBatch(firestore);
 
     if (isEditing) {
-      const existingTxIds = revenue.filter(tx => tx.tenancyId === tenancyId).map(tx => tx.id);
-      const newTxDates = new Set(data.map(tx => tx.date));
+      const existingTxIdsInTenancy = revenue.filter(tx => tx.tenancyId === tenancyId).map(tx => tx.id);
+      const newTxDates = new Set(data.map(tx => format(new Date(tx.date), 'yyyy-MM')));
       
       // Delete old transactions that are no longer in the date range
-      existingTxIds.forEach(id => {
-        const txInNewRange = revenue.find(t => t.id === id && newTxDates.has(t.date));
-        if(!txInNewRange) {
-          batch.delete(doc(firestore, 'revenue', id));
+      existingTxIdsInTenancy.forEach(id => {
+        const originalTx = revenue.find(t => t.id === id);
+        if (originalTx && !newTxDates.has(format(new Date(originalTx.date), 'yyyy-MM'))) {
+           batch.delete(doc(firestore, 'revenue', id));
         }
       });
     }

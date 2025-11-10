@@ -80,7 +80,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         const amountDue = transaction.rent + serviceChargesTotal + (transaction.deposit ?? 0);
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
-        return amountPaid < amountDue && dueDate <= today; // Include today's date
+        return amountPaid < amountDue && dueDate < today;
       })
       .map(transaction => {
         const rentDue = transaction.rent;
@@ -89,16 +89,14 @@ const ArrearsClient = memo(function ArrearsClient() {
         const amountPaid = transaction.amountPaid ?? 0;
         const dueDate = new Date(transaction.date);
 
-        // This logic correctly allocates payment first to deposit, then to rent.
         const paidTowardsDeposit = Math.min(amountPaid, depositDue);
         const remainingPaidAfterDeposit = amountPaid - paidTowardsDeposit;
-        const paidTowardsRent = Math.min(remainingPaidAfterDeposit, rentDue);
+        const paidTowardsRentAndCharges = Math.min(remainingPaidAfterDeposit, rentDue + serviceChargesTotal);
         
         const depositOwed = depositDue - paidTowardsDeposit;
-        const rentOwed = rentDue - paidTowardsRent;
-        const serviceChargesOwed = serviceChargesTotal; // Assuming service charges are paid last
+        const rentAndChargesOwed = (rentDue + serviceChargesTotal) - paidTowardsRentAndCharges;
         
-        const amountOwed = rentOwed + depositOwed + serviceChargesOwed;
+        const amountOwed = depositOwed + rentAndChargesOwed;
         
         const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
 
@@ -109,9 +107,9 @@ const ArrearsClient = memo(function ArrearsClient() {
           propertyAddress: transaction.propertyName,
           amountOwed,
           dueDate: transaction.date,
-          rentOwed,
+          rentOwed: rentAndChargesOwed, 
           depositOwed,
-          serviceChargesOwed,
+          serviceChargesOwed: 0, // Simplified for this view, logic is now rent+charges
           daysOverdue,
         };
       });
@@ -219,9 +217,8 @@ const ArrearsClient = memo(function ArrearsClient() {
                         <TableCell>{arrear.daysOverdue} days</TableCell>
                         <TableCell>
                             <div className="flex flex-col items-start text-sm">
-                                {arrear.rentOwed > 0 && <span>Rent</span>}
+                                {arrear.rentOwed > 0 && <span>Rent/Service Charges</span>}
                                 {arrear.depositOwed > 0 && <span>Deposit</span>}
-                                {arrear.serviceChargesOwed > 0 && <span>Service Charges</span>}
                             </div>
                         </TableCell>
                         <TableCell className="text-right font-semibold text-destructive">
