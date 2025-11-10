@@ -3,10 +3,11 @@
 
 import type { LucideProps } from 'lucide-react';
 import { DollarSign, Euro, PoundSterling, SwissFranc } from 'lucide-react';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 export function CurrencyIcon(props: LucideProps) {
-  const { currency } = useTheme();
+  const { settings } = useDataContext();
+  const { currency } = settings;
 
   switch (currency) {
     case 'USD':

@@ -6,7 +6,7 @@ import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { Property, Transaction } from '@/lib/types';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 interface BarChartProps {
   properties: Property[];
@@ -56,8 +56,19 @@ function getShortAddress(property: Property) {
 
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
-  const { formatCurrency, formatCurrencyForAxis, currency, residencyStatus } = useTheme();
+  const { settings } = useDataContext();
+  const { currency, locale, residencyStatus } = settings;
   const currentYear = new Date().getFullYear();
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  
+  const formatCurrencyForAxis = (amount: number) => {
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+    return amount.toString();
+  };
 
   const chartData = properties.map(property => {
     const propertyRevenue = revenue

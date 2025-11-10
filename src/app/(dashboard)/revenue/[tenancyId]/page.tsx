@@ -29,7 +29,7 @@ import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 function PaymentForm({
   isOpen,
@@ -225,7 +225,8 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const tenancyId = params.tenancyId as string;
   const { user } = useUser();
   const firestore = useFirestore();
-  const { locale, currency } = useTheme();
+  const { settings } = useDataContext();
+  const { locale, currency } = settings;
 
   // Data Fetching
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);

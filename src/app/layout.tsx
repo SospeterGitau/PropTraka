@@ -1,9 +1,11 @@
+
 'use client';
 import { type ReactNode } from 'react';
 import { PT_Sans } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster"
 import '@/app/globals.css';
 import { ThemeProvider } from '@/context/theme-context';
+import { DataProvider } from '@/context/data-context';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -16,7 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${ptSans.variable} font-sans antialiased`}>
         <ThemeProvider>
-          {children}
+            {children}
         </ThemeProvider>
         <Toaster />
       </body>

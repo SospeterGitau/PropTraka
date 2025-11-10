@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { SubscriptionChecker } from '@/components/subscription-checker';
-import { ThemeProvider } from '@/context/theme-context';
+import { DataProvider } from '@/context/data-context';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -27,17 +27,17 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   // Once the user is confirmed, render the main dashboard content.
   return (
-    <DashboardNavigation>
-      <SubscriptionChecker>{children}</SubscriptionChecker>
-    </DashboardNavigation>
+    <DataProvider>
+      <DashboardNavigation>
+        <SubscriptionChecker>{children}</SubscriptionChecker>
+      </DashboardNavigation>
+    </DataProvider>
   );
 }
 
 
 export default function DashboardClientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
         <LayoutContent>{children}</LayoutContent>
-    </ThemeProvider>
   )
 }

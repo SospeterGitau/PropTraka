@@ -32,7 +32,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -41,7 +41,8 @@ function formatAddress(property: Property) {
 const PropertiesClient = memo(function PropertiesClient() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { locale, currency } = useTheme();
+  const { settings } = useDataContext();
+  const { locale, currency } = settings;
 
   // Data Fetching
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);

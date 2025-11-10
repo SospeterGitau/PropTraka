@@ -7,7 +7,7 @@ import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { Transaction } from '@/lib/types';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 interface AreaChartProps {
   revenue: Transaction[];
@@ -26,7 +26,18 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
-  const { formatCurrency, formatCurrencyForAxis } = useTheme();
+  const { settings } = useDataContext();
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(settings.locale, { style: 'currency', currency: settings.currency }).format(amount);
+  };
+  
+  const formatCurrencyForAxis = (amount: number) => {
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+    return amount.toString();
+  };
+
   const chartData = Array.from({ length: 6 }).map((_, i) => {
     const d = subMonths(new Date(), 5 - i);
     const month = format(d, 'MMMM');

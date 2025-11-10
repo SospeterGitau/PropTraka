@@ -13,7 +13,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { ResidencyStatus } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -23,8 +22,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/context/theme-context';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useDataContext } from '@/context/data-context';
 
 const passwordSchema = z.object({
   newPassword: z.string().min(6, 'Password must be at least 6 characters'),
@@ -57,20 +55,25 @@ const plans = [
 ]
 
 function ProfileSettingsTab() {
-  const { 
-    theme, setTheme,
-    currency, setCurrency,
-    locale, setLocale,
-    companyName, setCompanyName,
-    residencyStatus, setResidencyStatus,
-    isPnlReportEnabled, setIsPnlReportEnabled,
-    isMarketResearchEnabled, setIsMarketResearchEnabled
-  } = useTheme();
-  
+  const { theme, setTheme } = useTheme();
+  const {
+    settings,
+    updateSettings,
+    isLoading: isDataLoading
+  } = useDataContext();
+
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
+  
+  // Temporary state for edits
+  const [tempSettings, setTempSettings] = useState(settings);
+
+  useEffect(() => {
+    setTempSettings(settings);
+  }, [settings]);
+
 
   const {
     register,
@@ -81,41 +84,23 @@ function ProfileSettingsTab() {
     resolver: zodResolver(passwordSchema),
   });
   
-  const [tempTheme, setTempTheme] = useState(theme);
-  const [tempCurrency, setTempCurrency] = useState(currency);
-  const [tempLocale, setTempLocale] = useState(locale);
-  const [tempCompanyName, setTempCompanyName] = useState(companyName);
-  const [tempResidencyStatus, setTempResidencyStatus] = useState(residencyStatus);
-  const [tempIsPnlReportEnabled, setTempIsPnlReportEnabled] = useState(isPnlReportEnabled);
-  const [tempIsMarketResearchEnabled, setTempIsMarketResearchEnabled] = useState(isMarketResearchEnabled);
-
-
   useEffect(() => {
     if (!isEditing) {
-      setTempTheme(theme);
-      setTempCurrency(currency);
-      setTempLocale(locale);
-      setTempCompanyName(companyName);
-      setTempResidencyStatus(residencyStatus);
-      setTempIsPnlReportEnabled(isPnlReportEnabled);
-      setTempIsMarketResearchEnabled(isMarketResearchEnabled);
+      setTempSettings(settings);
     }
-  }, [isEditing, theme, currency, locale, companyName, residencyStatus, isPnlReportEnabled, isMarketResearchEnabled]);
+  }, [isEditing, settings]);
 
-  const handleSave = () => {
-    setTheme(tempTheme);
-    setCurrency(tempCurrency);
-    setLocale(tempLocale);
-    setCompanyName(tempCompanyName);
-    setResidencyStatus(tempResidencyStatus);
-    setIsPnlReportEnabled(tempIsPnlReportEnabled);
-    setIsMarketResearchEnabled(tempIsMarketResearchEnabled);
+  const handleSave = async () => {
+    if (tempSettings) {
+      await updateSettings(tempSettings);
+    }
     setIsEditing(false);
     toast({ title: "Settings Saved", description: "Your preferences have been updated." });
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+    setTempSettings(settings); // Revert changes
   };
 
   const handleChangePassword = (data: PasswordFormValues) => {
@@ -138,6 +123,10 @@ function ProfileSettingsTab() {
     });
   };
 
+  if (isDataLoading || !tempSettings) {
+    return <p>Loading settings...</p>;
+  }
+
   return (
     <>
       <Card>
@@ -158,11 +147,11 @@ function ProfileSettingsTab() {
                <div className="space-y-4 pt-2">
                  <div className="space-y-2">
                     <Label>Company Name</Label>
-                    <Input value={tempCompanyName} onChange={(e) => setTempCompanyName(e.target.value)} placeholder="Your Company Ltd." />
+                    <Input value={tempSettings.companyName} onChange={(e) => setTempSettings({...tempSettings, companyName: e.target.value})} placeholder="Your Company Ltd." />
                 </div>
                  <div className="space-y-2">
                     <Label>Residency Status (for Tax Calculation)</Label>
-                    <RadioGroup value={tempResidencyStatus} onValueChange={(v) => setTempResidencyStatus(v as ResidencyStatus)} className="flex gap-4 pt-2">
+                    <RadioGroup value={tempSettings.residencyStatus} onValueChange={(v) => setTempSettings({...tempSettings, residencyStatus: v as ResidencyStatus})} className="flex gap-4 pt-2">
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="resident" id="resident" />
                             <Label htmlFor="resident">Resident</Label>
@@ -182,7 +171,7 @@ function ProfileSettingsTab() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
                   <Label>Currency</Label>
-                  <Select value={tempCurrency} onValueChange={(v) => setTempCurrency(v)}>
+                  <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({...tempSettings, currency: v})}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
@@ -194,7 +183,7 @@ function ProfileSettingsTab() {
                 </div>
                 <div className="space-y-2">
                   <Label>Date Format</Label>
-                  <Select value={tempLocale} onValueChange={(v) => setTempLocale(v)}>
+                  <Select value={tempSettings.locale} onValueChange={(v) => setTempSettings({...tempSettings, locale: v})}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
@@ -211,8 +200,8 @@ function ProfileSettingsTab() {
                <div className="space-y-2 pt-2">
                 <Label>Colour Scheme</Label>
                  <RadioGroup
-                    value={tempTheme}
-                    onValueChange={(value: "light" | "dark" | "system") => setTempTheme(value)}
+                    value={theme}
+                    onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}
                     className="grid max-w-md grid-cols-3 gap-8 pt-2"
                   >
                     <Label className="[&:has([data-state=checked])>div]:border-primary">
@@ -284,11 +273,11 @@ function ProfileSettingsTab() {
                 <Separator className="my-2" />
                 <div className="space-y-4 pt-2">
                     <div className="flex items-center space-x-2">
-                        <Switch id="pnl-switch" checked={tempIsPnlReportEnabled} onCheckedChange={setTempIsPnlReportEnabled} />
+                        <Switch id="pnl-switch" checked={tempSettings.isPnlReportEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isPnlReportEnabled: checked})} />
                         <Label htmlFor="pnl-switch">Enable AI P&L Statement Generation</Label>
                     </div>
                      <div className="flex items-center space-x-2">
-                        <Switch id="market-research-switch" checked={tempIsMarketResearchEnabled} onCheckedChange={setTempIsMarketResearchEnabled} />
+                        <Switch id="market-research-switch" checked={tempSettings.isMarketResearchEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isMarketResearchEnabled: checked})} />
                         <Label htmlFor="market-research-switch">Enable AI Market Research Generation</Label>
                     </div>
                 </div>

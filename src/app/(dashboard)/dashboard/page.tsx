@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
@@ -12,7 +13,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Property, Transaction } from '@/lib/types';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
@@ -21,7 +22,8 @@ const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart
 const DashboardPageContent = memo(function DashboardPageContent() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { currency, locale } = useTheme();
+  const { settings } = useDataContext();
+  const { currency, locale } = settings;
 
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);

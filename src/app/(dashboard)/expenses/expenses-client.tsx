@@ -35,7 +35,7 @@ import { ExpenseForm } from '@/components/expense-form';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 
 function ExpensesTable({ 
@@ -173,7 +173,8 @@ function ExpensesTable({
 const ExpensesClient = memo(function ExpensesClient() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { locale, currency } = useTheme();
+  const { settings } = useDataContext();
+  const { locale, currency } = settings;
 
   const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);

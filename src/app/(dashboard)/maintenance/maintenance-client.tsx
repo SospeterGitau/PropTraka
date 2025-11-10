@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -25,7 +25,8 @@ function formatAddress(property: Property) {
 const MaintenanceClient = memo(function MaintenanceClient() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { locale, currency } = useTheme();
+  const { settings } = useDataContext();
+  const { locale, currency } = settings;
   const { toast } = useToast();
 
   // Data Fetching

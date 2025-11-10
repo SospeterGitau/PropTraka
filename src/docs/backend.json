@@ -154,18 +154,20 @@
       },
       "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
     },
-    "chatMessage": {
-      "title": "Chat Message",
-      "description": "A single message in a user's conversation with the AI assistant.",
+    "userSettings": {
+      "title": "User Settings",
+      "description": "Stores user-specific application settings and preferences.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "ownerId": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "model"] },
-        "content": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "currency": { "type": "string" },
+        "locale": { "type": "string" },
+        "companyName": { "type": "string" },
+        "residencyStatus": { "type": "string", "enum": ["resident", "non-resident"] },
+        "isPnlReportEnabled": { "type": "boolean" },
+        "isMarketResearchEnabled": { "type": "boolean" }
       },
-      "required": ["ownerId", "role", "content", "timestamp"]
+      "required": ["ownerId", "currency", "locale", "residencyStatus"]
     }
   },
   "auth": {
@@ -204,9 +206,9 @@
         "schema": { "$ref": "#/entities/invoice" },
         "description": "Stores tenant payment invoices."
     },
-    "/users/{userId}/chatMessages/{messageId}": {
-      "schema": { "$ref": "#/entities/chatMessage" },
-      "description": "Stores chat messages for a specific user."
+     "/userSettings/{userId}": {
+      "schema": { "$ref": "#/entities/userSettings" },
+      "description": "Stores settings for a specific user."
     }
   }
 }

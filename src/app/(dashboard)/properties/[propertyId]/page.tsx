@@ -25,7 +25,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -36,7 +36,8 @@ function PropertyDetailPageContent() {
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
-  const { currency, locale } = useTheme();
+  const { settings } = useDataContext();
+  const { currency, locale } = settings;
 
   // Data Fetching
   const propertyRef = useMemo(() => propertyId ? doc(firestore, 'properties', propertyId as string) : null, [firestore, propertyId]);

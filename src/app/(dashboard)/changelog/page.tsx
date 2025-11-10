@@ -1,3 +1,4 @@
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -12,7 +13,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { ChangeLogEntry } from '@/lib/types';
-import { useTheme } from '@/context/theme-context';
+import { useDataContext } from '@/context/data-context';
 
 const iconMap: { [key: string]: React.ReactNode } = {
     Property: <Building2 className="h-4 w-4" />,
@@ -25,7 +26,8 @@ const iconMap: { [key: string]: React.ReactNode } = {
 function ChangelogPage() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { locale } = useTheme();
+  const { settings } = useDataContext();
+  const { locale } = settings;
 
   const changelogQuery = useMemo(() => user ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
   const { data: changelog, loading: isDataLoading } = useCollection<ChangeLogEntry>(changelogQuery);
