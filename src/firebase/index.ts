@@ -1,5 +1,4 @@
 
-
 'use client';
 
 /**
@@ -10,7 +9,7 @@
  * It is responsible for:
  * 1. Initializing the Firebase app on the client side.
  * 2. Exporting the core Firebase services (Auth, Firestore, Analytics).
- * 3. Exporting all custom hooks related to Firebase, such as `useUser`, `useCollection`,
+ * 3. Exporting all custom hooks related to Firebase, such as `useUser`,
  *    and `useDoc`.
  * 4. Exporting the main `FirebaseProvider` and `FirebaseClientProvider` components.
  *
@@ -64,7 +63,6 @@ export function getSdks(firebaseApp: FirebaseApp) {
 }
 
 export * from './provider';
-export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './auth/use-user';
 export * from './errors';

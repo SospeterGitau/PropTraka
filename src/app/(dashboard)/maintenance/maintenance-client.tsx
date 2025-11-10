@@ -2,8 +2,7 @@
 'use client';
 
 import { useState, useMemo, memo } from 'react';
-import { useDataContext } from '@/context/data-context';
-import type { MaintenanceRequest, Transaction, Property } from '@/lib/types';
+import type { MaintenanceRequest, Transaction, Property, Contractor } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 import { PageHeader } from '@/components/page-header';
@@ -14,33 +13,58 @@ import { ExpenseForm } from '@/components/expense-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaintenanceKanbanBoard } from '@/components/maintenance-kanban-board';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { useTheme } from '@/context/theme-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
 const MaintenanceClient = memo(function MaintenanceClient() {
-  const { 
-    properties,
-    maintenanceRequests,
-    contractors,
-    addMaintenanceRequest, 
-    updateMaintenanceRequest, 
-    deleteMaintenanceRequest, 
-    addExpense,
-    formatCurrency,
-    locale, 
-    addChangeLogEntry, 
-    isDataLoading 
-  } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { locale, currency } = useTheme();
   const { toast } = useToast();
-  
+
+  // Data Fetching
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const maintenanceQuery = useMemo(() => user ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const contractorsQuery = useMemo(() => user ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const { data: maintenanceRequests, loading: isMaintenanceLoading } = useCollection<MaintenanceRequest>(maintenanceQuery);
+  const { data: contractors, loading: isContractorsLoading } = useCollection<Contractor>(contractorsQuery);
+
+  const isDataLoading = isPropertiesLoading || isMaintenanceLoading || isContractorsLoading;
+
+  // State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [expenseFromMaintenance, setExpenseFromMaintenance] = useState<Partial<Transaction> | null>(null);
   const [propertyFilter, setPropertyFilter] = useState('all');
+
+  // Formatting
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  
+  // Actions
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    try {
+      await addDoc(collection(firestore, 'changelog'), {
+        ...log,
+        ownerId: user.uid,
+        date: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Failed to add changelog entry:", error);
+    }
+  };
 
   const handleAdd = () => {
     setSelectedRequest(null);
@@ -69,9 +93,9 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     setIsExpenseFormOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedRequest) {
-      deleteMaintenanceRequest(selectedRequest.id);
+      await deleteDoc(doc(firestore, 'maintenanceRequests', selectedRequest.id));
       addChangeLogEntry({
         type: 'Maintenance',
         action: 'Deleted',
@@ -83,12 +107,12 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     }
   };
   
-  const handleStatusChange = (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => {
+  const handleStatusChange = async (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => {
     const updatedRequest = { ...request, status: newStatus };
     if (newStatus === 'Done' && !updatedRequest.completedDate) {
       updatedRequest.completedDate = new Date().toISOString().split('T')[0];
     }
-    updateMaintenanceRequest(updatedRequest);
+    await updateDoc(doc(firestore, 'maintenanceRequests', request.id), updatedRequest);
     addChangeLogEntry({
       type: 'Maintenance',
       action: 'Updated',
@@ -97,11 +121,12 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     });
   };
 
-  const handleFormSubmit = (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => {
+  const handleFormSubmit = async (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => {
+    if (!user) return;
     const isEditing = 'id' in data;
 
     if (isEditing) {
-      updateMaintenanceRequest(data as MaintenanceRequest);
+      await updateDoc(doc(firestore, 'maintenanceRequests', data.id), data);
       addChangeLogEntry({
         type: 'Maintenance',
         action: 'Updated',
@@ -109,29 +134,32 @@ const MaintenanceClient = memo(function MaintenanceClient() {
         entityId: data.id,
       });
     } else {
-      addMaintenanceRequest(data);
+      const docRef = await addDoc(collection(firestore, 'maintenanceRequests'), { ...data, ownerId: user.uid });
        addChangeLogEntry({
         type: 'Maintenance',
         action: 'Created',
         description: `Maintenance request for "${data.propertyName}" was created.`,
-        entityId: `temp-id-${Date.now()}`,
+        entityId: docRef.id,
       });
     }
+    setIsFormOpen(false);
   };
   
-  const handleExpenseFormSubmit = (data: Transaction) => {
+  const handleExpenseFormSubmit = async (data: Transaction) => {
+    if(!user) return;
     const { id, type, ...expenseData } = data;
-    addExpense(expenseData);
+    const docRef = await addDoc(collection(firestore, 'expenses'), { ...expenseData, type: 'expense', ownerId: user.uid });
     addChangeLogEntry({
       type: 'Expense',
       action: 'Created',
       description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was logged from a maintenance task.`,
-      entityId: data.id,
+      entityId: docRef.id,
     });
      toast({
       title: "Expense Created",
       description: "The expense has been logged successfully.",
     });
+    setIsExpenseFormOpen(false);
   };
 
   const filteredRequests = useMemo(() => {

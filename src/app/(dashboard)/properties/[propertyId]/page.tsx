@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDataContext } from '@/context/data-context';
+import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,11 +18,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState } from 'react';
 import { PropertyForm } from '@/components/property-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import type { Property } from '@/lib/types';
-
+import type { Property, Transaction } from '@/lib/types';
+import { useUser, useFirestore } from '@/firebase';
+import { useDoc } from '@/firebase/firestore/use-doc';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useTheme } from '@/context/theme-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -31,13 +34,42 @@ function formatAddress(property: Property) {
 function PropertyDetailPageContent() {
   const { propertyId } = useParams();
   const router = useRouter();
-  const { properties, revenue, formatCurrency, updateProperty, deleteProperty, addChangeLogEntry, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { currency, locale } = useTheme();
+
+  // Data Fetching
+  const propertyRef = useMemo(() => propertyId ? doc(firestore, 'properties', propertyId as string) : null, [firestore, propertyId]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   
+  const { data: property, isLoading: isPropertyLoading } = useDoc<Property>(propertyRef);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  
+  const isDataLoading = isPropertyLoading || isRevenueLoading;
+
+  // State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const property = properties?.find(p => p.id === propertyId);
-
+  // Formatters
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  
+  // Actions
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    try {
+      await addDoc(collection(firestore, 'changelog'), {
+        ...log,
+        ownerId: user.uid,
+        date: serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Failed to add changelog entry:", error);
+    }
+  };
+  
   const handleEdit = () => {
     setIsFormOpen(true);
   };
@@ -48,7 +80,7 @@ function PropertyDetailPageContent() {
   
   const confirmDelete = async () => {
     if (property) {
-      await deleteProperty(property.id);
+      await deleteDoc(doc(firestore, 'properties', property.id));
       addChangeLogEntry({
         type: 'Property',
         action: 'Deleted',
@@ -61,13 +93,16 @@ function PropertyDetailPageContent() {
   };
 
   const handleFormSubmit = async (data: Property) => {
-    await updateProperty(data);
-    addChangeLogEntry({
-      type: 'Property',
-      action: 'Updated',
-      description: `Property "${formatAddress(data)}" was updated.`,
-      entityId: data.id,
-    });
+    if(propertyRef) {
+      await updateDoc(propertyRef, data as any);
+      addChangeLogEntry({
+        type: 'Property',
+        action: 'Updated',
+        description: `Property "${formatAddress(data)}" was updated.`,
+        entityId: data.id,
+      });
+    }
+    setIsFormOpen(false);
   };
 
   if (isDataLoading) {

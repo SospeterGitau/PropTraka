@@ -1,11 +1,8 @@
-
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { MoreHorizontal, User, Mail, Phone, Wrench } from 'lucide-react';
-import { useDataContext } from '@/context/data-context';
 import type { Contractor } from '@/lib/types';
-
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,9 +25,17 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContractorForm } from '@/components/contractor-form';
 import { Badge } from '@/components/ui/badge';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
 
 const ContractorsClient = memo(function ContractorsClient() {
-  const { contractors, addContractor, updateContractor, deleteContractor, addChangeLogEntry, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const contractorsQuery = useMemo(() => user ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const { data: contractors, loading: isDataLoading } = useCollection<Contractor>(contractorsQuery);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null);
@@ -49,10 +54,19 @@ const ContractorsClient = memo(function ContractorsClient() {
     setSelectedContractor(contractor);
     setIsDeleteDialogOpen(true);
   };
+  
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    await addDoc(collection(firestore, 'changelog'), {
+      ...log,
+      ownerId: user.uid,
+      date: serverTimestamp(),
+    });
+  };
 
   const confirmDelete = () => {
     if (selectedContractor) {
-      deleteContractor(selectedContractor.id);
+      deleteDoc(doc(firestore, 'contractors', selectedContractor.id));
       addChangeLogEntry({
         type: 'Contractor',
         action: 'Deleted',
@@ -64,25 +78,26 @@ const ContractorsClient = memo(function ContractorsClient() {
     }
   };
 
-  const handleFormSubmit = (data: Contractor) => {
-    const isEditing = !!data.id && contractors?.some(c => c.id === data.id);
+  const handleFormSubmit = async (data: Omit<Contractor, 'id'>) => {
+    if (!user) return;
+    const isEditing = !!selectedContractor;
     
     if (isEditing) {
-      updateContractor(data);
+      const { id, ...contractorData } = data;
+      await updateDoc(doc(firestore, 'contractors', selectedContractor!.id), contractorData);
       addChangeLogEntry({
         type: 'Contractor',
         action: 'Updated',
         description: `Contractor "${data.name}" was updated.`,
-        entityId: data.id,
+        entityId: selectedContractor!.id,
       });
     } else {
-      const { id, ...contractorData } = data;
-      addContractor(contractorData);
+      const docRef = await addDoc(collection(firestore, 'contractors'), { ...data, ownerId: user.uid });
        addChangeLogEntry({
         type: 'Contractor',
         action: 'Created',
         description: `Contractor "${data.name}" was created.`,
-        entityId: data.id, 
+        entityId: docRef.id, 
       });
     }
   };

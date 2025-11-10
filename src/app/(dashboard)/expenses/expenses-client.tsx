@@ -1,12 +1,11 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { ChevronRight, FileText, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
-import type { Property, Transaction } from '@/lib/types';
+import type { Property, Transaction, Contractor } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 
 import { PageHeader } from '@/components/page-header';
@@ -33,6 +32,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExpenseForm } from '@/components/expense-form';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useTheme } from '@/context/theme-context';
 
 
 function ExpensesTable({ 
@@ -168,11 +171,37 @@ function ExpensesTable({
 }
 
 const ExpensesClient = memo(function ExpensesClient() {
-  const { properties, expenses, contractors, addExpense, updateExpense, deleteExpense, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { locale, currency } = useTheme();
+
+  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const contractorsQuery = useMemo(() => user ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const { data: contractors, loading: isContractorsLoading } = useCollection<Contractor>(contractorsQuery);
+
+  const isDataLoading = isExpensesLoading || isPropertiesLoading || isContractorsLoading;
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    await addDoc(collection(firestore, 'changelog'), {
+      ...log,
+      ownerId: user.uid,
+      date: serverTimestamp(),
+    });
+  };
 
   useEffect(() => {
     const formatAllDates = async () => {
@@ -204,7 +233,7 @@ const ExpensesClient = memo(function ExpensesClient() {
 
   const confirmDelete = () => {
     if (selectedTransaction) {
-      deleteExpense(selectedTransaction.id);
+      deleteDoc(doc(firestore, 'expenses', selectedTransaction.id));
       addChangeLogEntry({
         type: 'Expense',
         action: 'Deleted',
@@ -216,12 +245,14 @@ const ExpensesClient = memo(function ExpensesClient() {
     }
   };
 
-  const handleFormSubmit = (data: Transaction) => {
+  const handleFormSubmit = async (data: Transaction) => {
+    if (!user) return;
     const isEditing = !!data.id && expenses?.some(e => e.id === data.id);
     
     if (isEditing) {
-      updateExpense(data);
-       addChangeLogEntry({
+      const { id, ...expenseData } = data;
+      await updateDoc(doc(firestore, 'expenses', id), expenseData);
+      addChangeLogEntry({
         type: 'Expense',
         action: 'Updated',
         description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was updated.`,
@@ -229,12 +260,12 @@ const ExpensesClient = memo(function ExpensesClient() {
       });
     } else {
       const { id, type, ...expenseData } = data;
-      addExpense(expenseData);
+      const docRef = await addDoc(collection(firestore, 'expenses'), { ...expenseData, type: 'expense', ownerId: user.uid });
       addChangeLogEntry({
         type: 'Expense',
         action: 'Created',
         description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was logged.`,
-        entityId: data.id,
+        entityId: docRef.id,
       });
     }
   };

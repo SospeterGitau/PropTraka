@@ -1,11 +1,10 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, PlusCircle, Trash2 } from 'lucide-react';
 import { format, startOfToday, eachMonthOfInterval, isAfter, isBefore } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
 import type { Property, Transaction, ServiceCharge } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -37,6 +36,11 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { useTheme } from '@/context/theme-context';
+
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -313,11 +317,27 @@ const RevenueForm = memo(function RevenueForm({
 
 
 const RevenueClient = memo(function RevenueClient() {
-  const { properties, revenue, addTenancy, updateTenancy, deleteTenancy, formatCurrency, locale, addChangeLogEntry, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { locale, currency } = useTheme();
+
+  // Data Fetching
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const isDataLoading = isPropertiesLoading || isRevenueLoading;
+
+  // State
   const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
+
+  // Formatters
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
 
   useEffect(() => {
     if (!revenue) return;
@@ -340,6 +360,15 @@ const RevenueClient = memo(function RevenueClient() {
     formatAllDates();
   }, [revenue, locale]);
 
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    await addDoc(collection(firestore, 'changelog'), {
+      ...log,
+      ownerId: user.uid,
+      date: serverTimestamp(),
+    });
+  };
+
   const handleAddTenancy = () => {
     setSelectedTransaction(null);
     setIsTenancyFormOpen(true);
@@ -357,7 +386,14 @@ const RevenueClient = memo(function RevenueClient() {
 
   const confirmDelete = async () => {
     if (selectedTransaction?.tenancyId) {
-      await deleteTenancy(selectedTransaction.tenancyId);
+      const batch = writeBatch(firestore);
+      const q = query(collection(firestore, 'revenue'), where('tenancyId', '==', selectedTransaction.tenancyId));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+
       addChangeLogEntry({
         type: 'Tenancy',
         action: 'Deleted',
@@ -370,15 +406,32 @@ const RevenueClient = memo(function RevenueClient() {
   };
 
   const handleTenancyFormSubmit = async (data: Transaction[]) => {
-    if (!revenue) return;
+    if (!user || !revenue) return;
     const tenancyId = data[0].tenancyId!;
     const isEditing = revenue.some(r => r.tenancyId === tenancyId);
     
+    const batch = writeBatch(firestore);
+
     if (isEditing) {
-        await updateTenancy(data);
-    } else {
-      await addTenancy(data);
+      const existingTxIds = revenue.filter(tx => tx.tenancyId === tenancyId).map(tx => tx.id);
+      const newTxDates = new Set(data.map(tx => tx.date));
+      
+      // Delete old transactions that are no longer in the date range
+      existingTxIds.forEach(id => {
+        const txInNewRange = revenue.find(t => t.id === id && newTxDates.has(t.date));
+        if(!txInNewRange) {
+          batch.delete(doc(firestore, 'revenue', id));
+        }
+      });
     }
+
+    data.forEach(tx => {
+      const { id, ...txData } = tx;
+      const docRef = id ? doc(firestore, 'revenue', id) : doc(collection(firestore, 'revenue'));
+      batch.set(docRef, { ...txData, ownerId: user.uid });
+    });
+    
+    await batch.commit();
     
     addChangeLogEntry({
       type: 'Tenancy',
@@ -560,5 +613,3 @@ const RevenueClient = memo(function RevenueClient() {
 });
 
 export default RevenueClient;
-
-    

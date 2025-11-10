@@ -1,14 +1,18 @@
 'use client';
 
-import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
 import { Building2, FileText, HandCoins, Receipt, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import type { ChangeLogEntry } from '@/lib/types';
+import { useTheme } from '@/context/theme-context';
 
 const iconMap: { [key: string]: React.ReactNode } = {
     Property: <Building2 className="h-4 w-4" />,
@@ -19,7 +23,13 @@ const iconMap: { [key: string]: React.ReactNode } = {
 };
 
 function ChangelogPage() {
-  const { changelog, locale, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { locale } = useTheme();
+
+  const changelogQuery = useMemo(() => user ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
+  const { data: changelog, loading: isDataLoading } = useCollection<ChangeLogEntry>(changelogQuery);
+
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
   useEffect(() => {

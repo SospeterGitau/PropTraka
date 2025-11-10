@@ -1,10 +1,10 @@
 
+
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { format, startOfToday } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,16 +20,55 @@ import { Badge } from '@/components/ui/badge';
 import { getLocale } from '@/lib/locales';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentRequestDialog } from '@/components/payment-request-dialog';
-import type { ArrearEntry } from '@/lib/types';
+import type { ArrearEntry, Transaction } from '@/lib/types';
 import { CreditCard } from 'lucide-react';
+import { useUser } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
+import { collection, query, where, onSnapshot, DocumentData } from 'firebase/firestore';
 
 
 const ArrearsClient = memo(function ArrearsClient() {
-  const { revenue, formatCurrency, locale, companyName, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const [revenue, setRevenue] = useState<Transaction[] | null>(null);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+
+  const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
+
+  useEffect(() => {
+    if (revenueQuery) {
+      const unsubscribe = onSnapshot(revenueQuery, (snapshot) => {
+        const revenueData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
+        setRevenue(revenueData);
+        setIsDataLoading(false);
+      }, (error) => {
+        console.error("Error fetching revenue data: ", error);
+        setIsDataLoading(false);
+      });
+      return () => unsubscribe();
+    } else {
+      setIsDataLoading(false);
+    }
+  }, [revenueQuery]);
+
+
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
   const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
   const [selectedArrear, setSelectedArrear] = useState<ArrearEntry | null>(null);
+
+  const locale = 'en-GB';
+  const currency = 'KES';
+  const companyName = 'LeaseLync';
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
 
   useEffect(() => {
     if (!revenue) return;
@@ -107,7 +146,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         ...details,
         tenant: selectedArrear?.tenant,
     });
-    // Here you would later integrate with Pesapal/Instasend API
+    // Here you would later integrate with Pesapal/InstaSend API
     setIsPaymentRequestOpen(false);
   };
 

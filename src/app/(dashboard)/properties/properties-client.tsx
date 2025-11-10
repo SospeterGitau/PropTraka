@@ -5,8 +5,7 @@ import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
-import { useDataContext } from '@/context/data-context';
-import type { Property } from '@/lib/types';
+import type { Property, Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,16 +29,50 @@ import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useTheme } from '@/context/theme-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
 const PropertiesClient = memo(function PropertiesClient() {
-  const { properties, addProperty, updateProperty, deleteProperty, revenue, formatCurrency, addChangeLogEntry, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { locale, currency } = useTheme();
+
+  // Data Fetching
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const isDataLoading = isPropertiesLoading || isRevenueLoading;
+
+  // State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
+  // Formatters
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  
+  // Actions
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    try {
+        await addDoc(collection(firestore, 'changelog'), {
+          ...log,
+          ownerId: user.uid,
+          date: serverTimestamp(),
+        });
+    } catch(error) {
+        console.error("Failed to add changelog entry:", error);
+    }
+  };
 
   const handleAdd = () => {
     setSelectedProperty(null);
@@ -58,7 +91,7 @@ const PropertiesClient = memo(function PropertiesClient() {
 
   const confirmDelete = async () => {
     if (selectedProperty) {
-      await deleteProperty(selectedProperty.id);
+      await deleteDoc(doc(firestore, 'properties', selectedProperty.id));
       addChangeLogEntry({
         type: 'Property',
         action: 'Deleted',
@@ -71,10 +104,12 @@ const PropertiesClient = memo(function PropertiesClient() {
   };
 
   const handleFormSubmit = async (data: Property) => {
+    if (!user) return;
     const isEditing = !!data.id && properties?.some(p => p.id === data.id);
 
     if (isEditing) {
-      await updateProperty(data);
+      const { id, ...propertyData } = data;
+      await updateDoc(doc(firestore, 'properties', id), propertyData);
       addChangeLogEntry({
         type: 'Property',
         action: 'Updated',
@@ -83,22 +118,21 @@ const PropertiesClient = memo(function PropertiesClient() {
       });
     } else {
       const { id, ...propertyData } = data; // Omit id for creation
-      await addProperty(propertyData);
+      const docRef = await addDoc(collection(firestore, 'properties'), { ...propertyData, ownerId: user.uid });
       addChangeLogEntry({
         type: 'Property',
         action: 'Created',
         description: `Property "${formatAddress(data)}" was created.`,
-        entityId: data.id, // The ID will be assigned by Firestore, but we use it for the log description
+        entityId: docRef.id, 
       });
     }
+    setIsFormOpen(false);
   };
   
   const occupiedPropertyIds = useMemo(() => {
     if (!revenue) return new Set<string>();
-
     const today = new Date();
     const occupiedIds = new Set<string>();
-
     revenue.forEach(t => {
       if (
         t.propertyId &&
@@ -110,7 +144,6 @@ const PropertiesClient = memo(function PropertiesClient() {
         occupiedIds.add(t.propertyId);
       }
     });
-
     return occupiedIds;
   }, [revenue]);
   

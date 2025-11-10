@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { ReactNode } from 'react';
@@ -9,13 +10,11 @@ import {
   Building,
   Calendar,
   CircleAlert,
-  CreditCard,
   HelpCircle,
   History,
   LayoutDashboard,
   LineChart,
   LogOut,
-  Settings,
   Shield,
   TrendingDown,
   TrendingUp,
@@ -24,7 +23,6 @@ import {
   User,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
-import { useDataContext } from '@/context/data-context';
 
 import {
   Sidebar,
@@ -33,13 +31,13 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
+  SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 
@@ -67,9 +65,6 @@ const utilityNavItems = [
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { logoUrl, companyName } = useDataContext();
-  
-  const isValidDataUri = logoUrl && logoUrl.startsWith('data:image/');
 
   return (
     <SidebarProvider>
@@ -80,35 +75,13 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
               <SidebarTrigger />
             </Button>
             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-full">
-              {isValidDataUri ? (
-                <div className="w-[140px] h-[40px] relative">
-                  <Image
-                    src={logoUrl}
-                    alt={`${companyName} Logo`}
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
-                </div>
-              ) : (
                 <div className="flex items-center gap-2">
                   <Building className="w-8 h-8 text-primary" />
-                  <span className="font-semibold text-lg">{companyName}</span>
+                  <span className="font-semibold text-lg">LeaseLync</span>
                 </div>
-              )}
             </div>
             <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
-              {isValidDataUri ? (
-                <Image
-                  src={logoUrl}
-                  alt={`${companyName} Logo`}
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              ) : (
                 <Building className="w-6 h-6 text-primary" />
-              )}
             </div>
           </div>
         </SidebarHeader>

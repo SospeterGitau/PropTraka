@@ -6,7 +6,7 @@ import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import type { Property, Transaction } from '@/lib/types';
-import { useDataContext } from '@/context/data-context';
+import { useTheme } from '@/context/theme-context';
 
 interface BarChartProps {
   properties: Property[];
@@ -56,7 +56,7 @@ function getShortAddress(property: Property) {
 
 
 export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
-  const { formatCurrency, formatCurrencyForAxis, currency, residencyStatus } = useDataContext();
+  const { formatCurrency, formatCurrencyForAxis, currency, residencyStatus } = useTheme();
   const currentYear = new Date().getFullYear();
 
   const chartData = properties.map(property => {
@@ -66,7 +66,7 @@ export function BarChartComponent({ properties, revenue, expenses }: BarChartPro
     
     const propertyExpenses = expenses
       .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
 
     const isTaxable = residencyStatus === 'resident' && property.propertyType === 'Domestic';
     const taxOnRevenue = isTaxable ? propertyRevenue * 0.075 : 0;

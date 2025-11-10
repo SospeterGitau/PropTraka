@@ -1,22 +1,41 @@
-
 'use client';
 
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { memo } from 'react';
-import { useDataContext } from '@/context/data-context';
+import { memo, useMemo } from 'react';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import type { Property, Transaction } from '@/lib/types';
+import { useTheme } from '@/context/theme-context';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
 const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false, memo: true });
 
 const DashboardPageContent = memo(function DashboardPageContent() {
-  const { properties, revenue, expenses, formatCurrency, isDataLoading } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { currency, locale } = useTheme();
+
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
+  
+  const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
 
   // Data might not be available on the first render, so we add a loading state.
   if (isDataLoading) {

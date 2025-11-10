@@ -7,7 +7,7 @@ import { Firestore } from 'firebase/firestore';
 import { Analytics } from 'firebase/analytics';
 import { FirebaseApp } from 'firebase/app';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { getSdks } from './index';
+import { initializeFirebase } from '@/firebase';
 
 // Define the shape of the context
 interface FirebaseContextValue {

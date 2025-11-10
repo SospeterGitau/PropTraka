@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useDataContext } from '@/context/data-context';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { ResidencyStatus } from '@/lib/types';
@@ -18,33 +17,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, ExternalLink } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-
-const supportedCurrencies = [
-  { code: 'USD', name: 'United States Dollar' },
-  { code: 'EUR', name: 'Euro' },
-  { code: 'GBP', name: 'British Pound Sterling' },
-  { code: 'JPY', name: 'Japanese Yen' },
-  { code: 'AUD', name: 'Australian Dollar' },
-  { code: 'CAD', name: 'Canadian Dollar' },
-  { code: 'CHF', name: 'Swiss Franc' },
-  { code: 'CNY', name: 'Chinese Yuan' },
-  { code: 'KES', name: 'Kenyan Shilling' },
-];
-
-const supportedLocales = [
-  { code: 'en-GB', name: 'DD/MM/YYYY (UK)' },
-  { code: 'en-US', name: 'MM/DD/YYYY (US)' },
-  { code: 'de-DE', name: 'DD.MM.YYYY (DE)' },
-  { code: 'fr-FR', name: 'DD/MM/YYYY (FR)' },
-  { code: 'ja-JP', name: 'YYYY/MM/DD (JP)' },
-];
+import { useTheme } from '@/context/theme-context';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const passwordSchema = z.object({
   newPassword: z.string().min(6, 'Password must be at least 6 characters'),
@@ -78,15 +58,14 @@ const plans = [
 
 function ProfileSettingsTab() {
   const { 
-    currency, setCurrency, 
-    locale, setLocale, 
+    theme, setTheme,
+    currency, setCurrency,
+    locale, setLocale,
     companyName, setCompanyName,
-    logoUrl, setLogoUrl,
     residencyStatus, setResidencyStatus,
     isPnlReportEnabled, setIsPnlReportEnabled,
-    isMarketResearchEnabled, setIsMarketResearchEnabled,
-    theme, setTheme,
-  } = useDataContext();
+    isMarketResearchEnabled, setIsMarketResearchEnabled
+  } = useTheme();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
@@ -102,38 +81,35 @@ function ProfileSettingsTab() {
     resolver: zodResolver(passwordSchema),
   });
   
+  const [tempTheme, setTempTheme] = useState(theme);
   const [tempCurrency, setTempCurrency] = useState(currency);
   const [tempLocale, setTempLocale] = useState(locale);
   const [tempCompanyName, setTempCompanyName] = useState(companyName);
-  const [tempLogoUrl, setTempLogoUrl] = useState(logoUrl);
   const [tempResidencyStatus, setTempResidencyStatus] = useState(residencyStatus);
   const [tempIsPnlReportEnabled, setTempIsPnlReportEnabled] = useState(isPnlReportEnabled);
   const [tempIsMarketResearchEnabled, setTempIsMarketResearchEnabled] = useState(isMarketResearchEnabled);
-  const [tempTheme, setTempTheme] = useState(theme);
 
 
   useEffect(() => {
     if (!isEditing) {
+      setTempTheme(theme);
       setTempCurrency(currency);
       setTempLocale(locale);
       setTempCompanyName(companyName);
-      setTempLogoUrl(logoUrl);
       setTempResidencyStatus(residencyStatus);
       setTempIsPnlReportEnabled(isPnlReportEnabled);
       setTempIsMarketResearchEnabled(isMarketResearchEnabled);
-      setTempTheme(theme);
     }
-  }, [isEditing, currency, locale, companyName, logoUrl, residencyStatus, isPnlReportEnabled, isMarketResearchEnabled, theme]);
+  }, [isEditing, theme, currency, locale, companyName, residencyStatus, isPnlReportEnabled, isMarketResearchEnabled]);
 
   const handleSave = () => {
+    setTheme(tempTheme);
     setCurrency(tempCurrency);
     setLocale(tempLocale);
     setCompanyName(tempCompanyName);
-    setLogoUrl(tempLogoUrl);
     setResidencyStatus(tempResidencyStatus);
     setIsPnlReportEnabled(tempIsPnlReportEnabled);
     setIsMarketResearchEnabled(tempIsMarketResearchEnabled);
-    setTheme(tempTheme);
     setIsEditing(false);
     toast({ title: "Settings Saved", description: "Your preferences have been updated." });
   };
@@ -176,37 +152,57 @@ function ProfileSettingsTab() {
         </CardHeader>
         <CardContent className="space-y-6">
           <fieldset disabled={!isEditing} className="space-y-8">
-             <div>
-              <h3 className="text-lg font-medium">Branding</h3>
-              <Separator className="my-2" />
+            <div>
+              <h3 className="text-lg font-medium">Reporting</h3>
+               <Separator className="my-2" />
                <div className="space-y-4 pt-2">
                  <div className="space-y-2">
-                    <Label htmlFor="company-name">Company Name</Label>
-                    <Input
-                      id="company-name"
-                      value={tempCompanyName}
-                      onChange={(e) => setTempCompanyName(e.target.value)}
-                      className="w-full max-w-sm"
-                      placeholder="Your Company Name"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      This name will be used on generated reports.
-                    </p>
-                  </div>
-                   <div className="space-y-2">
-                    <Label htmlFor="logo-url">Logo Data URI</Label>
-                    <Textarea
-                      id="logo-url"
-                      value={tempLogoUrl}
-                      onChange={(e) => setTempLogoUrl(e.target.value)}
-                      className="w-full max-w-lg min-h-[100px] font-mono text-xs"
-                      placeholder="data:image/png;base64,iVBORw0KGgo..."
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Paste a Data URI for your logo. You can use a free online "image to Data URI" converter.
-                    </p>
-                  </div>
-               </div>
+                    <Label>Company Name</Label>
+                    <Input value={tempCompanyName} onChange={(e) => setTempCompanyName(e.target.value)} placeholder="Your Company Ltd." />
+                </div>
+                 <div className="space-y-2">
+                    <Label>Residency Status (for Tax Calculation)</Label>
+                    <RadioGroup value={tempResidencyStatus} onValueChange={(v) => setTempResidencyStatus(v as ResidencyStatus)} className="flex gap-4 pt-2">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="resident" id="resident" />
+                            <Label htmlFor="resident">Resident</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="non-resident" id="non-resident" />
+                            <Label htmlFor="non-resident">Non-Resident</Label>
+                        </div>
+                    </RadioGroup>
+                 </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium">Regional</h3>
+              <Separator className="my-2" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label>Currency</Label>
+                  <Select value={tempCurrency} onValueChange={(v) => setTempCurrency(v)}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
+                        <SelectItem value="USD">USD - US Dollar</SelectItem>
+                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                        <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Date Format</Label>
+                  <Select value={tempLocale} onValueChange={(v) => setTempLocale(v)}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
+                        <SelectItem value="en-US">MM/DD/YYYY</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -284,6 +280,21 @@ function ProfileSettingsTab() {
             </div>
 
             <div>
+                <h3 className="text-lg font-medium">AI Features</h3>
+                <Separator className="my-2" />
+                <div className="space-y-4 pt-2">
+                    <div className="flex items-center space-x-2">
+                        <Switch id="pnl-switch" checked={tempIsPnlReportEnabled} onCheckedChange={setTempIsPnlReportEnabled} />
+                        <Label htmlFor="pnl-switch">Enable AI P&L Statement Generation</Label>
+                    </div>
+                     <div className="flex items-center space-x-2">
+                        <Switch id="market-research-switch" checked={tempIsMarketResearchEnabled} onCheckedChange={setTempIsMarketResearchEnabled} />
+                        <Label htmlFor="market-research-switch">Enable AI Market Research Generation</Label>
+                    </div>
+                </div>
+            </div>
+
+            <div>
               <h3 className="text-lg font-medium">Security</h3>
               <Separator className="my-2" />
               <div className="pt-2">
@@ -293,99 +304,6 @@ function ProfileSettingsTab() {
               </div>
             </div>
 
-
-            <div>
-              <h3 className="text-lg font-medium">Tax</h3>
-              <Separator className="my-2" />
-               <div className="space-y-4 pt-2">
-                  <div className="space-y-2">
-                    <Label>Residency Status</Label>
-                    <RadioGroup
-                      value={tempResidencyStatus}
-                      onValueChange={(value: ResidencyStatus) => setTempResidencyStatus(value)}
-                      className="flex gap-4 pt-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="resident" id="r-resident" />
-                        <Label htmlFor="r-resident">Resident</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="non-resident" id="r-non-resident" />
-                        <Label htmlFor="r-non-resident">Non-Resident</Label>
-                      </div>
-                    </RadioGroup>
-                    <p className="text-sm text-muted-foreground">
-                      Determines if KRA rental income tax is applicable.
-                    </p>
-                  </div>
-               </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium">Localisation</h3>
-              <Separator className="my-2" />
-              <div className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="currency-select">Currency</Label>
-                  <Select value={tempCurrency} onValueChange={setTempCurrency}>
-                    <SelectTrigger id="currency-select" className="w-[280px]">
-                      <SelectValue placeholder="Select a currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supportedCurrencies.map((c) => (
-                        <SelectItem key={c.code} value={c.code}>
-                          {c.name} ({c.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    This will change the currency symbol used across the application.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="locale-select">Date Format</Label>
-                  <Select value={tempLocale} onValueChange={setTempLocale}>
-                    <SelectTrigger id="locale-select" className="w-[280px]">
-                      <SelectValue placeholder="Select a format" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {supportedLocales.map((l) => (
-                        <SelectItem key={l.code} value={l.code}>
-                          {l.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    This will change the date and number formatting across the application.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium">AI Feature Control</h3>
-              <Separator className="my-2" />
-              <div className="space-y-4 pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="pnl-switch"
-                      checked={tempIsPnlReportEnabled}
-                      onCheckedChange={setTempIsPnlReportEnabled}
-                    />
-                    <Label htmlFor="pnl-switch">Enable AI P&amp;L Statement Generation</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                     <Switch
-                      id="market-research-switch"
-                      checked={tempIsMarketResearchEnabled}
-                      onCheckedChange={setTempIsMarketResearchEnabled}
-                    />
-                    <Label htmlFor="market-research-switch">Enable AI Market Research Generation</Label>
-                  </div>
-              </div>
-            </div>
           </fieldset>
           {isEditing && (
             <div className="flex justify-end gap-2 pt-4">
@@ -432,97 +350,22 @@ function ProfileSettingsTab() {
 }
 
 function SubscriptionBillingTab() {
-  const { subscriptions, addSubscription, isDataLoading } = useDataContext();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-
-  const currentSubscription = subscriptions?.[0];
 
   const handleChoosePlan = (planName: string) => {
     startTransition(async () => {
       // In a real app, this would trigger a payment flow via Pesapal/InstaSend.
-      // For now, we simulate creating a subscription record.
-      try {
-        await addSubscription({
-            plan: planName as "Free" | "Pro",
-            status: 'active',
-            billingCycle: 'monthly',
-            currentPeriodStart: new Date().toISOString(),
-            currentPeriodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
-        });
+      // For now, we simulate success
         toast({
             title: "Subscription Updated",
             description: `You are now on the ${planName}.`,
         });
-      } catch (error) {
-        toast({
-            variant: 'destructive',
-            title: "Error",
-            description: "Could not update your subscription.",
-        });
-      }
     });
   }
 
-  if (isDataLoading) {
-     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
-    <>
-      {currentSubscription ? (
-        // Display current subscription and billing history
-        <div className="grid gap-6 md:grid-cols-3">
-             <div className="md:col-span-2 space-y-6">
-                <Card>
-                    <CardHeader>
-                    <CardTitle>Current Plan</CardTitle>
-                    <CardDescription>Manage your subscription and see plan details.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                        <div>
-                        <h3 className="text-lg font-semibold">{currentSubscription.plan} Plan</h3>
-                        <p className="text-muted-foreground">KES {currentSubscription.plan === 'Pro' ? '2,500' : '0'}/month</p>
-                        </div>
-                        <Badge variant={currentSubscription.status === 'active' ? 'secondary' : 'destructive'} className="capitalize">
-                        {currentSubscription.status}
-                        </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        Your plan renews on {format(new Date(currentSubscription.currentPeriodEnd), 'MMMM dd, yyyy')}.
-                    </p>
-                    <div className="flex gap-2">
-                        <Button variant="outline" disabled>Change Plan</Button>
-                        <Button variant="destructive" disabled>Cancel Subscription</Button>
-                    </div>
-                    </CardContent>
-                </Card>
-             </div>
-             <div className="space-y-6">
-                <Card>
-                    <CardHeader>
-                    <CardTitle>Payment Method</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                    <div className="flex items-center gap-4 p-4 border rounded-lg">
-                        <CreditCard className="h-8 w-8 text-muted-foreground" />
-                        <div>
-                            <p className="font-semibold">M-Pesa</p>
-                            <p className="text-sm text-muted-foreground">*******321</p>
-                        </div>
-                    </div>
-                    <Button variant="outline" className="w-full" disabled>Update Payment Method</Button>
-                    </CardContent>
-                </Card>
-             </div>
-        </div>
-      ) : (
-        // Display plan selection for new users
         <div className="space-y-8">
             <div className="text-center">
                 <h2 className="text-3xl font-bold">Choose Your Plan</h2>
@@ -546,8 +389,8 @@ function SubscriptionBillingTab() {
                             </ul>
                         </CardContent>
                         <div className="p-6 pt-0">
-                            <Button 
-                                className="w-full" 
+                            <Button
+                                className="w-full"
                                 onClick={() => handleChoosePlan(plan.name.split(' ')[0])}
                                 disabled={isPending}
                             >
@@ -558,8 +401,6 @@ function SubscriptionBillingTab() {
                 ))}
             </div>
         </div>
-      )}
-    </>
   );
 }
 

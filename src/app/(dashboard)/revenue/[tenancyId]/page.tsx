@@ -5,8 +5,7 @@ import { useState, useEffect, memo } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { format, startOfToday, isBefore } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
-import type { Transaction, ServiceCharge } from '@/lib/types';
+import type { Transaction, ServiceCharge, Property } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -23,11 +22,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, FileText, MessageSquare, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
-
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { useTheme } from '@/context/theme-context';
 
 function PaymentForm({
   isOpen,
@@ -221,7 +223,17 @@ function InvoiceForm({
 const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const params = useParams();
   const tenancyId = params.tenancyId as string;
-  const { revenue, updateRevenueTransaction, properties, formatCurrency, locale, addChangeLogEntry, endTenancy } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { locale, currency } = useTheme();
+
+  // Data Fetching
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  
+  // State
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
@@ -230,20 +242,19 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
   
   useEffect(() => {
-    // Wait until revenue data is loaded
-    if (!revenue) return;
-
-    const allTransactionsForTenancy = revenue.filter(tx => tx.tenancyId === tenancyId);
-    if (allTransactionsForTenancy.length > 0) {
-      const representativeTx = allTransactionsForTenancy[0];
-      setTenancy({
-        ...representativeTx,
-        transactions: allTransactionsForTenancy.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-      });
-    } else if (revenue) { // If revenue is loaded but no transactions found, it's a 404
-       notFound();
-    }
-  }, [revenue, tenancyId]);
+    if (!revenue || revenue.length === 0) {
+      if(!isRevenueLoading) {
+        //notFound();
+      }
+      return;
+    };
+    
+    const representativeTx = revenue[0];
+    setTenancy({
+      ...representativeTx,
+      transactions: revenue.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    });
+  }, [revenue, isRevenueLoading]);
 
   useEffect(() => {
     const formatAllDates = async () => {
@@ -264,6 +275,21 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     formatAllDates();
   }, [tenancy, locale]);
   
+  // Formatters
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  
+  // Actions
+  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
+    if (!user) return;
+    await addDoc(collection(firestore, 'changelog'), {
+      ...log,
+      ownerId: user.uid,
+      date: serverTimestamp(),
+    });
+  };
+
   const handleRecordPayment = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsPaymentFormOpen(true);
@@ -275,7 +301,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   };
 
   const handleInvoiceFormSubmit = async (transaction: Transaction) => {
-     await updateRevenueTransaction(transaction);
+     await updateDoc(doc(firestore, 'revenue', transaction.id), transaction as any);
      addChangeLogEntry({
         type: 'Tenancy',
         action: 'Updated',
@@ -288,39 +314,29 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
 
   const handlePaymentFormSubmit = async (transactionId: string, amount: number) => {
     if (!revenue) return;
-
     const transactionToUpdate = revenue.find(tx => tx.id === transactionId);
-
     if (transactionToUpdate) {
         const newAmountPaid = (transactionToUpdate.amountPaid || 0) + amount;
-        const updatedTransaction = { ...transactionToUpdate, amountPaid: newAmountPaid };
-        
-        await updateRevenueTransaction(updatedTransaction);
-        
+        await updateDoc(doc(firestore, 'revenue', transactionId), { amountPaid: newAmountPaid });
         addChangeLogEntry({
             type: 'Payment',
             action: 'Created',
-            description: `Payment of ${formatCurrency(amount)} recorded for "${updatedTransaction.tenant}".`,
-            entityId: updatedTransaction.id,
+            description: `Payment of ${formatCurrency(amount)} recorded for "${transactionToUpdate.tenant}".`,
+            entityId: transactionToUpdate.id,
         });
     }
-    
     setIsPaymentFormOpen(false);
     setSelectedTransaction(null);
   };
   
   const handleReturnDeposit = async () => {
     if (!revenue || !tenancy) return;
-
-    const transactionsToUpdate = revenue.filter(tx => tx.tenancyId === tenancy.tenancyId);
-    
-    const updatePromises = transactionsToUpdate.map(tx => {
-        const updatedTransaction = { ...tx, depositReturned: true };
-        return updateRevenueTransaction(updatedTransaction);
+    const batch = writeBatch(firestore);
+    revenue.forEach(tx => {
+        const txRef = doc(firestore, 'revenue', tx.id);
+        batch.update(txRef, { depositReturned: true });
     });
-    
-    await Promise.all(updatePromises);
-    
+    await batch.commit();
     addChangeLogEntry({
         type: 'Tenancy',
         action: 'Updated',
@@ -330,10 +346,25 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   };
 
   const handleEndTenancy = async (newEndDate: Date) => {
-    if (!tenancy) return;
+    if (!tenancy || !user) return;
     
-    await endTenancy(tenancy.tenancyId!, newEndDate);
-    
+    const batch = writeBatch(firestore);
+    const newEndDateString = format(newEndDate, 'yyyy-MM-dd');
+
+    // Find transactions to delete (future, unpaid ones)
+    tenancy.transactions.forEach(tx => {
+      const txDate = new Date(tx.date);
+      if (isAfter(txDate, newEndDate) && (tx.amountPaid ?? 0) === 0) {
+        const txRef = doc(firestore, 'revenue', tx.id);
+        batch.delete(txRef);
+      } else {
+        // Update remaining transactions with the new end date
+        const txRef = doc(firestore, 'revenue', tx.id);
+        batch.update(txRef, { tenancyEndDate: newEndDateString });
+      }
+    });
+
+    await batch.commit();
     addChangeLogEntry({
         type: 'Tenancy',
         action: 'Updated',
@@ -343,27 +374,20 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     setIsEndTenancyOpen(false);
   };
 
-
-  if (!tenancy || !properties) {
-    // You can show a loading state here
+  if (isRevenueLoading || isPropertiesLoading || !tenancy || !properties) {
     return <div>Loading...</div>;
   }
 
   const property = properties.find(p => p.id === tenancy.propertyId);
-  
   const today = startOfToday();
-
-  // Calculate KPIs based on transactions due up to today
   const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
   const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
   const currentBalance = totalDueToDate - totalPaid;
-  
   const firstTransaction = tenancy.transactions[0];
   const depositAmount = firstTransaction.deposit || 0;
   const isDepositReturned = firstTransaction.depositReturned || false;
   const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
-
 
   return (
     <>

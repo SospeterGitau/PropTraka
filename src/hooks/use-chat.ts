@@ -31,7 +31,7 @@ export function useChat() {
     }
 
     setIsLoading(true);
-    // Simple query without ordering, as requested.
+    // Simple query without ordering.
     const simpleQuery = query(chatCollectionRef);
 
     const unsubscribe = onSnapshot(simpleQuery, 
@@ -53,7 +53,7 @@ export function useChat() {
         setError(null);
       },
       (err: FirestoreError) => {
-        console.error("Error fetching chat messages:", err);
+        console.error("Error in useChat onSnapshot:", err);
         setError(err);
         setIsLoading(false);
       }

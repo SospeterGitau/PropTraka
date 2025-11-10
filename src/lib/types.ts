@@ -4,7 +4,7 @@ export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface Property {
   id: string;
-  ownerId: string; // Foreign key to the user
+  ownerId?: string; // Foreign key to the user
   addressLine1: string;
   city: string;
   state: string;
@@ -31,7 +31,7 @@ export interface ServiceCharge {
 
 export interface Transaction {
   id: string;
-  ownerId: string; // Foreign key to the user
+  ownerId?: string; // Foreign key to the user
   date: string;
   rent: number; // Renamed from amount
   serviceCharges?: ServiceCharge[];
@@ -55,7 +55,7 @@ export interface Transaction {
   frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
   notes?: string;
   receiptUrl?: string;
-  transactions?: Transaction[]; 
+  transactions?: Transaction[];
   nextDueDate?: string;
   amount?: number; // Legacy field for expenses, should be optional
 }
@@ -76,7 +76,7 @@ export interface ArrearEntry {
 
 export interface MaintenanceRequest {
   id: string;
-  ownerId: string; // Foreign key to the user
+  ownerId?: string; // Foreign key to the user
   propertyId?: string;
   propertyName: string;
   description: string;
@@ -91,7 +91,7 @@ export interface MaintenanceRequest {
 
 export interface Contractor {
   id: string;
-  ownerId: string; // Foreign key to the user
+  ownerId?: string; // Foreign key to the user
   name: string;
   specialty: string;
   email?: string;
@@ -101,7 +101,7 @@ export interface Contractor {
 
 export interface Subscription {
   id: string;
-  ownerId: string;
+  ownerId?: string;
   plan: 'Free' | 'Pro';
   status: 'active' | 'cancelled' | 'past_due';
   billingCycle: 'monthly' | 'yearly';
@@ -111,7 +111,7 @@ export interface Subscription {
 
 export interface Invoice {
   id: string;
-  ownerId: string;
+  ownerId?: string;
   tenancyId: string;
   revenueTransactionId: string;
   amount: number;
@@ -124,7 +124,7 @@ export interface Invoice {
 
 export interface ChatMessage {
   id: string;
-  ownerId: string; // Foreign key to the user
+  ownerId?: string; // Foreign key to the user
   role: 'user' | 'model';
   content: string;
   timestamp: any; // Firestore ServerTimestamp
@@ -147,7 +147,7 @@ export interface CalendarEvent {
 
 export interface ChangeLogEntry {
   id: string;
-  ownerId: string; // Foreign key to the user
+  ownerId?: string; // Foreign key to the user
   date: string;
   type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance' | 'Contractor';
   action: 'Created' | 'Updated' | 'Deleted';

@@ -1,10 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Label } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, getDaysInMonth, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
-import { useDataContext } from '@/context/data-context';
+import { useState, useEffect, memo, useMemo } from 'react';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +25,11 @@ import { CurrencyIcon } from '@/components/currency-icon';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
 import { MarketResearchDialog } from '@/components/market-research-dialog';
 import { cn } from '@/lib/utils';
-import type { Property, Transaction } from '@/lib/types';
+import type { Property, Transaction, ResidencyStatus } from '@/lib/types';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where } from 'firebase/firestore';
+import { useTheme } from '@/context/theme-context';
 
 
 type ViewMode = 'month' | 'year';
@@ -43,9 +46,27 @@ function getFinancialYear(date: Date) {
 }
 
 function RevenueAnalysisTab() {
-  const { revenue, properties, formatCurrency, formatCurrencyForAxis, currency } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { currency, locale } = useTheme();
+
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  const formatCurrencyForAxis = (amount: number) => {
+      if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+      if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+      return amount.toString();
+  };
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -69,7 +90,7 @@ function RevenueAnalysisTab() {
     }
   };
 
-  if (!currentDate || !revenue || !properties) {
+  if (!currentDate || isRevenueLoading || isPropertiesLoading) {
     return (
       <Card>
         <CardHeader>
@@ -88,6 +109,8 @@ function RevenueAnalysisTab() {
     );
   }
   
+  if (!revenue || !properties) return <div>No data available</div>;
+
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
   const periodStart = viewMode === 'month' ? startOfMonth(currentDate) : financialYearStart;
   const periodEnd = viewMode === 'month' ? endOfMonth(currentDate) : financialYearEnd;
@@ -246,9 +269,29 @@ function RevenueAnalysisTab() {
 
 
 function PnlStatementTab() {
-  const { properties, revenue, expenses, formatCurrency, formatCurrencyForAxis, residencyStatus } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { currency, locale, residencyStatus } = useTheme();
+
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
+
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  };
+  const formatCurrencyForAxis = (amount: number) => {
+      if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+      if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+      return amount.toString();
+  };
 
   useEffect(() => {
     setCurrentDate(new Date());
@@ -272,8 +315,7 @@ function PnlStatementTab() {
     }
   };
   
-  if (!currentDate || !revenue || !expenses || !properties) {
-    // Show skeleton loader while waiting for client-side mount
+  if (!currentDate || isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
     return (
        <div className="space-y-6">
         <Card>
@@ -298,6 +340,8 @@ function PnlStatementTab() {
     );
   }
   
+  if (!revenue || !expenses || !properties) return <div>No data available.</div>;
+
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
 
   const periodStart = viewMode === 'month' ? startOfMonth(currentDate) : financialYearStart;
@@ -327,7 +371,6 @@ function PnlStatementTab() {
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
   const netOperatingIncome = totalRevenue - totalExpenses;
   
-  // Calculate estimated tax and net profit after tax
   const propertyMap = new Map(properties.map(p => [p.id, p]));
   const grossResidentialRevenue = residencyStatus === 'resident'
     ? filteredRevenue
@@ -487,10 +530,21 @@ function PnlStatementTab() {
 
 
 const ReportsClient = memo(function ReportsClient() {
-  const { revenue, expenses, properties, isPnlReportEnabled, isMarketResearchEnabled } = useDataContext();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  
+  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
-  if (!revenue || !expenses || !properties) {
-    // Render a loading state or skeleton
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  
+  const { isPnlReportEnabled, isMarketResearchEnabled } = useTheme();
+
+
+  if (isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
     return (
       <>
         <PageHeader title="Financial Reports" />
@@ -498,7 +552,7 @@ const ReportsClient = memo(function ReportsClient() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <Skeleton className="h-8 w-3/s4" />
+              <Skeleton className="h-8 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
             <CardContent className="space-y-6">
@@ -518,8 +572,8 @@ const ReportsClient = memo(function ReportsClient() {
   return (
     <>
       <PageHeader title="Financial Reports">
-        {isMarketResearchEnabled && <MarketResearchDialog properties={properties} />}
-        {isPnlReportEnabled && <GenerateReportDialog revenue={revenue} expenses={expenses} />}
+        {isMarketResearchEnabled && properties && <MarketResearchDialog properties={properties} />}
+        {isPnlReportEnabled && revenue && expenses && <GenerateReportDialog revenue={revenue} expenses={expenses} />}
       </PageHeader>
        <Tabs defaultValue="revenue-analysis">
         <TabsList>
