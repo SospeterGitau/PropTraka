@@ -34,7 +34,7 @@ const defaultSettings: UserSettings = {
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const { firestore } = useFirebase();
   const { toast } = useToast();
 
@@ -42,7 +42,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchSettings = useCallback(async () => {
-    if (!user) return;
+    if (!user || !firestore) return; // Guard against uninitialized user/firestore
+    
     setIsLoading(true);
     const settingsRef = doc(firestore, 'userSettings', user.uid);
     try {
@@ -50,24 +51,38 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (docSnap.exists()) {
         setSettings({ ...defaultSettings, ...docSnap.data() });
       } else {
-        // No settings found, create with defaults
+        // No settings found, create with defaults for the logged-in user
         await setDoc(settingsRef, { ...defaultSettings, ownerId: user.uid });
         setSettings(defaultSettings);
       }
     } catch (error) {
       console.error("Error fetching user settings:", error);
-      setSettings(defaultSettings); // Fallback to defaults on error
+      // Fallback to defaults on error, but do not attempt to write again
+      setSettings(defaultSettings);
     } finally {
       setIsLoading(false);
     }
   }, [user, firestore]);
 
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    // Only fetch settings when the user is authenticated and not loading
+    if (!isUserLoading && user) {
+        fetchSettings();
+    } else if (!isUserLoading && !user) {
+        // If auth is done and there's no user, we are done loading.
+        setIsLoading(false);
+    }
+  }, [isUserLoading, user, fetchSettings]);
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
-    if (!user) return;
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Not Authenticated",
+            description: "You must be logged in to save settings.",
+        });
+        return;
+    }
     const settingsRef = doc(firestore, 'userSettings', user.uid);
     try {
       const updatedSettings = { ...settings, ...newSettings };
