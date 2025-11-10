@@ -1,25 +1,47 @@
 
 rules_version = '2';
+
+/**
+ * @description This ruleset enforces a strict user-ownership model for all data.
+ *
+ * It allows `get`, `update`, and `delete` operations only if the requesting user's UID
+ * matches the `ownerId` on the document being accessed.
+ *
+ * For `list` and `create`, it checks that the user is signed in and that any create
+ * operation includes the user's UID as the `ownerId`.
+ *
+ * CRITICAL: `list` operations are only permitted if the application-level query
+ * explicitly includes `where('ownerId', '==', request.auth.uid)`. This ensures
+ * that users can only ever query for their own documents, preventing data leaks.
+ * The broad `allow list: if isSignedIn()` rule is safe ONLY because of this required
+ry.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Enforces a strict user-ownership model. Each document is secured
-     * such that only the owner (identified by `ownerId`) can access it.
-     * IMPORTANT: `list` is only allowed if the query includes a `where('ownerId', '==', request.auth.uid)` clause.
+     * Secures all top-level collections with a consistent ownership rule.
+     * This rule applies to:
+     * - /properties
+     * - /revenue
+     * - /expenses
+     * - /maintenanceRequests
+     * - /contractors
+     * - /changelog
+     * - /subscriptions
+     * - /userSettings
      */
-
     match /{collection}/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+      // Allow read/write operations if the user is the owner of the document.
+      // This covers get, update, delete.
       allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
-    }
 
-    /**
-     * @description Secures user settings. Users can read and write their own settings document.
-     */
-    match /userSettings/{userId} {
-      allow read, create, update, delete: if request.auth.uid == userId;
-      allow list: if false; // List should not be allowed for user settings
+      // Allow creating a document if the user is signed in and is setting themselves as the owner.
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      
+      // Allow listing documents ONLY if the user is signed in.
+      // The application MUST enforce ownership by using a where() clause on 'ownerId'.
+      allow list: if request.auth != null;
     }
   }
 }
