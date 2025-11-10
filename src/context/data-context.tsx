@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirebase } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { ResidencyStatus } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +35,7 @@ const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
-  const firestore = useFirestore();
+  const { firestore } = useFirebase();
   const { toast } = useToast();
 
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
