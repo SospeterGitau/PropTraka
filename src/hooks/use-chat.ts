@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   collection,
   query,
@@ -14,7 +14,6 @@ import {
 import { firestore } from '../firebase';
 import { useUser } from '../firebase/provider';
 import { askAiAgent, type AskAiAgentInput } from '@/ai/flows/ask-ai-agent';
-
 
 export interface ChatMessage {
   id?: string;
@@ -77,7 +76,7 @@ export const useChat = () => {
     return () => unsubscribe();
   }, [chatCollectionRef, user, isUserLoading]);
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = useCallback(async (text: string) => {
     if (!chatCollectionRef || !user) {
         setError(new Error("User or chat collection not available."));
         return;
@@ -85,17 +84,19 @@ export const useChat = () => {
 
     setIsSending(true);
 
-    const userMessage: Omit<ChatMessage, 'id'> & { ownerId: string, timestamp: Timestamp } = {
+    const userMessage: ChatMessage = {
         role: 'user',
         content: text,
-        timestamp: Timestamp.now(),
-        ownerId: user.uid,
     };
-
+    
+    // Optimistically update UI with user's message
+    setMessages(prev => [...prev, userMessage]);
+    
     try {
-        await addDoc(chatCollectionRef, userMessage);
-        
-        const currentHistory = [...messages, userMessage as ChatMessage];
+        // Save user message to Firestore
+        await addDoc(chatCollectionRef, { ...userMessage, ownerId: user.uid, timestamp: Timestamp.now() });
+
+        const currentHistory = [...messages, userMessage];
 
         const aiInput: AskAiAgentInput = {
             history: currentHistory.map(({ role, content }) => ({ role, content })),
@@ -103,22 +104,26 @@ export const useChat = () => {
         
         const aiResponse = await askAiAgent(aiInput);
 
-        const aiMessage: Omit<ChatMessage, 'id'> & { ownerId: string, timestamp: Timestamp } = {
+        const aiMessage: ChatMessage = {
             role: 'model',
             content: aiResponse.content,
-            timestamp: Timestamp.now(),
-            ownerId: user.uid,
         };
+        
+        // Optimistically update UI with AI's message
+        setMessages(prev => [...prev, aiMessage]);
 
-        await addDoc(chatCollectionRef, aiMessage);
+        // Save AI message to Firestore
+        await addDoc(chatCollectionRef, { ...aiMessage, ownerId: user.uid, timestamp: Timestamp.now() });
 
     } catch (e) {
         console.error("Failed to send message or get AI response:", e);
         setError(e instanceof Error ? e : new Error("An unknown error occurred."));
+        // Optional: remove optimistic message on error
+        setMessages(prev => prev.filter(m => m !== userMessage));
     } finally {
         setIsSending(false);
     }
-  };
+  }, [chatCollectionRef, user, messages]);
 
 
   return { messages, error, isLoading, isSending, sendMessage };
