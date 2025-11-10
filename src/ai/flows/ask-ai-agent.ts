@@ -52,8 +52,10 @@ const askAiAgentFlow = ai.defineFlow(
   async (input) => {
     try {
       const llmResponse = await ai.generate({
-        prompt: supportAgentPrompt(input.history),
-        history: input.history,
+        prompt: {
+            ...supportAgentPrompt,
+            history: input.history,
+        },
         model: 'googleai/gemini-2.5-flash',
       });
 
