@@ -36,7 +36,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 
-export default function DashboardClientLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardClientLayout({ children }: { children: React.Node }) {
   return (
         <LayoutContent>{children}</LayoutContent>
   )
