@@ -21,6 +21,7 @@ import {
   Wrench,
   User,
   Sparkles,
+  Landmark,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
 import { useDataContext } from '@/context/data-context';
@@ -95,12 +96,12 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             </Button>
             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-full">
                 <div className="flex items-center gap-2">
-                  <Building className="w-8 h-8 text-primary" />
+                  <Landmark className="w-8 h-8 text-primary" />
                   <span className="font-semibold text-lg">LeaseLync</span>
                 </div>
             </div>
             <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
-                <Building className="w-6 h-6 text-primary" />
+                <Landmark className="w-6 h-6 text-primary" />
             </div>
           </div>
         </SidebarHeader>
