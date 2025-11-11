@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, memo, useTransition } from 'react';
+import { useState, useEffect, memo, useTransition, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -62,7 +62,7 @@ const plans = [
         ],
         isCurrent: true,
     }
-]
+];
 
 function ProfileSettingsTab() {
   const { theme, setTheme } = useTheme();
