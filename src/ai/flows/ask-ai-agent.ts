@@ -2,12 +2,8 @@
 'use server';
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAdminApp } from '@/firebase/admin';
-
-// Ensure the admin app is initialized before using Firestore
-getAdminApp(); 
-const db = getFirestore();
 
 // 1. Define the schemas
 // This is the structure the frontend sends
@@ -24,7 +20,7 @@ export type AskAiAgentInput = z.infer<typeof AskAiAgentInputSchema>;
 
 // 2. --- NEW: KNOWLEDGE BASE FUNCTION ---
 // This function will search our Firestore "brain"
-async function searchKnowledgeBase(question: string): Promise<string> {
+async function searchKnowledgeBase(db: Firestore, question: string): Promise<string> {
   try {
     const knowledgeBaseRef = db.collection('knowledgeBase');
     // This is a simple query. It finds articles where the 'title'
@@ -56,6 +52,10 @@ async function searchKnowledgeBase(question: string): Promise<string> {
 export async function askAiAgent(
   input: AskAiAgentInput
 ): Promise<string> {
+  
+  // Ensure the admin app is initialized before using Firestore
+  getAdminApp(); 
+  const db = getFirestore();
 
   // 4. Correctly separate the history from the new prompt
   const history = input.history.slice(0, -1); // All messages except the last one
@@ -68,7 +68,7 @@ export async function askAiAgent(
   }
   
   // 5. --- NEW: CALL THE KNOWLEDGE BASE ---
-  const retrievedFacts = await searchKnowledgeBase(lastUserMessage.content);
+  const retrievedFacts = await searchKnowledgeBase(db, lastUserMessage.content);
 
   // 6. --- NEW: CREATE THE AUGMENTED PROMPT ---
   const newSystemPrompt = `You are "LeaseLync Support AI," a helpful expert on property management.
