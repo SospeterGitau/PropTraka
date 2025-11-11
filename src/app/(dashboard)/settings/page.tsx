@@ -665,21 +665,21 @@ export default function AccountPage() {
       <Tabs defaultValue="profile">
         <TabsList className="grid w-full grid-cols-4 max-w-2xl">
           <TabsTrigger value="profile">Profile & Settings</TabsTrigger>
-          <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
-          <TabsTrigger value="changelog">Changelog</TabsTrigger>
           <TabsTrigger value="subscription">Subscription & Billing</TabsTrigger>
+          <TabsTrigger value="changelog">Changelog</TabsTrigger>
+          <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="pt-6">
           <ProfileSettingsTab />
         </TabsContent>
-        <TabsContent value="knowledge" className="pt-6">
-          <KnowledgeBaseTab />
-        </TabsContent>
-         <TabsContent value="changelog" className="pt-6">
-          <ChangelogTab />
-        </TabsContent>
         <TabsContent value="subscription" className="pt-6">
           <SubscriptionBillingTab />
+        </TabsContent>
+        <TabsContent value="changelog" className="pt-6">
+          <ChangelogTab />
+        </TabsContent>
+        <TabsContent value="knowledge" className="pt-6">
+          <KnowledgeBaseTab />
         </TabsContent>
       </Tabs>
     </>
