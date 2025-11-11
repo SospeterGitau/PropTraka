@@ -1,7 +1,19 @@
 
+/**
+ * @fileoverview This file contains all the TypeScript type definitions and interfaces
+ * used across the application. Centralizing these types helps ensure data consistency,
+ * improves code readability, and provides strong typing for props, state, and API responses.
+ */
 
+
+/**
+ * Represents the tax residency status of the user, affecting P&L calculations.
+ */
 export type ResidencyStatus = 'resident' | 'non-resident';
 
+/**
+ * Represents a single article in the AI's knowledge base.
+ */
 export interface KnowledgeArticle {
   id: string;
   ownerId?: string;
@@ -9,6 +21,9 @@ export interface KnowledgeArticle {
   content: string;
 }
 
+/**
+ * Represents a single real estate property in the user's portfolio.
+ */
 export interface Property {
   id: string;
   ownerId?: string; // Foreign key to the user
@@ -31,42 +46,58 @@ export interface Property {
   imageHint: string;
 }
 
+/**
+ * Represents a fixed or variable service charge associated with a tenancy invoice.
+ */
 export interface ServiceCharge {
   name: string;
   amount: number;
 }
 
+/**
+ * Represents a single financial transaction, which can be either revenue or an expense.
+ * It's a versatile interface used for tracking all financial movements.
+ */
 export interface Transaction {
   id: string;
   ownerId?: string; // Foreign key to the user
-  date: string;
-  rent: number; // Renamed from amount
-  serviceCharges?: ServiceCharge[];
+  date: string; // ISO date string (YYYY-MM-DD)
+  rent: number; // Base rent amount due for a period (used in revenue)
+  serviceCharges?: ServiceCharge[]; // Additional charges for a period (used in revenue)
   propertyId?: string;
   propertyName: string;
   type: 'revenue' | 'expense';
-  category?: string;
+  category?: string; // e.g., 'Repairs', 'Insurance' (used in expenses)
+  
+  // Tenancy-related fields (primarily for revenue)
   tenant?: string;
   tenantEmail?: string;
   tenantPhone?: string;
-  contractorId?: string;
-  contractorName?: string;
   deposit?: number;
   depositReturned?: boolean;
-  amountPaid?: number;
-  tenancyId?: string;
+  amountPaid?: number; // The actual amount paid for a revenue transaction
+  tenancyId?: string; // A unique identifier for a group of related tenancy transactions
   tenancyStartDate?: string;
   tenancyEndDate?: string;
   contractUrl?: string;
+
+  // Expense-related fields
+  contractorId?: string;
+  contractorName?: string;
   expenseType?: 'one-off' | 'recurring';
   frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
   notes?: string;
   receiptUrl?: string;
-  transactions?: Transaction[];
-  nextDueDate?: string;
-  amount?: number; // Legacy field for expenses, should be optional
+  
+  // Fields for internal component state or data aggregation
+  transactions?: Transaction[]; // Used to group transactions within a tenancy
+  nextDueDate?: string; // Calculated field for UI display
+  amount?: number; // Legacy/general amount field, primarily for expenses
 }
 
+/**
+ * Represents a calculated entry showing a tenant's outstanding rental arrears.
+ */
 export interface ArrearEntry {
   tenant: string;
   tenantEmail: string;
@@ -80,7 +111,9 @@ export interface ArrearEntry {
   serviceChargesOwed: number;
 }
 
-
+/**
+ * Represents a request for maintenance on a property.
+ */
 export interface MaintenanceRequest {
   id: string;
   ownerId?: string; // Foreign key to the user
@@ -96,6 +129,9 @@ export interface MaintenanceRequest {
   contractorName?: string;
 }
 
+/**
+ * Represents a contractor or vendor who provides services.
+ */
 export interface Contractor {
   id: string;
   ownerId?: string; // Foreign key to the user
@@ -106,6 +142,9 @@ export interface Contractor {
   notes?: string;
 }
 
+/**
+ * Represents the user's subscription plan details.
+ */
 export interface Subscription {
   id: string;
   ownerId?: string;
@@ -116,6 +155,9 @@ export interface Subscription {
   currentPeriodEnd: string;
 }
 
+/**
+ * Represents a payment request (invoice) sent to a tenant.
+ */
 export interface Invoice {
   id: string;
   ownerId?: string;
@@ -129,6 +171,9 @@ export interface Invoice {
   datePaid?: string;
 }
 
+/**
+ * Represents a message in the AI chat interface.
+ */
 export interface ChatMessage {
   id: string;
   ownerId?: string; // Foreign key to the user
@@ -137,7 +182,9 @@ export interface ChatMessage {
   timestamp: any; // Firestore ServerTimestamp
 }
 
-
+/**
+ * @deprecated This type is deprecated. Use `ArrearEntry` instead.
+ */
 export interface Arrear {
   tenant: string;
   propertyAddress: string;
@@ -145,6 +192,9 @@ export interface Arrear {
   dueDate: string;
 }
 
+/**
+ * Represents a single event to be displayed on the calendar component.
+ */
 export interface CalendarEvent {
   date: string;
   title: string;
@@ -152,6 +202,9 @@ export interface CalendarEvent {
   details?: Record<string, string | number | undefined>;
 }
 
+/**
+ * Represents an entry in the activity changelog.
+ */
 export interface ChangeLogEntry {
   id: string;
   ownerId?: string; // Foreign key to the user
@@ -162,15 +215,26 @@ export interface ChangeLogEntry {
   entityId: string;
 }
 
-// AI Flow Types
+
+// ====== AI Flow Types ======
+
+/**
+ * Input for the `generateReportSummary` AI flow.
+ */
 export interface GenerateReportSummaryInput {
   summary: string;
 }
 
+/**
+ * Output for the `generateReportSummary` AI flow.
+ */
 export interface GenerateReportSummaryOutput {
   summary: string;
 }
 
+/**
+ * Input for the `generatePnlReport` AI flow.
+ */
 export interface GeneratePnlReportInput {
   startDate: string;
   endDate: string;
@@ -182,18 +246,27 @@ export interface GeneratePnlReportInput {
   prompt: string;
 }
 
+/**
+ * Output for the `generatePnlReport` AI flow.
+ */
 export interface GeneratePnlReportOutput {
   report: string | null;
   error?: string | null;
   hint?: string | null;
 }
 
+/**
+ * Input for the `generateMarketResearch` AI flow.
+ */
 export interface GenerateMarketResearchInput {
   properties: string; // JSON string of Property[]
   currency: string;
   prompt: string;
 }
 
+/**
+ * Output for the `generateMarketResearch` AI flow.
+ */
 export interface GenerateMarketResearchOutput {
   report: string | null;
   error?: string | null;
