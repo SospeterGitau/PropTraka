@@ -31,7 +31,7 @@ async function searchKnowledgeBase(question: string): Promise<string> {
     // is greater than or equal to the user's question.
     // A more complex search (e.g., text-embedding) can be added later.
     const snapshot = await knowledgeBaseRef
-      .where('title', '>=', question.toLowerCase())
+      .where('title', '>=', question)
       .limit(3)
       .get();
 
@@ -94,7 +94,7 @@ ${retrievedFacts}
     // 8. Use the *correct* safe response handling
     const text = llmResponse.text;
     if (!text) {
-      // This happens if the model's response is empty or blocked
+      // This happens if the model's response is empty or blocked by safety settings
       console.error('askAiAgent: LLM response was empty or blocked by safety settings.');
       return 'I\'m sorry, I was unable to generate a response for that request.';
     }
