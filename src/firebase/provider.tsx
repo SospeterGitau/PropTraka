@@ -4,12 +4,14 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 import { app } from './index';
 
 interface FirebaseContextValue {
   auth: Auth;
   firestore: Firestore;
   functions: Functions;
+  analytics: Analytics | null;
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
@@ -25,6 +27,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const auth = getAuth(app);
   const firestore = getFirestore(app);
   const functions = getFunctions(app);
+  const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -57,7 +61,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FirebaseContext.Provider value={{ auth, firestore, functions, user, isUserLoading: isUserLoading, userError }}>
+    <FirebaseContext.Provider value={{ auth, firestore, functions, analytics, user, isUserLoading: isUserLoading, userError }}>
       {children}
     </FirebaseContext.Provider>
   );
@@ -84,6 +88,11 @@ export const useFirestore = () => {
   const { firestore } = useFirebase();
   return firestore;
 };
+
+export const useAnalytics = () => {
+    const { analytics } = useFirebase();
+    return analytics;
+}
 
 export interface UserHookResult {
     user: User | null;

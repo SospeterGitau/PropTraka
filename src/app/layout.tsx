@@ -5,6 +5,7 @@ import '@/app/globals.css';
 import { ThemeProvider } from '@/context/theme-context';
 import { ClientProviderWrapper } from './client-provider';
 import type { Metadata } from 'next';
+import { AnalyticsProvider } from '@/firebase/analytics-provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,9 +27,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ClientProviderWrapper>
-          <ThemeProvider>
-              {children}
-          </ThemeProvider>
+          <AnalyticsProvider>
+            <ThemeProvider>
+                {children}
+            </ThemeProvider>
+          </AnalyticsProvider>
           <Toaster />
         </ClientProviderWrapper>
       </body>

@@ -1,30 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import { logEvent, isSupported } from 'firebase/analytics';
-import { useAnalytics } from '@/firebase/provider';
+import { logEvent, isSupported, Analytics } from 'firebase/analytics';
 
-// Log a page view event
-export const logPageView = async () => {
-    if (await isSupported()) {
-        const analytics = useAnalytics();
-        if (analytics) {
-            logEvent(analytics, 'page_view', {
-                page_path: window.location.pathname,
-                page_location: window.location.href,
-                page_title: document.title,
-            });
-        }
-    }
-};
-
-// Log a custom event
-export const logCustomEvent = async (eventName: string, eventParams: object) => {
-    if (await isSupported()) {
-        const analytics = useAnalytics();
-        if (analytics) {
-            logEvent(analytics, eventName, eventParams);
-        }
-    }
+/**
+ * Logs a custom event to Firebase Analytics.
+ * @param analytics The Firebase Analytics instance.
+ * @param eventName The name of the event to log.
+ * @param eventParams Optional parameters to associate with the event.
+ */
+export const logCustomEvent = async (analytics: Analytics, eventName: string, eventParams?: { [key: string]: any }) => {
+  if (await isSupported()) {
+    logEvent(analytics, eventName, eventParams);
+  }
 };
