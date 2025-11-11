@@ -3,9 +3,9 @@
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, PlusCircle, Trash2 } from 'lucide-react';
-import { format, startOfToday, eachMonthOfInterval, isAfter, isBefore } from 'date-fns';
-import type { Property, Transaction, ServiceCharge } from '@/lib/types';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { format, startOfToday, isBefore } from 'date-fns';
+import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -26,297 +26,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
-
-
-function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
-}
-
-const RevenueForm = memo(function RevenueForm({
-  isOpen,
-  onClose,
-  onSubmit,
-  tenancyToEdit,
-  properties,
-  revenue,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: Transaction[]) => void;
-  tenancyToEdit?: Transaction | null;
-  properties: Property[],
-  revenue: Transaction[],
-}) {
-  const { toast } = useToast();
-  const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
-
-  useEffect(() => {
-    if (tenancyToEdit) {
-      setServiceCharges(tenancyToEdit.serviceCharges || []);
-    } else {
-      setServiceCharges([]);
-    }
-  }, [tenancyToEdit]);
-  
-  const addServiceCharge = () => {
-    setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
-  };
-  
-  const removeServiceCharge = (index: number) => {
-    setServiceCharges(serviceCharges.filter((_, i) => i !== index));
-  };
-
-  const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
-    const newCharges = [...serviceCharges];
-    if (field === 'amount') {
-        const numericValue = value === '' ? 0 : parseFloat(value);
-        (newCharges[index] as any)[field] = numericValue;
-    } else {
-        (newCharges[index] as any)[field] = value;
-    }
-    setServiceCharges(newCharges);
-  };
-
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const isEditing = !!tenancyToEdit;
-
-    const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
-    const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
-    const propertyId = formData.get('propertyId') as string;
-    const selectedProperty = properties.find(p => p.id === propertyId);
-    const tenant = formData.get('tenantName') as string;
-    const tenantEmail = formData.get('tenantEmail') as string;
-    const tenantPhone = formData.get('tenantPhone') as string;
-    const rent = Number(formData.get('rent'));
-    const deposit = Number(formData.get('deposit'));
-    const contractUrl = formData.get('contractUrl') as string;
-    const notes = formData.get('notes') as string;
-    const consent = formData.get('consent') as string;
-
-    if (!isEditing && !consent) {
-        toast({
-            variant: "destructive",
-            title: "Consent Required",
-            description: "You must confirm the tenant has consented to their data being stored.",
-        });
-        return;
-    }
-    
-    if (!isEditing) {
-      const existingTenancy = revenue.find(
-        (t) =>
-          t.tenant?.toLowerCase() === tenant.toLowerCase() &&
-          t.propertyId === propertyId
-      );
-
-      if (existingTenancy) {
-        toast({
-          variant: "destructive",
-          title: "Duplicate Tenancy",
-          description: `A tenancy for "${tenant}" already exists at this property.`,
-        });
-        return;
-      }
-    }
-
-
-    if (!tenancyStartDateStr || !tenancyEndDateStr) {
-       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Tenancy start and end dates are required.",
-      });
-      return;
-    }
-    
-    const [startYear, startMonth, startDay] = tenancyStartDateStr.split('-').map(Number);
-    const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
-    const tenancyStartDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
-    const tenancyEndDate = new Date(Date.UTC(endYear, endMonth - 1, endDay));
-
-    if (tenancyEndDate < tenancyStartDate) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Date Range",
-        description: "Tenancy end date cannot be before the start date.",
-      });
-      return;
-    }
-
-    const months = eachMonthOfInterval({
-      start: tenancyStartDate,
-      end: tenancyEndDate,
-    });
-
-    const tenancyId = tenancyToEdit?.tenancyId || `t${Date.now()}`;
-    const existingTransactions = isEditing ? revenue.filter(t => t.tenancyId === tenancyToEdit.tenancyId) : [];
-
-    const finalServiceCharges = serviceCharges
-      .map(sc => ({
-        name: sc.name,
-        amount: Number(sc.amount) || 0,
-      }))
-      .filter(sc => sc.name && sc.amount > 0);
-
-    const newTransactions = months.map((monthStartDate, index) => {
-      const dateStr = format(monthStartDate, 'yyyy-MM-dd');
-      const existingTx = isEditing ? existingTransactions.find(tx => format(new Date(tx.date), 'yyyy-MM') === format(monthStartDate, 'yyyy-MM')) : undefined;
-
-
-      const newTxData: Partial<Transaction> = {
-        tenancyId: tenancyId,
-        date: dateStr,
-        rent: rent,
-        serviceCharges: finalServiceCharges,
-        amountPaid: existingTx?.amountPaid || 0,
-        propertyId: propertyId,
-        propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-        tenant: tenant,
-        tenantEmail: tenantEmail,
-        tenantPhone: tenantPhone,
-        type: 'revenue' as const,
-        deposit: index === 0 ? deposit : 0,
-        tenancyStartDate: tenancyStartDateStr,
-        tenancyEndDate: tenancyEndDateStr,
-        contractUrl: contractUrl,
-        ownerId: tenancyToEdit?.ownerId || '',
-      };
-      
-      if (existingTx?.id) {
-        newTxData.id = existingTx.id;
-      }
-      
-      if (index === 0 && notes) {
-        newTxData.notes = notes;
-      }
-
-      return newTxData;
-    });
-
-    onSubmit(newTransactions as Transaction[]);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{tenancyToEdit ? 'Edit' : 'Add'} Tenancy</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4 max-h-[80vh] overflow-y-auto pr-2">
-           <div className="space-y-2">
-            <Label htmlFor="propertyId">Property</Label>
-             <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a property" />
-              </SelectTrigger>
-              <SelectContent>
-                {properties.map(property => (
-                  <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantName">Tenant Name</Label>
-            <Input id="tenantName" name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="tenantEmail">Tenant Email</Label>
-            <Input id="tenantEmail" name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantPhone">Tenant Phone</Label>
-            <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
-          </div>
-           <div className="space-y-2">
-            <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
-            <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
-            <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="rent">Monthly Rent</Label>
-            <Input id="rent" name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Fixed Monthly Service Charges (optional)</Label>
-            <div className="space-y-2 rounded-md border p-4">
-              {serviceCharges.map((charge, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                  <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Service Charge
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-            <Input id="deposit" name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contractUrl">Contract Link (optional)</Label>
-            <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes} />
-          </div>
-           {!tenancyToEdit && (
-            <div className="items-top flex space-x-2 pt-2">
-                    <Checkbox id="consent" name="consent" />
-                    <div className="grid gap-1.5 leading-none">
-                        <label
-                        htmlFor="consent"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                        I confirm I have the tenant's consent to store and process their personal information in accordance with our privacy policy.
-                        </label>
-                        <p className="text-sm text-muted-foreground">
-                        You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for more details.
-                        </p>
-                    </div>
-                </div>
-            )}
-          <DialogFooter className="pt-4">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit">Save</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-});
 
 
 const RevenueClient = memo(function RevenueClient() {
@@ -326,14 +42,11 @@ const RevenueClient = memo(function RevenueClient() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
-  const isDataLoading = isPropertiesLoading || isRevenueLoading;
+  const isDataLoading = isRevenueLoading;
 
   // State
-  const [isTenancyFormOpen, setIsTenancyFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
@@ -372,16 +85,6 @@ const RevenueClient = memo(function RevenueClient() {
       date: serverTimestamp(),
     });
   };
-
-  const handleAddTenancy = () => {
-    setSelectedTransaction(null);
-    setIsTenancyFormOpen(true);
-  };
-
-  const handleEditTenancy = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setIsTenancyFormOpen(true);
-  };
   
   const handleDeleteTenancy = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -389,7 +92,7 @@ const RevenueClient = memo(function RevenueClient() {
   };
 
   const confirmDelete = async () => {
-    if (selectedTransaction?.tenancyId) {
+    if (selectedTransaction?.tenancyId && user) {
       const batch = writeBatch(firestore);
       const q = query(collection(firestore, 'revenue'), where('tenancyId', '==', selectedTransaction.tenancyId), where('ownerId', '==', user.uid));
       const snapshot = await getDocs(q);
@@ -409,44 +112,6 @@ const RevenueClient = memo(function RevenueClient() {
     }
   };
 
-  const handleTenancyFormSubmit = async (data: Transaction[]) => {
-    if (!user || !revenue) return;
-    const tenancyId = data[0].tenancyId!;
-    const isEditing = revenue.some(r => r.tenancyId === tenancyId);
-    
-    const batch = writeBatch(firestore);
-
-    if (isEditing) {
-      const existingTxIdsInTenancy = revenue.filter(tx => tx.tenancyId === tenancyId).map(tx => tx.id);
-      const newTxDates = new Set(data.map(tx => format(new Date(tx.date), 'yyyy-MM')));
-      
-      // Delete old transactions that are no longer in the date range
-      existingTxIdsInTenancy.forEach(id => {
-        const originalTx = revenue.find(t => t.id === id);
-        if (originalTx && !newTxDates.has(format(new Date(originalTx.date), 'yyyy-MM'))) {
-           batch.delete(doc(firestore, 'revenue', id));
-        }
-      });
-    }
-
-    data.forEach(tx => {
-      const { id, ...txData } = tx;
-      const docRef = id ? doc(firestore, 'revenue', id) : doc(collection(firestore, 'revenue'));
-      batch.set(docRef, { ...txData, ownerId: user.uid });
-    });
-    
-    await batch.commit();
-    
-    addChangeLogEntry({
-      type: 'Tenancy',
-      action: isEditing ? 'Updated' : 'Created',
-      description: `Tenancy for "${data[0].tenant}" at "${data[0].propertyName}" was ${isEditing ? 'updated' : 'created'}.`,
-      entityId: tenancyId,
-    });
-
-    setIsTenancyFormOpen(false);
-    setSelectedTransaction(null);
-  };
   
   if (isDataLoading) {
     return (
@@ -503,7 +168,12 @@ const RevenueClient = memo(function RevenueClient() {
   return (
     <>
       <PageHeader title="Revenue">
-        <Button onClick={handleAddTenancy}>Add Tenancy</Button>
+        <Button asChild>
+            <Link href="/revenue/add">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Tenancy
+            </Link>
+        </Button>
       </PageHeader>
       <Card>
         <CardHeader>
@@ -577,7 +247,9 @@ const RevenueClient = memo(function RevenueClient() {
                                     <DropdownMenuItem asChild>
                                       <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleEditTenancy(tenancy)}>Edit Tenancy</DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link href={`/revenue/edit/${tenancy.tenancyId}`}>Edit Tenancy</Link>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -597,15 +269,6 @@ const RevenueClient = memo(function RevenueClient() {
         </CardContent>
       </Card>
       
-      {properties && revenue && <RevenueForm
-        isOpen={isTenancyFormOpen}
-        onClose={() => setIsTenancyFormOpen(false)}
-        onSubmit={handleTenancyFormSubmit}
-        tenancyToEdit={selectedTransaction}
-        properties={properties}
-        revenue={revenue}
-      />}
-
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
