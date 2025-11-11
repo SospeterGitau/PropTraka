@@ -2,6 +2,13 @@
 
 export type ResidencyStatus = 'resident' | 'non-resident';
 
+export interface KnowledgeArticle {
+  id: string;
+  ownerId?: string;
+  title: string;
+  content: string;
+}
+
 export interface Property {
   id: string;
   ownerId?: string; // Foreign key to the user

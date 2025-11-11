@@ -30,6 +30,7 @@ service cloud.firestore {
      * - /changelog
      * - /subscriptions
      * - /userSettings
+     * - /knowledgeBase
      */
     match /{collection}/{docId} {
       // Allow read/write operations if the user is the owner of the document.

@@ -1,4 +1,5 @@
 
+
 {
   "entities": {
     "property": {
@@ -106,6 +107,18 @@
       },
       "required": ["name", "specialty", "ownerId"]
     },
+    "knowledgeArticle": {
+      "title": "Knowledge Article",
+      "description": "An article in the AI's knowledge base.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "required": ["title", "content", "ownerId"]
+    },
     "changeLogEntry": {
         "title": "Change Log Entry",
         "description": "An entry in the activity changelog.",
@@ -193,6 +206,10 @@
     "/contractors/{contractorId}": {
       "schema": { "$ref": "#/entities/contractor" },
       "description": "Stores contractor and vendor information."
+    },
+    "/knowledgeBase/{articleId}": {
+      "schema": { "$ref": "#/entities/knowledgeArticle" },
+      "description": "Stores AI knowledge base articles."
     },
     "/changelog/{logId}": {
         "schema": { "$ref": "#/entities/changeLogEntry" },
