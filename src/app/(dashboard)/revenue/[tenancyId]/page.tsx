@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -532,7 +533,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(paid)}</TableCell>
-                        <TableCell className={cn("text-right font-medium", balance > 0 ? 'text-destructive' : 'text-primary')}>
+                        <TableCell className={cn("text-right font-medium", balance > 0 ? 'text-destructive' : 'text-accent')}>
                           {formatCurrency(balance)}
                         </TableCell>
                         <TableCell>
