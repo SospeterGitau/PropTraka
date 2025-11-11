@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Our privacy policy outlines how LeaseLync collects, uses, and manages personal data, clarifying our role as a Data Processor and your responsibilities as a Data Controller.',
+  description: 'Our privacy policy outlines how LeaseLync collects, uses, and manages personal data, clarifying our role as a Data Processor and your responsibilities as a Data Controller under the Kenya Data Protection Act, 2019 (DPA).',
 };
 
 export default function PrivacyPolicyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>LeaseLync acts as the Data Processor on your behalf.</strong> Our application stores and processes this data based on your instructions to provide you with property management services.</li>
         </ul>
         <p>
-          This policy details our role as a Data Processor and your responsibilities as a Data Controller.
+          This policy details our role as a Data Processor and your responsibilities as a Data Controller under the DPA.
         </p>
 
         <h2 className="pt-4 font-bold">2. Data We Process on Your Behalf</h2>
@@ -62,7 +62,7 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">5. Lawful Basis for Processing</h2>
         <p>
-          As the Data Controller, you are responsible for ensuring you have a lawful basis for processing tenant data. The two primary lawful bases in this context are:
+          As the Data Controller, you are responsible for ensuring you have a lawful basis under the DPA for processing tenant data. The two primary lawful bases in this context are:
         </p>
          <ul>
             <li><strong>Performance of a Contract:</strong> Processing the data is necessary to manage the tenancy agreement between you and your tenant.</li>
@@ -103,7 +103,7 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">10. Disclaimer</h2>
         <p>
-          This Privacy Policy is for informational purposes only and does not constitute legal advice. You should consult with a legal professional to ensure your full compliance with all applicable data protection laws, including the Kenya Data Protection Act.
+          This Privacy Policy is for informational purposes only and does not constitute legal advice. You should consult with a legal professional to ensure your full compliance with all applicable data protection laws, including the Kenya Data Protection Act, 2019.
         </p>
       </div>
     </>
