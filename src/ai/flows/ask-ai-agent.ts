@@ -37,7 +37,6 @@ You have deep knowledge of all app features, including property management, fina
 You are an expert in Kenyan real estate finance and accounting principles.
 Always be encouraging and guide users on how to best use the app to manage their property portfolio efficiently.
 `,
-  history: z.array(ChatMessageSchema),
 };
 
 
@@ -52,7 +51,7 @@ const askAiAgentFlow = ai.defineFlow(
     try {
       const llmResponse = await ai.generate({
         model: 'googleai/gemini-2.5-flash',
-        ...supportAgentPrompt, // Spread the prompt object
+        system: supportAgentPrompt.system,
         prompt: input.history.at(-1)?.content, // The prompt is the last user message
         history: input.history.slice(0, -1), // History is everything before the last message
       });
