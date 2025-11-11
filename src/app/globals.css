@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 body {
-  font-family: 'PT Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 @layer base {
@@ -119,5 +119,11 @@ body {
   }
   input[type=number] {
     -moz-appearance: textfield;
+  }
+  
+  .text-clamp {
+    /* Set a minimum font size, a preferred (dynamic) size, and a maximum font size. */
+    /* 1.25rem is the smallest, 2.5vw scales with viewport width, 1.5rem is the largest it will get */
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
   }
 }

@@ -20,7 +20,7 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
       </CardHeader>
       <CardContent>
         <div className={cn(
-          "text-base sm:text-lg md:text-xl lg:text-2xl font-bold whitespace-nowrap",
+          "text-clamp font-bold whitespace-nowrap",
           variant === 'destructive' && 'text-destructive',
           variant === 'positive' && 'text-accent'
         )}>
