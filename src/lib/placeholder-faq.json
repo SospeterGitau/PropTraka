@@ -50,6 +50,10 @@
     },
     {
         "title": "Can I change the currency or other settings?",
-        "content": "Yes. The Account page is where you manage all your personal and application-wide settings. It is organized into two tabs:\n\n- **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name and logo for reports, define your tax residency status (which affects P&L report calculations), enable or disable AI features, and change your password.\n\n- **Subscription & Billing:** Manage your LeaseLync subscription plan. When you first sign up, you will be directed here to choose a plan."
+        "content": "Yes. The Account page is where you manage all your personal and application-wide settings. It is organized into four tabs:\n\n- **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name for reports, define your tax residency status, and change your password.\n\n- **Subscription & Billing:** Manage your LeaseLync subscription plan.\n\n- **Changelog:** View a complete activity log of all changes made in your account.\n\n- **Knowledge Base:** Add, edit, or remove the help articles that are used by the FAQ search system."
+    },
+    {
+        "title": "What is the Changelog for?",
+        "content": "The Changelog provides an audit trail of all significant activities that occur within your account. This includes creating a new property, updating a tenancy, logging an expense, and more. It helps you keep track of all changes made to your portfolio. You can find the Changelog in the Account page under the 'Changelog' tab."
     }
 ]

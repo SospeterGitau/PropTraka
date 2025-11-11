@@ -117,16 +117,28 @@ export default function FaqPage() {
               The <Link href="/calendar" className="text-primary underline">Calendar</Link> provides a visual timeline of important events. It automatically populates with tenancy start and end dates, logged expense transactions, and reported maintenance requests, giving you a clear view of key dates and activities across your portfolio each month.
             </AccordionContent>
           </AccordionItem>
+
+           {/* Changelog Section */}
+          <AccordionItem value="item-14">
+            <AccordionTrigger className="text-lg font-semibold">What is the Changelog for?</AccordionTrigger>
+            <AccordionContent className="text-base leading-relaxed">
+              The Changelog provides an audit trail of all significant activities that occur within your account. This includes creating a new property, updating a tenancy, logging an expense, and more. It helps you keep track of all changes made to your portfolio. You can find the Changelog in the <Link href="/settings" className="text-primary underline">Account</Link> page under the "Changelog" tab.
+            </AccordionContent>
+          </AccordionItem>
           
            {/* Account Section */}
           <AccordionItem value="item-9">
             <AccordionTrigger className="text-lg font-semibold">Can I change the currency or other settings?</AccordionTrigger>
             <AccordionContent className="text-base leading-relaxed">
-              Yes. The <Link href="/settings" className="text-primary underline">Account</Link> page is where you manage all your personal and application-wide settings. It is organized into two tabs:
+              Yes. The <Link href="/settings" className="text-primary underline">Account</Link> page is where you manage all your personal and application-wide settings. It is organized into four tabs:
               <br /><br />
-              - **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name and logo for reports, define your tax residency status (which affects P&L report calculations), enable or disable AI features, and change your password.
+              - **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name for reports, define your tax residency status, and change your password.
               <br /><br />
-              - **Subscription & Billing:** Manage your LeaseLync subscription plan. When you first sign up, you will be directed here to choose a plan.
+              - **Subscription & Billing:** Manage your LeaseLync subscription plan.
+              <br /><br />
+              - **Changelog:** View a complete activity log of all changes made in your account.
+              <br /><br />
+              - **Knowledge Base:** Add, edit, or remove the help articles that are used by the FAQ search system.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
