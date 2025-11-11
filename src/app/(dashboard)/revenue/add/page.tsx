@@ -299,20 +299,22 @@ const TenancyForm = memo(function TenancyForm({
 });
 
 export default function AddTenancyPage() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
+  // Defer query creation until user is available.
   const propertiesQuery = user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null;
   const revenueQuery = user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null;
   
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
 
-  if (isPropertiesLoading || isRevenueLoading) {
+  // Master loading state: wait for auth AND data fetching.
+  if (isUserLoading || isPropertiesLoading || isRevenueLoading) {
     return <div>Loading...</div>;
   }
   
-  // This check is important. The form needs at least one property to be useful.
+  // This check is now safe because we know loading is complete.
   if (!properties || properties.length === 0) {
       return (
           <>
