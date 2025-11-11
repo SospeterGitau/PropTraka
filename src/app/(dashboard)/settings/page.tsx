@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -401,7 +400,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
 });
 
 
-const KnowledgeBaseTab = memo(() => {
+const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -569,7 +568,7 @@ const KnowledgeBaseTab = memo(() => {
 });
 
 
-const AccountPage = memo(function AccountPage() {
+function AccountPage() {
   return (
     <>
       <PageHeader title="Account" />
@@ -591,8 +590,9 @@ const AccountPage = memo(function AccountPage() {
       </Tabs>
     </>
   );
-});
+}
 
 export default AccountPage;
     
 
+    
