@@ -1,7 +1,10 @@
 
+'use client';
+
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useFitText } from '@/hooks/use-fit-text';
 
 type KpiCardProps = {
   icon: LucideIcon;
@@ -12,6 +15,8 @@ type KpiCardProps = {
 };
 
 export function KpiCard({ icon: Icon, title, value, description, variant = 'default' }: KpiCardProps) {
+  const { fontSize, ref } = useFitText();
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -19,11 +24,15 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className={cn(
-          "text-clamp font-bold whitespace-nowrap",
-          variant === 'destructive' && 'text-destructive',
-          variant === 'positive' && 'text-accent'
-        )}>
+        <div 
+          ref={ref}
+          style={{ fontSize }}
+          className={cn(
+            "font-bold whitespace-nowrap",
+            variant === 'destructive' && 'text-destructive',
+            variant === 'positive' && 'text-accent'
+          )}
+        >
           {value}
         </div>
         <p className="text-xs text-muted-foreground">{description}</p>
