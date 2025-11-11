@@ -64,7 +64,7 @@ const plans = [
     }
 ];
 
-function ProfileSettingsTab() {
+const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const { theme, setTheme } = useTheme();
   const {
     settings,
@@ -77,7 +77,6 @@ function ProfileSettingsTab() {
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
   
-  // Temporary state for edits
   const [tempSettings, setTempSettings] = useState(settings);
 
   useEffect(() => {
@@ -110,7 +109,7 @@ function ProfileSettingsTab() {
 
   const handleCancel = () => {
     setIsEditing(false);
-    setTempSettings(settings); // Revert changes
+    setTempSettings(settings);
   };
 
   const handleChangePassword = (data: PasswordFormValues) => {
@@ -346,16 +345,14 @@ function ProfileSettingsTab() {
       </Dialog>
     </>
   );
-}
+});
 
-function SubscriptionBillingTab() {
+const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const handleChoosePlan = (planName: string) => {
     startTransition(async () => {
-      // In a real app, this would trigger a payment flow via Pesapal/InstaSend.
-      // For now, we simulate success
         toast({
             title: "Subscription Updated",
             description: `You are now on the ${planName}.`,
@@ -401,80 +398,81 @@ function SubscriptionBillingTab() {
             </div>
         </div>
   );
-}
+});
 
-const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const { toast } = useToast();
 
-  const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const { data: articles, loading: isDataLoading } = useCollection<KnowledgeArticle>(articlesQuery);
+const KnowledgeBaseTab = memo(() => {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
 
-  const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;
+    const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
+    const { data: articles, loading: isDataLoading } = useCollection<KnowledgeArticle>(articlesQuery);
 
-  const handleSeedData = async () => {
-    if (!user) return;
-    const batch = writeBatch(firestore);
-    placeholderFaq.forEach(article => {
-        const docRef = doc(collection(firestore, 'knowledgeBase'));
-        batch.set(docRef, { ...article, ownerId: user.uid });
-    });
-    await batch.commit();
-    toast({
-        title: "Knowledge Base Seeded",
-        description: "The placeholder FAQs have been added to your knowledge base.",
-    });
-  };
+    const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;
 
-  const handleAdd = () => {
-    setSelectedArticle(null);
-    setIsFormOpen(true);
-  };
+    const handleSeedData = async () => {
+        if (!user) return;
+        const batch = writeBatch(firestore);
+        placeholderFaq.forEach(article => {
+            const docRef = doc(collection(firestore, 'knowledgeBase'));
+            batch.set(docRef, { ...article, ownerId: user.uid });
+        });
+        await batch.commit();
+        toast({
+            title: "Knowledge Base Seeded",
+            description: "The placeholder FAQs have been added to your knowledge base.",
+        });
+    };
 
-  const handleEdit = (article: KnowledgeArticle) => {
-    setSelectedArticle(article);
-    setIsFormOpen(true);
-  };
+    const handleAdd = () => {
+        setSelectedArticle(null);
+        setIsFormOpen(true);
+    };
 
-  const handleDelete = (article: KnowledgeArticle) => {
-    setSelectedArticle(article);
-    setIsDeleteDialogOpen(true);
-  };
+    const handleEdit = (article: KnowledgeArticle) => {
+        setSelectedArticle(article);
+        setIsFormOpen(true);
+    };
 
-  const confirmDelete = async () => {
-    if (selectedArticle) {
-      if (!articles?.find(a => a.id === selectedArticle.id)) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Cannot delete a placeholder article. Seed the data first.' });
-          setIsDeleteDialogOpen(false);
-          return;
-      }
-      await deleteDoc(doc(firestore, 'knowledgeBase', selectedArticle.id));
-      setIsDeleteDialogOpen(false);
-      setSelectedArticle(null);
-    }
-  };
+    const handleDelete = (article: KnowledgeArticle) => {
+        setSelectedArticle(article);
+        setIsDeleteDialogOpen(true);
+    };
 
-  const handleFormSubmit = async (data: Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle) => {
-    if (!user) return;
-    const isEditing = 'id' in data;
+    const confirmDelete = async () => {
+        if (selectedArticle) {
+            if (!articles?.find(a => a.id === selectedArticle.id)) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Cannot delete a placeholder article. Seed the data first.' });
+                setIsDeleteDialogOpen(false);
+                return;
+            }
+            await deleteDoc(doc(firestore, 'knowledgeBase', selectedArticle.id));
+            setIsDeleteDialogOpen(false);
+            setSelectedArticle(null);
+        }
+    };
 
-    if (isEditing) {
-      if (!articles?.find(a => a.id === data.id)) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Cannot edit a placeholder article. Seed the data first.' });
-          setIsFormOpen(false);
-          return;
-      }
-      await updateDoc(doc(firestore, 'knowledgeBase', data.id), data as Partial<KnowledgeArticle>);
-    } else {
-      await addDoc(collection(firestore, 'knowledgeBase'), { ...data, ownerId: user.uid });
-    }
-    setIsFormOpen(false);
-  };
+    const handleFormSubmit = async (data: Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle) => {
+        if (!user) return;
+        const isEditing = 'id' in data;
+
+        if (isEditing) {
+            if (!articles?.find(a => a.id === data.id)) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Cannot edit a placeholder article. Seed the data first.' });
+                setIsFormOpen(false);
+                return;
+            }
+            await updateDoc(doc(firestore, 'knowledgeBase', data.id), data as Partial<KnowledgeArticle>);
+        } else {
+            await addDoc(collection(firestore, 'knowledgeBase'), { ...data, ownerId: user.uid });
+        }
+        setIsFormOpen(false);
+    };
   
   if (isDataLoading) {
     return (
@@ -596,5 +594,5 @@ const AccountPage = memo(function AccountPage() {
 });
 
 export default AccountPage;
-
     
+
