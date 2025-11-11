@@ -1,6 +1,7 @@
 
 import DashboardClientLayout from './dashboard-client-layout';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { ChatBubble } from '@/components/chat-bubble';
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
       <DashboardClientLayout>
         {children}
         <FirebaseErrorListener />
+        <ChatBubble />
       </DashboardClientLayout>
   );
 }
