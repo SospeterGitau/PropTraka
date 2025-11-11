@@ -1,134 +1,121 @@
 
 'use client';
 
-import { useRef, useEffect, useState, FormEvent, ChangeEvent } from 'react';
-import { Paperclip, Send, Bot } from 'lucide-react';
-import { useChat } from '@/hooks/use-chat';
+import { useState, useMemo, useEffect } from 'react';
+import { Search, ChevronRight, X } from 'lucide-react';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
+import { collection, query, where } from 'firebase/firestore';
+import type { KnowledgeArticle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { useUser } from '@/firebase';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
-  const { messages, sendMessage, isLoading, isSending } = useChat();
-  const [input, setInput] = useState('');
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const firestore = useFirestore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeArticle, setActiveArticle] = useState<KnowledgeArticle | null>(null);
 
+  const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const { data: articles, loading: isLoading } = useCollection<KnowledgeArticle>(articlesQuery);
+
+  const filteredArticles = useMemo(() => {
+    if (!articles) return [];
+    if (!searchTerm) return articles;
+    return articles.filter(article =>
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [articles, searchTerm]);
+  
   useEffect(() => {
-    // Scroll to the bottom whenever messages change
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+    if (!isOpen) {
+        setSearchTerm('');
+        setActiveArticle(null);
     }
-  }, [messages]);
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (input.trim() && !isSending) {
-      sendMessage(input);
-      setInput('');
-    }
-  };
+  }, [isOpen]);
+  
+  const handleBack = () => {
+    setActiveArticle(null);
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md md:max-w-lg p-0 flex flex-col h-[80vh] max-h-[700px]">
+      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[70vh] max-h-[600px]">
         <DialogHeader className="p-4 border-b">
           <DialogTitle className="flex items-center gap-2">
-            <Bot /> LeaseLync Support AI
+            {activeArticle ? (
+                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleBack}><X className="h-4 w-4"/></Button>
+            ) : (
+                <Search className="h-5 w-5" />
+            )}
+            {activeArticle ? 'Article' : 'Help & FAQs'}
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
-          <div className="space-y-4 py-4">
-            {isLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-16 w-3/4" />
-                <Skeleton className="h-16 w-3/4 ml-auto" />
-                <Skeleton className="h-16 w-3/4" />
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    'flex items-end gap-2',
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                  {message.role === 'model' && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>AI</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={cn(
-                      'max-w-[75%] rounded-lg px-3 py-2 text-sm',
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    )}
-                  >
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                   {message.role === 'user' && (
-                     <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.photoURL ?? undefined} />
-                        <AvatarFallback>{user?.email?.[0].toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  )}
+        <div className="flex-1 overflow-y-auto">
+            {activeArticle ? (
+                <div className="p-6">
+                    <h3 className="font-bold text-lg mb-2">{activeArticle.title}</h3>
+                    <p className="text-sm whitespace-pre-wrap">{activeArticle.content}</p>
                 </div>
-              ))
-            )}
-             {isSending && (
-                <div className="flex items-end gap-2 justify-start">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback>AI</AvatarFallback>
-                    </Avatar>
-                    <div className="bg-muted rounded-lg px-3 py-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="h-2 w-2 bg-primary rounded-full animate-pulse delay-0"></span>
-                            <span className="h-2 w-2 bg-primary rounded-full animate-pulse delay-150"></span>
-                            <span className="h-2 w-2 bg-primary rounded-full animate-pulse delay-300"></span>
+            ) : (
+                <>
+                    <div className="p-4 border-b">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search articles..."
+                            className="pl-10"
+                            />
                         </div>
                     </div>
-                </div>
+                    <ScrollArea className="h-[calc(100%-72px)]">
+                        <div className="p-4 space-y-2">
+                            {isLoading ? (
+                                <div className="space-y-2">
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                </div>
+                            ) : filteredArticles.length > 0 ? (
+                                filteredArticles.map(article => (
+                                <button
+                                    key={article.id}
+                                    onClick={() => setActiveArticle(article)}
+                                    className="w-full text-left p-3 rounded-md hover:bg-muted flex items-center justify-between"
+                                >
+                                    <span className="font-medium text-sm">{article.title}</span>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground"/>
+                                </button>
+                                ))
+                            ) : (
+                                <div className="text-center text-muted-foreground py-8">
+                                <p>No articles found.</p>
+                                <p className="text-xs">Try adding some in the Admin Knowledge Base.</p>
+                                </div>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </>
             )}
-          </div>
-        </ScrollArea>
-
-        <DialogFooter className="p-4 border-t">
-          <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
-            <Input
-              value={input}
-              onChange={handleInputChange}
-              placeholder="Ask about your portfolio..."
-              className="flex-1"
-              disabled={isSending}
-            />
-            <Button type="submit" size="icon" disabled={!input.trim() || isSending}>
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
