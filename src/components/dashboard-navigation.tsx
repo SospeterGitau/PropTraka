@@ -106,7 +106,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>Core Operations</SidebarGroupLabel>
+            <SidebarGroupLabel>Manage</SidebarGroupLabel>
             <SidebarMenu>
                 {coreNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
@@ -129,7 +129,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
           </SidebarGroup>
 
           <SidebarGroup>
-             <SidebarGroupLabel>Analysis & Reporting</SidebarGroupLabel>
+             <SidebarGroupLabel>Analyze</SidebarGroupLabel>
              <SidebarMenu>
                 {analysisNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
@@ -151,25 +151,28 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
             </SidebarMenu>
           </SidebarGroup>
           
-           <SidebarMenu className="mt-auto">
-            {utilityNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    className="justify-start text-sm h-10"
-                    tooltip={item.label}
-                    >
-                    <Link href={item.href}>
-                        <span className="inline-flex items-center justify-center w-6 h-6">
-                        <item.icon />
-                        </span>
-                        <span>{item.label}</span>
-                    </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            ))}
-           </SidebarMenu>
+           <SidebarGroup className="mt-auto">
+             <SidebarGroupLabel>Help & Settings</SidebarGroupLabel>
+             <SidebarMenu>
+                {utilityNavItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.href}
+                        className="justify-start h-10"
+                        tooltip={item.label}
+                        >
+                        <Link href={item.href}>
+                            <span className="inline-flex items-center justify-center w-6 h-6">
+                            <item.icon />
+                            </span>
+                            <span>{item.label}</span>
+                        </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                ))}
+             </SidebarMenu>
+           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter>
           <SidebarSeparator />
