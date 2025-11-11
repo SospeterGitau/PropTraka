@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import placeholderFaq from '@/lib/placeholder-faq.json';
 
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
@@ -27,14 +28,16 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const { data: articles, loading: isLoading } = useCollection<KnowledgeArticle>(articlesQuery);
 
+  // Use placeholder data as a fallback if the collection is empty or loading
+  const articlesToSearch = (articles && articles.length > 0) ? articles : placeholderFaq;
+
   const filteredArticles = useMemo(() => {
-    if (!articles) return [];
-    if (!searchTerm) return articles;
-    return articles.filter(article =>
+    if (!searchTerm) return articlesToSearch;
+    return articlesToSearch.filter(article =>
       article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       article.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [articles, searchTerm]); // FIX: Added searchTerm to dependency array
+  }, [articlesToSearch, searchTerm]);
   
   useEffect(() => {
     if (!isOpen) {
@@ -89,9 +92,9 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                     <Skeleton className="h-12 w-full" />
                                 </div>
                             ) : filteredArticles.length > 0 ? (
-                                filteredArticles.map(article => (
+                                filteredArticles.map((article, index) => (
                                 <button
-                                    key={article.id}
+                                    key={article.id || `placeholder-${index}`}
                                     onClick={() => setActiveArticle(article)}
                                     className="w-full text-left p-3 rounded-md hover:bg-muted flex items-center justify-between"
                                 >
