@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 interface ContractorFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Contractor) => void;
+  onSubmit: (data: Omit<Contractor, 'id'> | Contractor) => void;
   contractor?: Contractor | null;
 }
 
@@ -26,16 +26,15 @@ export function ContractorForm({ isOpen, onClose, onSubmit, contractor }: Contra
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const id = contractor?.id || `c${Date.now()}`;
-    
-    const data: Contractor = {
-      id,
+    const isEditing = !!contractor;
+
+    const data: Omit<Contractor, 'id'> | Contractor = {
+      ...(isEditing ? { id: contractor.id } : {}),
       name: formData.get('name') as string,
       specialty: formData.get('specialty') as string,
-      email: formData.get('email') as string || undefined,
-      phone: formData.get('phone') as string || undefined,
-      notes: formData.get('notes') as string || undefined,
-      ownerId: contractor?.ownerId || '',
+      email: (formData.get('email') as string) || undefined,
+      phone: (formData.get('phone') as string) || undefined,
+      notes: (formData.get('notes') as string) || undefined,
     };
     
     onSubmit(data);

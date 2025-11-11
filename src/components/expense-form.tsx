@@ -64,7 +64,7 @@ export function ExpenseForm({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Transaction) => void;
+  onSubmit: (data: Omit<Transaction, 'id'> | Transaction) => void;
   transaction?: Partial<Transaction> | null;
   properties: Property[];
   contractors: Contractor[];
@@ -94,9 +94,10 @@ export function ExpenseForm({
     const propertyId = formData.get('propertyId') as string;
     const selectedProperty = properties.find(p => p.id === propertyId);
     const selectedContractor = contractors.find(c => c.id === contractorId);
+    const isEditing = !!transaction?.id;
     
-    const data: Transaction = {
-      id: transaction?.id || `e${Date.now()}`,
+    const data: Omit<Transaction, 'id'> | Transaction = {
+      ...(isEditing ? { id: transaction.id } : {}),
       date: formData.get('date') as string,
       amount: Number(formData.get('amount')),
       propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Expense',
@@ -109,7 +110,6 @@ export function ExpenseForm({
       expenseType: expenseType,
       frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
       receiptUrl: formData.get('receiptUrl') as string,
-      ownerId: transaction?.ownerId || '', // This will be handled by context
       rent: 0,
     };
     onSubmit(data);

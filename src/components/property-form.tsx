@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 interface PropertyFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (property: Property) => void;
+  onSubmit: (data: Omit<Property, 'id'> | Property) => void;
   property?: Property | null;
 }
 
@@ -45,9 +45,11 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const isEditing = !!property?.id;
     const id = property?.id || `p${Date.now()}`;
-    const updatedProperty: Property = {
-      id: id,
+
+    const data: Omit<Property, 'id'> | Property = {
+      ...(isEditing ? { id: property.id } : {}),
       addressLine1: formData.get('addressLine1') as string,
       city: formData.get('city') as string,
       state: formData.get('state') as string,
@@ -66,7 +68,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       imageUrl: property?.imageUrl || `https://picsum.photos/seed/${id}/600/400`,
       imageHint: property?.imageHint || 'new property',
     };
-    onSubmit(updatedProperty);
+    onSubmit(data);
     onClose();
   };
 

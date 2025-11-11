@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 interface MaintenanceFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => void;
+  onSubmit: (data: Omit<MaintenanceRequest, 'id'> | MaintenanceRequest) => void;
   request?: MaintenanceRequest | null;
   properties: Property[];
   contractors: Contractor[];
@@ -37,9 +37,10 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
     const selectedProperty = properties.find(p => p.id === propertyId);
     const contractorId = formData.get('contractorId') as string;
     const selectedContractor = contractors.find(c => c.id === contractorId);
+    const isEditing = !!request?.id;
 
-    const data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest = {
-      ...(request ? { id: request.id } : {}), // include id if editing
+    const data: Omit<MaintenanceRequest, 'id'> | MaintenanceRequest = {
+      ...(isEditing ? { id: request.id } : {}), // include id if editing
       propertyId: propertyId !== 'none' ? propertyId : undefined,
       propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Task',
       description: formData.get('description') as string,
