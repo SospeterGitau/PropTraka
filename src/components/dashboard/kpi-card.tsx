@@ -1,3 +1,4 @@
+
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -19,7 +20,7 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
       </CardHeader>
       <CardContent>
         <div className={cn(
-          "text-2xl font-bold",
+          "text-lg sm:text-xl md:text-2xl font-bold break-words",
           variant === 'destructive' && 'text-destructive',
           variant === 'positive' && 'text-primary'
         )}>
