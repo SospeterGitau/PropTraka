@@ -22,7 +22,7 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
         <div className={cn(
           "text-lg sm:text-xl md:text-2xl font-bold break-words",
           variant === 'destructive' && 'text-destructive',
-          variant === 'positive' && 'text-primary'
+          variant === 'positive' && 'text-accent'
         )}>
           {value}
         </div>
