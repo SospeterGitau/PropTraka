@@ -22,7 +22,6 @@ import {
   Wrench,
   User,
   Sparkles,
-  Database,
 } from 'lucide-react';
 import { logout } from '@/app/(dashboard)/actions';
 import { useDataContext } from '@/context/data-context';
@@ -62,7 +61,6 @@ const analysisNavItems = [
 
 const utilityNavItems = [
     { href: '/settings', label: 'Account', icon: User },
-    { href: '/admin', label: 'Knowledge Base', icon: Database },
     { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
