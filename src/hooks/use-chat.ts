@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -94,8 +95,10 @@ export const useChat = () => {
     setMessages(currentHistory);
 
     try {
+        const cleanHistory = currentHistory.filter(m => !m.id?.startsWith('temp-'));
+        
         const aiInput: AskAiAgentInput = {
-            history: currentHistory.map(({ role, content }) => ({ role, content })),
+            history: cleanHistory.map(({ role, content }) => ({ role, content })),
         };
         
         const aiResponse = await askAiAgent(aiInput);
@@ -103,17 +106,18 @@ export const useChat = () => {
         const aiMessage: ChatMessage = {
             id: `temp-ai-${Date.now()}`,
             role: 'model',
-            content: aiResponse.content,
+            content: aiResponse,
         };
+        setMessages(prev => [...prev, aiMessage]);
         
         // Save both messages to Firestore
         const userMessageForDb = { role: 'user', content: text, ownerId: user.uid, timestamp: Timestamp.now() };
-        const aiMessageForDb = { role: 'model', content: aiResponse.content, ownerId: user.uid, timestamp: Timestamp.now() };
+        const aiMessageForDb = { role: 'model', content: aiResponse, ownerId: user.uid, timestamp: Timestamp.now() };
 
         await addDoc(chatCollectionRef, userMessageForDb);
         await addDoc(chatCollectionRef, aiMessageForDb);
         
-        // The onSnapshot listener will now handle the final state update.
+        // The onSnapshot listener will eventually sync the state, replacing temp IDs with real ones.
 
     } catch (e) {
         console.error("Failed to send message or get AI response:", e);
