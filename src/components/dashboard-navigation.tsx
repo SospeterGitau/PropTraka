@@ -11,7 +11,6 @@ import {
   Calendar,
   CircleAlert,
   HelpCircle,
-  History,
   LayoutDashboard,
   LineChart,
   LogOut,
@@ -61,7 +60,6 @@ const analysisNavItems = [
 
 const utilityNavItems = [
     { href: '/settings', label: 'Account', icon: User },
-    { href: '/changelog', label: 'Changelog', icon: History },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
 ];
