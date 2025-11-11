@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Inter, Lora } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { Toaster } from "@/components/ui/toaster"
 import '@/app/globals.css';
 import { ThemeProvider } from '@/context/theme-context';
@@ -10,15 +10,10 @@ const inter = Inter({
   variable: '--font-sans'
 });
 
-const lora = Lora({
-  subsets: ['latin'],
-  variable: '--font-headline'
-})
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${lora.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ClientProviderWrapper>
           <ThemeProvider>
               {children}
