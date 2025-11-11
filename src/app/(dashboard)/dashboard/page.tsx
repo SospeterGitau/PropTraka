@@ -102,6 +102,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
     }, 0);
 
   const netOperatingIncome = totalRevenue - totalExpenses;
+  const noiVariant = netOperatingIncome >= 0 ? 'positive' : 'destructive';
 
   return (
     <>
@@ -136,12 +137,14 @@ const DashboardPageContent = memo(function DashboardPageContent() {
           title="Net Operating Income"
           value={formatCurrency(netOperatingIncome)}
           description="This month (before tax)"
+          variant={noiVariant}
         />
         <KpiCard
           icon={CircleAlert}
           title="Arrears"
           value={formatCurrency(totalArrears)}
           description="Total outstanding payments"
+          variant={totalArrears > 0 ? 'destructive' : 'default'}
         />
       </div>
       <div className="grid gap-4 mt-4 grid-cols-1">
