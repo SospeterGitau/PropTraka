@@ -1,23 +1,22 @@
 
-'use client';
-
-import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Our privacy policy outlines how LeaseLync collects, uses, and manages personal data, and clarifies our role as a Data Processor and your responsibilities as a Data Controller.',
+};
 
 export default function PrivacyPolicyPage() {
-  const [lastUpdated, setLastUpdated] = useState('');
-
-  useEffect(() => {
-    // This code runs only on the client, after hydration
-    setLastUpdated(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
-  }, []);
+  // Date is now server-rendered, making this a Server Component
+  const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
     <>
       <PageHeader title="Privacy Policy" />
       <div className="max-w-4xl mx-auto prose prose-sm sm:prose-base">
-        <p><strong>Last Updated:</strong> {lastUpdated || '...'}</p>
+        <p><strong>Last Updated:</strong> {lastUpdated}</p>
 
         <h2 className="pt-4 font-bold">1. Introduction</h2>
         <p>
