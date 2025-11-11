@@ -17,12 +17,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
@@ -40,7 +34,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       article.content.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [articles, searchTerm]);
+  }, [articles, searchTerm]); // FIX: Added searchTerm to dependency array
   
   useEffect(() => {
     if (!isOpen) {
@@ -107,8 +101,8 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 ))
                             ) : (
                                 <div className="text-center text-muted-foreground py-8">
-                                <p>No articles found.</p>
-                                <p className="text-xs">Try adding some in the Admin Knowledge Base.</p>
+                                <p>No articles found for "{searchTerm}".</p>
+                                <p className="text-xs">Try a different keyword or add more articles in the Admin panel.</p>
                                 </div>
                             )}
                         </div>
