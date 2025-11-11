@@ -32,6 +32,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 const passwordSchema = z.object({
   newPassword: z.string().min(6, 'Password must be at least 6 characters'),
