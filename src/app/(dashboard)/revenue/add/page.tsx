@@ -308,8 +308,24 @@ export default function AddTenancyPage() {
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
   const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
 
-  if (isPropertiesLoading || isRevenueLoading || !properties || !revenue) {
+  if (isPropertiesLoading || isRevenueLoading) {
     return <div>Loading...</div>;
+  }
+  
+  // This check is important. The form needs at least one property to be useful.
+  if (!properties || properties.length === 0) {
+      return (
+          <>
+            <PageHeader title="Add New Tenancy" />
+            <div className="text-center py-12">
+                <h2 className="text-2xl font-semibold mb-2">No Properties Found</h2>
+                <p className="text-muted-foreground mb-4">You need to add a property before you can create a tenancy.</p>
+                <Button asChild>
+                    <Link href="/properties">Go to Properties</Link>
+                </Button>
+            </div>
+          </>
+      )
   }
 
   return (
@@ -322,7 +338,7 @@ export default function AddTenancyPage() {
           </Link>
         </Button>
       </PageHeader>
-      <TenancyForm properties={properties} revenue={revenue} />
+      <TenancyForm properties={properties} revenue={revenue || []} />
     </>
   );
 }
