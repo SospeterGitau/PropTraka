@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useUser, useFirebase } from '@/firebase';
-import { doc, getDoc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection, query, where, addDoc } from 'firebase/firestore';
 import type { ResidencyStatus, Subscription } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -65,18 +65,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const subsSnap = await getDocs(subsQuery);
         
         if (subsSnap.empty) {
-            // No subscription found, create a default "Free" one
+            // No subscription found, create a default "Starter" one for new users.
             const subRef = doc(collection(firestore, 'subscriptions'));
             const newSub: Subscription = {
                 id: subRef.id,
                 ownerId: user.uid,
-                plan: 'Free',
+                plan: 'Starter', // Default to Starter
                 status: 'active',
                 billingCycle: 'monthly',
                 currentPeriodStart: new Date().toISOString(),
                 currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
             };
             await setDoc(subRef, newSub);
+            addDoc(collection(firestore, 'changelog'), {
+              ownerId: user.uid,
+              date: new Date().toISOString(),
+              type: 'Subscription',
+              action: 'Created',
+              description: `New "Starter" subscription created.`,
+              entityId: subRef.id,
+            });
             userSettings.subscription = newSub;
         } else {
             userSettings.subscription = subsSnap.docs[0].data() as Subscription;

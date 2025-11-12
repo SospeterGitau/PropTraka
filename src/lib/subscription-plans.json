@@ -1,0 +1,81 @@
+
+[
+    {
+        "id": "plan_starter",
+        "name": "Starter",
+        "price": 2000,
+        "price_per_unit": 400,
+        "unit_range": "1-5 Units",
+        "description": "Ideal for individual landlords getting started.",
+        "features": [
+            "rent_tracking",
+            "maintenance_logs",
+            "tenant_records",
+            "email_support"
+        ],
+        "transaction_limit": 50,
+        "support_level": "Email"
+    },
+    {
+        "id": "plan_growth",
+        "name": "Growth",
+        "price": 4500,
+        "price_per_unit": 225,
+        "unit_range": "6-20 Units",
+        "description": "For small property managers scaling their portfolio.",
+        "features": [
+            "rent_tracking",
+            "maintenance_logs",
+            "tenant_records",
+            "expense_tracking",
+            "basic_analytics",
+            "email_support",
+            "chat_support"
+        ],
+        "transaction_limit": 200,
+        "support_level": "Email & Chat"
+    },
+    {
+        "id": "plan_professional",
+        "name": "Professional",
+        "price": 10000,
+        "price_per_unit": 200,
+        "unit_range": "21-50 Units",
+        "description": "For established managers needing advanced tools.",
+        "features": [
+            "rent_tracking",
+            "maintenance_logs",
+            "tenant_records",
+            "expense_tracking",
+            "advanced_reports",
+            "maintenance_workflow",
+            "document_storage",
+            "email_support",
+            "chat_support",
+            "phone_support"
+        ],
+        "transaction_limit": 500,
+        "support_level": "Priority Support"
+    },
+    {
+        "id": "plan_enterprise",
+        "name": "Enterprise",
+        "price": null,
+        "price_per_unit": 150,
+        "unit_range": "50+ Units",
+        "description": "Custom solutions for large-scale property companies.",
+        "features": [
+            "rent_tracking",
+            "maintenance_logs",
+            "tenant_records",
+            "expense_tracking",
+            "advanced_reports",
+            "maintenance_workflow",
+            "document_storage",
+            "api_access",
+            "dedicated_support"
+        ],
+        "transaction_limit": -1,
+        "support_level": "Dedicated Account Manager"
+    }
+]

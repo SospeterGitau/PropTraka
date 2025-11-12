@@ -143,16 +143,45 @@ export interface Contractor {
 }
 
 /**
- * Represents the user's subscription plan details.
+ * Represents a subscription plan's details from the static configuration.
+ */
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number | null;
+  price_per_unit?: number;
+  unit_range: string;
+  description: string;
+  features: string[];
+  transaction_limit: number;
+  support_level: string;
+}
+
+/**
+ * Represents a feature available in the application.
+ */
+export interface AppFeature {
+    id: string;
+    name: string;
+    description: string;
+    page_url: string | null;
+}
+
+/**
+ * Represents the user's subscription plan details stored in Firestore.
  */
 export interface Subscription {
   id: string;
   ownerId?: string;
-  plan: 'Free' | 'Pro';
-  status: 'active' | 'cancelled' | 'past_due';
+  plan: 'Free' | 'Starter' | 'Growth' | 'Professional' | 'Enterprise';
+  status: 'active' | 'trial' | 'cancelled' | 'overdue' | 'past_due';
   billingCycle: 'monthly' | 'yearly';
   currentPeriodStart: string;
   currentPeriodEnd: string;
+  units_managed?: number;
+  payment_customer_id?: string; // For IntaSend API
+  next_billing_date?: string;    // For IntaSend API
+  last_payment_status?: string; // For IntaSend API
 }
 
 /**

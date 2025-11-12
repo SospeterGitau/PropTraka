@@ -10,13 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry } from '@/lib/types';
+import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,6 +34,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
 import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
+import { cn } from '@/lib/utils';
+import plans from '@/lib/subscription-plans.json';
+import features from '@/lib/app-features.json';
 
 
 const passwordSchema = z.object({
@@ -42,29 +45,8 @@ const passwordSchema = z.object({
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
-const plans = [
-    {
-        name: 'Free Plan',
-        price: 'KES 0/month',
-        features: [
-            'Up to 3 Properties',
-            'Basic Reporting',
-            'Manual Data Entry',
-        ],
-        isCurrent: false,
-    },
-    {
-        name: 'Pro Plan',
-        price: 'KES 2,500/month',
-        features: [
-            'Unlimited Properties',
-            'AI-Powered Reporting',
-            'Tenant Payment Requests (soon)',
-            'Priority Support',
-        ],
-        isCurrent: true,
-    }
-];
+const allPlans: SubscriptionPlan[] = plans;
+const allFeatures: AppFeature[] = features;
 
 const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const { theme, setTheme } = useTheme();
@@ -350,57 +332,80 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 });
 
 const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
-  const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
+    const { settings, isLoading } = useDataContext();
+    const [isPending, startTransition] = useTransition();
+    const { toast } = useToast();
+  
+    const handleChoosePlan = (planName: string) => {
+      startTransition(async () => {
+          toast({
+              title: "Subscription Updated",
+              description: `This is where you would integrate with IntaSend to change the plan to ${planName}.`,
+          });
+      });
+    }
 
-  const handleChoosePlan = (planName: string) => {
-    startTransition(async () => {
-        toast({
-            title: "Subscription Updated",
-            description: `You are now on the ${planName}.`,
-        });
-    });
-  }
-
-
-  return (
+    const currentPlan = settings.subscription?.plan;
+  
+    return (
         <div className="space-y-8">
             <div className="text-center">
                 <h2 className="text-3xl font-bold">Choose Your Plan</h2>
                 <p className="text-muted-foreground mt-2">Select the plan that best fits your needs.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {plans.map((plan) => (
-                    <Card key={plan.name} className="flex flex-col">
-                        <CardHeader>
-                            <CardTitle>{plan.name}</CardTitle>
-                            <CardDescription className="text-2xl font-bold">{plan.price}</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                             <ul className="space-y-3 text-sm">
-                                {plan.features.map((feature) => (
-                                    <li key={feature} className="flex items-center gap-2">
-                                        <CheckCircle className="h-4 w-4 text-primary" />
-                                        <span>{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </CardContent>
-                        <div className="p-6 pt-0">
-                            <Button
-                                className="w-full"
-                                onClick={() => handleChoosePlan(plan.name.split(' ')[0])}
-                                disabled={isPending}
-                            >
-                                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Choose Plan'}
-                            </Button>
-                        </div>
-                    </Card>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                {allPlans.map((plan) => {
+                    const isCurrent = plan.name === currentPlan;
+                    return (
+                        <Card key={plan.id} className={cn("flex flex-col", isCurrent && "border-primary border-2")}>
+                            {isCurrent && (
+                                <div className="bg-primary text-primary-foreground text-center text-sm font-bold py-1 rounded-t-lg">
+                                    Current Plan
+                                </div>
+                            )}
+                            <CardHeader className="text-center">
+                                <CardTitle>{plan.name}</CardTitle>
+                                <div className="text-4xl font-bold">
+                                    {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
+                                </div>
+                                <CardDescription>{plan.price !== null ? '/month' : 'pricing'}</CardDescription>
+                                <p className="text-sm text-muted-foreground pt-2">{plan.description}</p>
+                            </CardHeader>
+                            <CardContent className="flex-1 space-y-4">
+                                <h4 className="font-semibold text-center">Features</h4>
+                                 <ul className="space-y-3 text-sm">
+                                    {plan.features.map((featureId) => {
+                                        const feature = allFeatures.find(f => f.id === featureId);
+                                        if (!feature) return null;
+                                        return (
+                                            <li key={feature.id} className="flex items-center gap-2">
+                                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                                {feature.page_url ? (
+                                                    <Link href={feature.page_url} className="hover:underline">{feature.name}</Link>
+                                                ) : (
+                                                    <span>{feature.name}</span>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </CardContent>
+                            <div className="p-6 pt-0">
+                                <Button
+                                    className="w-full"
+                                    onClick={() => handleChoosePlan(plan.name)}
+                                    disabled={isPending || isCurrent}
+                                >
+                                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Current Plan' : 'Choose Plan')}
+                                </Button>
+                            </div>
+                        </Card>
+                    );
+                })}
             </div>
         </div>
-  );
-});
+    );
+  });
 
 const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const { user } = useUser();

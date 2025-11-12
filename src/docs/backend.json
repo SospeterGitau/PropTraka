@@ -1,5 +1,4 @@
 
-
 {
   "entities": {
     "property": {
@@ -107,18 +106,6 @@
       },
       "required": ["name", "specialty", "ownerId"]
     },
-    "knowledgeArticle": {
-      "title": "Knowledge Article",
-      "description": "An article in the AI's knowledge base.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "title": { "type": "string" },
-        "content": { "type": "string" }
-      },
-      "required": ["title", "content", "ownerId"]
-    },
     "changeLogEntry": {
         "title": "Change Log Entry",
         "description": "An entry in the activity changelog.",
@@ -141,11 +128,15 @@
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Free", "Pro"] },
-        "status": { "type": "string", "enum": ["active", "cancelled", "past_due"] },
+        "plan": { "type": "string", "enum": ["Free", "Starter", "Growth", "Professional", "Enterprise"] },
+        "status": { "type": "string", "enum": ["active", "trial", "cancelled", "overdue", "past_due"] },
         "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
         "currentPeriodStart": { "type": "string", "format": "date-time" },
-        "currentPeriodEnd": { "type": "string", "format": "date-time" }
+        "currentPeriodEnd": { "type": "string", "format": "date-time" },
+        "units_managed": { "type": "number" },
+        "payment_customer_id": { "type": "string" },
+        "next_billing_date": { "type": "string", "format": "date-time" },
+        "last_payment_status": { "type": "string" }
       },
       "required": ["ownerId", "plan", "status", "billingCycle"]
     },
@@ -167,20 +158,33 @@
       },
       "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
     },
-    "userSettings": {
-      "title": "User Settings",
-      "description": "Stores user-specific application settings and preferences.",
-      "type": "object",
-      "properties": {
-        "ownerId": { "type": "string" },
-        "currency": { "type": "string" },
-        "locale": { "type": "string" },
-        "companyName": { "type": "string" },
-        "residencyStatus": { "type": "string", "enum": ["resident", "non-resident"] },
-        "isPnlReportEnabled": { "type": "boolean" },
-        "isMarketResearchEnabled": { "type": "boolean" }
-      },
-      "required": ["ownerId", "currency", "locale", "residencyStatus"]
+    "subscription_plan": {
+        "title": "Subscription Plan",
+        "description": "Defines a subscription tier.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "monthly_price": { "type": "number" },
+            "per_unit_price": { "type": "number" },
+            "description": { "type": "string" },
+            "core_features": { "type": "array", "items": { "type": "string" } },
+            "transaction_limit": { "type": "number" },
+            "support_level": { "type": "string" }
+        },
+        "required": ["name", "description"]
+    },
+    "app_feature": {
+        "title": "App Feature",
+        "description": "Defines a feature within the application.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "page_url": { "type": "string" }
+        },
+        "required": ["name", "description"]
     }
   },
   "auth": {
@@ -207,10 +211,6 @@
       "schema": { "$ref": "#/entities/contractor" },
       "description": "Stores contractor and vendor information."
     },
-    "/knowledgeBase/{articleId}": {
-      "schema": { "$ref": "#/entities/knowledgeArticle" },
-      "description": "Stores AI knowledge base articles."
-    },
     "/changelog/{logId}": {
         "schema": { "$ref": "#/entities/changeLogEntry" },
         "description": "Stores activity log entries."
@@ -223,9 +223,13 @@
         "schema": { "$ref": "#/entities/invoice" },
         "description": "Stores tenant payment invoices."
     },
-     "/userSettings/{userId}": {
-      "schema": { "$ref": "#/entities/userSettings" },
-      "description": "Stores settings for a specific user."
+    "/subscription_plans/{planId}": {
+      "schema": { "$ref": "#/entities/subscription_plan" },
+      "description": "Configuration for subscription plans (read-only)."
+    },
+    "/app_features/{featureId}": {
+      "schema": { "$ref": "#/entities/app_feature" },
+      "description": "Configuration for application features (read-only)."
     }
   }
 }

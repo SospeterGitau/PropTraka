@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { ReactNode } from 'react';
@@ -37,7 +36,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
   SidebarInset,
@@ -71,7 +69,7 @@ function UpgradeBanner() {
   const { settings } = useDataContext();
   const pathname = usePathname();
 
-  if (settings.subscription?.plan !== 'Free' || pathname === '/settings') {
+  if (settings.subscription?.plan !== 'Starter' || pathname.includes('/settings')) {
     return null;
   }
   
@@ -79,7 +77,7 @@ function UpgradeBanner() {
       <Alert className="mb-4 bg-primary/10 border-primary/50 text-primary-foreground">
         <Sparkles className="h-4 w-4" />
         <AlertDescription className="text-primary">
-            You are on the Free Plan. <Link href="/settings" className="font-bold underline hover:text-primary/90">Upgrade to Pro</Link> to unlock AI-powered reports and more features.
+            You are on the Starter Plan. <Link href="/settings" className="font-bold underline hover:text-primary/90">Upgrade your plan</Link> to unlock more powerful features.
         </AlertDescription>
       </Alert>
   )
@@ -201,5 +199,3 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
     </SidebarProvider>
   );
 }
-
-    
