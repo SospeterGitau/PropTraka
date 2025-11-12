@@ -189,7 +189,7 @@ const TenancyForm = memo(function TenancyForm({
                 <CardTitle>Tenancy Details</CardTitle>
                 <CardDescription>Select the property and enter the tenant's information.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
                 <div className="space-y-2">
                     <Label htmlFor="propertyId">Property</Label>
                     <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
@@ -223,7 +223,7 @@ const TenancyForm = memo(function TenancyForm({
                 <CardTitle>Lease & Financials</CardTitle>
                 <CardDescription>Set the lease duration, rent, and any service charges.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
@@ -267,7 +267,7 @@ const TenancyForm = memo(function TenancyForm({
                 <CardTitle>Additional Information</CardTitle>
                 <CardDescription>Add a contract link and notes.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
                  <div className="space-y-2">
                     <Label htmlFor="contractUrl">Contract Link (optional)</Label>
                     <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
@@ -279,7 +279,7 @@ const TenancyForm = memo(function TenancyForm({
             </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-background py-4 pr-24">
             <Button type="button" variant="outline" asChild><Link href="/revenue">Cancel</Link></Button>
             <Button type="submit">Save Changes</Button>
         </div>

@@ -198,9 +198,9 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
               <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} required />
             </div>
           
-          <DialogFooter className="pt-6">
+          <DialogFooter className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-background -mx-6 -mb-6 px-6 py-4 rounded-b-lg pr-24">
             <DialogClose asChild>
-              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+              <Button type="button" variant="outline">Cancel</Button>
             </DialogClose>
             <Button type="submit">Save</Button>
           </DialogFooter>
