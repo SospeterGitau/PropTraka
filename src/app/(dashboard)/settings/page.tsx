@@ -10,13 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature } from '@/lib/types';
+import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature, Subscription } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,8 +35,8 @@ import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitl
 import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
-import plans from '@/lib/subscription-plans.json';
-import features from '@/lib/app-features.json';
+import allPlans from '@/lib/subscription-plans.json';
+import allFeatures from '@/lib/app-features.json';
 
 
 const passwordSchema = z.object({
@@ -44,9 +44,6 @@ const passwordSchema = z.object({
 });
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
-
-const allPlans: SubscriptionPlan[] = plans;
-const allFeatures: AppFeature[] = features;
 
 const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const { theme, setTheme } = useTheme();
@@ -350,62 +347,83 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     return (
         <div className="space-y-8">
             <div className="text-center">
-                <h2 className="text-3xl font-bold">Choose Your Plan</h2>
-                <p className="text-muted-foreground mt-2">Select the plan that best fits your needs.</p>
+                <h2 className="text-3xl font-bold tracking-tight">Choose Your Plan</h2>
+                <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Select the plan that best fits the size and needs of your property portfolio.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-11 gap-6 items-start">
                 {allPlans.map((plan) => {
                     const isCurrent = plan.name === currentPlan;
+                    const isMostPopular = plan.name === 'Professional';
+                    const planFeatures = plan.features.map(fid => allFeatures.find(f => f.id === fid)).filter(Boolean) as AppFeature[];
+
                     return (
-                        <Card key={plan.id} className={cn("flex flex-col", isCurrent && "border-primary border-2")}>
-                            {isCurrent && (
-                                <div className="bg-primary text-primary-foreground text-center text-sm font-bold py-1 rounded-t-lg">
-                                    Current Plan
-                                </div>
+                        <div key={plan.id} className={cn("relative rounded-2xl border p-6 shadow-sm flex flex-col", 
+                            isMostPopular ? "lg:col-span-3 lg:scale-105 bg-card" : "lg:col-span-2",
+                            isCurrent && "ring-2 ring-primary"
+                        )}>
+                            {isMostPopular && (
+                                <Badge variant="secondary" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 font-semibold">
+                                    <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
+                                    Most Popular
+                                </Badge>
                             )}
-                            <CardHeader className="text-center">
-                                <CardTitle>{plan.name}</CardTitle>
-                                <div className="text-4xl font-bold">
-                                    {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
+                             {isCurrent && !isMostPopular && (
+                                <Badge variant="outline" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
+                                    Current Plan
+                                </Badge>
+                            )}
+
+                            <div className="flex-1">
+                                <CardHeader className="text-center p-0 mb-6">
+                                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                                    <p className="text-sm text-muted-foreground pt-1">{plan.description}</p>
+                                </CardHeader>
+                                
+                                <div className="text-center mb-6">
+                                    <span className="text-4xl font-bold">
+                                        {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {plan.price !== null ? '/month' : ''}
+                                    </span>
                                 </div>
-                                <CardDescription>{plan.price !== null ? '/month' : 'pricing'}</CardDescription>
-                                <p className="text-sm text-muted-foreground pt-2">{plan.description}</p>
-                            </CardHeader>
-                            <CardContent className="flex-1 space-y-4">
-                                <h4 className="font-semibold text-center">Features</h4>
-                                 <ul className="space-y-3 text-sm">
-                                    {plan.features.map((featureId) => {
-                                        const feature = allFeatures.find(f => f.id === featureId);
-                                        if (!feature) return null;
-                                        return (
-                                            <li key={feature.id} className="flex items-center gap-2">
-                                                <CheckCircle className="h-4 w-4 text-green-500" />
+                                
+                                <Separator />
+
+                                <CardContent className="p-0 mt-6">
+                                    <h4 className="font-semibold text-center mb-4">Features</h4>
+                                    <ul className="space-y-3 text-sm">
+                                        {planFeatures.map((feature) => (
+                                            <li key={feature.id} className="flex items-center gap-3">
+                                                <CheckCircle className="h-5 w-5 text-green-500" />
                                                 {feature.page_url ? (
                                                     <Link href={feature.page_url} className="hover:underline">{feature.name}</Link>
                                                 ) : (
                                                     <span>{feature.name}</span>
                                                 )}
                                             </li>
-                                        );
-                                    })}
-                                </ul>
-                            </CardContent>
-                            <div className="p-6 pt-0">
+                                        ))}
+                                    </ul>
+                                </CardContent>
+                            </div>
+
+                            <div className="mt-6">
                                 <Button
                                     className="w-full"
+                                    variant={isMostPopular ? 'default' : 'outline'}
                                     onClick={() => handleChoosePlan(plan.name)}
                                     disabled={isPending || isCurrent}
                                 >
                                     {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Current Plan' : 'Choose Plan')}
                                 </Button>
                             </div>
-                        </Card>
+                        </div>
                     );
                 })}
             </div>
         </div>
     );
-  });
+});
 
 const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const { user } = useUser();
@@ -690,3 +708,5 @@ export default function AccountPage() {
     </>
   );
 }
+
+    
