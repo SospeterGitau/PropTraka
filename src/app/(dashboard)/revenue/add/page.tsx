@@ -14,9 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Trash2, ArrowLeft, Building } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Building, Loader2 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 
 function formatAddress(property: Property) {
@@ -274,18 +273,42 @@ const TenancyForm = memo(function TenancyForm({
 export default function AddTenancyPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Defer query creation until user is available.
-  const propertiesQuery = user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null;
-  
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  useEffect(() => {
+    if (isUserLoading) {
+      return; // Wait for user to be loaded
+    }
+    if (!user) {
+      setIsLoading(false);
+      return; // Or redirect, handle unauthenticated user
+    }
 
-  // Master loading state: wait for auth AND properties fetching.
-  if (isUserLoading || isPropertiesLoading) {
-    return <div>Loading...</div>;
+    const fetchProperties = async () => {
+      const q = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
+      try {
+        const querySnapshot = await getDocs(q);
+        const props = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
+        setProperties(props);
+      } catch (error) {
+        console.error("Error fetching properties: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, [user, isUserLoading, firestore]);
+
+  if (isLoading) {
+    return (
+        <div className="flex h-[calc(100vh-200px)] w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
   }
   
-  // This check is now safe because we know loading is complete.
   if (!properties || properties.length === 0) {
       return (
           <>
@@ -300,7 +323,7 @@ export default function AddTenancyPage() {
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
-                        <Link href="/properties">Add Your First Property</Link>
+                        <Link href="/properties/add">Add Your First Property</Link>
                     </Button>
                 </CardContent>
             </Card>
