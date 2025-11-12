@@ -250,7 +250,7 @@ function RevenueAnalysisTab() {
                 content={<ChartTooltipContent
                   formatter={(value, name) => (
                     <div className="flex flex-col">
-                      <span className="text-muted-foreground capitalize">{name}</span>
+                      <span className="text-muted-foreground capitalize">{name === 'grossPotential' ? 'Gross Potential' : 'Net Income'}</span>
                       <span>{formatCurrency(Number(value))}</span>
                     </div>
                   )}
@@ -258,8 +258,8 @@ function RevenueAnalysisTab() {
                 cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
               />
               <Legend />
-              <Bar dataKey="grossPotential" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Gross Potential" />
-              <Bar dataKey="netIncome" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Net Income" />
+              <Bar dataKey="grossPotential" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Gross Potential" />
+              <Bar dataKey="netIncome" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Net Income" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
@@ -595,5 +595,7 @@ const ReportsClient = memo(function ReportsClient() {
 });
 
 export default ReportsClient;
+
+    
 
     
