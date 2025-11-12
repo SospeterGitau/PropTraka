@@ -9,8 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "if [ -f node_modules/.bin/patch-package ]; then patch-package; fi"
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": "20.x"
@@ -48,12 +47,10 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^10.12.2",
-    "firebase-admin": "^12.1.0",
     "genkit": "^1.14.1",
     "iron-session": "^8.0.2",
     "lucide-react": "^0.475.0",
     "next": "15.3.3",
-    "patch-package": "^8.0.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
