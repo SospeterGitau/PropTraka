@@ -75,7 +75,7 @@ function CalendarPage() {
     maintenanceRequests.forEach(item => {
       events.push({
         date: item.reportedDate,
-        title: `Maint: ${item.description.substring(0, 20)}...`,
+        title: `Maint: ${item.description}`,
         type: 'appointment',
         details: {
           Property: item.propertyName,
@@ -99,5 +99,6 @@ function CalendarPage() {
 
 
 export default CalendarPage;
+
 
 
