@@ -37,6 +37,7 @@ import { getLocale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
 import allPlans from '@/lib/subscription-plans.json';
 import allFeatures from '@/lib/app-features.json';
+import { Badge } from '@/components/ui/badge';
 
 
 const passwordSchema = z.object({
@@ -58,7 +59,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
   
-  const [tempSettings, setTempSettings] = useState(settings);
+  const [tempSettings, setTempSettings = useState(settings);
 
   useEffect(() => {
     setTempSettings(settings);
@@ -687,8 +688,8 @@ export default function AccountPage() {
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
         <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-          <TabsTrigger value="profile">Profile & Settings</TabsTrigger>
-          <TabsTrigger value="subscription">Subscription & Billing</TabsTrigger>
+          <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
+          <TabsTrigger value="subscription">Subscription &amp; Billing</TabsTrigger>
           <TabsTrigger value="changelog">Changelog</TabsTrigger>
           <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
         </TabsList>
@@ -710,3 +711,4 @@ export default function AccountPage() {
 }
 
     
+
