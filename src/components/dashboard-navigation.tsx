@@ -76,7 +76,7 @@ function UpgradeBanner() {
   
   return (
       <Alert className="mb-4 bg-primary/10 border-primary/50 text-primary-foreground">
-        <Sparkles className="h-4 w-4" />
+        <Sparkles className="h-4 w-4 text-primary" />
         <AlertDescription className="text-primary">
             You are on the Starter Plan. <Link href="/settings" className="font-bold underline hover:text-primary/90">Upgrade your plan</Link> to unlock more powerful features.
         </AlertDescription>
