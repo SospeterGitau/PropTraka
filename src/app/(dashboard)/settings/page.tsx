@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -38,6 +39,7 @@ import { cn } from '@/lib/utils';
 import allPlans from '@/lib/subscription-plans.json';
 import allFeatures from '@/lib/app-features.json';
 import { Badge } from '@/components/ui/badge';
+import { useFitText } from '@/hooks/use-fit-text';
 
 
 const passwordSchema = z.object({
@@ -329,21 +331,46 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   );
 });
 
+const PlanPrice = ({ plan }: { plan: SubscriptionPlan }) => {
+    const { fontSize, ref } = useFitText();
+
+    return (
+        <div ref={ref} className="text-center mb-6 h-12 flex items-center justify-center">
+            <span style={{ fontSize }} className="font-bold whitespace-nowrap">
+                {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
+            </span>
+            {plan.price !== null && <span className="text-muted-foreground self-end mb-1">/month</span>}
+        </div>
+    );
+};
+
+
 const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     const { settings, isLoading } = useDataContext();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
+    
+    const currentPlanName = settings.subscription?.plan;
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(currentPlanName || null);
   
     const handleChoosePlan = (planName: string) => {
-      startTransition(async () => {
+        if(planName === currentPlanName) return;
+
+        startTransition(async () => {
           toast({
-              title: "Subscription Updated",
+              title: "Confirm Subscription",
               description: `This is where you would integrate with IntaSend to change the plan to ${planName}.`,
           });
-      });
+          // In a real app, you would navigate to a checkout page or call an API here.
+          // For now, we just show the toast.
+        });
     }
 
-    const currentPlan = settings.subscription?.plan;
+    const handleSelectPlan = (planName: string) => {
+        if (planName !== currentPlanName) {
+            setSelectedPlan(planName);
+        }
+    }
   
     return (
         <div className="space-y-8">
@@ -351,25 +378,33 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 <h2 className="text-3xl font-bold tracking-tight">Choose Your Plan</h2>
                 <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Select the plan that best fits the size and needs of your property portfolio.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-11 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
                 {allPlans.map((plan) => {
-                    const isCurrent = plan.name === currentPlan;
+                    const isCurrent = plan.name === currentPlanName;
+                    const isSelected = plan.name === selectedPlan;
                     const isMostPopular = plan.name === 'Professional';
                     const planFeatures = plan.features.map(fid => allFeatures.find(f => f.id === fid)).filter(Boolean) as AppFeature[];
 
                     return (
-                        <div key={plan.id} className={cn("relative rounded-2xl border p-6 shadow-sm flex flex-col", 
-                            isMostPopular ? "lg:col-span-3 lg:scale-105 bg-card" : "lg:col-span-2",
-                            isCurrent && "ring-2 ring-primary"
-                        )}>
+                        <div key={plan.id} className="h-full">
+                             <button
+                                onClick={() => handleSelectPlan(plan.name)}
+                                disabled={isCurrent}
+                                className={cn(
+                                    "relative rounded-2xl border p-6 shadow-sm flex flex-col h-full w-full text-left transition-all duration-200",
+                                    isCurrent ? "ring-2 ring-primary bg-card" : "hover:shadow-lg",
+                                    isSelected && !isCurrent ? "ring-2 ring-primary" : "border-border",
+                                    isMostPopular && !isCurrent && "bg-muted/30"
+                                )}
+                            >
                             {isMostPopular && (
                                 <Badge variant="secondary" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 font-semibold">
                                     <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                     Most Popular
                                 </Badge>
                             )}
-                             {isCurrent && !isMostPopular && (
-                                <Badge variant="outline" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
+                             {isCurrent && (
+                                <Badge variant="default" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
                                     Current Plan
                                 </Badge>
                             )}
@@ -377,17 +412,10 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                             <div className="flex-1">
                                 <CardHeader className="text-center p-0 mb-6">
                                     <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                                    <p className="text-sm text-muted-foreground pt-1">{plan.description}</p>
+                                    <p className="text-sm text-muted-foreground pt-1 h-10">{plan.description}</p>
                                 </CardHeader>
                                 
-                                <div className="text-center mb-6">
-                                    <span className="text-4xl font-bold">
-                                        {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
-                                    </span>
-                                    <span className="text-muted-foreground">
-                                        {plan.price !== null ? '/month' : ''}
-                                    </span>
-                                </div>
+                                <PlanPrice plan={plan} />
                                 
                                 <Separator />
 
@@ -411,13 +439,14 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                             <div className="mt-6">
                                 <Button
                                     className="w-full"
-                                    variant={isMostPopular ? 'default' : 'outline'}
+                                    variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
                                     onClick={() => handleChoosePlan(plan.name)}
                                     disabled={isPending || isCurrent}
                                 >
-                                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Current Plan' : 'Choose Plan')}
+                                    {isPending && isSelected ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Your Plan' : 'Choose Plan')}
                                 </Button>
                             </div>
+                        </button>
                         </div>
                     );
                 })}
@@ -710,3 +739,6 @@ export default function AccountPage() {
     </>
   );
 }
+
+
+    
