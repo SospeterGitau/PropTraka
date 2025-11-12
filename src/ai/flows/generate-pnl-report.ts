@@ -21,8 +21,12 @@ const GeneratePnlReportInputSchema = z.object({
   companyName: z.string().optional().describe('The name of the company for which the report is being generated.'),
   residencyStatus: z.enum(['resident', 'non-resident']).describe('The residency status of the landlord.'),
   prompt: z.string().describe('The user-editable prompt template.'),
-  isResident: z.boolean().describe('True if the landlord is a resident.'),
-  isNonResident: z.boolean().describe('True if the landlord is a non-resident.'),
+});
+
+// This schema defines the object that the prompt expects, including the derived boolean flags.
+const PnlReportPromptInputSchema = GeneratePnlReportInputSchema.extend({
+    isResident: z.boolean().describe('True if the landlord is a resident.'),
+    isNonResident: z.boolean().describe('True if the landlord is a non-resident.'),
 });
 
 // Define the output schema for the structured report
@@ -51,12 +55,12 @@ const generatePnlReportFlow = ai.defineFlow({
     // Dynamically define the prompt within the flow
     const pnlReportPrompt = ai.definePrompt({
       name: 'pnlReportPrompt_dynamic',
-      input: { schema: GeneratePnlReportInputSchema },
+      input: { schema: PnlReportPromptInputSchema }, // The prompt uses the extended schema with booleans
       output: { schema: GeneratePnlReportOutputSchema },
       prompt: input.prompt, // Use the prompt from the input
     });
     
-    // Add the boolean flags based on residencyStatus
+    // Add the boolean flags based on residencyStatus before calling the prompt
     const fullInput = {
       ...input,
       isResident: input.residencyStatus === 'resident',
@@ -66,4 +70,3 @@ const generatePnlReportFlow = ai.defineFlow({
   const { output } = await pnlReportPrompt(fullInput);
   return { report: output!.report };
 });
-
