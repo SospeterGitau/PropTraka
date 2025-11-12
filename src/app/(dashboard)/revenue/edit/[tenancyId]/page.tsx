@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, memo } from 'react';
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -78,7 +79,6 @@ const TenancyForm = memo(function TenancyForm({
     event.preventDefault();
     if (!user || !revenue || !tenancyToEdit) return;
     const formData = new FormData(event.currentTarget);
-    const isEditing = !!tenancyToEdit;
 
     const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
     const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
@@ -183,80 +183,107 @@ const TenancyForm = memo(function TenancyForm({
   if (!tenancyToEdit) return <div>Loading tenancy...</div>
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="propertyId">Property</Label>
-            <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
-              <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
-              <SelectContent>
-                {properties.map(property => (
-                  <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantName">Tenant Name</Label>
-            <Input id="tenantName" name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantEmail">Tenant Email</Label>
-            <Input id="tenantEmail" name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantPhone">Tenant Phone</Label>
-            <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
-          </div>
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
-                <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
-                <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="rent">Monthly Rent</Label>
-            <Input id="rent" name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Fixed Monthly Service Charges (optional)</Label>
-            <div className="space-y-2 rounded-md border p-4">
-              {serviceCharges.map((charge, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                  <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+    <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>Tenancy Details</CardTitle>
+                <CardDescription>Select the property and enter the tenant's information.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2">
+                    <Label htmlFor="propertyId">Property</Label>
+                    <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
+                    <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
+                    <SelectContent>
+                        {properties.map(property => (
+                        <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
                 </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Service Charge
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-            <Input id="deposit" name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contractUrl">Contract Link (optional)</Label>
-            <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes} />
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
+                <div className="space-y-2">
+                    <Label htmlFor="tenantName">Tenant Name</Label>
+                    <Input id="tenantName" name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="tenantEmail">Tenant Email</Label>
+                        <Input id="tenantEmail" name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="tenantPhone">Tenant Phone</Label>
+                        <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Lease & Financials</CardTitle>
+                <CardDescription>Set the lease duration, rent, and any service charges.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
+                        <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
+                        <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
+                    </div>
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="rent">Monthly Rent</Label>
+                        <Input id="rent" name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
+                        <Input id="deposit" name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label>Fixed Monthly Service Charges (optional)</Label>
+                    <div className="space-y-2 rounded-md border p-4">
+                    {serviceCharges.map((charge, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                        <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
+                        <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Service Charge
+                    </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+             <CardHeader>
+                <CardTitle>Additional Information</CardTitle>
+                <CardDescription>Add a contract link and notes.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                 <div className="space-y-2">
+                    <Label htmlFor="contractUrl">Contract Link (optional)</Label>
+                    <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="notes">Notes (optional)</Label>
+                    <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes} />
+                </div>
+            </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" asChild><Link href="/revenue">Cancel</Link></Button>
             <Button type="submit">Save Changes</Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+    </form>
   );
 });
 

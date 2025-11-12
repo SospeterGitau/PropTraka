@@ -130,7 +130,7 @@ const ContractorsClient = memo(function ContractorsClient() {
         <CardHeader>
           <CardTitle>Contractor & Vendor List</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {contractors && contractors.length > 0 ? (
               <Table>
                 <TableHeader>

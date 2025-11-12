@@ -120,7 +120,7 @@ export function ExpenseForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{transaction?.id ? 'Edit' : 'Add'} Expense</DialogTitle>
         </DialogHeader>
@@ -265,10 +265,10 @@ export function ExpenseForm({
             <Label htmlFor="notes">Notes (optional)</Label>
             <Textarea id="notes" name="notes" defaultValue={transaction?.notes} />
           </div>
-          <div className="flex justify-end gap-2 pt-4">
+          <DialogFooter className="pt-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">Save</Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

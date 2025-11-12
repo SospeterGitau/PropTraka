@@ -127,7 +127,7 @@ function LoginPageContent() {
     <>
     <div className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center p-6">
+        <CardHeader className="text-center p-6 space-y-2">
           <CardTitle className="text-2xl">Welcome to LeaseLync</CardTitle>
           <CardDescription>Enter your credentials to sign in or create an account.</CardDescription>
         </CardHeader>
