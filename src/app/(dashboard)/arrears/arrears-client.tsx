@@ -23,7 +23,7 @@ import { PaymentRequestDialog } from '@/components/payment-request-dialog';
 import type { ArrearEntry, Transaction } from '@/lib/types';
 import { CreditCard } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, DocumentData } from 'firebase/firestore';
 
 
@@ -32,7 +32,7 @@ const ArrearsClient = memo(function ArrearsClient() {
   const firestore = useFirestore();
 
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-  const { data: revenue, loading: isDataLoading } = useCollection<Transaction>(revenueQuery);
+  const [revenue, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
 
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
@@ -56,7 +56,7 @@ const ArrearsClient = memo(function ArrearsClient() {
     if (!revenue) return;
     const today = startOfToday();
 
-    const calculatedArrears = revenue
+    const calculatedArrears = revenue.docs.map(doc => doc.data() as Transaction)
       .filter(transaction => {
         const serviceChargesTotal = (transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
         const amountDue = transaction.rent + serviceChargesTotal + (transaction.deposit ?? 0);
