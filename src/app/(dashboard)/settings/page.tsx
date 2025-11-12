@@ -59,7 +59,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
   
-  const [tempSettings, setTempSettings = useState(settings);
+  const [tempSettings, setTempSettings] = useState(settings);
 
   useEffect(() => {
     setTempSettings(settings);
@@ -611,6 +611,7 @@ const ChangelogTab = memo(function ChangelogTab() {
       Payment: <HandCoins className="h-4 w-4" />,
       Maintenance: <Wrench className="h-4 w-4" />,
       Contractor: <Wrench className="h-4 w-4" />,
+      Subscription: <CreditCard className="h-4 w-4" />,
   };
 
   useEffect(() => {
@@ -709,6 +710,3 @@ export default function AccountPage() {
     </>
   );
 }
-
-    
-
