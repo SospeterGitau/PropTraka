@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -13,8 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PlusCircle, Trash2, ArrowLeft, Building } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
@@ -209,8 +210,8 @@ const TenancyForm = memo(function TenancyForm({
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="propertyId">Property</Label>
             <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
@@ -234,7 +235,7 @@ const TenancyForm = memo(function TenancyForm({
             <Label htmlFor="tenantPhone">Tenant Phone</Label>
             <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
                 <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
@@ -319,13 +320,20 @@ export default function AddTenancyPage() {
       return (
           <>
             <PageHeader title="Add New Tenancy" />
-            <div className="text-center py-12">
-                <h2 className="text-2xl font-semibold mb-2">No Properties Found</h2>
-                <p className="text-muted-foreground mb-4">You need to add a property before you can create a tenancy.</p>
-                <Button asChild>
-                    <Link href="/properties">Go to Properties</Link>
-                </Button>
-            </div>
+             <Card className="text-center py-16">
+                <CardHeader>
+                    <div className="mx-auto bg-muted rounded-full p-4 w-fit">
+                        <Building className="w-12 h-12 text-muted-foreground" />
+                    </div>
+                    <CardTitle className="mt-4 !text-2xl">No Properties Found</CardTitle>
+                    <CardDescription>You need to add a property before you can create a tenancy.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                        <Link href="/properties/add">Add Your First Property</Link>
+                    </Button>
+                </CardContent>
+            </Card>
           </>
       )
   }

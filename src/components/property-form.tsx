@@ -80,7 +80,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
         <DialogHeader>
           <DialogTitle>{property ? 'Edit Property' : 'Add Property'}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-2 py-4 space-y-6">
             <div className="space-y-2">
               <Label htmlFor="addressLine1">Address Line 1</Label>
               <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} required />

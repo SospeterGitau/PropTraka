@@ -3,17 +3,19 @@
 
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { memo, useMemo } from 'react';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import type { Property, Transaction } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
+import { Button } from '@/components/ui/button';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
@@ -66,14 +68,24 @@ const DashboardPageContent = memo(function DashboardPageContent() {
     )
   }
   
-  if (!properties || !revenue || !expenses) {
+  if (!properties || properties.length === 0) {
     return (
         <>
             <PageHeader title="Dashboard" />
-            <div className="text-center py-12">
-                <h2 className="text-2xl font-semibold mb-2">Welcome to LeaseLync</h2>
-                <p className="text-muted-foreground">Get started by adding your first property.</p>
-            </div>
+             <Card className="text-center py-16">
+                <CardHeader>
+                    <div className="mx-auto bg-muted rounded-full p-4 w-fit">
+                        <Building className="w-12 h-12 text-muted-foreground" />
+                    </div>
+                    <CardTitle className="mt-4 !text-2xl">Welcome to LeaseLync</CardTitle>
+                    <CardDescription className="max-w-md mx-auto">Get started by adding your first property to your portfolio. Once added, you can begin tracking revenue, expenses, and more.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button asChild>
+                        <Link href="/properties">Add Property</Link>
+                    </Button>
+                </CardContent>
+            </Card>
         </>
     )
   }

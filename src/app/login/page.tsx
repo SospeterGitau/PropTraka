@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useTransition, useState } from 'react';
@@ -124,13 +125,13 @@ function LoginPageContent() {
 
   return (
     <>
-    <div className="flex h-screen w-full items-center justify-center bg-muted/40">
+    <div className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center p-6">
           <CardTitle className="text-2xl">Welcome to LeaseLync</CardTitle>
           <CardDescription>Enter your credentials to sign in or create an account.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

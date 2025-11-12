@@ -4,7 +4,7 @@
 import { useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MoreHorizontal, Bed, Bath, Square } from 'lucide-react';
+import { MoreHorizontal, Bed, Bath, Square, Building } from 'lucide-react';
 import type { Property, Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
@@ -158,7 +158,7 @@ const PropertiesClient = memo(function PropertiesClient() {
           <CardHeader>
             <CardTitle>Property Portfolio</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center space-x-4">
@@ -187,103 +187,105 @@ const PropertiesClient = memo(function PropertiesClient() {
         <CardHeader>
           <CardTitle>Property Portfolio</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
-                </TableHead>
-                <TableHead>Property Details</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-                <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
-                <TableHead>
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {properties && properties.length > 0 ? (
-                properties.map((property) => {
-                const isPlaceholder = property.imageUrl?.includes('picsum.photos');
-                const status = occupiedPropertyIds.has(property.id) ? 'Occupied' : 'Vacant';
-                return (
-                  <TableRow key={property.id}>
-                    <TableCell className="hidden sm:table-cell">
-                      {property.imageUrl && !isPlaceholder ? (
-                         <Image
-                          alt="Property image"
-                          className="aspect-square rounded-md object-cover"
-                          height="64"
-                          src={property.imageUrl}
-                          width="64"
-                          data-ai-hint={property.imageHint}
-                        />
-                      ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
-                          <PropertyIcon type={property.buildingType} className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/properties/${property.id}`} className="font-medium hover:underline">{formatAddress(property)}</Link>
-                      <div className="text-sm text-muted-foreground">{property.buildingType}</div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
-                         <div className="flex items-center gap-1">
-                          <Bed className="h-4 w-4" />
-                          <span>{property.bedrooms}</span>
-                         </div>
-                         <div className="flex items-center gap-1">
-                          <Bath className="h-4 w-4" />
-                          <span>{property.bathrooms}</span>
-                         </div>
-                         {property.size && (
-                          <div className="flex items-center gap-1">
-                            <Square className="h-4 w-4" />
-                            <span>{property.size} {property.sizeUnit}</span>
-                          </div>
-                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                       <Badge variant="secondary">{property.propertyType}</Badge>
-                    </TableCell>
-                    <TableCell>
-                       <Badge variant={status === 'Occupied' ? 'secondary' : 'outline'}>
-                         {status}
-                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(property.currentValue)}</TableCell>
-                    <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue)}/month</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => handleEdit(property)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleDelete(property)}>Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-              ) : (
+        <CardContent className="p-6">
+          {properties && properties.length > 0 ? (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    No properties found. Click "Add Property" to get started.
-                  </TableCell>
+                  <TableHead className="hidden w-[100px] sm:table-cell">
+                    <span className="sr-only">Image</span>
+                  </TableHead>
+                  <TableHead>Property Details</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Value</TableHead>
+                  <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
+                  <TableHead>
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {properties.map((property) => {
+                  const isPlaceholder = property.imageUrl?.includes('picsum.photos');
+                  const status = occupiedPropertyIds.has(property.id) ? 'Occupied' : 'Vacant';
+                  return (
+                    <TableRow key={property.id}>
+                      <TableCell className="hidden sm:table-cell">
+                        {property.imageUrl && !isPlaceholder ? (
+                           <Image
+                            alt="Property image"
+                            className="aspect-square rounded-md object-cover"
+                            height="64"
+                            src={property.imageUrl}
+                            width="64"
+                            data-ai-hint={property.imageHint}
+                          />
+                        ) : (
+                          <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
+                            <PropertyIcon type={property.buildingType} className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Link href={`/properties/${property.id}`} className="font-medium hover:underline">{formatAddress(property)}</Link>
+                        <div className="text-sm text-muted-foreground">{property.buildingType}</div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
+                           <div className="flex items-center gap-1">
+                            <Bed className="h-4 w-4" />
+                            <span>{property.bedrooms}</span>
+                           </div>
+                           <div className="flex items-center gap-1">
+                            <Bath className="h-4 w-4" />
+                            <span>{property.bathrooms}</span>
+                           </div>
+                           {property.size && (
+                            <div className="flex items-center gap-1">
+                              <Square className="h-4 w-4" />
+                              <span>{property.size} {property.sizeUnit}</span>
+                            </div>
+                           )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                         <Badge variant="secondary">{property.propertyType}</Badge>
+                      </TableCell>
+                      <TableCell>
+                         <Badge variant={status === 'Occupied' ? 'secondary' : 'outline'}>
+                           {status}
+                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(property.currentValue)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue)}/month</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => handleEdit(property)}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => handleDelete(property)}>Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+                }
+              </TableBody>
+            </Table>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Building className="w-16 h-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold">No Properties Added Yet</h3>
+                    <p className="text-muted-foreground mb-4">Click the button below to add your first property.</p>
+                    <Button onClick={handleAdd}>Add Property</Button>
+                </div>
+            )}
         </CardContent>
       </Card>
       

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import { format, startOfToday, isBefore } from 'date-fns';
 import type { Property, Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -123,7 +123,7 @@ const RevenueClient = memo(function RevenueClient() {
                 <CardHeader>
                     <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                     <Skeleton className="h-48 w-full" />
                 </CardContent>
             </Card>
@@ -179,93 +179,99 @@ const RevenueClient = memo(function RevenueClient() {
         <CardHeader>
           <CardTitle>Revenue Transactions by Tenancy</CardTitle>
         </CardHeader>
-        <CardContent>
-           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tenant &amp; Property</TableHead>
-                <TableHead>Tenancy Period</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Total Due</TableHead>
-                <TableHead className="text-right">Total Paid</TableHead>
-                <TableHead className="text-right">Total Balance</TableHead>
-                <TableHead className="w-[100px] text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-                {tenancies.length > 0 ? (
-                    tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
-                        const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
-                        const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
-                        const totalBalance = totalDue - totalPaid;
-                        
-                        const today = startOfToday();
-                        const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
+        <CardContent className="p-6">
+           {tenancies.length > 0 ? (
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Tenant &amp; Property</TableHead>
+                    <TableHead>Tenancy Period</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Total Due</TableHead>
+                    <TableHead className="text-right">Total Paid</TableHead>
+                    <TableHead className="text-right">Total Balance</TableHead>
+                    <TableHead className="w-[100px] text-center">Actions</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                        {tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
+                            const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
+                            const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
+                            const totalBalance = totalDue - totalPaid;
+                            
+                            const today = startOfToday();
+                            const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
-                        let statusBadge;
-                        const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
-                        
-                        if (hasOverdue) {
-                            statusBadge = <Badge variant="destructive">Overdue {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
-                        } else if (tenancy.nextDueDate && !hasOverdue) {
-                             statusBadge = <Badge variant="outline">Upcoming {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
-                        } else if (!isTenancyActive && totalBalance <= 0) {
-                            statusBadge = <Badge variant="secondary">Completed</Badge>;
-                        } else if (isTenancyActive && totalBalance <= 0) {
-                            statusBadge = <Badge variant="secondary">Paid Up</Badge>;
-                        } else {
-                            statusBadge = <Badge variant="outline">N/A</Badge>;
-                        }
+                            let statusBadge;
+                            const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
+                            
+                            if (hasOverdue) {
+                                statusBadge = <Badge variant="destructive">Overdue {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
+                            } else if (tenancy.nextDueDate && !hasOverdue) {
+                                 statusBadge = <Badge variant="outline">Upcoming {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
+                            } else if (!isTenancyActive && totalBalance <= 0) {
+                                statusBadge = <Badge variant="secondary">Completed</Badge>;
+                            } else if (isTenancyActive && totalBalance <= 0) {
+                                statusBadge = <Badge variant="secondary">Paid Up</Badge>;
+                            } else {
+                                statusBadge = <Badge variant="outline">N/A</Badge>;
+                            }
 
-                        return (
-                            <TableRow key={tenancy.tenancyId}>
-                              <TableCell>
-                                <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary underline">
-                                    {tenancy.tenant}
-                                </Link>
-                                <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
-                              </TableCell>
-                              <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
-                              <TableCell>
-                                 {statusBadge}
-                              </TableCell>
-                              <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
-                              <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
-                                {formatCurrency(totalBalance)}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                      <span className="sr-only">Toggle menu</span>
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <Link href={`/revenue/edit/${tenancy.tenancyId}`}>Edit Tenancy</Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                        );
-                    })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No tenancies found. Click "Add Tenancy" to get started.
-                    </TableCell>
-                  </TableRow>
-                )}
-            </TableBody>
-          </Table>
+                            return (
+                                <TableRow key={tenancy.tenancyId}>
+                                  <TableCell>
+                                    <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary underline">
+                                        {tenancy.tenant}
+                                    </Link>
+                                    <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
+                                  </TableCell>
+                                  <TableCell>{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</TableCell>
+                                  <TableCell>
+                                     {statusBadge}
+                                  </TableCell>
+                                  <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
+                                  <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
+                                    {formatCurrency(totalBalance)}
+                                  </TableCell>
+                                  <TableCell className="text-center">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                          <span className="sr-only">Toggle menu</span>
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem asChild>
+                                          <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href={`/revenue/edit/${tenancy.tenancyId}`}>Edit Tenancy</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                </TableBody>
+              </Table>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Users className="w-16 h-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold">No Tenancies Found</h3>
+                    <p className="text-muted-foreground mb-4">Track revenue by creating your first tenancy.</p>
+                    <Button asChild>
+                        <Link href="/revenue/add">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Tenancy
+                        </Link>
+                    </Button>
+                </div>
+            )}
         </CardContent>
       </Card>
       
