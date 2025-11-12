@@ -353,7 +353,8 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     const currentPlanName = settings.subscription?.plan;
     const [selectedPlan, setSelectedPlan] = useState<string | null>(currentPlanName || null);
   
-    const handleChoosePlan = (planName: string) => {
+    const handleChoosePlan = (e: React.MouseEvent, planName: string) => {
+        e.stopPropagation(); // Prevent the card's onClick from firing
         if(planName === currentPlanName) return;
 
         startTransition(async () => {
@@ -387,11 +388,10 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
 
                     return (
                         <div key={plan.id} className="h-full">
-                             <button
+                             <div
                                 onClick={() => handleSelectPlan(plan.name)}
-                                disabled={isCurrent}
                                 className={cn(
-                                    "relative rounded-2xl border p-6 shadow-sm flex flex-col h-full w-full text-left transition-all duration-200",
+                                    "relative rounded-2xl border p-6 shadow-sm flex flex-col h-full w-full text-left transition-all duration-200 cursor-pointer",
                                     isCurrent ? "ring-2 ring-primary bg-card" : "hover:shadow-lg",
                                     isSelected && !isCurrent ? "ring-2 ring-primary" : "border-border",
                                     isMostPopular && !isCurrent && "bg-muted/30"
@@ -442,13 +442,13 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 <Button
                                     className="w-full"
                                     variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
-                                    onClick={() => handleChoosePlan(plan.name)}
+                                    onClick={(e) => handleChoosePlan(e, plan.name)}
                                     disabled={isPending || isCurrent}
                                 >
                                     {isPending && isSelected ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Your Plan' : 'Choose Plan')}
                                 </Button>
                             </div>
-                        </button>
+                        </div>
                         </div>
                     );
                 })}
@@ -742,6 +742,8 @@ export default function AccountPage() {
   );
 }
 
+
+    
 
     
 
