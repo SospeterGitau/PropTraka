@@ -80,13 +80,14 @@ Your report must follow the Pyramid Principle. Start with the main conclusion (t
 
 ### **Tax Calculation (Estimation Only)**
 
-{{#if (eq residencyStatus "resident")}}
+{{#if isResident}}
 (Based on KRA guidelines for residential rental income, calculate the estimated tax. You MUST state the assumption that you are using the Monthly Rental Income (MRI) tax rate of 7.5% and applying it ONLY to the gross **Net Rental Income** from **"Domestic"** properties for the period.)
 
 - **Gross Residential Rental Income:** [Sum of 'amountPaid' from all revenue transactions where propertyType is 'Domestic'.]
 
 - **Estimated Rental Income Tax (7.5% of Gross Residential Rental Income):** [Calculate as Gross Residential Rental Income * 0.075]
-{{else}}
+{{/if}}
+{{#if isNonResident}}
 (As a non-resident landlord, no Monthly Rental Income (MRI) tax is applicable. The Net Profit/Loss will be the same as the Net Operating Income.)
 
 - **Estimated Rental Income Tax:** **{{currency}} 0**

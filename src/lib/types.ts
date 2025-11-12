@@ -273,6 +273,8 @@ export interface GeneratePnlReportInput {
   companyName?: string;
   residencyStatus: ResidencyStatus;
   prompt: string;
+  isResident: boolean;
+  isNonResident: boolean;
 }
 
 /**

@@ -2,7 +2,7 @@
 'use server';
 
 import {generateReportSummary} from '@/ai/flows/generate-report-summary';
-import {generatePnlReport} from '@/ai/flows/generate-pnl-report';
+import {generatePnlReport as generatePnlReportFlow} from '@/ai/flows/generate-pnl-report';
 import {generateMarketResearch} from '@/ai/flows/generate-market-research';
 import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput } from '@/lib/types';
 
@@ -50,9 +50,9 @@ Provide a concise analysis of this month's performance, focusing on the differen
 }
 
 
-export async function getPnlReport(input: GeneratePnlReportInput): Promise<GeneratePnlReportOutput> {
+export async function getPnlReport(input: Omit<GeneratePnlReportInput, 'isResident' | 'isNonResident'>): Promise<GeneratePnlReportOutput> {
     try {
-        const result = await generatePnlReport(input);
+        const result = await generatePnlReportFlow(input as GeneratePnlReportInput);
         return { report: result.report, error: null };
     } catch (e: any) {
         const msg = String(e?.message || e);
