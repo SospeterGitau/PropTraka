@@ -30,10 +30,10 @@ interface CalendarViewProps {
 }
 
 const eventColors: { [key: string]: string } = {
-  appointment: 'bg-blue-200 text-blue-800',
-  'tenancy-start': 'bg-green-200 text-green-800',
-  'tenancy-end': 'bg-red-200 text-red-800',
-  expense: 'bg-yellow-200 text-yellow-800',
+  appointment: 'bg-blue-200 text-blue-800 hover:bg-blue-300',
+  'tenancy-start': 'bg-green-200 text-green-800 hover:bg-green-300',
+  'tenancy-end': 'bg-red-200 text-red-800 hover:bg-red-300',
+  expense: 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300',
 };
 
 export function CalendarView({ events }: CalendarViewProps) {
@@ -74,9 +74,9 @@ export function CalendarView({ events }: CalendarViewProps) {
           <Button variant="outline" onClick={goToToday}>Today</Button>
         </div>
 
-        <div className="grid grid-cols-7 gap-px border-t border-l border-border bg-border">
+        <div className="grid grid-cols-7 border-t border-l border-border">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-            <div key={day} className="py-2 text-center font-medium text-sm text-muted-foreground bg-card">
+            <div key={day} className="py-2 text-center font-medium text-sm text-muted-foreground bg-card border-r border-b border-border">
               {day}
             </div>
           ))}
@@ -88,7 +88,7 @@ export function CalendarView({ events }: CalendarViewProps) {
               <div
                 key={day.toString()}
                 className={cn(
-                  'relative flex flex-col min-h-[120px] bg-card p-2',
+                  'relative flex flex-col min-h-[120px] bg-card p-2 border-r border-b border-border',
                   !isSameMonth(day, currentDate) && 'bg-muted/50'
                 )}
               >
@@ -101,17 +101,17 @@ export function CalendarView({ events }: CalendarViewProps) {
                 >
                   {format(day, 'd')}
                 </time>
-                <div className="mt-1 space-y-1 overflow-y-auto">
+                <div className="mt-1 space-y-1 flex-1 overflow-y-auto">
                   {dayEvents.map((event, index) => (
                     <Tooltip key={index} delayDuration={0}>
                       <TooltipTrigger asChild>
                          <Badge
-                          className={cn('w-full text-left block whitespace-normal text-xs font-normal cursor-default', eventColors[event.type])}
+                          className={cn('w-full text-left block whitespace-normal text-xs font-normal h-auto cursor-default', eventColors[event.type])}
                         >
                           {event.title}
                         </Badge>
                       </TooltipTrigger>
-                      <TooltipContent className="w-60 text-sm">
+                      <TooltipContent className="w-60 text-sm z-10">
                         <div className="space-y-2">
                           <h4 className="font-medium leading-none">{event.title}</h4>
                            {event.details ? (
