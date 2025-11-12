@@ -24,7 +24,7 @@ import type { ArrearEntry, Transaction } from '@/lib/types';
 import { CreditCard } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, DocumentData } from 'firebase/firestore';
+import { collection, query, where, DocumentData, Query } from 'firebase/firestore';
 
 
 const ArrearsClient = memo(function ArrearsClient() {
