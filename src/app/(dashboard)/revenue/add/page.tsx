@@ -180,93 +180,118 @@ const TenancyForm = memo(function TenancyForm({
   };
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="propertyId">Property</Label>
-            <Select name="propertyId" id="propertyId" required>
-              <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
-              <SelectContent>
-                {properties.map(property => (
-                  <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantName">Tenant Name</Label>
-            <Input id="tenantName" name="tenantName" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantEmail">Tenant Email</Label>
-            <Input id="tenantEmail" name="tenantEmail" type="email" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tenantPhone">Tenant Phone</Label>
-            <Input id="tenantPhone" name="tenantPhone" type="tel" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
-                <Input id="tenancyStartDate" name="tenancyStartDate" type="date" required />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
-                <Input id="tenancyEndDate" name="tenancyEndDate" type="date" required />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="rent">Monthly Rent</Label>
-            <Input id="rent" name="rent" type="number" required />
-          </div>
-          <div className="space-y-2">
-            <Label>Fixed Monthly Service Charges (optional)</Label>
-            <div className="space-y-2 rounded-md border p-4">
-              {serviceCharges.map((charge, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                  <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+    <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle>Tenancy Details</CardTitle>
+                <CardDescription>Select the property and enter the tenant's information.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="space-y-2">
+                    <Label htmlFor="propertyId">Property</Label>
+                    <Select name="propertyId" id="propertyId" required>
+                    <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
+                    <SelectContent>
+                        {properties.map(property => (
+                        <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
                 </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Service Charge
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-            <Input id="deposit" name="deposit" type="number" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="contractUrl">Contract Link (optional)</Label>
-            <Input id="contractUrl" name="contractUrl" type="url" placeholder="https://docs.google.com/..." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" name="notes" />
-          </div>
-          
-            <div className="items-top flex space-x-2 pt-2">
-              <Checkbox id="consent" name="consent" />
-              <div className="grid gap-1.5 leading-none">
-                <label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  I confirm I have the tenant's consent to store and process their personal information.
-                </label>
-                <p className="text-sm text-muted-foreground">
-                  You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for details.
-                </p>
-              </div>
-            </div>
-          
-          <div className="flex justify-end gap-2 pt-4">
+                <div className="space-y-2">
+                    <Label htmlFor="tenantName">Tenant Name</Label>
+                    <Input id="tenantName" name="tenantName" required />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="tenantEmail">Tenant Email</Label>
+                        <Input id="tenantEmail" name="tenantEmail" type="email" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="tenantPhone">Tenant Phone</Label>
+                        <Input id="tenantPhone" name="tenantPhone" type="tel" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Lease & Financials</CardTitle>
+                <CardDescription>Set the lease duration, rent, and any service charges.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
+                        <Input id="tenancyStartDate" name="tenancyStartDate" type="date" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
+                        <Input id="tenancyEndDate" name="tenancyEndDate" type="date" required />
+                    </div>
+                </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="rent">Monthly Rent</Label>
+                        <Input id="rent" name="rent" type="number" required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
+                        <Input id="deposit" name="deposit" type="number" />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <Label>Fixed Monthly Service Charges (optional)</Label>
+                    <div className="space-y-2 rounded-md border p-4">
+                    {serviceCharges.map((charge, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                        <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
+                        <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                    ))}
+                    <Button type="button" variant="outline" size="sm" onClick={addServiceCharge} className="w-full">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Service Charge
+                    </Button>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Card>
+             <CardHeader>
+                <CardTitle>Additional Information</CardTitle>
+                <CardDescription>Add a contract link, notes, and confirm tenant consent.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                 <div className="space-y-2">
+                    <Label htmlFor="contractUrl">Contract Link (optional)</Label>
+                    <Input id="contractUrl" name="contractUrl" type="url" placeholder="https://docs.google.com/..." />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="notes">Notes (optional)</Label>
+                    <Textarea id="notes" name="notes" placeholder="Any initial notes about this tenancy..." />
+                </div>
+                <div className="items-top flex space-x-2 pt-2">
+                    <Checkbox id="consent" name="consent" />
+                    <div className="grid gap-1.5 leading-none">
+                        <label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        I confirm I have the tenant's consent to store and process their personal information.
+                        </label>
+                        <p className="text-sm text-muted-foreground">
+                        You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for details.
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" asChild><Link href="/revenue">Cancel</Link></Button>
             <Button type="submit">Save Tenancy</Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+    </form>
   );
 });
 
