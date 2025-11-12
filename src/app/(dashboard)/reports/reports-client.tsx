@@ -98,7 +98,7 @@ function RevenueAnalysisTab() {
           <Skeleton className="h-8 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 p-6">
           <div className="grid gap-4 md:grid-cols-3">
             <Skeleton className="h-24" />
             <Skeleton className="h-24" />
@@ -212,7 +212,7 @@ function RevenueAnalysisTab() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 p-6">
         <div className="grid gap-4 md:grid-cols-3">
           <KpiCard
             icon={TrendingUp}
@@ -259,7 +259,7 @@ function RevenueAnalysisTab() {
               />
               <Legend />
               <Bar dataKey="grossPotential" fill="hsl(var(--chart-5))" radius={[4, 4, 0, 0]} name="Gross Potential" />
-              <Bar dataKey="netIncome" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Net Income" />
+              <Bar dataKey="netIncome" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Net Income" />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
@@ -325,7 +325,7 @@ function PnlStatementTab() {
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Skeleton className="h-24" />
               <Skeleton className="h-24" />
@@ -427,7 +427,7 @@ function PnlStatementTab() {
                </div>
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <KpiCard
               icon={TrendingUp}
@@ -458,7 +458,7 @@ function PnlStatementTab() {
                 </CardTitle>
                 <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent className="text-center p-6">
                 <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
                 {formatCurrency(netProfitAfterTax)}
                 </div>
@@ -471,7 +471,7 @@ function PnlStatementTab() {
           <CardHeader>
             <CardTitle>Revenue Breakdown</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -502,7 +502,7 @@ function PnlStatementTab() {
           <CardHeader>
             <CardTitle>Expense Breakdown</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -558,7 +558,7 @@ const ReportsClient = memo(function ReportsClient() {
               <Skeleton className="h-8 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               <div className="grid gap-4 md:grid-cols-3">
                 <Skeleton className="h-24" />
                 <Skeleton className="h-24" />
@@ -595,3 +595,5 @@ const ReportsClient = memo(function ReportsClient() {
 });
 
 export default ReportsClient;
+
+    
