@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -30,10 +31,10 @@ interface CalendarViewProps {
 }
 
 const eventColors: { [key: string]: string } = {
-  appointment: 'bg-blue-200 text-blue-800 hover:bg-blue-300',
-  'tenancy-start': 'bg-green-200 text-green-800 hover:bg-green-300',
-  'tenancy-end': 'bg-red-200 text-red-800 hover:bg-red-300',
-  expense: 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300',
+  appointment: 'bg-blue-500 text-white hover:bg-blue-600',
+  'tenancy-start': 'bg-green-500 text-white hover:bg-green-600',
+  'tenancy-end': 'bg-red-500 text-white hover:bg-red-600',
+  expense: 'bg-yellow-500 text-black hover:bg-yellow-600',
 };
 
 export function CalendarView({ events }: CalendarViewProps) {
@@ -88,15 +89,15 @@ export function CalendarView({ events }: CalendarViewProps) {
               <div
                 key={day.toString()}
                 className={cn(
-                  'relative flex flex-col min-h-[120px] bg-card p-2 border-r border-b border-border',
+                  'relative flex flex-col min-h-[120px] bg-card p-1 border-r border-b border-border',
                   !isSameMonth(day, currentDate) && 'bg-muted/50'
                 )}
               >
                 <time
                   dateTime={format(day, 'yyyy-MM-dd')}
                   className={cn(
-                    'text-sm',
-                    isToday(day) && 'flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground'
+                    'text-sm h-6 w-6 flex items-center justify-center rounded-full',
+                    isToday(day) && 'border-2 border-primary text-primary font-bold'
                   )}
                 >
                   {format(day, 'd')}
@@ -106,7 +107,7 @@ export function CalendarView({ events }: CalendarViewProps) {
                     <Tooltip key={index} delayDuration={0}>
                       <TooltipTrigger asChild>
                          <Badge
-                          className={cn('w-full text-left block whitespace-nowrap text-xs font-normal h-auto cursor-default truncate', eventColors[event.type])}
+                          className={cn('w-full text-left block whitespace-nowrap text-xs font-semibold h-auto cursor-default truncate py-1 px-2 border-none rounded', eventColors[event.type])}
                         >
                           {event.title}
                         </Badge>
