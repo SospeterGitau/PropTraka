@@ -335,11 +335,11 @@ const PlanPrice = ({ plan }: { plan: SubscriptionPlan }) => {
     const { fontSize, ref } = useFitText();
 
     return (
-        <div ref={ref} className="text-center mb-6 h-12 flex items-center justify-center">
+        <div ref={ref} className="h-12 flex items-baseline justify-center gap-1 mb-6">
             <span style={{ fontSize }} className="font-bold whitespace-nowrap">
                 {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
             </span>
-            {plan.price !== null && <span className="text-muted-foreground self-end mb-1">/month</span>}
+            {plan.price !== null && <span className="text-muted-foreground text-sm self-end">/month</span>}
         </div>
     );
 };
@@ -378,7 +378,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 <h2 className="text-3xl font-bold tracking-tight">Choose Your Plan</h2>
                 <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Select the plan that best fits the size and needs of your property portfolio.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start lg:grid-cols-4">
                 {allPlans.map((plan) => {
                     const isCurrent = plan.name === currentPlanName;
                     const isSelected = plan.name === selectedPlan;
@@ -386,7 +386,13 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                     const planFeatures = plan.features.map(fid => allFeatures.find(f => f.id === fid)).filter(Boolean) as AppFeature[];
 
                     return (
-                        <div key={plan.id} className="h-full">
+                        <div
+                            key={plan.id}
+                            className={cn(
+                                "h-full",
+                                isMostPopular && "lg:col-span-2"
+                            )}
+                         >
                              <button
                                 onClick={() => handleSelectPlan(plan.name)}
                                 disabled={isCurrent}
@@ -740,5 +746,7 @@ export default function AccountPage() {
   );
 }
 
+
+    
 
     
