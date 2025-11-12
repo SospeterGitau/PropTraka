@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, memo } from 'react';
@@ -25,27 +24,15 @@ function formatAddress(property: Property) {
 }
 
 const TenancyForm = memo(function TenancyForm({
-  tenancyToEdit,
   properties,
-  revenue,
 }: {
-  tenancyToEdit?: Transaction | null;
   properties: Property[];
-  revenue: Transaction[];
 }) {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
   const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
-
-  useEffect(() => {
-    if (tenancyToEdit) {
-      setServiceCharges(tenancyToEdit.serviceCharges || []);
-    } else {
-      setServiceCharges([]);
-    }
-  }, [tenancyToEdit]);
 
   const addServiceCharge = () => {
     setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
@@ -77,9 +64,8 @@ const TenancyForm = memo(function TenancyForm({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user || !revenue) return;
+    if (!user) return;
     const formData = new FormData(event.currentTarget);
-    const isEditing = !!tenancyToEdit;
 
     const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
     const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
@@ -94,7 +80,7 @@ const TenancyForm = memo(function TenancyForm({
     const notes = formData.get('notes') as string;
     const consent = formData.get('consent') as string;
 
-    if (!isEditing && !consent) {
+    if (!consent) {
       toast({
         variant: "destructive",
         title: "Consent Required",
@@ -103,20 +89,21 @@ const TenancyForm = memo(function TenancyForm({
       return;
     }
 
-    if (!isEditing) {
-      const existingTenancy = revenue.find(
-        (t) =>
-          t.tenant?.toLowerCase() === tenant.toLowerCase() &&
-          t.propertyId === propertyId
-      );
-      if (existingTenancy) {
-        toast({
-          variant: "destructive",
-          title: "Duplicate Tenancy",
-          description: `A tenancy for "${tenant}" already exists at this property.`,
-        });
-        return;
-      }
+    // On-demand check for duplicates
+    const q = query(
+      collection(firestore, 'revenue'),
+      where('ownerId', '==', user.uid),
+      where('propertyId', '==', propertyId),
+      where('tenant', '==', tenant)
+    );
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+       toast({
+        variant: "destructive",
+        title: "Duplicate Tenancy",
+        description: `A tenancy for "${tenant}" already exists at this property.`,
+      });
+      return;
     }
 
     if (!tenancyStartDateStr || !tenancyEndDateStr) {
@@ -143,8 +130,7 @@ const TenancyForm = memo(function TenancyForm({
     }
 
     const months = eachMonthOfInterval({ start: tenancyStartDate, end: tenancyEndDate });
-    const tenancyId = tenancyToEdit?.tenancyId || `t${Date.now()}`;
-    const existingTransactions = isEditing ? revenue.filter(t => t.tenancyId === tenancyToEdit.tenancyId) : [];
+    const tenancyId = `t${Date.now()}`;
 
     const finalServiceCharges = serviceCharges
       .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
@@ -152,14 +138,13 @@ const TenancyForm = memo(function TenancyForm({
 
     const transactionsData = months.map((monthStartDate, index) => {
       const dateStr = format(monthStartDate, 'yyyy-MM-dd');
-      const existingTx = isEditing ? existingTransactions.find(tx => format(new Date(tx.date), 'yyyy-MM') === format(monthStartDate, 'yyyy-MM')) : undefined;
 
       const newTxData: Partial<Transaction> = {
         tenancyId,
         date: dateStr,
         rent,
         serviceCharges: finalServiceCharges,
-        amountPaid: existingTx?.amountPaid || 0,
+        amountPaid: 0,
         propertyId,
         propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
         tenant, tenantEmail, tenantPhone,
@@ -168,40 +153,27 @@ const TenancyForm = memo(function TenancyForm({
         tenancyStartDate: tenancyStartDateStr,
         tenancyEndDate: tenancyEndDateStr,
         contractUrl,
-        ownerId: tenancyToEdit?.ownerId || user.uid,
+        ownerId: user.uid,
       };
       
-      if (existingTx?.id) newTxData.id = existingTx.id;
       if (index === 0 && notes) newTxData.notes = notes;
 
       return newTxData;
     });
 
     const batch = writeBatch(firestore);
-    if (isEditing) {
-        const existingTxIdsInTenancy = existingTransactions.map(tx => tx.id);
-        const newTxDates = new Set(transactionsData.map(tx => format(new Date(tx.date), 'yyyy-MM')));
-        
-        existingTxIdsInTenancy.forEach(id => {
-            const originalTx = revenue.find(t => t.id === id);
-            if (originalTx && !newTxDates.has(format(new Date(originalTx.date), 'yyyy-MM'))) {
-                batch.delete(doc(firestore, 'revenue', id));
-            }
-        });
-    }
-
+    
     transactionsData.forEach(tx => {
-      const { id, ...txData } = tx;
-      const docRef = id ? doc(firestore, 'revenue', id) : doc(collection(firestore, 'revenue'));
-      batch.set(docRef, { ...txData, ownerId: user.uid });
+      const docRef = doc(collection(firestore, 'revenue'));
+      batch.set(docRef, { ...tx, ownerId: user.uid });
     });
     
     await batch.commit();
     
     addChangeLogEntry({
       type: 'Tenancy',
-      action: isEditing ? 'Updated' : 'Created',
-      description: `Tenancy for "${transactionsData[0].tenant}" at "${transactionsData[0].propertyName}" was ${isEditing ? 'updated' : 'created'}.`,
+      action: 'Created',
+      description: `Tenancy for "${transactionsData[0].tenant}" at "${transactionsData[0].propertyName}" was created.`,
       entityId: tenancyId,
     });
     
@@ -214,7 +186,7 @@ const TenancyForm = memo(function TenancyForm({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="propertyId">Property</Label>
-            <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
+            <Select name="propertyId" id="propertyId" required>
               <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
               <SelectContent>
                 {properties.map(property => (
@@ -225,29 +197,29 @@ const TenancyForm = memo(function TenancyForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="tenantName">Tenant Name</Label>
-            <Input id="tenantName" name="tenantName" defaultValue={tenancyToEdit?.tenant} required />
+            <Input id="tenantName" name="tenantName" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="tenantEmail">Tenant Email</Label>
-            <Input id="tenantEmail" name="tenantEmail" type="email" defaultValue={tenancyToEdit?.tenantEmail} required />
+            <Input id="tenantEmail" name="tenantEmail" type="email" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="tenantPhone">Tenant Phone</Label>
-            <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
+            <Input id="tenantPhone" name="tenantPhone" type="tel" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
-                <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
+                <Input id="tenancyStartDate" name="tenancyStartDate" type="date" required />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
-                <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
+                <Input id="tenancyEndDate" name="tenancyEndDate" type="date" required />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="rent">Monthly Rent</Label>
-            <Input id="rent" name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
+            <Input id="rent" name="rent" type="number" required />
           </div>
           <div className="space-y-2">
             <Label>Fixed Monthly Service Charges (optional)</Label>
@@ -266,17 +238,17 @@ const TenancyForm = memo(function TenancyForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-            <Input id="deposit" name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
+            <Input id="deposit" name="deposit" type="number" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="contractUrl">Contract Link (optional)</Label>
-            <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
+            <Input id="contractUrl" name="contractUrl" type="url" placeholder="https://docs.google.com/..." />
           </div>
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes} />
+            <Textarea id="notes" name="notes" />
           </div>
-          {!tenancyToEdit && (
+          
             <div className="items-top flex space-x-2 pt-2">
               <Checkbox id="consent" name="consent" />
               <div className="grid gap-1.5 leading-none">
@@ -288,7 +260,7 @@ const TenancyForm = memo(function TenancyForm({
                 </p>
               </div>
             </div>
-          )}
+          
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" asChild><Link href="/revenue">Cancel</Link></Button>
             <Button type="submit">Save Tenancy</Button>
@@ -305,13 +277,11 @@ export default function AddTenancyPage() {
 
   // Defer query creation until user is available.
   const propertiesQuery = user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null;
-  const revenueQuery = user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null;
   
   const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
 
-  // Master loading state: wait for auth AND data fetching.
-  if (isUserLoading || isPropertiesLoading || isRevenueLoading) {
+  // Master loading state: wait for auth AND properties fetching.
+  if (isUserLoading || isPropertiesLoading) {
     return <div>Loading...</div>;
   }
   
@@ -330,7 +300,7 @@ export default function AddTenancyPage() {
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
-                        <Link href="/properties/add">Add Your First Property</Link>
+                        <Link href="/properties">Add Your First Property</Link>
                     </Button>
                 </CardContent>
             </Card>
@@ -348,7 +318,7 @@ export default function AddTenancyPage() {
           </Link>
         </Button>
       </PageHeader>
-      <TenancyForm properties={properties} revenue={revenue || []} />
+      <TenancyForm properties={properties} />
     </>
   );
 }
