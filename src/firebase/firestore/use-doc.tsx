@@ -1,3 +1,5 @@
+"use client"; // Client component
+
 import { useState, useEffect } from 'react';
 import {
   doc,
@@ -55,9 +57,8 @@ export const useDoc = <T>(
       }
     );
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [targetRefOrPath, isAuthLoading, user]); // Re-run if path or auth state changes
+  }, [targetRefOrPath, isAuthLoading, user]); 
 
   return { data, error, loading };
 };

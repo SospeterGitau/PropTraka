@@ -1,3 +1,5 @@
+"use client"; // Client component
+
 import { useState, useEffect } from 'react';
 import {
   collection,
@@ -21,7 +23,6 @@ export const useCollection = <T>(
   useEffect(() => {
     // **THE GUARD:** Do not do anything until Firebase Auth is 100% ready
     if (isAuthLoading || !user) {
-      // If auth is loading or user is not logged in, stop.
       setLoading(false);
       return;
     }
@@ -33,7 +34,6 @@ export const useCollection = <T>(
     } else if (targetRefOrQuery) {
       queryRef = targetRefOrQuery;
     } else {
-      // If the query is null (e.g., waiting for user), stop.
       setLoading(false);
       return;
     }
@@ -52,17 +52,14 @@ export const useCollection = <T>(
         setError(null);
       },
       (err) => {
-        // This is where the "Missing or insufficient permissions" error
-        // was coming from. It will now be caught and handled safely.
         console.error('Error in useCollection:', err);
         setError(err);
         setLoading(false);
       }
     );
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [targetRefOrQuery, isAuthLoading, user]); // Re-run if query or auth state changes
+  }, [targetRefOrQuery, isAuthLoading, user]); 
 
   return { data, error, loading };
 };

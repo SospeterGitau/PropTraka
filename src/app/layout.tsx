@@ -1,38 +1,14 @@
-import { type ReactNode } from 'react';
-import { Inter } from 'next/font/google';
-import { Toaster } from "@/components/ui/toaster"
-import '@/app/globals.css';
-import { ThemeProvider } from '@/context/theme-context';
+import { ReactNode } from 'react';
 import { ClientProviderWrapper } from './client-provider';
-import type { Metadata } from 'next';
-import { AnalyticsProvider } from '@/firebase/analytics-provider';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans'
-});
-
-export const metadata: Metadata = {
-  title: {
-    template: '%s | LeaseLync',
-    default: 'LeaseLync - Smart Property Management',
-  },
-  description: 'The smart, simple way to manage your rental properties. Track revenue, expenses, maintenance, and arrears all in one place.',
-  keywords: ['property management', 'landlord software', 'rental management', 'tenant tracking', 'real estate'],
-};
-
+// You may need to import your global CSS file here
+// import './globals.css'; 
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`}>
+    <html lang="en">
+      <body>
         <ClientProviderWrapper>
-          <AnalyticsProvider>
-            <ThemeProvider>
-                {children}
-            </ThemeProvider>
-          </AnalyticsProvider>
-          <Toaster />
+          {children}
         </ClientProviderWrapper>
       </body>
     </html>

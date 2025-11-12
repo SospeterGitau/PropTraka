@@ -4,45 +4,34 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
-import { getAnalytics, Analytics } from 'firebase/analytics';
 import { app } from './index';
 
 interface FirebaseContextValue {
   auth: Auth;
   firestore: Firestore;
   functions: Functions;
-  analytics: Analytics | null;
   user: User | null;
-  isUserLoading: boolean;
-  userError: Error | null;
+  isAuthLoading: boolean;
 }
 
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefined);
 
 export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isUserLoading, setIsUserLoading] = useState(true);
-  const [userError, setUserError] = useState<Error | null>(null);
-
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
   const functions = getFunctions(app);
-  const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setIsUserLoading(false);
-    }, (error) => {
-        console.error("Authentication error:", error);
-        setUserError(error);
-        setIsUserLoading(false);
+      setIsAuthLoading(false);
     });
     return () => unsubscribe();
   }, [auth]);
 
-  if (isUserLoading) {
+  if (isAuthLoading) {
     return (
       <div style={{
         display: 'flex',
@@ -61,7 +50,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FirebaseContext.Provider value={{ auth, firestore, functions, analytics, user, isUserLoading: isUserLoading, userError }}>
+    <FirebaseContext.Provider value={{ auth, firestore, functions, user, isAuthLoading }}>
       {children}
     </FirebaseContext.Provider>
   );
@@ -76,26 +65,11 @@ export const useFirebase = () => {
 };
 
 export const useUser = () => {
-  const context = useFirebase();
-  return { 
-      user: context.user, 
-      isUserLoading: context.isUserLoading, 
-      userError: context.userError 
-    };
+  const { user, isAuthLoading } = useFirebase();
+  return { user, isAuthLoading };
 };
 
 export const useFirestore = () => {
   const { firestore } = useFirebase();
   return firestore;
 };
-
-export const useAnalytics = () => {
-    const { analytics } = useFirebase();
-    return analytics;
-}
-
-export interface UserHookResult {
-    user: User | null;
-    isUserLoading: boolean;
-    userError: Error | null;
-}
