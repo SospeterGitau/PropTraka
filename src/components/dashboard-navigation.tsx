@@ -192,7 +192,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-10 flex items-center justify-start h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
           <SidebarTrigger />
         </header>
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="p-4 sm:p-6 lg:p-8 pb-24">
           <UpgradeBanner />
           {children}
         </main>
