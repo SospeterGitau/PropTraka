@@ -335,7 +335,7 @@ const PlanPrice = ({ plan }: { plan: SubscriptionPlan }) => {
     const { fontSize, ref } = useFitText();
 
     return (
-        <div ref={ref} className="h-12 flex items-baseline justify-center gap-1 mb-6">
+        <div ref={ref} className="h-12 flex items-baseline justify-center gap-1">
             <span style={{ fontSize }} className="font-bold whitespace-nowrap">
                 {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
             </span>
@@ -378,7 +378,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 <h2 className="text-3xl font-bold tracking-tight">Choose Your Plan</h2>
                 <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Select the plan that best fits the size and needs of your property portfolio.</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start lg:grid-cols-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
                 {allPlans.map((plan) => {
                     const isCurrent = plan.name === currentPlanName;
                     const isSelected = plan.name === selectedPlan;
@@ -386,13 +386,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                     const planFeatures = plan.features.map(fid => allFeatures.find(f => f.id === fid)).filter(Boolean) as AppFeature[];
 
                     return (
-                        <div
-                            key={plan.id}
-                            className={cn(
-                                "h-full",
-                                isMostPopular && "lg:col-span-2"
-                            )}
-                         >
+                        <div key={plan.id} className="h-full">
                              <button
                                 onClick={() => handleSelectPlan(plan.name)}
                                 disabled={isCurrent}
@@ -415,17 +409,19 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 </Badge>
                             )}
 
-                            <div className="flex-1">
-                                <CardHeader className="text-center p-0 mb-6">
+                            <div className="flex-1 flex flex-col">
+                                <CardHeader className="text-center p-0">
                                     <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                                    <p className="text-sm text-muted-foreground pt-1 h-10">{plan.description}</p>
+                                    <p className="text-sm text-muted-foreground pt-1 min-h-[40px]">{plan.description}</p>
                                 </CardHeader>
                                 
-                                <PlanPrice plan={plan} />
+                                <div className="my-6">
+                                  <PlanPrice plan={plan} />
+                                </div>
                                 
                                 <Separator />
 
-                                <CardContent className="p-0 mt-6">
+                                <CardContent className="p-0 mt-6 flex-1">
                                     <h4 className="font-semibold text-center mb-4">Features</h4>
                                     <ul className="space-y-3 text-sm">
                                         {planFeatures.map((feature) => (
@@ -746,6 +742,8 @@ export default function AccountPage() {
   );
 }
 
+
+    
 
     
 
