@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
-import { format, startOfToday } from 'date-fns';
+import { format, startOfToday, isBefore, differenceInCalendarDays } from 'date-fns';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -55,48 +56,72 @@ const ArrearsClient = memo(function ArrearsClient() {
     const today = startOfToday();
 
     const revenue = revenueSnapshot.docs.map(doc => doc.data() as Transaction);
-    
-    const calculatedArrears = revenue
-      .filter(transaction => {
-        const serviceChargesTotal = (transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
-        const amountDue = transaction.rent + serviceChargesTotal + (transaction.deposit ?? 0);
-        const amountPaid = transaction.amountPaid ?? 0;
-        const dueDate = new Date(transaction.date);
-        return amountPaid < amountDue && dueDate < today;
-      })
-      .map(transaction => {
-        const rentDue = transaction.rent;
-        const serviceChargesTotal = (transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
-        const depositDue = transaction.deposit ?? 0;
-        const amountPaid = transaction.amountPaid ?? 0;
-        const dueDate = new Date(transaction.date);
 
-        const paidTowardsDeposit = Math.min(amountPaid, depositDue);
-        const remainingPaidAfterDeposit = amountPaid - paidTowardsDeposit;
-        const paidTowardsRentAndCharges = Math.min(remainingPaidAfterDeposit, rentDue + serviceChargesTotal);
+    const tenancies = Object.values(
+      revenue.reduce((acc, tx) => {
+        if (!tx.tenancyId) return acc;
+        if (!acc[tx.tenancyId]) {
+          acc[tx.tenancyId] = {
+            ...tx,
+            transactions: [],
+          };
+        }
+        acc[tx.tenancyId].transactions.push(tx);
+        return acc;
+      }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
+    );
+
+    const calculatedArrears = tenancies
+      .map(tenancy => {
+        const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
+        if (dueTransactions.length === 0) return null;
+
+        const totalDueToDate = dueTransactions.reduce((sum, tx) => {
+          const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
+          return sum + tx.rent + serviceChargesTotal + (tx.deposit || 0);
+        }, 0);
         
-        const depositOwed = depositDue - paidTowardsDeposit;
-        const rentAndChargesOwed = (rentDue + serviceChargesTotal) - paidTowardsRentAndCharges;
+        const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid || 0), 0);
+        const amountOwed = totalDueToDate - totalPaid;
+
+        if (amountOwed <= 0) return null;
+
+        const firstUnpaidTx = tenancy.transactions
+          .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          .find(tx => {
+            const txDue = tx.rent + (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0) + (tx.deposit || 0);
+            return (tx.amountPaid || 0) < txDue && isBefore(new Date(tx.date), today);
+          });
+          
+        const dueDate = firstUnpaidTx ? new Date(firstUnpaidTx.date) : new Date(tenancy.transactions[0].date);
+        const daysOverdue = differenceInCalendarDays(today, dueDate);
+
+        // This simplified breakdown isn't perfect but gives a general idea.
+        const totalDepositDue = tenancy.transactions.reduce((sum, tx) => sum + (tx.deposit || 0), 0);
+        const totalRentAndChargesDue = totalDueToDate - totalDepositDue;
+
+        const paidTowardsDeposit = Math.min(totalPaid, totalDepositDue);
+        const remainingAfterDeposit = totalPaid - paidTowardsDeposit;
         
-        const amountOwed = depositOwed + rentAndChargesOwed;
-        
-        const daysOverdue = Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24));
+        const depositOwed = totalDepositDue - paidTowardsDeposit;
+        const rentAndChargesOwed = totalRentAndChargesDue - remainingAfterDeposit;
 
         return {
-          tenant: transaction.tenant!,
-          tenantEmail: transaction.tenantEmail!,
-          tenantPhone: transaction.tenantPhone,
-          propertyAddress: transaction.propertyName,
+          tenant: tenancy.tenant!,
+          tenantEmail: tenancy.tenantEmail!,
+          tenantPhone: tenancy.tenantPhone,
+          propertyAddress: tenancy.propertyName,
           amountOwed,
-          dueDate: transaction.date,
-          rentOwed: rentAndChargesOwed, 
-          depositOwed,
-          serviceChargesOwed: 0, // Simplified for this view, logic is now rent+charges
+          dueDate: format(dueDate, 'yyyy-MM-dd'),
+          rentOwed: rentAndChargesOwed > 0 ? rentAndChargesOwed : 0,
+          depositOwed: depositOwed > 0 ? depositOwed : 0,
+          serviceChargesOwed: 0, 
           daysOverdue,
         };
-      });
+      })
+      .filter((a): a is ArrearEntry => a !== null);
     
-    setArrears(calculatedArrears.filter(a => a.amountOwed > 0).sort((a,b) => b.daysOverdue - a.daysOverdue));
+    setArrears(calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue));
   }, [revenueSnapshot]);
   
   useEffect(() => {
@@ -161,7 +186,7 @@ const ArrearsClient = memo(function ArrearsClient() {
                 <TableRow>
                   <TableHead>Tenant</TableHead>
                   <TableHead>Property</TableHead>
-                  <TableHead>Due Date</TableHead>
+                  <TableHead>First Due Date</TableHead>
                   <TableHead>Days Overdue</TableHead>
                   <TableHead>Owed For</TableHead>
                   <TableHead className="text-right">Amount Owed</TableHead>
@@ -181,7 +206,7 @@ const ArrearsClient = memo(function ArrearsClient() {
                     const body = [
                       `Dear ${arrear.tenant},`,
                       `This is a friendly reminder regarding the outstanding balance for your tenancy at ${arrear.propertyAddress}.`,
-                      `Our records show that a payment of ${formatCurrency(arrear.amountOwed)} was due on ${formattedDates[arrear.dueDate]} and is now overdue.`,
+                      `Our records show that a payment of ${formatCurrency(arrear.amountOwed)} is outstanding and overdue.`,
                       `Could you please arrange to make this payment at your earliest convenience? If you have already made the payment, please disregard this notice.`,
                       `If you have any questions or wish to discuss this, please do not hesitate to reply to this email.`,
                       `Thank you for your prompt attention to this matter.`,

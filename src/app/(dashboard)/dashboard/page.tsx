@@ -16,6 +16,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import type { Property, Transaction } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { Button } from '@/components/ui/button';
+import { startOfToday, isBefore } from 'date-fns';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
@@ -106,17 +107,27 @@ const DashboardPageContent = memo(function DashboardPageContent() {
     .filter(e => new Date(e.date).getMonth() === new Date().getMonth())
     .reduce((acc, e) => acc + (e.amount || 0), 0);
   
-  const totalArrears = revenue
-    .filter(r => {
-      const amountDue = r.rent + ((r.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0)) + (r.deposit ?? 0);
-      const amountPaid = r.amountPaid ?? 0;
-      return amountPaid < amountDue && new Date(r.date) < new Date();
-    })
-    .reduce((acc, r) => {
-      const amountDue = r.rent + ((r.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0)) + (r.deposit ?? 0);
-      const amountPaid = r.amountPaid ?? 0;
-      return acc + (amountDue - amountPaid);
-    }, 0);
+  const today = startOfToday();
+  const tenancies = Object.values(
+    revenue.reduce((acc, tx) => {
+      const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
+      if (!acc[tenancyId]) {
+        acc[tenancyId] = {
+          transactions: [],
+        };
+      }
+      acc[tenancyId].transactions.push(tx);
+      return acc;
+    }, {} as Record<string, { transactions: Transaction[] }>)
+  );
+
+  const totalArrears = tenancies.reduce((total, tenancy) => {
+    const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
+    const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
+    const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
+    const balance = totalDueToDate - totalPaid;
+    return total + (balance > 0 ? balance : 0);
+  }, 0);
 
   const netOperatingIncome = totalRevenue - totalExpenses;
   const noiVariant = netOperatingIncome >= 0 ? 'positive' : 'destructive';

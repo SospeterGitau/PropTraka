@@ -4,7 +4,7 @@
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { format, startOfToday, isBefore } from 'date-fns';
 import type { Transaction, ServiceCharge, Property } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -28,8 +28,8 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, deleteDoc, writeBatch, getDocs, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
 function PaymentForm({
@@ -224,6 +224,7 @@ function InvoiceForm({
 const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const params = useParams();
   const tenancyId = params.tenancyId as string;
+  const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
@@ -232,21 +233,23 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   // Data Fetching
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid), where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
-  
-  // State
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
+
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction) || [], [revenueSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => doc.data() as Property) || [], [propertiesSnapshot]);
+
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
-  
+
   useEffect(() => {
     if (isRevenueLoading) return;
     if (!revenue || revenue.length === 0) {
-      // It might take a moment for useCollection to return data, so we don't call notFound() immediately
+      if (!isRevenueLoading) notFound();
       return;
     };
     
@@ -375,7 +378,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     setIsEndTenancyOpen(false);
   };
 
-  if (isRevenueLoading || isPropertiesLoading || !properties) {
+  if (isRevenueLoading || isPropertiesLoading) {
     return <div>Loading...</div>;
   }
   
@@ -415,8 +418,8 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 <CalendarX2 className="mr-2 h-4 w-4" />
                 End Tenancy
             </Button>
-            <Button asChild>
-                <Link href="/revenue">
+            <Button asChild onClick={() => router.back()}>
+                <Link href="#">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Back
                 </Link>
