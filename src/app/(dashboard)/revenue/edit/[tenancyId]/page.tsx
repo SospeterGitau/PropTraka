@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, memo } from 'react';
@@ -15,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
@@ -40,6 +39,7 @@ const TenancyForm = memo(function TenancyForm({
   const { user } = useUser();
   const firestore = useFirestore();
   const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (tenancyToEdit) {
@@ -80,6 +80,8 @@ const TenancyForm = memo(function TenancyForm({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user || !revenue || !tenancyToEdit) return;
+    setIsSubmitting(true);
+    
     const formData = new FormData(event.currentTarget);
 
     const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
@@ -100,6 +102,7 @@ const TenancyForm = memo(function TenancyForm({
         title: "Error",
         description: "Tenancy start and end dates are required.",
       });
+      setIsSubmitting(false);
       return;
     }
     
@@ -114,6 +117,7 @@ const TenancyForm = memo(function TenancyForm({
         title: "Invalid Date Range",
         description: "Tenancy end date cannot be before the start date.",
       });
+      setIsSubmitting(false);
       return;
     }
 
@@ -179,6 +183,7 @@ const TenancyForm = memo(function TenancyForm({
       entityId: tenancyId,
     });
     
+    setIsSubmitting(false);
     router.push('/revenue');
   };
 
@@ -281,9 +286,12 @@ const TenancyForm = memo(function TenancyForm({
             </CardContent>
         </Card>
 
-        <div className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-background py-4 pr-24">
+        <div className="flex justify-end gap-2 pb-24">
             <Button type="button" variant="outline" asChild><Link href="/revenue">Cancel</Link></Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
         </div>
     </form>
   );

@@ -10,7 +10,7 @@ export function ChatBubble() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-20 right-4 sm:bottom-20 sm:right-6 md:bottom-24 md:right-8 z-40">
         <Button
           size="icon"
           className="rounded-full w-14 h-14 shadow-lg"

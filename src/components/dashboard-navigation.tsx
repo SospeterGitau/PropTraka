@@ -22,8 +22,8 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   return (
     <div className="min-h-screen">
-      {/* Main content area with bottom padding for mobile nav AND chat bubble */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+      {/* Main content area with generous bottom padding for mobile nav and chat bubble */}
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-40">
         {children}
       </main>
 
