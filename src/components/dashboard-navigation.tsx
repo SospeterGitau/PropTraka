@@ -27,7 +27,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       </main>
 
       {/* Mobile navigation bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t bg-background/95 backdrop-blur-sm sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 bg-red-600">
         <div className="flex h-full items-center justify-around">
           {navItems.map((item) => {
             const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
@@ -38,11 +38,11 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
                 className={cn(
                   "relative flex h-full w-full flex-col items-center justify-center gap-1 text-sm font-medium transition-colors",
                   isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-primary"
+                    ? "text-white"
+                    : "text-white/70 hover:text-white"
                 )}
               >
-                {isActive && <span className="absolute top-0 h-0.5 w-12 rounded-full bg-primary" />}
+                {isActive && <span className="absolute top-0 h-0.5 w-12 rounded-full bg-white" />}
                 <item.icon className="h-6 w-6" />
                 <span className="text-xs">{item.label}</span>
               </Link>
