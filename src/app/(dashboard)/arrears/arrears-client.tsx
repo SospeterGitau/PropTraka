@@ -21,18 +21,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentRequestDialog } from '@/components/payment-request-dialog';
 import type { ArrearEntry, Transaction } from '@/lib/types';
 import { CreditCard } from 'lucide-react';
-import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, DocumentData, Query } from 'firebase/firestore';
+import { useCollection } from '@/firebase';
 
 
 const ArrearsClient = memo(function ArrearsClient() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-
-  const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
-
+  const { data: revenue, loading: isDataLoading, error } = useCollection<Transaction>('revenue');
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
@@ -52,10 +45,8 @@ const ArrearsClient = memo(function ArrearsClient() {
   };
 
   useEffect(() => {
-    if (!revenueSnapshot) return;
+    if (!revenue) return;
     const today = startOfToday();
-
-    const revenue = revenueSnapshot.docs.map(doc => doc.data() as Transaction);
 
     const tenancies = Object.values(
       revenue.reduce((acc, tx) => {
@@ -73,10 +64,7 @@ const ArrearsClient = memo(function ArrearsClient() {
 
     const calculatedArrears = tenancies
       .map(tenancy => {
-        const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
-        if (dueTransactions.length === 0) return null;
-
-        const totalDueToDate = dueTransactions.reduce((sum, tx) => {
+        const totalDueToDate = tenancy.transactions.reduce((sum, tx) => {
           const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
           return sum + tx.rent + serviceChargesTotal + (tx.deposit || 0);
         }, 0);
@@ -122,7 +110,7 @@ const ArrearsClient = memo(function ArrearsClient() {
       .filter((a): a is ArrearEntry => a !== null);
     
     setArrears(calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue));
-  }, [revenueSnapshot]);
+  }, [revenue]);
   
   useEffect(() => {
     const formatAllDates = async () => {

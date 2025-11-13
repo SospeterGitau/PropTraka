@@ -13,9 +13,8 @@ import { ExpenseForm } from '@/components/expense-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaintenanceKanbanBoard } from '@/components/maintenance-kanban-board';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
@@ -30,13 +29,9 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const { toast } = useToast();
 
   // Data Fetching
-  const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const maintenanceQuery = useMemo(() => user?.uid ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const contractorsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [maintenanceRequestsSnapshot, isMaintenanceLoading] = useCollection(maintenanceQuery);
-  const [contractorsSnapshot, isContractorsLoading] = useCollection(contractorsQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
+  const { data: maintenanceRequests, loading: isMaintenanceLoading } = useCollection<MaintenanceRequest>('maintenanceRequests');
+  const { data: contractors, loading: isContractorsLoading } = useCollection<Contractor>('contractors');
 
   const isDataLoading = isPropertiesLoading || isMaintenanceLoading || isContractorsLoading;
 
@@ -47,11 +42,6 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
   const [expenseFromMaintenance, setExpenseFromMaintenance] = useState<Partial<Transaction> | null>(null);
   const [propertyFilter, setPropertyFilter] = useState('all');
-
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)), [propertiesSnapshot]);
-  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaintenanceRequest)), [maintenanceRequestsSnapshot]);
-  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)), [contractorsSnapshot]);
-
 
   // Formatting
   const formatCurrency = (amount: number) => {

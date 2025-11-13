@@ -23,15 +23,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
@@ -45,19 +44,14 @@ const PropertiesClient = memo(function PropertiesClient() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
   const isDataLoading = isPropertiesLoading || isRevenueLoading;
 
   // State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)), [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
 
   // Formatters
   const formatCurrency = (amount: number) => {

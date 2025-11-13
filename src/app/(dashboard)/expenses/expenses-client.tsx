@@ -32,9 +32,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExpenseForm } from '@/components/expense-form';
-import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
 
@@ -176,13 +175,9 @@ const ExpensesClient = memo(function ExpensesClient() {
   const { settings } = useDataContext();
   const { locale, currency } = settings;
 
-  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const contractorsQuery = useMemo(() => user ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-
-  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [contractorsSnapshot, isContractorsLoading] = useCollection(contractorsQuery);
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
+  const { data: contractors, loading: isContractorsLoading } = useCollection<Contractor>('contractors');
 
   const isDataLoading = isExpensesLoading || isPropertiesLoading || isContractorsLoading;
 
@@ -190,11 +185,6 @@ const ExpensesClient = memo(function ExpensesClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
-  
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)), [expensesSnapshot]);
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)), [propertiesSnapshot]);
-  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)), [contractorsSnapshot]);
-
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);

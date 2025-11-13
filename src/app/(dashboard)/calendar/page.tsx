@@ -4,24 +4,14 @@
 import { useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { CalendarView } from '@/components/calendar-view';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, Query } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useCollection } from '@/firebase';
 import type { Transaction, MaintenanceRequest, CalendarEvent } from '@/lib/types';
 
 
 function CalendarPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-
-  const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-  const expensesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-  const maintenanceRequestsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-  
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
-  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
-  const [maintenanceRequestsSnapshot, isMaintenanceLoading] = useCollection(maintenanceRequestsQuery);
-
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
+  const { data: maintenanceRequests, loading: isMaintenanceLoading } = useCollection<MaintenanceRequest>('maintenanceRequests');
 
   const formatCurrencyWithCents = (amount: number) => {
     return new Intl.NumberFormat('en-GB', {
@@ -31,11 +21,7 @@ function CalendarPage() {
   };
 
   const calendarEvents = useMemo(() => {
-    if (!revenueSnapshot || !expensesSnapshot || !maintenanceRequestsSnapshot) return [];
-
-    const revenue = revenueSnapshot.docs.map(doc => doc.data() as Transaction);
-    const expenses = expensesSnapshot.docs.map(doc => doc.data() as Transaction);
-    const maintenanceRequests = maintenanceRequestsSnapshot.docs.map(doc => doc.data() as MaintenanceRequest);
+    if (!revenue || !expenses || !maintenanceRequests) return [];
   
     const events: CalendarEvent[] = [];
     const processedTenancies = new Set<string>();
@@ -91,7 +77,7 @@ function CalendarPage() {
     });
   
     return events;
-  }, [revenueSnapshot, expensesSnapshot, maintenanceRequestsSnapshot]);
+  }, [revenue, expenses, maintenanceRequests]);
 
   return (
     <>

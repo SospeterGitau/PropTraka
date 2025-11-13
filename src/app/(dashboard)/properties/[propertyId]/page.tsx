@@ -21,10 +21,8 @@ import {
 import { PropertyForm } from '@/components/property-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import type { Property, Transaction } from '@/lib/types';
-import { useUser, useFirestore } from '@/firebase';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
+import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
@@ -41,10 +39,9 @@ function PropertyDetailPageContent() {
 
   // Data Fetching
   const propertyRef = useMemo(() => propertyId ? doc(firestore, 'properties', propertyId as string) : null, [firestore, propertyId]);
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid), where('propertyId', '==', propertyId)) : null, [firestore, user, propertyId]);
   
-  const [property, isPropertyLoading] = useDoc<Property>(propertyRef);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
+  const { data: property, loading: isPropertyLoading } = useDoc<Property>(propertyRef);
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
   
   const isDataLoading = isPropertyLoading || isRevenueLoading;
 
@@ -121,7 +118,6 @@ function PropertyDetailPageContent() {
     notFound();
   }
   
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
   const today = new Date();
   const isOccupied = revenue?.some(t => 
       t.propertyId === property.id && 

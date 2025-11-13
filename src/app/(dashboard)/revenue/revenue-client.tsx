@@ -5,7 +5,7 @@ import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import { format, startOfToday, isBefore } from 'date-fns';
-import type { Property, Transaction } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -29,9 +29,8 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, doc, serverTimestamp, writeBatch, getDocs, query, where } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
 
@@ -42,16 +41,12 @@ const RevenueClient = memo(function RevenueClient() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
-  const isDataLoading = isRevenueLoading;
+  const { data: revenue, loading: isDataLoading } = useCollection<Transaction>('revenue');
 
   // State
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
-
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)), [revenueSnapshot]);
 
   // Formatters
   const formatCurrency = (amount: number) => {

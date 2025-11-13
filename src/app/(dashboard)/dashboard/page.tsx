@@ -4,15 +4,13 @@
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useCollection } from '@/firebase';
 import type { Property, Transaction } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { Button } from '@/components/ui/button';
@@ -23,29 +21,18 @@ const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-cha
 const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false, memo: true });
 
 const DashboardPageContent = memo(function DashboardPageContent() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const { settings } = useDataContext();
   const { currency, locale } = settings;
 
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
-  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
+  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
+  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
+  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
   
   const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   };
-  
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)), [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => doc.data() as Transaction), [expensesSnapshot]);
-
 
   // Data might not be available on the first render, so we add a loading state.
   if (isDataLoading || !properties || !revenue || !expenses) {
@@ -122,8 +109,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   );
 
   const totalArrears = tenancies.reduce((total, tenancy) => {
-    const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
-    const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
+    const totalDueToDate = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
     const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
     const balance = totalDueToDate - totalPaid;
     return total + (balance > 0 ? balance : 0);

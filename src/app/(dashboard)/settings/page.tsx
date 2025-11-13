@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -24,9 +23,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, writeBatch, orderBy } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
@@ -463,10 +461,7 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
 
-    const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-    const [articlesSnapshot, isDataLoading] = useCollection(articlesQuery);
-
-    const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as KnowledgeArticle)), [articlesSnapshot]);
+    const { data: articles, loading: isDataLoading } = useCollection<KnowledgeArticle>('knowledgeBase');
     const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;
 
     const handleSeedData = async () => {

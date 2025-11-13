@@ -5,9 +5,7 @@ import { useState, useEffect, useMemo, memo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CreditCard, Building2, FileText, HandCoins, Receipt, Wrench } from 'lucide-react';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useCollection } from '@/firebase';
 import type { ChangeLogEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
@@ -17,14 +15,10 @@ import { useDataContext } from '@/context/data-context';
 
 
 const ChangelogPage = memo(function ChangelogPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const { settings } = useDataContext();
   const { locale } = settings;
 
-  const changelogQuery = useMemo(() => user?.uid ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
-  const [changelogSnapshot, isDataLoading] = useCollection(changelogQuery);
-  const changelog = useMemo(() => changelogSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry)), [changelogSnapshot]);
+  const { data: changelog, loading: isDataLoading } = useCollection<ChangeLogEntry>('changelog');
 
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -37,13 +31,18 @@ const ChangelogPage = memo(function ChangelogPage() {
       Contractor: <Wrench className="h-4 w-4" />,
       Subscription: <CreditCard className="h-4 w-4" />,
   };
+  
+  const sortedChangelog = useMemo(() => {
+    if (!changelog) return [];
+    return [...changelog].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [changelog]);
 
   useEffect(() => {
     const formatAllDates = async () => {
-        if (!changelog) return;
+        if (!sortedChangelog) return;
         const localeData = await getLocale(locale);
         const newFormattedDates: {[key: string]: string} = {};
-        for (const item of changelog) {
+        for (const item of sortedChangelog) {
             if (item.date) {
                 newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy, HH:mm', { locale: localeData });
             }
@@ -51,7 +50,7 @@ const ChangelogPage = memo(function ChangelogPage() {
         setFormattedDates(newFormattedDates);
     };
     formatAllDates();
-  }, [changelog, locale]);
+  }, [sortedChangelog, locale]);
   
   if (isDataLoading) {
     return (
@@ -87,11 +86,11 @@ const ChangelogPage = memo(function ChangelogPage() {
             <CardDescription>A log of all significant events and changes within your portfolio.</CardDescription>
         </CardHeader>
         <CardContent>
-            {changelog && changelog.length > 0 ? (
+            {sortedChangelog && sortedChangelog.length > 0 ? (
             <Timeline>
-                {changelog.map((item, index) => (
+                {sortedChangelog.map((item, index) => (
                     <TimelineItem key={item.id}>
-                        {index < changelog.length - 1 && <TimelineConnector />}
+                        {index < sortedChangelog.length - 1 && <TimelineConnector />}
                         <TimelineHeader>
                             <TimelineIcon>{iconMap[item.type]}</TimelineIcon>
                             <TimelineTitle>{item.type} {item.action}</TimelineTitle>

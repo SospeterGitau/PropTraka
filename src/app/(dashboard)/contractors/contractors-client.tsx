@@ -26,16 +26,14 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContractorForm } from '@/components/contractor-form';
 import { Badge } from '@/components/ui/badge';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 
 const ContractorsClient = memo(function ContractorsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const contractorsQuery = useMemo(() => user?.uid ? query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const [contractorsSnapshot, isDataLoading] = useCollection(contractorsQuery);
+  const { data: contractors, loading: isDataLoading } = useCollection<Contractor>('contractors');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -120,8 +118,6 @@ const ContractorsClient = memo(function ContractorsClient() {
       </>
     );
   }
-
-  const contractors = contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor));
 
   return (
     <>
