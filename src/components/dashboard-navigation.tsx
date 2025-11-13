@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Menu, FileText, User } from 'lucide-react';
+import { LayoutDashboard, Building, DollarSign, Settings, User, Menu, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DashboardNavigationProps {
@@ -15,15 +15,15 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/menu', label: 'Menu', icon: Menu },
-    { href: '/activity', label: 'Activity', icon: FileText },
-    { href: '/settings', label: 'Account', icon: User },
+    { href: '/properties', label: 'Properties', icon: Menu },
+    { href: '/revenue', label: 'Revenue', icon: FileText },
+    { href: '/settings', label: 'Settings', icon: User },
   ];
 
   return (
     <div className="min-h-screen">
-      {/* Main content area with padding at the bottom for the nav bar on mobile */}
-      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
+      {/* Main content area */}
+      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-6">
         {children}
       </main>
 
