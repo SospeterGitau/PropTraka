@@ -94,7 +94,7 @@ const ChangelogPage = memo(function ChangelogPage() {
         <PageHeader title="Activity Feed" />
         <Card>
         <CardHeader>
-            <CardTitle>Activity Feed</CardTitle>
+            <CardTitle>Recent Activity</CardTitle>
             <CardDescription>A log of all significant events and changes within your portfolio.</CardDescription>
         </CardHeader>
         <CardContent>
