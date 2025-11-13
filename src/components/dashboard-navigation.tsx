@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -29,7 +28,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       </main>
 
       {/* Mobile navigation bar, fixed to the bottom */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-gray-200 bg-white shadow-lg">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-border bg-background/95 backdrop-blur-sm shadow-lg">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
