@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -22,27 +23,27 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pb-24 sm:pb-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pb-24">
         {children}
       </main>
 
       {/* Mobile navigation bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 bg-red-600">
-        <div className="flex h-full items-center justify-around">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-border bg-background/95 backdrop-blur-sm">
+        <div className="flex h-full items-center justify-center gap-8">
           {navItems.map((item) => {
-            const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
+            const isActive = (pathname === '/' && item.href === '/dashboard') || (item.href !== '/' && pathname.startsWith(item.href));
             return (
               <Link
                 href={item.href}
                 key={item.label}
                 className={cn(
-                  "relative flex h-full w-full flex-col items-center justify-center gap-1 text-sm font-medium transition-colors",
+                  "relative flex flex-col items-center justify-center gap-1 text-sm font-medium transition-colors h-full",
                   isActive
-                    ? "text-white"
-                    : "text-white/70 hover:text-white"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
                 )}
               >
-                {isActive && <span className="absolute top-0 h-0.5 w-12 rounded-full bg-white" />}
+                {isActive && <span className="absolute top-0 h-0.5 w-full rounded-full bg-primary" />}
                 <item.icon className="h-6 w-6" />
                 <span className="text-xs">{item.label}</span>
               </Link>
