@@ -1,15 +1,18 @@
-"use client";
+
+'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 import { app } from './index';
 
 interface FirebaseContextValue {
   auth: Auth;
   firestore: Firestore;
   functions: Functions;
+  analytics: Analytics | null;
   user: User | null;
   isAuthLoading: boolean;
 }
@@ -22,6 +25,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const auth = getAuth(app);
   const firestore = getFirestore(app);
   const functions = getFunctions(app);
+  const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -50,7 +54,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FirebaseContext.Provider value={{ auth, firestore, functions, user, isAuthLoading }}>
+    <FirebaseContext.Provider value={{ auth, firestore, functions, analytics, user, isAuthLoading }}>
       {children}
     </FirebaseContext.Provider>
   );
@@ -66,10 +70,15 @@ export const useFirebase = () => {
 
 export const useUser = () => {
   const { user, isAuthLoading } = useFirebase();
-  return { user, isAuthLoading };
+  return { user, isUserLoading };
 };
 
 export const useFirestore = () => {
   const { firestore } = useFirebase();
   return firestore;
+};
+
+export const useAnalytics = () => {
+  const { analytics } = useFirebase();
+  return analytics;
 };
