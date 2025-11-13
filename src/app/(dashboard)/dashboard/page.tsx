@@ -138,38 +138,38 @@ const DashboardPageContent = memo(function DashboardPageContent() {
         <KpiCard
           icon={Building}
           title="Total Property Value"
-          value={formatCurrency(totalPropertyValue)}
+          value={totalPropertyValue}
           description="Current market value of all assets"
         />
         <KpiCard
           icon={Banknote}
           title="Total Portfolio Equity"
-          value={formatCurrency(totalEquity)}
+          value={totalEquity}
           description="Property value minus outstanding mortgage"
         />
         <KpiCard
           icon={TrendingUp}
           title="Revenue"
-          value={formatCurrency(totalRevenue)}
+          value={totalRevenue}
           description="This month"
         />
         <KpiCard
           icon={TrendingDown}
           title="Expenses"
-          value={formatCurrency(totalExpenses)}
+          value={totalExpenses}
           description="This month"
         />
         <KpiCard
           icon={CurrencyIcon}
           title="Net Operating Income"
-          value={formatCurrency(netOperatingIncome)}
+          value={netOperatingIncome}
           description="This month (before tax)"
           variant={noiVariant}
         />
         <KpiCard
           icon={CircleAlert}
           title="Arrears"
-          value={formatCurrency(totalArrears)}
+          value={totalArrears}
           description="Total outstanding payments"
           variant={totalArrears > 0 ? 'destructive' : 'default'}
         />
