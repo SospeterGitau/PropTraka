@@ -23,15 +23,15 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="relative min-h-screen flex flex-col">
-      {/* Main content area */}
-      <main className="flex-grow p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
+    <div className="relative min-h-screen">
+      {/* Main content area with padding at the bottom for the mobile nav */}
+      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
         {children}
       </main>
 
-      {/* Mobile navigation */}
-      <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
-        <nav className="flex items-center justify-around h-16 max-w-lg mx-auto">
+      {/* Mobile navigation bar, fixed to the bottom */}
+      <nav className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
              const isActive = (item.href === '/dashboard' && pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
@@ -52,13 +52,8 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
               </Link>
             )
           })}
-        </nav>
-      </div>
-
-       {/* Desktop navigation - hidden for now, can be implemented later */}
-      <div className="hidden sm:block">
-        {/* Placeholder for future desktop sidebar */}
-      </div>
+        </div>
+      </nav>
     </div>
   );
 }
