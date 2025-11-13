@@ -229,16 +229,18 @@ const ArrearsClient = memo(function ArrearsClient() {
                         <TableCell className="text-right font-semibold text-destructive">
                           {formatCurrency(arrear.amountOwed)}
                         </TableCell>
-                        <TableCell className="text-center space-x-2">
-                           <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)}>
-                                <CreditCard className="mr-2 h-4 w-4"/>
-                                Request Payment
-                           </Button>
-                           <Button size="sm" asChild>
-                            <Link href={`mailto:${arrear.tenantEmail}?subject=${encodeURIComponent(subject)}&body=${body}`}>
-                              Send Reminder
-                            </Link>
-                          </Button>
+                        <TableCell className="text-center">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                               <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)}>
+                                    <CreditCard className="mr-2 h-4 w-4"/>
+                                    Request Payment
+                               </Button>
+                               <Button size="sm" asChild>
+                                <Link href={`mailto:${arrear.tenantEmail}?subject=${encodeURIComponent(subject)}&body=${body}`}>
+                                  Send Reminder
+                                </Link>
+                              </Button>
+                            </div>
                         </TableCell>
                       </TableRow>
                     );
