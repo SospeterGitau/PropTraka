@@ -1,4 +1,3 @@
-
 'use client';
 
 import { DataProvider } from '@/context/data-context';
@@ -20,8 +19,9 @@ export default function DashboardLayout({
             {children}
           </SubscriptionChecker>
           <FirebaseErrorListener />
-          <ChatBubble />
         </main>
+        {/* ChatBubble is moved outside of main to prevent content overlap */}
+        <ChatBubble />
       </DashboardNavigation>
     </DataProvider>
   );

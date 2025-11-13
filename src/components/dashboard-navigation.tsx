@@ -30,7 +30,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
 
     if (itemSubNav === 'account') {
         // "Account" is active if we are on /settings and the tab is 'profile' or not set at all.
-        return currentTab === 'profile' || currentTab === null;
+        return currentTab === 'profile' || currentTab === null || currentTab === 'subscription' || currentTab === 'knowledge';
     }
     
     if (itemSubNav === 'changelog') {
