@@ -18,8 +18,8 @@ export default function DashboardLayout({
         <SubscriptionChecker>
           {children}
         </SubscriptionChecker>
-        <FirebaseErrorListener />
       </DashboardNavigation>
+      <FirebaseErrorListener />
       <ChatBubble />
     </DataProvider>
   );
