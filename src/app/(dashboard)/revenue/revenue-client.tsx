@@ -24,7 +24,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -174,7 +174,8 @@ const RevenueClient = memo(function RevenueClient() {
       </PageHeader>
       <Card>
         <CardHeader>
-          <CardTitle>Revenue Transactions by Tenancy</CardTitle>
+          <CardTitle>Your Tenancies</CardTitle>
+          <CardDescription>An overview of all tenancy agreements and their financial status.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
            {tenancies.length > 0 ? (

@@ -21,7 +21,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContractorForm } from '@/components/contractor-form';
@@ -134,7 +134,8 @@ const ContractorsClient = memo(function ContractorsClient() {
       </PageHeader>
       <Card>
         <CardHeader>
-          <CardTitle>Contractor & Vendor List</CardTitle>
+          <CardTitle>Your Contractors</CardTitle>
+          <CardDescription>A directory of all your vendors and service providers.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           {contractors && contractors.length > 0 ? (

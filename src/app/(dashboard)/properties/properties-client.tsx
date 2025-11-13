@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
@@ -187,7 +187,8 @@ const PropertiesClient = memo(function PropertiesClient() {
       </PageHeader>
       <Card>
         <CardHeader>
-          <CardTitle>Property Portfolio</CardTitle>
+          <CardTitle>Your Properties</CardTitle>
+          <CardDescription>An overview of all properties in your portfolio.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
           {properties && properties.length > 0 ? (
