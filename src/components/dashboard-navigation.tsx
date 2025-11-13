@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ReactNode } from 'react';
+import { ReactNode, useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -21,16 +21,37 @@ const navItems = [
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const mainRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    const applyPadding = () => {
+      if (mainRef.current && navRef.current) {
+        // Only apply padding on mobile screens where the nav bar is visible
+        if (window.innerWidth < 640) { // 640px is Tailwind's default 'sm' breakpoint
+          const navHeight = navRef.current.offsetHeight;
+          mainRef.current.style.paddingBottom = `${navHeight}px`;
+        } else {
+          mainRef.current.style.paddingBottom = '0px';
+        }
+      }
+    };
+
+    applyPadding();
+
+    window.addEventListener('resize', applyPadding);
+    return () => window.removeEventListener('resize', applyPadding);
+  }, []);
 
   return (
     <div className="relative min-h-screen">
-      {/* Main content area with padding at the bottom for the mobile nav */}
-      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
+      {/* Main content area, now with a ref */}
+      <main ref={mainRef} className="p-4 sm:p-6 lg:p-8">
         {children}
       </main>
 
-      {/* Mobile navigation bar, fixed to the bottom */}
-      <nav className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
+      {/* Mobile navigation bar, fixed to the bottom, now with a ref */}
+      <nav ref={navRef} className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
              const isActive = (item.href === '/dashboard' && pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href));
