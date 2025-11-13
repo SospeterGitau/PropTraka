@@ -1,30 +1,29 @@
 'use client';
 
-import { ReactNode } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Menu,
-  FileText,
-  User,
-} from 'lucide-react';
+import { LayoutDashboard, Menu, FileText, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/menu', label: 'Menu', icon: Menu },
-  { href: '/activity', label: 'Activity', icon: FileText },
-  { href: '/settings', label: 'Account', icon: User },
-];
+interface DashboardNavigationProps {
+  children: React.ReactNode;
+}
 
-export function DashboardNavigation({ children }: { children: ReactNode }) {
+export function DashboardNavigation({ children }: DashboardNavigationProps) {
   const pathname = usePathname();
+
+  const navItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/menu', label: 'Menu', icon: Menu },
+    { href: '/activity', label: 'Activity', icon: FileText },
+    { href: '/settings', label: 'Account', icon: User },
+  ];
 
   return (
     <div className="min-h-screen">
       {/* Main content area with padding at the bottom for the nav bar on mobile */}
-      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-8">
+      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
         {children}
       </main>
 
@@ -32,7 +31,7 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
       <nav className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
-             const isActive = (item.href === '/dashboard' && pathname === item.href) || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+             const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
 
             return (
               <Link
