@@ -70,7 +70,7 @@ export const useFirebase = () => {
 
 export const useUser = () => {
   const { user, isAuthLoading } = useFirebase();
-  return { user, isUserLoading };
+  return { user, isAuthLoading };
 };
 
 export const useFirestore = () => {
