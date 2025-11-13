@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import type { Property, Transaction } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { Button } from '@/components/ui/button';
@@ -31,18 +31,23 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const expensesQuery = useMemo(() => user ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
   
   const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   };
+  
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)), [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => doc.data() as Transaction), [expensesSnapshot]);
+
 
   // Data might not be available on the first render, so we add a loading state.
-  if (isDataLoading) {
+  if (isDataLoading || !properties || !revenue || !expenses) {
     return (
       <>
         <PageHeader title="Dashboard" />
@@ -68,7 +73,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
     )
   }
   
-  if (!properties || properties.length === 0) {
+  if (properties.length === 0) {
     return (
         <>
             <PageHeader title="Dashboard" />

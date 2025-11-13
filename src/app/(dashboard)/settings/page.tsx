@@ -26,7 +26,7 @@ import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, writeBatch, orderBy } from 'firebase/firestore';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
@@ -467,8 +467,9 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
 
     const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-    const { data: articles, loading: isDataLoading } = useCollection<KnowledgeArticle>(articlesQuery);
+    const [articlesSnapshot, isDataLoading] = useCollection(articlesQuery);
 
+    const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as KnowledgeArticle)), [articlesSnapshot]);
     const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;
 
     const handleSeedData = async () => {
@@ -631,7 +632,8 @@ const ChangelogTab = memo(function ChangelogTab() {
   const { locale } = settings;
 
   const changelogQuery = useMemo(() => user?.uid ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
-  const { data: changelog, loading: isDataLoading } = useCollection<ChangeLogEntry>(changelogQuery);
+  const [changelogSnapshot, isDataLoading] = useCollection(changelogQuery);
+  const changelog = useMemo(() => changelogSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry)), [changelogSnapshot]);
 
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -651,7 +653,9 @@ const ChangelogTab = memo(function ChangelogTab() {
         const localeData = await getLocale(locale);
         const newFormattedDates: {[key: string]: string} = {};
         for (const item of changelog) {
-            newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy, HH:mm', { locale: localeData });
+            if (item.date) {
+                newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy, HH:mm', { locale: localeData });
+            }
         }
         setFormattedDates(newFormattedDates);
     };
@@ -741,12 +745,3 @@ export default function AccountPage() {
     </>
   );
 }
-
-
-    
-
-    
-
-    
-
-    

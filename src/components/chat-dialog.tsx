@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronRight, X } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import type { KnowledgeArticle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,9 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [activeArticle, setActiveArticle] = useState<KnowledgeArticle | null>(null);
 
   const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const { data: articles, loading: isLoading } = useCollection<KnowledgeArticle>(articlesQuery);
+  const [articlesSnapshot, isLoading] = useCollection(articlesQuery);
+
+  const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data() } as KnowledgeArticle)), [articlesSnapshot]);
 
   // Use placeholder data as a fallback if the collection is empty or loading
   const articlesToSearch = (articles && articles.length > 0) ? articles : placeholderFaq;

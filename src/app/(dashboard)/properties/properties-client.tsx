@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
@@ -47,14 +47,17 @@ const PropertiesClient = memo(function PropertiesClient() {
   // Data Fetching
   const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
   const isDataLoading = isPropertiesLoading || isRevenueLoading;
 
   // State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)), [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
 
   // Formatters
   const formatCurrency = (amount: number) => {

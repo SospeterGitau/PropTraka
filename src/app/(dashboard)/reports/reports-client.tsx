@@ -27,7 +27,7 @@ import { MarketResearchDialog } from '@/components/market-research-dialog';
 import { cn } from '@/lib/utils';
 import type { Property, Transaction, ResidencyStatus } from '@/lib/types';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
@@ -54,11 +54,14 @@ function RevenueAnalysisTab() {
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
 
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data()} as Property)), [propertiesSnapshot]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
@@ -91,7 +94,7 @@ function RevenueAnalysisTab() {
     }
   };
 
-  if (!currentDate || isRevenueLoading || isPropertiesLoading) {
+  if (!currentDate || isRevenueLoading || isPropertiesLoading || !revenue || !properties) {
     return (
       <Card>
         <CardHeader>
@@ -109,8 +112,6 @@ function RevenueAnalysisTab() {
       </Card>
     );
   }
-  
-  if (!revenue || !properties) return <div>No data available</div>;
 
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
   const periodStart = viewMode === 'month' ? startOfMonth(currentDate) : financialYearStart;
@@ -279,9 +280,13 @@ function PnlStatementTab() {
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const expensesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
+  
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data()} as Property)), [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => doc.data() as Transaction), [expensesSnapshot]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -317,7 +322,7 @@ function PnlStatementTab() {
     }
   };
   
-  if (!currentDate || isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
+  if (!currentDate || isRevenueLoading || isExpensesLoading || isPropertiesLoading || !revenue || !expenses || !properties) {
     return (
        <div className="space-y-6">
         <Card>
@@ -341,8 +346,6 @@ function PnlStatementTab() {
       </div>
     );
   }
-  
-  if (!revenue || !expenses || !properties) return <div>No data available.</div>;
 
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
 
@@ -539,13 +542,16 @@ const ReportsClient = memo(function ReportsClient() {
   const expensesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
   const propertiesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
 
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>(expensesQuery);
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
   
   const { settings } = useDataContext();
   const { isPnlReportEnabled, isMarketResearchEnabled } = settings;
 
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction), [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => doc.data() as Transaction), [expensesSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data()} as Property)), [propertiesSnapshot]);
 
   if (isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
     return (
@@ -595,7 +601,3 @@ const ReportsClient = memo(function ReportsClient() {
 });
 
 export default ReportsClient;
-
-    
-
-    

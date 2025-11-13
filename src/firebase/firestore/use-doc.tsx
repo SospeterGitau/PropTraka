@@ -1,64 +1,66 @@
 "use client"; // Client component
 
-import { useState, useEffect } from 'react';
 import {
   doc,
   onSnapshot,
   DocumentReference,
   DocumentData,
 } from 'firebase/firestore';
-import { useFirebase } from '../provider';
 import { firestore } from '../index';
+import { useSyncExternalStore } from 'react';
+
+// A basic in-memory cache to store results.
+const cache = new Map<string, any>();
+const listeners = new Map<string, Set<() => void>>();
+
+function getCacheKey(target: string | DocumentReference): string {
+  return typeof target === 'string' ? target : target.path;
+}
 
 export const useDoc = <T>(
   targetRefOrPath: string | DocumentReference | null
-) => {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { isAuthLoading, user } = useFirebase(); // Get auth state
+): [T | null | undefined, boolean, Error | undefined] => {
 
-  useEffect(() => {
-    // **THE GUARD:** Do not do anything until Firebase Auth is 100% ready
-    if (isAuthLoading || !user) {
-      setLoading(false);
-      return;
-    }
-
-    let docRef: DocumentReference;
-
-    if (typeof targetRefOrPath === 'string') {
-      docRef = doc(firestore, targetRefOrPath);
-    } else if (targetRefOrPath) {
-      docRef = targetRefOrPath;
-    } else {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    const unsubscribe = onSnapshot(
-      docRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          const docData = { ...snapshot.data(), id: snapshot.id } as T;
-          setData(docData);
-        } else {
-          setData(null);
-        }
-        setLoading(false);
-        setError(null);
-      },
-      (err) => {
-        console.error('Error in useDoc:', err);
-        setError(err);
-        setLoading(false);
+  const store = useSyncExternalStore(
+    (callback) => {
+      if (!targetRefOrPath) {
+        return () => {};
       }
-    );
 
-    return () => unsubscribe();
-  }, [targetRefOrPath, isAuthLoading, user]); 
+      const cacheKey = getCacheKey(targetRefOrPath);
+      if (!listeners.has(cacheKey)) {
+        listeners.set(cacheKey, new Set());
+      }
+      listeners.get(cacheKey)!.add(callback);
 
-  return { data, error, loading };
+      const docRef = typeof targetRefOrPath === 'string' ? doc(firestore, targetRefOrPath) : targetRefOrPath;
+
+      const unsubscribe = onSnapshot(
+        docRef,
+        (snapshot) => {
+          const data = snapshot.exists() ? ({ ...snapshot.data(), id: snapshot.id } as T) : null;
+          cache.set(cacheKey, { value: data, loading: false, error: undefined });
+          listeners.get(cacheKey)?.forEach(l => l());
+        },
+        (err) => {
+          console.error('Error in useDoc:', err);
+          cache.set(cacheKey, { value: undefined, loading: false, error: err });
+          listeners.get(cacheKey)?.forEach(l => l());
+        }
+      );
+
+      return () => {
+        listeners.get(cacheKey)?.delete(callback);
+        unsubscribe();
+      };
+    },
+    () => {
+        if (!targetRefOrPath) return { value: undefined, loading: false, error: undefined };
+        const cacheKey = getCacheKey(targetRefOrPath);
+        return cache.get(cacheKey) ?? { value: undefined, loading: true, error: undefined };
+    },
+    () => ({ value: undefined, loading: true, error: undefined })
+  );
+
+  return [store.value, store.loading, store.error];
 };

@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 
@@ -43,13 +43,15 @@ const RevenueClient = memo(function RevenueClient() {
 
   // Data Fetching
   const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
   const isDataLoading = isRevenueLoading;
 
   // State
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
+
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)), [revenueSnapshot]);
 
   // Formatters
   const formatCurrency = (amount: number) => {

@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -32,7 +30,7 @@ const ArrearsClient = memo(function ArrearsClient() {
   const firestore = useFirestore();
 
   const revenueQuery = useMemo(() => user?.uid ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null, [firestore, user?.uid]);
-  const [revenue, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
+  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
 
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
@@ -53,10 +51,12 @@ const ArrearsClient = memo(function ArrearsClient() {
   };
 
   useEffect(() => {
-    if (!revenue) return;
+    if (!revenueSnapshot) return;
     const today = startOfToday();
 
-    const calculatedArrears = revenue.docs.map(doc => doc.data() as Transaction)
+    const revenue = revenueSnapshot.docs.map(doc => doc.data() as Transaction);
+    
+    const calculatedArrears = revenue
       .filter(transaction => {
         const serviceChargesTotal = (transaction.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
         const amountDue = transaction.rent + serviceChargesTotal + (transaction.deposit ?? 0);
@@ -97,7 +97,7 @@ const ArrearsClient = memo(function ArrearsClient() {
       });
     
     setArrears(calculatedArrears.filter(a => a.amountOwed > 0).sort((a,b) => b.daysOverdue - a.daysOverdue));
-  }, [revenue]);
+  }, [revenueSnapshot]);
   
   useEffect(() => {
     const formatAllDates = async () => {
