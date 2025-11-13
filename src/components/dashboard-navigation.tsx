@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building, DollarSign, Settings, User, Menu, FileText } from 'lucide-react';
+import { LayoutDashboard, Building, DollarSign, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DashboardNavigationProps {
@@ -15,9 +15,9 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/properties', label: 'Properties', icon: Menu },
-    { href: '/revenue', label: 'Revenue', icon: FileText },
-    { href: '/settings', label: 'Settings', icon: User },
+    { href: '/properties', label: 'Properties', icon: Building },
+    { href: '/revenue', label: 'Revenue', icon: DollarSign },
+    { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
