@@ -45,10 +45,10 @@ const statusConfig = {
 };
 
 const priorityColors = {
-  Low: 'bg-blue-100 text-blue-800 border-blue-300',
-  Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  High: 'bg-orange-100 text-orange-800 border-orange-300',
-  Emergency: 'bg-red-200 text-red-900 border-red-400 font-bold',
+  Low: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700',
+  Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-200 dark:border-yellow-700',
+  High: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-200 dark:border-orange-700',
+  Emergency: 'bg-red-200 text-red-900 border-red-400 font-bold dark:bg-red-900/50 dark:text-red-100 dark:border-red-700',
 };
 
 function KanbanCard({ 
@@ -70,7 +70,7 @@ function KanbanCard({
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
-            <CardTitle className="text-base font-semibold leading-tight">
+            <CardTitle className="text-base font-semibold leading-tight pr-2">
               {request.propertyId ? (
                 <Link href={`/properties/${request.propertyId}`} className="hover:underline">
                   {request.propertyName}
@@ -81,7 +81,7 @@ function KanbanCard({
             </CardTitle>
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button aria-haspopup="true" size="icon" variant="ghost" className="h-6 w-6">
+                <Button aria-haspopup="true" size="icon" variant="ghost" className="h-6 w-6 shrink-0">
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="sr-only">Toggle menu</span>
                 </Button>
@@ -120,10 +120,10 @@ function KanbanCard({
             </DropdownMenuContent>
             </DropdownMenu>
         </div>
-        <p className="text-sm text-muted-foreground">{request.description}</p>
+        <p className="text-sm text-muted-foreground mt-1">{request.description}</p>
       </CardHeader>
       <CardFooter className="p-4 flex justify-between items-center text-sm">
-        <Badge className={cn("text-xs", priorityColors[request.priority])}>{request.priority}</Badge>
+        <Badge className={cn("text-xs border", priorityColors[request.priority])}>{request.priority}</Badge>
         <div className="flex items-center gap-2 text-muted-foreground">
           {request.contractorName && (
              <TooltipProvider>
