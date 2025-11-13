@@ -22,11 +22,9 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   return (
     <div className="min-h-screen">
-      {/* Main content area with bottom padding for mobile nav */}
-      <main className="p-4 sm:p-6 lg:p-8 pb-24">
-        <div className="max-w-7xl mx-auto">
-         {children}
-        </div>
+      {/* Main content area with bottom padding for mobile nav AND chat bubble */}
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+        {children}
       </main>
 
       {/* Mobile navigation bar, fixed to the bottom */}
