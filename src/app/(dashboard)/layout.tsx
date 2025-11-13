@@ -15,12 +15,10 @@ export default function DashboardLayout({
   return (
     <DataProvider>
       <DashboardNavigation>
-        <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
-          <SubscriptionChecker>
-            {children}
-          </SubscriptionChecker>
-          <FirebaseErrorListener />
-        </main>
+        <SubscriptionChecker>
+          {children}
+        </SubscriptionChecker>
+        <FirebaseErrorListener />
       </DashboardNavigation>
       <ChatBubble />
     </DataProvider>

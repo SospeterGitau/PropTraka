@@ -23,8 +23,12 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div>
-      {children}
+    <div className="relative min-h-screen flex flex-col">
+      {/* Main content area */}
+      <main className="flex-grow p-4 sm:p-6 lg:p-8 pb-16 sm:pb-0">
+        {children}
+      </main>
+
       {/* Mobile navigation */}
       <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
         <nav className="flex items-center justify-around h-16 max-w-lg mx-auto">
