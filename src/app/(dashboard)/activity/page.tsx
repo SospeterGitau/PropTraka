@@ -43,7 +43,7 @@ const ChangelogPage = memo(function ChangelogPage() {
   
   const sortedChangelog = useMemo(() => {
     if (!changelogSnapshot) return [];
-    const data = changelogSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry));
+    const data = changelogSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ChangeLogEntry));
     return [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [changelogSnapshot]);
 

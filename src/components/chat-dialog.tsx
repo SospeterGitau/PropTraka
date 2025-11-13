@@ -29,7 +29,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const articlesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null, [firestore, user]);
   const [articlesSnapshot, isLoading] = useCollection(articlesQuery);
 
-  const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data() } as KnowledgeArticle)), [articlesSnapshot]);
+  const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as KnowledgeArticle)), [articlesSnapshot]);
 
   // Use placeholder data as a fallback if the collection is empty or loading
   const articlesToSearch = (articles && articles.length > 0) ? articles : placeholderFaq;

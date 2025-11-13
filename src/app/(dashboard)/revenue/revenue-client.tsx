@@ -45,7 +45,7 @@ const RevenueClient = memo(function RevenueClient() {
   // Data Fetching
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
 
 
   // State

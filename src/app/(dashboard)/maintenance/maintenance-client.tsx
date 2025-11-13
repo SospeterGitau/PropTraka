@@ -39,9 +39,9 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const [maintenanceRequestsSnapshot, isMaintenanceLoading] = useCollection(maintenanceRequestsQuery);
   const [contractorsSnapshot, isContractorsLoading] = useCollection(contractorsQuery);
 
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
-  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
-  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)) || [], [contractorsSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
+  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
+  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Contractor)) || [], [contractorsSnapshot]);
 
 
   const isDataLoading = isPropertiesLoading || isMaintenanceLoading || isContractorsLoading;

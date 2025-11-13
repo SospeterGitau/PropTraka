@@ -40,7 +40,7 @@ const ContractorsClient = memo(function ContractorsClient() {
   , [firestore, user?.uid]);
 
   const [contractorsSnapshot, isDataLoading, error] = useCollection(contractorsQuery);
-  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)) || [], [contractorsSnapshot]);
+  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Contractor)) || [], [contractorsSnapshot]);
 
 
   const [isFormOpen, setIsFormOpen] = useState(false);

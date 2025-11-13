@@ -53,8 +53,8 @@ const PropertiesClient = memo(function PropertiesClient() {
   const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
   const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
   
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
   
   const isDataLoading = isPropertiesLoading || isRevenueLoading;
 

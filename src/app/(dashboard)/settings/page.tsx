@@ -465,7 +465,7 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
 
     const articlesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null, [firestore, user?.uid]);
     const [articlesSnapshot, isDataLoading] = useCollection(articlesQuery);
-    const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as KnowledgeArticle)) || [], [articlesSnapshot]);
+    const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as KnowledgeArticle)) || [], [articlesSnapshot]);
 
 
     const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;

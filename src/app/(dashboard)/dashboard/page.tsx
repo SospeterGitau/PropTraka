@@ -37,9 +37,9 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
   const [expensesSnapshot, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
   
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [expensesSnapshot]);
 
   const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
 

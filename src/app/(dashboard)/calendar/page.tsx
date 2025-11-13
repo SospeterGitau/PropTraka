@@ -28,9 +28,9 @@ function CalendarPage() {
   const [expensesSnapshot, isExpensesLoading, expensesError] = useCollection(expensesQuery);
   const [maintenanceRequestsSnapshot, isMaintenanceLoading, maintenanceError] = useCollection(maintenanceRequestsQuery);
 
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
-  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [expensesSnapshot]);
+  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
 
 
   const formatCurrencyWithCents = (amount: number) => {
