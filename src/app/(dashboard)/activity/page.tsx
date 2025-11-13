@@ -43,7 +43,10 @@ const ChangelogPage = memo(function ChangelogPage() {
   
   const sortedChangelog = useMemo(() => {
     if (!changelog) return [];
-    return [...changelog].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // The useCollection hook from react-firebase-hooks returns a snapshot.
+    // We need to map over the docs to get the data.
+    const data = changelog.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry));
+    return [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [changelog]);
 
   useEffect(() => {
@@ -68,7 +71,9 @@ const ChangelogPage = memo(function ChangelogPage() {
             <Card>
                 <CardHeader>
                     <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-                    <CardDescription><Skeleton className="h-4 w-3/4" /></CardDescription>
+                    <div className="text-sm text-muted-foreground pt-1">
+                        <Skeleton className="h-4 w-3/4" />
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {Array.from({ length: 5 }).map((_, i) => (
