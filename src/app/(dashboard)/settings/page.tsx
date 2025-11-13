@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -284,9 +285,9 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
           </fieldset>
           {isEditing && (
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleSave}>Save Changes</Button>
+            <div className="flex gap-3 justify-end mt-8 mb-32 sm:mb-24 md:mb-12">
+              <Button variant="outline" onClick={handleCancel} className="min-w-24">Cancel</Button>
+              <Button onClick={handleSave} className="min-w-32">Save Changes</Button>
             </div>
           )}
         </CardContent>
