@@ -1,7 +1,11 @@
 
+'use client';
+
+import { DataProvider } from '@/context/data-context';
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { ChatBubble } from '@/components/chat-bubble';
+import { SubscriptionChecker } from '@/components/subscription-checker';
 
 export default function DashboardLayout({
   children,
@@ -9,12 +13,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardNavigation>
-      <main className="p-4 sm:p-6 lg:p-8 pb-24">
-        {children}
-        <FirebaseErrorListener />
-        <ChatBubble />
-      </main>
-    </DashboardNavigation>
+    <DataProvider>
+      <DashboardNavigation>
+        <main className="p-4 sm:p-6 lg:p-8 pb-24">
+          <SubscriptionChecker>
+            {children}
+          </SubscriptionChecker>
+          <FirebaseErrorListener />
+          <ChatBubble />
+        </main>
+      </DashboardNavigation>
+    </DataProvider>
   );
 }
