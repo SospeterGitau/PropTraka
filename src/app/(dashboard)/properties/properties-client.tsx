@@ -29,9 +29,11 @@ import { PropertyForm } from '@/components/property-form';
 import { Badge } from '@/components/ui/badge';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -44,8 +46,11 @@ const PropertiesClient = memo(function PropertiesClient() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
+  
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
+  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
   const isDataLoading = isPropertiesLoading || isRevenueLoading;
 
   // State

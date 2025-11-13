@@ -23,8 +23,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query } from 'firebase/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
@@ -35,6 +36,7 @@ import allPlans from '@/lib/subscription-plans.json';
 import allFeatures from '@/lib/app-features.json';
 import { Badge } from '@/components/ui/badge';
 import { useFitText } from '@/hooks/use-fit-text';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 
 const passwordSchema = z.object({
@@ -461,7 +463,9 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticle | null>(null);
 
-    const { data: articles, loading: isDataLoading } = useCollection<KnowledgeArticle>('knowledgeBase');
+    const articlesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null, [firestore, user?.uid]);
+    const [articles, isDataLoading] = useCollection<KnowledgeArticle>(articlesQuery as Query<KnowledgeArticle> | null);
+
     const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;
 
     const handleSeedData = async () => {

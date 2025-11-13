@@ -32,9 +32,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExpenseForm } from '@/components/expense-form';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 
 function ExpensesTable({ 
@@ -175,9 +177,13 @@ const ExpensesClient = memo(function ExpensesClient() {
   const { settings } = useDataContext();
   const { locale, currency } = settings;
 
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
-  const { data: contractors, loading: isContractorsLoading } = useCollection<Contractor>('contractors');
+  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+  const contractorsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null, [firestore, user?.uid]);
+  
+  const [expenses, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
+  const [contractors, isContractorsLoading] = useCollection<Contractor>(contractorsQuery as Query<Contractor> | null);
 
   const isDataLoading = isExpensesLoading || isPropertiesLoading || isContractorsLoading;
 

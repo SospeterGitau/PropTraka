@@ -4,17 +4,20 @@
 import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { PageHeader } from '@/components/page-header';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollection } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import type { Property, Transaction } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { Button } from '@/components/ui/button';
 import { startOfToday, isBefore } from 'date-fns';
+import { useUser, useFirestore } from '@/firebase';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { Query } from 'firebase/firestore';
 
 // Dynamically import charts to prevent server-side rendering issues
 const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
@@ -23,10 +26,16 @@ const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart
 const DashboardPageContent = memo(function DashboardPageContent() {
   const { settings } = useDataContext();
   const { currency, locale } = settings;
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
+  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
+
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
+  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [expenses, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
   
   const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
 

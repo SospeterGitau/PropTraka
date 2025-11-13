@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { PageHeader } from '@/components/page-header';
@@ -26,8 +26,11 @@ import { GenerateReportDialog } from '@/components/generate-report-dialog';
 import { MarketResearchDialog } from '@/components/market-research-dialog';
 import { cn } from '@/lib/utils';
 import type { Property, Transaction, ResidencyStatus } from '@/lib/types';
-import { useCollection } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { useDataContext } from '@/context/data-context';
+import { useUser, useFirestore } from '@/firebase';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { Query } from 'firebase/firestore';
 
 
 type ViewMode = 'month' | 'year';
@@ -46,9 +49,14 @@ function getFinancialYear(date: Date) {
 function RevenueAnalysisTab() {
   const { settings } = useDataContext();
   const { currency, locale } = settings;
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+  
+  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
 
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -263,10 +271,17 @@ function RevenueAnalysisTab() {
 function PnlStatementTab() {
   const { settings } = useDataContext();
   const { currency, locale, residencyStatus } = settings;
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
+  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
+
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
+  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [expenses, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+
 
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -515,12 +530,18 @@ function PnlStatementTab() {
 
 
 const ReportsClient = memo(function ReportsClient() {
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
-  
+  const { user } = useUser();
+  const firestore = useFirestore();
   const { settings } = useDataContext();
   const { isPnlReportEnabled, isMarketResearchEnabled } = settings;
+
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
+  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+
+  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [expenses, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
 
 
   if (isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
@@ -557,7 +578,7 @@ const ReportsClient = memo(function ReportsClient() {
        <Tabs defaultValue="revenue-analysis">
         <TabsList>
           <TabsTrigger value="revenue-analysis">Revenue Analysis</TabsTrigger>
-          <TabsTrigger value="pnl-statement">P&amp;L Statement</TabsTrigger>
+          <TabsTrigger value="pnl-statement">P&L Statement</TabsTrigger>
         </TabsList>
         <TabsContent value="revenue-analysis" className="pt-4">
           <RevenueAnalysisTab />

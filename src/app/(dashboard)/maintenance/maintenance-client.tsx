@@ -13,9 +13,11 @@ import { ExpenseForm } from '@/components/expense-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaintenanceKanbanBoard } from '@/components/maintenance-kanban-board';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -29,9 +31,13 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const { toast } = useToast();
 
   // Data Fetching
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>('properties');
-  const { data: maintenanceRequests, loading: isMaintenanceLoading } = useCollection<MaintenanceRequest>('maintenanceRequests');
-  const { data: contractors, loading: isContractorsLoading } = useCollection<Contractor>('contractors');
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
+  const maintenanceRequestsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'maintenanceRequests', user.uid) : null, [firestore, user?.uid]);
+  const contractorsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null, [firestore, user?.uid]);
+  
+  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
+  const [maintenanceRequests, isMaintenanceLoading] = useCollection<MaintenanceRequest>(maintenanceRequestsQuery as Query<MaintenanceRequest> | null);
+  const [contractors, isContractorsLoading] = useCollection<Contractor>(contractorsQuery as Query<Contractor> | null);
 
   const isDataLoading = isPropertiesLoading || isMaintenanceLoading || isContractorsLoading;
 

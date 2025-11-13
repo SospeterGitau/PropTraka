@@ -21,11 +21,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentRequestDialog } from '@/components/payment-request-dialog';
 import type { ArrearEntry, Transaction } from '@/lib/types';
 import { CreditCard } from 'lucide-react';
-import { useCollection } from '@/firebase';
-
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { Query } from 'firebase/firestore';
 
 const ArrearsClient = memo(function ArrearsClient() {
-  const { data: revenue, loading: isDataLoading, error } = useCollection<Transaction>('revenue');
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const revenueQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
+  , [firestore, user?.uid]);
+  
+  const [revenue, isDataLoading, error] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});

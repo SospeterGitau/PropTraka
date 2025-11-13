@@ -5,20 +5,29 @@ import { useState, useEffect, useMemo, memo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CreditCard, Building2, FileText, HandCoins, Receipt, Wrench } from 'lucide-react';
-import { useCollection } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import type { ChangeLogEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
 import { format } from 'date-fns';
 import { getLocale } from '@/lib/locales';
 import { useDataContext } from '@/context/data-context';
+import { useUser, useFirestore } from '@/firebase';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { Query } from 'firebase/firestore';
 
 
 const ChangelogPage = memo(function ChangelogPage() {
   const { settings } = useDataContext();
   const { locale } = settings;
+  const { user } = useUser();
+  const firestore = useFirestore();
 
-  const { data: changelog, loading: isDataLoading } = useCollection<ChangeLogEntry>('changelog');
+  const changelogQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'changelog', user.uid) : null
+  , [firestore, user?.uid]);
+
+  const [changelog, isDataLoading, error] = useCollection<ChangeLogEntry>(changelogQuery as Query<ChangeLogEntry> | null);
 
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 

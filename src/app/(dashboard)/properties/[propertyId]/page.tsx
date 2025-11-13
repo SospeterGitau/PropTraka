@@ -21,9 +21,11 @@ import {
 import { PropertyForm } from '@/components/property-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import type { Property, Transaction } from '@/lib/types';
-import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
-import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -41,7 +43,11 @@ function PropertyDetailPageContent() {
   const propertyRef = useMemo(() => propertyId ? doc(firestore, 'properties', propertyId as string) : null, [firestore, propertyId]);
   
   const { data: property, loading: isPropertyLoading } = useDoc<Property>(propertyRef);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
+  
+  const revenueQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
+  , [firestore, user?.uid]);
+  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
   
   const isDataLoading = isPropertyLoading || isRevenueLoading;
 

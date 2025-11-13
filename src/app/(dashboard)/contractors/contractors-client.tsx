@@ -26,14 +26,20 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContractorForm } from '@/components/contractor-form';
 import { Badge } from '@/components/ui/badge';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 const ContractorsClient = memo(function ContractorsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const { data: contractors, loading: isDataLoading } = useCollection<Contractor>('contractors');
+  const contractorsQuery = useMemo(() =>
+    user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null
+  , [firestore, user?.uid]);
+
+  const [contractors, isDataLoading, error] = useCollection<Contractor>(contractorsQuery as Query<Contractor> | null);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);

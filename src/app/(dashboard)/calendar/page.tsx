@@ -4,14 +4,30 @@
 import { useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { CalendarView } from '@/components/calendar-view';
-import { useCollection } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import type { Transaction, MaintenanceRequest, CalendarEvent } from '@/lib/types';
-
+import { useUser, useFirestore } from '@/firebase';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { Query } from 'firebase/firestore';
 
 function CalendarPage() {
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>('revenue');
-  const { data: expenses, loading: isExpensesLoading } = useCollection<Transaction>('expenses');
-  const { data: maintenanceRequests, loading: isMaintenanceLoading } = useCollection<MaintenanceRequest>('maintenanceRequests');
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const revenueQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
+  , [firestore, user?.uid]);
+  const expensesQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null
+  , [firestore, user?.uid]);
+  const maintenanceRequestsQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'maintenanceRequests', user.uid) : null
+  , [firestore, user?.uid]);
+  
+  const [revenue, isRevenueLoading, revenueError] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [expenses, isExpensesLoading, expensesError] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+  const [maintenanceRequests, isMaintenanceLoading, maintenanceError] = useCollection<MaintenanceRequest>(maintenanceRequestsQuery as Query<MaintenanceRequest> | null);
+
 
   const formatCurrencyWithCents = (amount: number) => {
     return new Intl.NumberFormat('en-GB', {

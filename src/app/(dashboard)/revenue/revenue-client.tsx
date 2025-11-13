@@ -29,9 +29,11 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { collection, addDoc, doc, serverTimestamp, writeBatch, getDocs, query, where } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, doc, serverTimestamp, writeBatch, getDocs, query, where, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 
 const RevenueClient = memo(function RevenueClient() {
@@ -41,7 +43,8 @@ const RevenueClient = memo(function RevenueClient() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const { data: revenue, loading: isDataLoading } = useCollection<Transaction>('revenue');
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
+  const [revenue, isDataLoading, error] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
 
   // State
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
