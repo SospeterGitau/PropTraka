@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getLocale } from '@/lib/locales';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,7 +24,7 @@ import { CreditCard } from 'lucide-react';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useUser, useFirestore } from '@/firebase';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
-import { Query } from 'firebase/firestore';
+import type { Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { formatCurrency } from '@/lib/utils';
 
@@ -38,7 +38,7 @@ const ArrearsClient = memo(function ArrearsClient() {
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
   , [firestore, user?.uid]);
   
-  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery);
+  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
@@ -168,7 +168,8 @@ const ArrearsClient = memo(function ArrearsClient() {
       <PageHeader title="Arrears" />
       <Card>
         <CardHeader>
-          <CardTitle>Arrears List</CardTitle>
+          <CardTitle>Outstanding Payments</CardTitle>
+          <CardDescription>A list of all tenants with overdue payments.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
