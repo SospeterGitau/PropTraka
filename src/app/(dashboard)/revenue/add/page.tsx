@@ -17,7 +17,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Trash2, ArrowLeft, Building, Loader2 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs, Query } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { useMemo } from 'react';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -297,35 +300,17 @@ const TenancyForm = memo(function TenancyForm({
 });
 
 export default function AddTenancyPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isAuthLoading } = useUser();
   const firestore = useFirestore();
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (isUserLoading) {
-      return; // Wait for user to be loaded
-    }
-    if (!user) {
-      setIsLoading(false);
-      return; // Or redirect, handle unauthenticated user
-    }
+  const propertiesQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null
+  , [firestore, user?.uid]);
 
-    const fetchProperties = async () => {
-      const q = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
-      try {
-        const querySnapshot = await getDocs(q);
-        const props = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
-        setProperties(props);
-      } catch (error) {
-        console.error("Error fetching properties: ", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
 
-    fetchProperties();
-  }, [user, isUserLoading, firestore]);
+  const isLoading = isAuthLoading || isPropertiesLoading;
 
   if (isLoading) {
     return (
@@ -349,7 +334,7 @@ export default function AddTenancyPage() {
                 </CardHeader>
                 <CardContent>
                     <Button asChild>
-                        <Link href="/properties/add">Add Your First Property</Link>
+                        <Link href="/properties">Add Your First Property</Link>
                     </Button>
                 </CardContent>
             </Card>
