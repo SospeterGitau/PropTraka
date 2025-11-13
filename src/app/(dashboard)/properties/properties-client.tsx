@@ -106,13 +106,12 @@ const PropertiesClient = memo(function PropertiesClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Property) => {
+  const handleFormSubmit = async (data: Omit<Property, 'id'> | Property) => {
     if (!user) return;
-    const isEditing = !!data.id && properties?.some(p => p.id === data.id);
+    const isEditing = 'id' in data;
 
     if (isEditing) {
-      const { id, ...propertyData } = data;
-      await updateDoc(doc(firestore, 'properties', id), propertyData);
+      await updateDoc(doc(firestore, 'properties', data.id), data);
       addChangeLogEntry({
         type: 'Property',
         action: 'Updated',
@@ -120,12 +119,11 @@ const PropertiesClient = memo(function PropertiesClient() {
         entityId: data.id,
       });
     } else {
-      const { id, ...propertyData } = data; // Omit id for creation
-      const docRef = await addDoc(collection(firestore, 'properties'), { ...propertyData, ownerId: user.uid });
+      const docRef = await addDoc(collection(firestore, 'properties'), { ...data, ownerId: user.uid });
       addChangeLogEntry({
         type: 'Property',
         action: 'Created',
-        description: `Property "${formatAddress(data)}" was created.`,
+        description: `Property "${formatAddress(data as Property)}" was created.`,
         entityId: docRef.id, 
       });
     }

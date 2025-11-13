@@ -90,8 +90,7 @@ const ContractorsClient = memo(function ContractorsClient() {
     const isEditing = !!selectedContractor;
     
     if (isEditing) {
-      const { id, ...contractorData } = data;
-      await updateDoc(doc(firestore, 'contractors', selectedContractor!.id), contractorData);
+      await updateDoc(doc(firestore, 'contractors', selectedContractor!.id), data);
       addChangeLogEntry({
         type: 'Contractor',
         action: 'Updated',
