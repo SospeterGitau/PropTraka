@@ -3,200 +3,74 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
-  Building,
-  Calendar,
-  CircleAlert,
-  HelpCircle,
   LayoutDashboard,
-  LineChart,
-  LogOut,
-  Shield,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Wrench,
+  Menu,
+  FileText,
   User,
-  Sparkles,
-  Landmark,
-  Mail,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { logout } from '@/app/(dashboard)/actions';
-import { useDataContext } from '@/context/data-context';
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-  SidebarTrigger,
-  SidebarInset,
-  SidebarProvider,
-} from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-
-const coreNavItems = [
+const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/properties', label: 'Properties', icon: Building },
-  { href: '/revenue', label: 'Revenue', icon: TrendingUp },
-  { href: '/expenses', label: 'Expenses', icon: TrendingDown },
-  { href: '/arrears', label: 'Arrears', icon: CircleAlert },
-  { href: '/maintenance', label: 'Maintenance', icon: Wrench },
-  { href: '/contractors', label: 'Contractors', icon: Users },
+  { href: '/menu', label: 'Menu', icon: Menu },
+  { href: '/settings', label: 'Activity', icon: FileText, subNav: 'changelog' },
+  { href: '/settings', label: 'Account', icon: User, subNav: '' },
 ];
-
-const analysisNavItems = [
-  { href: '/reports', label: 'Reports', icon: LineChart },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
-];
-
-const utilityNavItems = [
-    { href: '/settings', label: 'Account', icon: User },
-    { href: '/faq', label: 'FAQ', icon: HelpCircle },
-    { href: '/contact', label: 'Contact Us', icon: Mail },
-    { href: '/privacy', label: 'Privacy Policy', icon: Shield },
-];
-
-function UpgradeBanner() {
-  const { settings } = useDataContext();
-  const pathname = usePathname();
-
-  if (settings.subscription?.plan !== 'Starter' || pathname.includes('/settings')) {
-    return null;
-  }
-  
-  return (
-      <Alert className="mb-4 bg-primary/10 border-primary/50 text-primary-foreground">
-        <Sparkles className="h-4 w-4 text-primary" />
-        <AlertDescription className="text-primary">
-            You are on the Starter Plan. <Link href="/settings" className="font-bold underline hover:text-primary/90">Upgrade your plan</Link> to unlock more powerful features.
-        </AlertDescription>
-      </Alert>
-  )
-}
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="icon" className="shrink-0 md:hidden">
-              <SidebarTrigger />
-            </Button>
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-full">
-                <div className="flex items-center gap-2">
-                  <Landmark className="w-8 h-8 text-primary" />
-                  <span className="font-semibold text-lg">LeaseLync</span>
-                </div>
-            </div>
-            <div className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-6 h-6 relative">
-                <Landmark className="w-6 h-6 text-primary" />
-            </div>
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Manage</SidebarGroupLabel>
-            <SidebarMenu>
-                {coreNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    className="justify-start"
-                    tooltip={item.label}
-                    >
-                    <Link href={item.href}>
-                        <span className="inline-flex items-center justify-center w-6 h-6">
-                        <item.icon />
-                        </span>
-                        <span>{item.label}</span>
-                    </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-          </SidebarGroup>
+  const isSettingsActive = (itemHref: string, subNav?: string) => {
+    if (itemHref !== '/settings') return false;
+    const isBaseSettings = pathname === '/settings';
+    
+    // The "Account" tab is active if we are on the base /settings page
+    if (subNav === '') return isBaseSettings;
+    
+    // Other tabs would be checked differently, but for now we link changelog
+    if (subNav === 'changelog') return isBaseSettings; // Or a more specific check if URL changes
 
-          <SidebarGroup>
-             <SidebarGroupLabel>Analyze</SidebarGroupLabel>
-             <SidebarMenu>
-                {analysisNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                    className="justify-start"
-                    tooltip={item.label}
-                    >
-                    <Link href={item.href}>
-                        <span className="inline-flex items-center justify-center w-6 h-6">
-                        <item.icon />
-                        </span>
-                        <span>{item.label}</span>
-                    </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-          </SidebarGroup>
-          
-           <SidebarGroup className="mt-auto">
-             <SidebarGroupLabel>Help & Settings</SidebarGroupLabel>
-             <SidebarMenu>
-                {utilityNavItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}
-                        className="justify-start h-10"
-                        tooltip={item.label}
-                        >
-                        <Link href={item.href}>
-                            <span className="inline-flex items-center justify-center w-6 h-6">
-                            <item.icon />
-                            </span>
-                            <span>{item.label}</span>
-                        </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
-             </SidebarMenu>
-           </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarSeparator />
-          <div className="p-2 h-[56px] flex items-center">
-            <form action={logout}>
-              <SidebarMenuButton variant="ghost" className="w-full justify-start h-10" tooltip="Logout">
-                <LogOut />
-                <span>Logout</span>
-              </SidebarMenuButton>
-            </form>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex items-center justify-start h-14 px-4 bg-background/80 backdrop-blur-sm border-b md:hidden">
-          <SidebarTrigger />
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8 pb-24">
-          <UpgradeBanner />
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    return false;
+  };
+  
+  const getHref = (item: typeof navItems[0]) => {
+      if (item.href === '/settings' && item.subNav) {
+          return `${item.href}?tab=${item.subNav}`;
+      }
+      return item.href;
+  }
+
+  return (
+    <div>
+      {children}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/80 backdrop-blur-sm">
+        <nav className="flex items-center justify-around h-16 max-w-lg mx-auto">
+          {navItems.map((item) => {
+             const isActive = item.href === '/settings' 
+              ? isSettingsActive(item.href, item.subNav)
+              : pathname.startsWith(item.href);
+
+            return (
+              <Link
+                href={getHref(item)}
+                key={item.label}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 w-full h-full text-sm font-medium transition-colors",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <item.icon className="h-6 w-6" />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+    </div>
   );
 }
