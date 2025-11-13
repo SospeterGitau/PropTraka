@@ -28,7 +28,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       </main>
 
       {/* Mobile navigation bar, fixed to the bottom */}
-      <nav className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-red-600 h-16" style={{display: 'flex'}}>
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
