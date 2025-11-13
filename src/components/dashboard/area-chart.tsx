@@ -25,7 +25,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
+export default function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
   const { settings } = useDataContext();
   
   const formatCurrency = (amount: number) => {

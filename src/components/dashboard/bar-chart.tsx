@@ -55,7 +55,7 @@ function getShortAddress(property: Property) {
 }
 
 
-export function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
+export default function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
   const { settings } = useDataContext();
   const { currency, locale, residencyStatus } = settings;
   const currentYear = new Date().getFullYear();

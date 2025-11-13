@@ -20,8 +20,8 @@ import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Query } from 'firebase/firestore';
 
 // Dynamically import charts to prevent server-side rendering issues
-const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChartComponent), { ssr: false, memo: true });
-const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart').then(mod => mod.BarChartComponent), { ssr: false, memo: true });
+const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart'), { ssr: false });
+const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart'), { ssr: false });
 
 const DashboardPageContent = memo(function DashboardPageContent() {
   const { settings } = useDataContext();
