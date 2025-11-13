@@ -32,9 +32,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
-import { format } from 'date-fns';
-import { getLocale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
 import allPlans from '@/lib/subscription-plans.json';
 import allFeatures from '@/lib/app-features.json';
@@ -625,108 +622,15 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
   );
 });
 
-const ChangelogTab = memo(function ChangelogTab() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const { settings } = useDataContext();
-  const { locale } = settings;
-
-  const changelogQuery = useMemo(() => user?.uid ? query(collection(firestore, 'changelog'), where('ownerId', '==', user.uid), orderBy('date', 'desc')) : null, [firestore, user]);
-  const [changelogSnapshot, isDataLoading] = useCollection(changelogQuery);
-  const changelog = useMemo(() => changelogSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry)), [changelogSnapshot]);
-
-  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
-
-  const iconMap: { [key: string]: React.ReactNode } = {
-      Property: <Building2 className="h-4 w-4" />,
-      Tenancy: <FileText className="h-4 w-4" />,
-      Expense: <Receipt className="h-4 w-4" />,
-      Payment: <HandCoins className="h-4 w-4" />,
-      Maintenance: <Wrench className="h-4 w-4" />,
-      Contractor: <Wrench className="h-4 w-4" />,
-      Subscription: <CreditCard className="h-4 w-4" />,
-  };
-
-  useEffect(() => {
-    const formatAllDates = async () => {
-        if (!changelog) return;
-        const localeData = await getLocale(locale);
-        const newFormattedDates: {[key: string]: string} = {};
-        for (const item of changelog) {
-            if (item.date) {
-                newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy, HH:mm', { locale: localeData });
-            }
-        }
-        setFormattedDates(newFormattedDates);
-    };
-    formatAllDates();
-  }, [changelog, locale]);
-  
-  if (isDataLoading) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-                <CardDescription><Skeleton className="h-4 w-3/4" /></CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex gap-4">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                        <Skeleton className="h-5 w-1/3" />
-                        <Skeleton className="h-4 w-2/3" />
-                    </div>
-                    </div>
-                ))}
-            </CardContent>
-        </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-          <CardTitle>Activity Feed</CardTitle>
-          <CardDescription>A log of all significant events and changes within your portfolio.</CardDescription>
-      </CardHeader>
-      <CardContent>
-          {changelog && changelog.length > 0 ? (
-          <Timeline>
-              {changelog.map((item, index) => (
-                  <TimelineItem key={item.id}>
-                      {index < changelog.length - 1 && <TimelineConnector />}
-                      <TimelineHeader>
-                          <TimelineIcon>{iconMap[item.type]}</TimelineIcon>
-                          <TimelineTitle>{item.type} {item.action}</TimelineTitle>
-                          <div className="text-sm text-muted-foreground ml-auto">{formattedDates[item.id]}</div>
-                      </TimelineHeader>
-                      <TimelineDescription>
-                          {item.description}
-                      </TimelineDescription>
-                  </TimelineItem>
-              ))}
-          </Timeline>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No activity recorded yet.
-            </div>
-          )}
-      </CardContent>
-    </Card>
-  );
-});
-
 
 export default function AccountPage() {
   return (
     <>
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
-        <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-3 max-w-lg">
           <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
-          <TabsTrigger value="subscription">Subscription &amp; Billing</TabsTrigger>
-          <TabsTrigger value="changelog">Changelog</TabsTrigger>
+          <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="pt-6">
@@ -734,9 +638,6 @@ export default function AccountPage() {
         </TabsContent>
         <TabsContent value="subscription" className="pt-6">
           <SubscriptionBillingTab />
-        </TabsContent>
-        <TabsContent value="changelog" className="pt-6">
-          <ChangelogTab />
         </TabsContent>
         <TabsContent value="knowledge" className="pt-6">
           <KnowledgeBaseTab />
