@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useUser, useFirebase } from '@/firebase';
-import { doc, getDoc, setDoc, getDocs, collection, query, where, addDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { ResidencyStatus, Subscription } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -60,7 +60,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             await setDoc(settingsRef, { ...defaultSettings, ownerId: user.uid });
         }
 
-        // Fetch Subscription
+        // Fetch Subscription - CRITICAL: ADD ownerId filter
         const subsQuery = query(collection(firestore, 'subscriptions'), where('ownerId', '==', user.uid));
         const subsSnap = await getDocs(subsQuery);
         
@@ -79,7 +79,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
             await setDoc(subRef, newSub);
             addDoc(collection(firestore, 'changelog'), {
               ownerId: user.uid,
-              date: new Date().toISOString(),
+              date: serverTimestamp(),
               type: 'Subscription',
               action: 'Created',
               description: `New "Starter" subscription created.`,
@@ -93,7 +93,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setSettings(userSettings);
 
     } catch (error) {
-        console.error("Error fetching app data (settings/subscription):", error);
+        console.error("Error fetching data (subscription):", error);
         setSettings({ ...defaultSettings, subscription: null });
     } finally {
         setIsLoading(false);
