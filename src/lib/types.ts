@@ -101,7 +101,7 @@ export interface Transaction {
 export interface ArrearEntry {
   tenant: string;
   tenantEmail: string;
-  tenantPhone?: string;
+  tenantPhone: string;
   propertyAddress: string;
   amountOwed: number;
   dueDate: string;

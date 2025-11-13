@@ -99,7 +99,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         return {
           tenant: tenancy.tenant!,
           tenantEmail: tenancy.tenantEmail!,
-          tenantPhone: tenancy.tenantPhone,
+          tenantPhone: tenancy.tenantPhone || 'N/A',
           propertyAddress: tenancy.propertyName,
           amountOwed,
           dueDate: format(dueDate, 'yyyy-MM-dd'),
@@ -109,7 +109,7 @@ const ArrearsClient = memo(function ArrearsClient() {
           daysOverdue,
         };
       })
-      .filter((a): a is ArrearEntry => a !== null);
+      .filter((a): a is NonNullable<ArrearEntry> => a !== null);
     
     setArrears(calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue));
   }, [revenue]);
