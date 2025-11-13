@@ -17,8 +17,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Trash2, ArrowLeft } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
+
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -293,11 +295,19 @@ export default function EditTenancyPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const propertiesQuery = user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null;
-  const revenueQuery = user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid)) : null;
+  const propertiesQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null
+  , [firestore, user?.uid]);
+
+  const revenueQuery = useMemo(() => 
+    user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
+  , [firestore, user?.uid]);
   
-  const { data: properties, loading: isPropertiesLoading } = useCollection<Property>(propertiesQuery);
-  const { data: revenue, loading: isRevenueLoading } = useCollection<Transaction>(revenueQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
 
   const tenancyToEdit = useMemo(() => {
     if (!revenue) return null;

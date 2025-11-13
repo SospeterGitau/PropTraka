@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format, eachMonthOfInterval } from 'date-fns';
@@ -17,9 +17,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Trash2, ArrowLeft, Building, Loader2 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs, Query } from 'firebase/firestore';
+import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { useMemo } from 'react';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function formatAddress(property: Property) {
@@ -300,7 +299,7 @@ const TenancyForm = memo(function TenancyForm({
 });
 
 export default function AddTenancyPage() {
-  const { user, isAuthLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const propertiesQuery = useMemo(() => 
@@ -310,7 +309,7 @@ export default function AddTenancyPage() {
   const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
 
-  const isLoading = isAuthLoading || isPropertiesLoading;
+  const isLoading = isUserLoading || isPropertiesLoading;
 
   if (isLoading) {
     return (
