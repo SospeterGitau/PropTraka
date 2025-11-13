@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   LayoutDashboard,
   Menu,
@@ -14,34 +14,32 @@ import { cn } from '@/lib/utils';
 import { logout } from '@/app/(dashboard)/actions';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/menu', label: 'Menu', icon: Menu },
-  { href: '/settings', label: 'Activity', icon: FileText, subNav: 'changelog' },
-  { href: '/settings', label: 'Account', icon: User, subNav: '' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, subNav: 'dashboard' },
+  { href: '/menu', label: 'Menu', icon: Menu, subNav: 'menu' },
+  { href: '/settings?tab=changelog', label: 'Activity', icon: FileText, subNav: 'changelog' },
+  { href: '/settings', label: 'Account', icon: User, subNav: 'account' },
 ];
 
 export function DashboardNavigation({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const isSettingsActive = (itemHref: string, subNav?: string) => {
-    if (itemHref !== '/settings') return false;
-    const isBaseSettings = pathname === '/settings';
+  const isSettingsActive = (itemSubNav?: string) => {
+    if (pathname !== '/settings') return false;
+    const currentTab = searchParams.get('tab');
+
+    if (itemSubNav === 'account') {
+        // "Account" is active if we are on /settings and the tab is 'profile' or not set at all.
+        return currentTab === 'profile' || currentTab === null;
+    }
     
-    // The "Account" tab is active if we are on the base /settings page
-    if (subNav === '') return isBaseSettings;
-    
-    // Other tabs would be checked differently, but for now we link changelog
-    if (subNav === 'changelog') return isBaseSettings; // Or a more specific check if URL changes
+    if (itemSubNav === 'changelog') {
+        // "Activity" is active if the tab is 'changelog'
+        return currentTab === 'changelog';
+    }
 
     return false;
   };
-  
-  const getHref = (item: typeof navItems[0]) => {
-      if (item.href === '/settings' && item.subNav) {
-          return `${item.href}?tab=${item.subNav}`;
-      }
-      return item.href;
-  }
 
   return (
     <div>
@@ -49,13 +47,13 @@ export function DashboardNavigation({ children }: { children: ReactNode }) {
       <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/80 backdrop-blur-sm">
         <nav className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
-             const isActive = item.href === '/settings' 
-              ? isSettingsActive(item.href, item.subNav)
+             const isActive = item.href.startsWith('/settings')
+              ? isSettingsActive(item.subNav)
               : pathname.startsWith(item.href);
 
             return (
               <Link
-                href={getHref(item)}
+                href={item.href}
                 key={item.label}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 w-full h-full text-sm font-medium transition-colors",
