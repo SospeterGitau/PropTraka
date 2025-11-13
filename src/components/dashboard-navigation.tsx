@@ -23,12 +23,14 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
   return (
     <div className="min-h-screen">
       {/* Main content area with bottom padding for mobile nav */}
-      <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-6">
-        {children}
+      <main className="p-4 sm:p-6 lg:p-8 pb-24">
+        <div className="max-w-7xl mx-auto">
+         {children}
+        </div>
       </main>
 
       {/* Mobile navigation bar, fixed to the bottom */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-border bg-background/95 backdrop-blur-sm shadow-lg">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t bg-background/95 backdrop-blur-sm shadow-lg">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
             const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
