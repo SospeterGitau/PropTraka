@@ -181,9 +181,14 @@ const ExpensesClient = memo(function ExpensesClient() {
   const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
   const contractorsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null, [firestore, user?.uid]);
   
-  const [expenses, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
-  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
-  const [contractors, isContractorsLoading] = useCollection<Contractor>(contractorsQuery as Query<Contractor> | null);
+  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [contractorsSnapshot, isContractorsLoading] = useCollection(contractorsQuery);
+
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)) || [], [contractorsSnapshot]);
+
 
   const isDataLoading = isExpensesLoading || isPropertiesLoading || isContractorsLoading;
 

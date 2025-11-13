@@ -27,7 +27,7 @@ const ChangelogPage = memo(function ChangelogPage() {
     user?.uid ? createUserQuery(firestore, 'changelog', user.uid) : null
   , [firestore, user?.uid]);
 
-  const [changelog, isDataLoading, error] = useCollection<ChangeLogEntry>(changelogQuery as Query<ChangeLogEntry> | null);
+  const [changelogSnapshot, isDataLoading, error] = useCollection(changelogQuery);
 
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
 
@@ -42,12 +42,10 @@ const ChangelogPage = memo(function ChangelogPage() {
   };
   
   const sortedChangelog = useMemo(() => {
-    if (!changelog) return [];
-    // The useCollection hook from react-firebase-hooks returns a snapshot.
-    // We need to map over the docs to get the data.
-    const data = changelog.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry));
+    if (!changelogSnapshot) return [];
+    const data = changelogSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChangeLogEntry));
     return [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [changelog]);
+  }, [changelogSnapshot]);
 
   useEffect(() => {
     const formatAllDates = async () => {

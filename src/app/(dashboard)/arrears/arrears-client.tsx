@@ -34,8 +34,8 @@ const ArrearsClient = memo(function ArrearsClient() {
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
   , [firestore, user?.uid]);
   
-  const [revenue, isDataLoading, error] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-
+  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
 
   const [arrears, setArrears] = useState<ArrearEntry[]>([]);
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});

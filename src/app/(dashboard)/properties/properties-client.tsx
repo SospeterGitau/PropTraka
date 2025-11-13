@@ -49,8 +49,12 @@ const PropertiesClient = memo(function PropertiesClient() {
   const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   
-  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
-  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  
   const isDataLoading = isPropertiesLoading || isRevenueLoading;
 
   // State

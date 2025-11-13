@@ -5,7 +5,7 @@
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound, useParams, useRouter } from 'next/navigation';
-import { format, startOfToday, isBefore } from 'date-fns';
+import { format, startOfToday, isBefore, isAfter } from 'date-fns';
 import type { Transaction, ServiceCharge, Property } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -31,6 +31,7 @@ import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, deleteDoc, writeBatch, getDocs, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function PaymentForm({
   isOpen,
@@ -231,13 +232,15 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const { locale, currency } = settings;
 
   // Data Fetching
-  const revenueQuery = useMemo(() => user ? query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid), where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
-  const propertiesQuery = useMemo(() => user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
+  const revenueQuery = useMemo(() => user ? createUserQuery(firestore, 'revenue', user.uid, where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
+  const propertiesQuery = useMemo(() => user ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user]);
+  
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
 
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => doc.data() as Transaction) || [], [revenueSnapshot]);
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => doc.data() as Property) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+
 
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);

@@ -35,9 +35,14 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const maintenanceRequestsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'maintenanceRequests', user.uid) : null, [firestore, user?.uid]);
   const contractorsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null, [firestore, user?.uid]);
   
-  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
-  const [maintenanceRequests, isMaintenanceLoading] = useCollection<MaintenanceRequest>(maintenanceRequestsQuery as Query<MaintenanceRequest> | null);
-  const [contractors, isContractorsLoading] = useCollection<Contractor>(contractorsQuery as Query<Contractor> | null);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [maintenanceRequestsSnapshot, isMaintenanceLoading] = useCollection(maintenanceRequestsQuery);
+  const [contractorsSnapshot, isContractorsLoading] = useCollection(contractorsQuery);
+
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
+  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)) || [], [contractorsSnapshot]);
+
 
   const isDataLoading = isPropertiesLoading || isMaintenanceLoading || isContractorsLoading;
 

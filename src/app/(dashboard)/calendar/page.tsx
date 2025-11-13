@@ -24,9 +24,13 @@ function CalendarPage() {
     user?.uid ? createUserQuery(firestore, 'maintenanceRequests', user.uid) : null
   , [firestore, user?.uid]);
   
-  const [revenue, isRevenueLoading, revenueError] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-  const [expenses, isExpensesLoading, expensesError] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
-  const [maintenanceRequests, isMaintenanceLoading, maintenanceError] = useCollection<MaintenanceRequest>(maintenanceRequestsQuery as Query<MaintenanceRequest> | null);
+  const [revenueSnapshot, isRevenueLoading, revenueError] = useCollection(revenueQuery);
+  const [expensesSnapshot, isExpensesLoading, expensesError] = useCollection(expensesQuery);
+  const [maintenanceRequestsSnapshot, isMaintenanceLoading, maintenanceError] = useCollection(maintenanceRequestsQuery);
+
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
+  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
 
 
   const formatCurrencyWithCents = (amount: number) => {

@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import placeholderFaq from '@/lib/placeholder-faq.json';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
@@ -25,7 +26,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [searchTerm, setSearchTerm] = useState('');
   const [activeArticle, setActiveArticle] = useState<KnowledgeArticle | null>(null);
 
-  const articlesQuery = useMemo(() => user?.uid ? query(collection(firestore, 'knowledgeBase'), where('ownerId', '==', user.uid)) : null, [firestore, user]);
+  const articlesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null, [firestore, user]);
   const [articlesSnapshot, isLoading] = useCollection(articlesQuery);
 
   const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({id: doc.id, ...doc.data() } as KnowledgeArticle)), [articlesSnapshot]);

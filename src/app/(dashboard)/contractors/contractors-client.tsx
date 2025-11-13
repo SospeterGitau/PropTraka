@@ -39,7 +39,9 @@ const ContractorsClient = memo(function ContractorsClient() {
     user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null
   , [firestore, user?.uid]);
 
-  const [contractors, isDataLoading, error] = useCollection<Contractor>(contractorsQuery as Query<Contractor> | null);
+  const [contractorsSnapshot, isDataLoading, error] = useCollection(contractorsQuery);
+  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Contractor)) || [], [contractorsSnapshot]);
+
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
