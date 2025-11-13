@@ -77,14 +77,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
             };
             await setDoc(subRef, newSub);
-            addDoc(collection(firestore, 'changelog'), {
-              ownerId: user.uid,
+            
+            // Log the creation of the subscription to the changelog
+            await addDoc(collection(firestore, 'changelog'), {
+              ownerId: user.uid, // This was the missing field
               date: serverTimestamp(),
               type: 'Subscription',
               action: 'Created',
               description: `New "Starter" subscription created.`,
               entityId: subRef.id,
             });
+
             userSettings.subscription = newSub;
         } else {
             userSettings.subscription = subsSnap.docs[0].data() as Subscription;
