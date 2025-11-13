@@ -298,7 +298,7 @@ const TenancyForm = memo(function TenancyForm({
             </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-3 mt-8 mb-32 sm:mb-24 md:mb-12">
+        <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" asChild className="min-w-24"><Link href="/revenue">Cancel</Link></Button>
             <Button type="submit" disabled={isSubmitting} className="min-w-32">
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

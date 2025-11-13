@@ -285,7 +285,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
           </fieldset>
           {isEditing && (
-            <div className="flex gap-3 justify-end mt-8 mb-32 sm:mb-24 md:mb-12">
+            <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={handleCancel} className="min-w-24">Cancel</Button>
               <Button onClick={handleSave} className="min-w-32">Save Changes</Button>
             </div>

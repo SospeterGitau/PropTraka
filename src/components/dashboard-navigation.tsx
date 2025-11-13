@@ -23,34 +23,31 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   return (
     <div className="min-h-screen">
-      {/* Main content area with generous bottom padding for mobile nav and chat bubble */}
-      <main className="p-4 sm:p-6 lg:p-8 pb-32 sm:pb-28 md:pb-20">
+      {/* Main content area with bottom padding for mobile nav */}
+      <main className="p-4 sm:p-6 lg:p-8 pb-24 sm:pb-6">
         {children}
       </main>
 
       {/* Mobile navigation bar, fixed to the bottom */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-200 bg-white shadow-2xl">
-        <div className="flex items-center justify-around h-20 max-w-screen-xl mx-auto">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center justify-around h-full max-w-lg mx-auto">
           {navItems.map((item) => {
-            const isActive = (item.href === '/dashboard' && pathname === item.href) || 
-                             (pathname.startsWith(item.href) && item.href !== '/dashboard');
+            const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
 
             return (
               <Link
                 href={item.href}
                 key={item.label}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1.5 w-full h-full text-sm font-medium transition-all active:scale-95",
+                  "flex flex-col items-center justify-center gap-1 w-full h-full text-sm font-medium transition-colors relative",
                   isActive
-                    ? "text-blue-600"
-                    : "text-gray-600 hover:text-blue-500 active:text-blue-600"
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-primary"
                 )}
               >
-                {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-blue-600 rounded-b-full"></span>
-                )}
-                <item.icon className="h-7 w-7" strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-xs font-medium">{item.label}</span>
+                {isActive && <span className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-primary rounded-full"></span>}
+                <item.icon className="h-6 w-6" />
+                <span className="text-xs">{item.label}</span>
               </Link>
             );
           })}
