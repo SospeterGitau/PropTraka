@@ -3,7 +3,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { useFitText } from '@/hooks/use-fit-text';
 import { useDataContext } from '@/context/data-context';
 
@@ -19,10 +19,6 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
   const { fontSize, ref } = useFitText();
   const { settings } = useDataContext();
   const { currency, locale } = settings;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  };
 
   return (
     <Card>
@@ -40,7 +36,7 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
             variant === 'positive' && 'text-accent'
           )}
         >
-          {formatCurrency(value)}
+          {formatCurrency(value, locale, currency)}
         </div>
         <p className="text-xs text-muted-foreground">{description}</p>
       </CardContent>

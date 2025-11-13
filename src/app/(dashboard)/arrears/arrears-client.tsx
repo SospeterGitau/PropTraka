@@ -25,10 +25,14 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { useUser, useFirestore } from '@/firebase';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Query } from 'firebase/firestore';
+import { useDataContext } from '@/context/data-context';
+import { formatCurrency } from '@/lib/utils';
 
 const ArrearsClient = memo(function ArrearsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { settings } = useDataContext();
+  const { currency, locale, companyName } = settings;
 
   const revenueQuery = useMemo(() => 
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
@@ -41,18 +45,6 @@ const ArrearsClient = memo(function ArrearsClient() {
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
   const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
   const [selectedArrear, setSelectedArrear] = useState<ArrearEntry | null>(null);
-
-  const locale = 'en-GB';
-  const currency = 'KES';
-  const companyName = 'LeaseLync';
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
 
   useEffect(() => {
     if (!revenue) return;
@@ -204,7 +196,7 @@ const ArrearsClient = memo(function ArrearsClient() {
                     const body = [
                       `Dear ${arrear.tenant},`,
                       `This is a friendly reminder regarding the outstanding balance for your tenancy at ${arrear.propertyAddress}.`,
-                      `Our records show that a payment of ${formatCurrency(arrear.amountOwed)} is outstanding and overdue.`,
+                      `Our records show that a payment of ${formatCurrency(arrear.amountOwed, locale, currency)} is outstanding and overdue.`,
                       `Could you please arrange to make this payment at your earliest convenience? If you have already made the payment, please disregard this notice.`,
                       `If you have any questions or wish to discuss this, please do not hesitate to reply to this email.`,
                       `Thank you for your prompt attention to this matter.`,
@@ -227,7 +219,7 @@ const ArrearsClient = memo(function ArrearsClient() {
                             </div>
                         </TableCell>
                         <TableCell className="text-right font-semibold text-destructive">
-                          {formatCurrency(arrear.amountOwed)}
+                          {formatCurrency(arrear.amountOwed, locale, currency)}
                         </TableCell>
                         <TableCell className="text-center">
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
@@ -256,7 +248,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         onClose={() => setIsPaymentRequestOpen(false)}
         onSubmit={handlePaymentRequestSubmit}
         arrear={selectedArrear}
-        formatCurrency={formatCurrency}
+        formatCurrency={(amount) => formatCurrency(amount, locale, currency)}
       />
     </>
   );

@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore } from '@/firebase';
@@ -52,11 +52,6 @@ const RevenueClient = memo(function RevenueClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
-
-  // Formatters
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  };
 
   useEffect(() => {
     if (!revenue) return;
@@ -231,10 +226,10 @@ const RevenueClient = memo(function RevenueClient() {
                                   <TableCell>
                                      {statusBadge}
                                   </TableCell>
-                                  <TableCell className="text-right">{formatCurrency(totalDue)}</TableCell>
-                                  <TableCell className="text-right">{formatCurrency(totalPaid)}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(totalDue, locale, currency)}</TableCell>
+                                  <TableCell className="text-right">{formatCurrency(totalPaid, locale, currency)}</TableCell>
                                   <TableCell className={cn("text-right", totalBalance > 0 && 'text-destructive')}>
-                                    {formatCurrency(totalBalance)}
+                                    {formatCurrency(totalBalance, locale, currency)}
                                   </TableCell>
                                   <TableCell className="text-center">
                                     <DropdownMenu>

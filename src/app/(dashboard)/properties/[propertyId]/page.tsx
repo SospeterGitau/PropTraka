@@ -26,6 +26,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { formatCurrency } from '@/lib/utils';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -47,18 +48,14 @@ function PropertyDetailPageContent() {
   const revenueQuery = useMemo(() => 
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
   , [firestore, user?.uid]);
-  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
   
   const isDataLoading = isPropertyLoading || isRevenueLoading;
 
   // State
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-
-  // Formatters
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  };
   
   // Actions
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
@@ -219,24 +216,24 @@ function PropertyDetailPageContent() {
                 <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Current Value</span>
-                        <span className="font-medium">{formatCurrency(property.currentValue)}</span>
+                        <span className="font-medium">{formatCurrency(property.currentValue, locale, currency)}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Purchase Price</span>
-                        <span className="font-medium">{formatCurrency(property.purchasePrice)}</span>
+                        <span className="font-medium">{formatCurrency(property.purchasePrice, locale, currency)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Purchase Fees</span>
-                        <span className="font-medium">{formatCurrency(property.purchaseTaxes || 0)}</span>
+                        <span className="font-medium">{formatCurrency(property.purchaseTaxes || 0, locale, currency)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Mortgage</span>
-                        <span className="font-medium">{formatCurrency(property.mortgage)}</span>
+                        <span className="font-medium">{formatCurrency(property.mortgage, locale, currency)}</span>
                     </div>
                      <hr className="my-2"/>
                     <div className="flex justify-between font-bold">
                         <span >Equity</span>
-                        <span>{formatCurrency(property.currentValue - property.mortgage)}</span>
+                        <span>{formatCurrency(property.currentValue - property.mortgage, locale, currency)}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -247,7 +244,7 @@ function PropertyDetailPageContent() {
                 <CardContent className="space-y-2 text-sm">
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Asking Rent</span>
-                        <span className="font-medium">{formatCurrency(property.rentalValue)}/month</span>
+                        <span className="font-medium">{formatCurrency(property.rentalValue, locale, currency)}/month</span>
                     </div>
                 </CardContent>
             </Card>

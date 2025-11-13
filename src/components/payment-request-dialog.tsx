@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ArrearEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,8 +33,14 @@ export function PaymentRequestDialog({
   arrear,
   formatCurrency,
 }: PaymentRequestDialogProps) {
-  const [amount, setAmount] = useState(arrear?.amountOwed || 0);
+  const [amount, setAmount] = useState(0);
   const [method, setMethod] = useState('Pesapal');
+
+  useEffect(() => {
+    if (arrear) {
+      setAmount(arrear.amountOwed);
+    }
+  }, [arrear]);
 
   const handleSubmit = () => {
     onSubmit({ amount, method });

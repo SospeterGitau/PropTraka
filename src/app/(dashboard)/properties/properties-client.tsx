@@ -34,6 +34,7 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { formatCurrency } from '@/lib/utils';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -61,11 +62,6 @@ const PropertiesClient = memo(function PropertiesClient() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-
-  // Formatters
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  };
   
   // Actions
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
@@ -261,8 +257,8 @@ const PropertiesClient = memo(function PropertiesClient() {
                            {status}
                          </Badge>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(property.currentValue)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue)}/month</TableCell>
+                      <TableCell className="text-right">{formatCurrency(property.currentValue, locale, currency)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue, locale, currency)}/month</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
