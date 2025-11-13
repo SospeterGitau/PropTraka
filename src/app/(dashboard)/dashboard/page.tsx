@@ -33,10 +33,14 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
 
-  const [properties, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
-  const [revenue, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-  const [expenses, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
+  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery as Query<Transaction> | null);
   
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
+
   const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
 
   const formatCurrency = (amount: number) => {
@@ -44,7 +48,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   };
 
   // Data might not be available on the first render, so we add a loading state.
-  if (isDataLoading || !properties || !revenue || !expenses) {
+  if (isDataLoading) {
     return (
       <>
         <PageHeader title="Dashboard" />
