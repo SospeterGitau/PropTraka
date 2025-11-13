@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building, DollarSign, Settings } from 'lucide-react';
+import { LayoutDashboard, Menu, FileText, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface DashboardNavigationProps {
@@ -15,14 +15,14 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/properties', label: 'Properties', icon: Building },
-    { href: '/revenue', label: 'Revenue', icon: DollarSign },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/menu', label: 'Menu', icon: Menu },
+    { href: '/activity', label: 'Activity', icon: FileText },
+    { href: '/settings', label: 'Account', icon: User },
   ];
 
   return (
     <div className="min-h-screen">
-      {/* Main content area */}
+      {/* Main content area with bottom padding for mobile nav */}
       <main className="p-4 sm:p-6 lg:p-8 pb-16 sm:pb-6">
         {children}
       </main>
@@ -31,7 +31,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       <nav className="sm:hidden fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
           {navItems.map((item) => {
-             const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
+            const isActive = (item.href === '/dashboard' && pathname === item.href) || (pathname.startsWith(item.href) && item.href !== '/dashboard');
 
             return (
               <Link
@@ -48,7 +48,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
                 <item.icon className="h-6 w-6" />
                 <span className="text-xs">{item.label}</span>
               </Link>
-            )
+            );
           })}
         </div>
       </nav>
