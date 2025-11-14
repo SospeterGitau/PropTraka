@@ -251,29 +251,29 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     if (isRevenueLoading) {
-      return;
-    }
-    
-    if (!isRevenueLoading && (!revenue || revenue.length === 0)) {
-        if (!tenancy) {
-            notFound();
-        }
+        setInitialLoadComplete(false);
         return;
     }
-    
-    const representativeTx = revenue[0];
-    setTenancy({
-      ...representativeTx,
-      transactions: revenue.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-    });
-  }, [revenue, isRevenueLoading, tenancy]);
+
+    if (!isRevenueLoading && revenue.length > 0) {
+        const representativeTx = revenue[0];
+        setTenancy({
+            ...representativeTx,
+            transactions: revenue.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+        });
+    }
+    setInitialLoadComplete(true);
+  }, [revenue, isRevenueLoading]);
+
 
   const formattedDates = useMemo(() => {
+    if (!tenancy) return {};
+    
     const getFormattedDates = async () => {
-        if (!tenancy) return {};
         const localeData = await getLocale(locale);
         const newFormattedDates: { [key: string]: string } = {};
         for (const item of tenancy.transactions) {
@@ -287,9 +287,8 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         }
         return newFormattedDates;
     }
-
-    // This is a bit of a trick to use an async function inside useMemo
-    // It's not ideal, but it works for this case. A better solution might involve a custom hook.
+    // This is not ideal, but it's a quick way to handle the async nature inside useMemo.
+    // A more robust solution might involve a dedicated state for formatted dates updated in a separate effect.
     let dates: { [key: string]: string } = {};
     getFormattedDates().then(d => dates = d);
     return dates;
@@ -389,7 +388,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     setIsEndTenancyOpen(false);
   };
 
-  if (isRevenueLoading || isPropertiesLoading || !tenancy) {
+  if (isRevenueLoading || isPropertiesLoading || !initialLoadComplete) {
     return (
         <>
             <PageHeader title="Tenancy Details">
@@ -414,6 +413,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </Card>
         </>
     );
+  }
+
+  if (!tenancy) {
+    notFound();
   }
 
 
@@ -485,19 +488,19 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </div>
 
                 <div className="flex justify-between text-sm pt-3">
-                    <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                    <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             Tenancy Period
                         </p>
                         <p className="font-medium text-foreground">
                             {formattedDates['start']} - {formattedDates['end']}
                         </p>
                     </div>
-                    <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                    <div className="space-y-1 text-right">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             Property Type
                         </p>
-                        <p className="font-medium text-foreground text-right">
+                        <p className="font-medium text-foreground">
                             {property?.propertyType}
                         </p>
                     </div>
