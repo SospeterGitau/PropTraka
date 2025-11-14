@@ -3,7 +3,7 @@
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
+import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter, type Locale } from 'date-fns';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -613,5 +613,3 @@ const ReportsClient = memo(function ReportsClient() {
 });
 
 export default ReportsClient;
-
-    
