@@ -631,14 +631,22 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
 
 
 export default function AccountPage() {
+  const { user } = useUser();
+  
+  // Define your admin email here.
+  // For a real application, you might get this from environment variables.
+  const ADMIN_EMAIL = 'sospeter.gitau@gmail.com';
+
+  const isAdmin = user?.email === ADMIN_EMAIL;
+
   return (
     <>
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg">
+        <TabsList className={cn("grid w-full max-w-lg", isAdmin ? "grid-cols-3" : "grid-cols-2")}>
           <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>
+          {isAdmin && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="pt-6">
           <ProfileSettingsTab />
@@ -646,10 +654,14 @@ export default function AccountPage() {
         <TabsContent value="subscription" className="pt-6">
           <SubscriptionBillingTab />
         </TabsContent>
-        <TabsContent value="knowledge" className="pt-6">
-          <KnowledgeBaseTab />
-        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="knowledge" className="pt-6">
+            <KnowledgeBaseTab />
+          </TabsContent>
+        )}
       </Tabs>
     </>
   );
 }
+
+    
