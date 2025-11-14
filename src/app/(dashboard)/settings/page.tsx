@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -37,6 +38,7 @@ import allFeatures from '@/lib/app-features.json';
 import { Badge } from '@/components/ui/badge';
 import { useFitText } from '@/hooks/use-fit-text';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
 const passwordSchema = z.object({
