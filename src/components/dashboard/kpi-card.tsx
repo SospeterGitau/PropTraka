@@ -1,14 +1,14 @@
 
 'use client';
 
-import type { LucideIcon } from 'lucide-react';
+import type { ElementType } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useFitText } from '@/hooks/use-fit-text';
 import { useDataContext } from '@/context/data-context';
 
 type KpiCardProps = {
-  icon: LucideIcon;
+  icon: ElementType;
   title: string;
   value: number;
   description: string;
