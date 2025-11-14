@@ -27,10 +27,11 @@ function formatAddress(property: Property) {
 
 // Safely creates a date for a specific day of the month, handling cases where the day doesn't exist (e.g., Feb 30th).
 function createSafeMonthDate(year: number, month: number, day: number): Date {
-  const date = new Date(Date.UTC(year, month, day));
-  const lastDayOfMonth = getDaysInMonth(new Date(Date.UTC(year, month, 1)));
-  if (day > lastDayOfMonth) {
-    return new Date(Date.UTC(year, month, lastDayOfMonth));
+  const date = new Date(year, month, day);
+  // If the created date's day doesn't match, it means the day was invalid for that month (e.g. day 31 in a 30 day month).
+  // In that case, we roll back to the last day of the correct month.
+  if (date.getDate() !== day) {
+    return new Date(year, month + 1, 0);
   }
   return date;
 }
@@ -188,6 +189,8 @@ const TenancyForm = memo(function TenancyForm({
                 proRataNotes = `Pro-rated rent for ${activeDaysInCycle} days in the final month.`;
             }
         }
+        
+        const txNotes = isLastMonth ? proRataNotes : (isFirstMonth ? notes : undefined);
 
         const newTxData: Partial<Transaction> = {
             tenancyId,
@@ -204,7 +207,7 @@ const TenancyForm = memo(function TenancyForm({
             tenancyEndDate: tenancyEndDateStr,
             contractUrl,
             ownerId: user.uid,
-            notes: isLastMonth ? proRataNotes : (isFirstMonth ? notes : undefined)
+            ...(txNotes && { notes: txNotes }) // Only include notes if they exist
         };
         
         if (existingTx?.id) newTxData.id = existingTx.id;
@@ -222,7 +225,7 @@ const TenancyForm = memo(function TenancyForm({
     
     const batch = writeBatch(firestore);
     
-    const newTxDates = new Set(transactionsData.map(tx => format(parseLocalDate(tx.date!), 'yyyy-MM')));
+    const newTxDates = new Set(transactionsData.map(tx => format(parseLocalDate(tx!.date!), 'yyyy-MM')));
     
     existingTransactions.forEach(tx => {
         const txDate = format(parseLocalDate(tx.date), 'yyyy-MM');
@@ -320,7 +323,7 @@ const TenancyForm = memo(function TenancyForm({
                     {serviceCharges.map((charge, index) => (
                         <div key={index} className="flex items-center gap-2">
                         <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                        <Input type="number" placeholder="Amount" value={charge.amount || ''} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                        <Input type="number" placeholder="Amount" value={charge.amount.toString()} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                     ))}
