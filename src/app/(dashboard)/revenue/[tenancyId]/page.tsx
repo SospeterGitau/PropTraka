@@ -286,7 +286,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         }
         setFormattedDates(newFormattedDates);
     };
-    formatAllDates();
+    if (tenancy) {
+      formatAllDates();
+    }
   }, [tenancy, locale]);
   
   // Actions
@@ -448,7 +450,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
-              <div className="mb-4">
+              <div className="mb-3">
                 <h2 className="text-2xl font-bold text-card-foreground mb-1">
                   {tenancy.tenant}
                 </h2>
@@ -469,7 +471,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
               </div>
 
               <div className="mb-3 pb-3 border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                   Contact
                 </p>
                 <p className="text-sm text-foreground mb-1 flex items-center gap-2">
@@ -478,22 +480,23 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </p>
               </div>
 
-              <div className="mb-3 pb-3 border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Tenancy Period
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {formattedDates['start']} - {formattedDates['end']}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Property Type
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {property?.propertyType} &middot; {property?.buildingType}
-                </p>
+              <div className="flex justify-between text-sm">
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                        Tenancy Period
+                    </p>
+                    <p className="font-medium text-foreground">
+                        {formattedDates['start']} - {formattedDates['end']}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                        Property Type
+                    </p>
+                    <p className="font-medium text-foreground text-right">
+                        {property?.propertyType}
+                    </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -504,26 +507,26 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 Financial Summary
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/50">
-                <span className="text-sm font-medium text-foreground">Total Due to Date</span>
-                <span className="text-lg font-bold text-orange-700 dark:text-orange-400">{formatCurrency(totalDueToDate, locale, currency)}</span>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm text-muted-foreground">Total Due to Date</span>
+                <span className="text-lg font-bold text-orange-500">{formatCurrency(totalDueToDate, locale, currency)}</span>
               </div>
 
-              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/50">
-                <span className="text-sm font-medium text-foreground">Total Paid</span>
-                <span className="text-lg font-bold text-green-700 dark:text-green-400">{formatCurrency(totalPaid, locale, currency)}</span>
+              <div className="flex justify-between items-baseline">
+                <span className="text-sm text-muted-foreground">Total Paid</span>
+                <span className="text-lg font-bold text-green-600 dark:text-green-500">{formatCurrency(totalPaid, locale, currency)}</span>
               </div>
 
-              <div className="border-t border-border my-2"></div>
-
-              <div className={cn("p-4 rounded-lg shadow-sm", currentBalance > 0 ? 'bg-destructive' : 'bg-primary')}>
-                <p className="text-xs font-semibold text-primary-foreground/80 uppercase tracking-wide mb-1">
-                  Current Balance
-                </p>
-                <p className="text-3xl font-bold text-primary-foreground">
-                  {formatCurrency(currentBalance, locale, currency)}
-                </p>
+              <div className="border-t border-border pt-3 mt-3">
+                <div className={cn("flex justify-between items-baseline")}>
+                    <p className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    Current Balance
+                    </p>
+                    <p className={cn("text-2xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-foreground')}>
+                    {formatCurrency(currentBalance, locale, currency)}
+                    </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -531,7 +534,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold text-card-foreground flex items-center gap-2">
-                <BadgeCheck className="w-5 h-5 text-green-500"/>
+                <BadgeCheck className="w-5 h-5 text-muted-foreground"/>
                 Deposit Status
               </CardTitle>
             </CardHeader>
@@ -692,7 +695,3 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
-
-    
-
-    
