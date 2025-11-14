@@ -56,7 +56,7 @@ function PaymentForm({
     const formatDateAsync = async () => {
       if (transaction) {
         const localeData = await getLocale(locale);
-        setFormattedDate(format(new Date(transaction.date), 'MMMM dd, yyyy', { locale: localeData }));
+        setFormattedDate(format(new Date(transaction.date), 'PPP', { locale: localeData }));
       }
     };
     formatDateAsync();
@@ -279,30 +279,28 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     const formatDates = async () => {
         const localeData = await localeDataPromise;
         for (const item of tenancy.transactions) {
-            newFormattedDates[item.id] = format(new Date(item.date), 'MMM dd, yyyy', { locale: localeData });
+            newFormattedDates[item.id] = format(new Date(item.date), 'PPP', { locale: localeData });
         }
         if (tenancy.tenancyStartDate) {
-           newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'MMMM dd, yyyy', { locale: localeData });
+           newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'PPP', { locale: localeData });
         }
         if (tenancy.tenancyEndDate) {
-            newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'MMMM dd, yyyy', { locale: localeData });
+            newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'PPP', { locale: localeData });
         }
     };
     
-    // We don't await here, so it might not be ready on first render, but React will re-render when it is.
     formatDates();
 
-    // This is synchronous part, so it might return empty on first pass
     for (const item of tenancy.transactions) {
         if (!newFormattedDates[item.id]) {
-           newFormattedDates[item.id] = format(new Date(item.date), 'MMM dd, yyyy'); // fallback
+           newFormattedDates[item.id] = format(new Date(item.date), 'PP'); 
         }
     }
      if (tenancy.tenancyStartDate && !newFormattedDates['start']) {
-       newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'MMMM dd, yyyy');
+       newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'PP');
     }
     if (tenancy.tenancyEndDate && !newFormattedDates['end']) {
-        newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'MMMM dd, yyyy');
+        newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'PP');
     }
 
     return newFormattedDates;
@@ -396,7 +394,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     addChangeLogEntry({
         type: 'Tenancy',
         action: 'Updated',
-        description: `Tenancy for "${tenancy.tenant}" end date changed to ${format(newEndDate, 'MMMM dd, yyyy')}.`,
+        description: `Tenancy for "${tenancy.tenant}" end date changed to ${format(newEndDate, 'PPP')}.`,
         entityId: tenancy.tenancyId!,
     });
     setIsEndTenancyOpen(false);
