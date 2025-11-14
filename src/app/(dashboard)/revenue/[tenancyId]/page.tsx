@@ -253,11 +253,16 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    if (isRevenueLoading) return;
-    if (!revenue || revenue.length === 0) {
-      if (!isRevenueLoading) notFound();
+    // Prevent running this effect until data has stopped loading
+    if (isRevenueLoading) {
       return;
-    };
+    }
+    
+    // If loading is finished and there's still no revenue, then it's a 404.
+    if (!isRevenueLoading && (!revenue || revenue.length === 0)) {
+      notFound();
+      return;
+    }
     
     const representativeTx = revenue[0];
     setTenancy({
@@ -379,7 +384,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     setIsEndTenancyOpen(false);
   };
 
-  if (isRevenueLoading || isPropertiesLoading) {
+  if (isRevenueLoading || isPropertiesLoading || !tenancy) {
     return (
         <>
             <PageHeader title="Tenancy Details">
@@ -401,14 +406,6 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </Card>
         </>
     );
-  }
-  
-  if (!tenancy) {
-      if (!isRevenueLoading) {
-          // If loading is done and still no tenancy, then it's a 404
-          notFound();
-      }
-      return <div>Loading...</div>;
   }
 
 
