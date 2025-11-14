@@ -19,6 +19,8 @@ import { useUser, useFirestore } from '@/firebase';
 import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useDataContext } from '@/context/data-context';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -37,8 +39,8 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
 
 function parseLocalDate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
-  // Use UTC to prevent timezone shifts.
-  return new Date(Date.UTC(year, month - 1, day));
+  // Use local date parts to create date
+  return new Date(year, month - 1, day);
 }
 
 const TenancyForm = memo(function TenancyForm({
@@ -50,8 +52,11 @@ const TenancyForm = memo(function TenancyForm({
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
+  const { settings } = useDataContext();
   const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   const addServiceCharge = () => {
     setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
@@ -87,9 +92,20 @@ const TenancyForm = memo(function TenancyForm({
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
+    
+    if (!startDate || !endDate) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Tenancy start and end dates are required.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
 
-    const tenancyStartDateStr = formData.get('tenancyStartDate') as string;
-    const tenancyEndDateStr = formData.get('tenancyEndDate') as string;
+    const tenancyStartDateStr = format(startDate, 'yyyy-MM-dd');
+    const tenancyEndDateStr = format(endDate, 'yyyy-MM-dd');
+
     const propertyId = formData.get('propertyId') as string;
     const selectedProperty = properties.find(p => p.id === propertyId);
     const tenant = formData.get('tenantName') as string;
@@ -128,21 +144,10 @@ const TenancyForm = memo(function TenancyForm({
       setIsSubmitting(false);
       return;
     }
-
-    if (!tenancyStartDateStr || !tenancyEndDateStr) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Tenancy start and end dates are required.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
     
-    const tenancyStartDate = parseLocalDate(tenancyStartDateStr);
-    const tenancyEndDate = parseLocalDate(tenancyEndDateStr);
-    const dayOfMonth = tenancyStartDate.getUTCDate();
-
+    const tenancyStartDate = startDate;
+    const tenancyEndDate = endDate;
+    const dayOfMonth = tenancyStartDate.getDate();
 
     if (tenancyEndDate < tenancyStartDate) {
       toast({
@@ -164,16 +169,11 @@ const TenancyForm = memo(function TenancyForm({
     let currentDate = new Date(tenancyStartDate);
     
     while (currentDate <= tenancyEndDate) {
-        const year = currentDate.getUTCFullYear();
-        const month = currentDate.getUTCMonth();
-        const isFirstMonth = year === tenancyStartDate.getUTCFullYear() && month === tenancyStartDate.getUTCMonth();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const isFirstMonth = year === tenancyStartDate.getFullYear() && month === tenancyStartDate.getMonth();
         
         const dueDate = createSafeMonthDate(year, month, dayOfMonth);
-        console.log('=== Monthly Record Debug ===');
-        console.log('Year:', year, 'Month:', month, 'Day:', dayOfMonth);
-        console.log('Created dueDate:', dueDate);
-        console.log('Formatted dueDate:', format(dueDate, 'yyyy-MM-dd'));
-        console.log('===========================');
       
       const newTxData: Partial<Transaction> = {
         tenancyId,
@@ -197,7 +197,13 @@ const TenancyForm = memo(function TenancyForm({
       transactionsData.push(newTxData);
 
       // Move to the next month
-      currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
+      let newMonth = month + 1;
+      let newYear = year;
+      if (newMonth > 11) {
+          newMonth = 0;
+          newYear++;
+      }
+      currentDate = new Date(newYear, newMonth, 1); // Set to start of month to avoid day-related skips
     }
 
     const batch = writeBatch(firestore);
@@ -264,12 +270,12 @@ const TenancyForm = memo(function TenancyForm({
             <CardContent className="space-y-6 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
-                        <Input id="tenancyStartDate" name="tenancyStartDate" type="date" required />
+                        <Label>Tenancy Start Date</Label>
+                        <DatePicker date={startDate} setDate={setStartDate} locale={settings.locale} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
-                        <Input id="tenancyEndDate" name="tenancyEndDate" type="date" required />
+                        <Label>Tenancy End Date</Label>
+                        <DatePicker date={endDate} setDate={setEndDate} locale={settings.locale} />
                     </div>
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,6 +1,5 @@
-
 'use client';
-
+import { useState, useEffect } from 'react';
 import type { Property, MaintenanceRequest, Contractor } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +14,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from './ui/date-picker';
+import { useDataContext } from '@/context/data-context';
+import { format } from 'date-fns';
 
 interface MaintenanceFormProps {
   isOpen: boolean;
@@ -30,6 +32,17 @@ function formatAddress(property: Property) {
 }
 
 export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties, contractors }: MaintenanceFormProps) {
+  const { settings } = useDataContext();
+  const [reportedDate, setReportedDate] = useState<Date | undefined>();
+  const [completedDate, setCompletedDate] = useState<Date | undefined>();
+
+  useEffect(() => {
+      if (isOpen) {
+          setReportedDate(request?.reportedDate ? new Date(request.reportedDate) : new Date());
+          setCompletedDate(request?.completedDate ? new Date(request.completedDate) : undefined);
+      }
+  }, [isOpen, request]);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -46,8 +59,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
       description: formData.get('description') as string,
       status: formData.get('status') as MaintenanceRequest['status'],
       priority: formData.get('priority') as MaintenanceRequest['priority'],
-      reportedDate: formData.get('reportedDate') as string,
-      completedDate: (formData.get('completedDate') as string) || undefined,
+      reportedDate: format(reportedDate!, 'yyyy-MM-dd'),
+      completedDate: completedDate ? format(completedDate, 'yyyy-MM-dd') : undefined,
       cost: Number(formData.get('cost')) || undefined,
       contractorId: contractorId !== 'none' ? contractorId : undefined,
       contractorName: selectedContractor ? selectedContractor.name : undefined,
@@ -64,7 +77,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
         <DialogHeader>
           <DialogTitle>{request ? 'Edit' : 'Add'} Maintenance Request</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-6 pl-1 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-2 py-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="propertyId">Property (Optional)</Label>
                 <Select name="propertyId" id="propertyId" defaultValue={request?.propertyId || 'none'}>
@@ -133,12 +146,12 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="reportedDate">Date Reported</Label>
-                    <Input id="reportedDate" name="reportedDate" type="date" defaultValue={request?.reportedDate ? request.reportedDate.split('T')[0] : new Date().toISOString().split('T')[0]} required />
+                    <Label>Date Reported</Label>
+                    <DatePicker date={reportedDate} setDate={setReportedDate} locale={settings.locale} />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="completedDate">Date Completed</Label>
-                    <Input id="completedDate" name="completedDate" type="date" defaultValue={request?.completedDate ? request.completedDate.split('T')[0] : ''} />
+                    <Label>Date Completed</Label>
+                    <DatePicker date={completedDate} setDate={setCompletedDate} locale={settings.locale} />
                 </div>
             </div>
 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -26,6 +25,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Check, ChevronsUpDown } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useDataContext } from '@/context/data-context';
+import { format } from 'date-fns';
 
 const defaultCategories = [
   'Accounting',
@@ -74,17 +76,15 @@ export function ExpenseForm({
   const [expenseType, setExpenseType] = useState<Transaction['expenseType']>('one-off');
   const [contractorId, setContractorId] = useState('');
   const [isContractorOpen, setIsContractorOpen] = useState(false);
-  
-  const allCategories = useMemo(() => {
-    const customCategory = category && !defaultCategories.includes(category) ? [category] : [];
-    return [...defaultCategories, ...customCategory];
-  }, [category]);
+  const { settings } = useDataContext();
+  const [date, setDate] = useState<Date | undefined>();
   
   useEffect(() => {
     if (isOpen) {
       setCategory(transaction?.category || 'Maintenance');
       setExpenseType(transaction?.expenseType || 'one-off');
       setContractorId(transaction?.contractorId || '');
+      setDate(transaction?.date ? new Date(transaction.date) : new Date());
     }
   }, [isOpen, transaction]);
 
@@ -98,7 +98,7 @@ export function ExpenseForm({
     
     const data: Omit<Transaction, 'id'> | Transaction = {
       ...(isEditing ? { id: transaction.id } : {}),
-      date: formData.get('date') as string,
+      date: format(date!, 'yyyy-MM-dd'),
       amount: Number(formData.get('amount')),
       propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Expense',
       propertyId: propertyId !== 'none' ? propertyId : undefined,
@@ -127,7 +127,7 @@ export function ExpenseForm({
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <Input id="date" name="date" type="date" defaultValue={transaction?.date ? transaction.date.split('T')[0] : new Date().toISOString().split('T')[0]} required />
+            <DatePicker date={date} setDate={setDate} locale={settings.locale} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="propertyId">Property (optional)</Label>
@@ -163,7 +163,7 @@ export function ExpenseForm({
                         {category ? `Create "${category}"` : "No category found."}
                     </CommandEmpty>
                     <CommandGroup>
-                      {allCategories.map((cat) => (
+                      {defaultCategories.map((cat) => (
                         <CommandItem
                           key={cat}
                           value={cat}
