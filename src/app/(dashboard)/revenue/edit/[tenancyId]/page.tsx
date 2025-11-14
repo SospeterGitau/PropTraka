@@ -30,7 +30,7 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
   const date = new Date(year, month, day);
   // If the created date's day doesn't match, it means the day was invalid for that month (e.g. day 31 in a 30 day month).
   // In that case, we roll back to the last day of the correct month.
-  if (date.getMonth() !== month) {
+  if (date.getDate() !== day) {
     return new Date(year, month + 1, 0);
   }
   return date;

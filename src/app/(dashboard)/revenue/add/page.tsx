@@ -29,10 +29,15 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
   const date = new Date(year, month, day);
   // If the created date's day doesn't match, it means the day was invalid for that month (e.g. day 31 in a 30 day month).
   // In that case, we roll back to the last day of the correct month.
-  if (date.getMonth() !== month) {
+  if (date.getDate() !== day) {
     return new Date(year, month + 1, 0);
   }
   return date;
+}
+
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 const TenancyForm = memo(function TenancyForm({
@@ -134,10 +139,8 @@ const TenancyForm = memo(function TenancyForm({
     }
     
     // Correctly handle timezone by parsing date parts and creating a local date
-    const [startYear, startMonth, startDay] = tenancyStartDateStr.split('-').map(Number);
-    const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
-    const tenancyStartDate = new Date(startYear, startMonth - 1, startDay);
-    const tenancyEndDate = new Date(endYear, endMonth - 1, endDay);
+    const tenancyStartDate = parseLocalDate(tenancyStartDateStr);
+    const tenancyEndDate = parseLocalDate(tenancyEndDateStr);
     const dayOfMonth = tenancyStartDate.getDate();
 
 
