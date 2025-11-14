@@ -259,8 +259,11 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     }
     
     if (!isRevenueLoading && (!revenue || revenue.length === 0)) {
-      notFound();
-      return;
+        // Only trigger notFound if loading is complete and still no data.
+        if (!tenancy) {
+            notFound();
+        }
+        return;
     }
     
     const representativeTx = revenue[0];
@@ -268,7 +271,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       ...representativeTx,
       transactions: revenue.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
     });
-  }, [revenue, isRevenueLoading]);
+  }, [revenue, isRevenueLoading, tenancy]);
 
   useEffect(() => {
     const formatAllDates = async () => {
@@ -480,7 +483,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </p>
               </div>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm pt-3">
                 <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                         Tenancy Period
@@ -510,7 +513,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             <CardContent className="space-y-3">
               <div className="flex justify-between items-baseline">
                 <span className="text-sm text-muted-foreground">Total Due to Date</span>
-                <span className="text-lg font-bold text-orange-500">{formatCurrency(totalDueToDate, locale, currency)}</span>
+                <span className="text-lg font-bold text-destructive">{formatCurrency(totalDueToDate, locale, currency)}</span>
               </div>
 
               <div className="flex justify-between items-baseline">
