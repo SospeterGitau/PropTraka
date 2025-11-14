@@ -31,6 +31,7 @@ import { useDataContext } from '@/context/data-context';
 import { useUser, useFirestore } from '@/firebase';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Query } from 'firebase/firestore';
+import { getLocale } from '@/lib/locales';
 
 
 type ViewMode = 'month' | 'year';
@@ -89,9 +90,9 @@ function RevenueAnalysisTab() {
     }
   };
   
-  const handleViewChange = (value: ViewMode | null) => {
-    if (value) {
-      setViewMode(value);
+  const handleViewChange = (value: string) => {
+    if (value === 'month' || value === 'year') {
+      setViewMode(value as ViewMode);
     }
   };
 
@@ -229,7 +230,7 @@ function RevenueAnalysisTab() {
             description={`Unpaid rent and vacant property loss`}
           />
           <KpiCard
-            icon={CurrencyIcon}
+            icon={(props) => <CurrencyIcon {...props} />}
             title="Net Rental Income"
             value={netRentalIncome}
             description={`Effective Gross Income collected`}
@@ -292,6 +293,15 @@ function PnlStatementTab() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [localeData, setLocaleData] = useState<Locale | null>(null);
+
+  useEffect(() => {
+    const loadLocale = async () => {
+      const data = await getLocale(locale);
+      setLocaleData(data);
+    };
+    loadLocale();
+  }, [locale]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
@@ -318,13 +328,13 @@ function PnlStatementTab() {
     }
   };
 
-  const handleViewChange = (value: ViewMode | null) => {
-    if (value) {
-      setViewMode(value);
+  const handleViewChange = (value: string) => {
+    if (value === 'month' || value === 'year') {
+      setViewMode(value as ViewMode);
     }
   };
   
-  if (!currentDate || isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
+  if (!currentDate || isRevenueLoading || isExpensesLoading || isPropertiesLoading || !localeData) {
     return (
        <div className="space-y-6">
         <Card>
@@ -371,7 +381,7 @@ function PnlStatementTab() {
   });
   
   const dateDisplayFormat = viewMode === 'month' 
-    ? format(currentDate, 'MMMM yyyy') 
+    ? format(currentDate, 'MMMM yyyy', { locale: localeData }) 
     : `${financialYearStart.getFullYear()}/${financialYearEnd.getFullYear()}`;
     
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
@@ -447,7 +457,7 @@ function PnlStatementTab() {
               description="Sum of all costs incurred"
               />
               <KpiCard
-              icon={CurrencyIcon}
+              icon={(props) => <CurrencyIcon {...props} />}
               title="Net Operating Income"
               value={netOperatingIncome}
               description="Profit before tax"
@@ -489,7 +499,7 @@ function PnlStatementTab() {
               <TableBody>
                  {filteredRevenue.length > 0 ? filteredRevenue.map(item => (
                   <TableRow key={item.id}>
-                    <TableCell>{format(new Date(item.date), 'MMM dd, yyyy')}</TableCell>
+                    <TableCell>{format(new Date(item.date), 'PP', { locale: localeData })}</TableCell>
                     <TableCell>{item.tenant}</TableCell>
                     <TableCell>{item.propertyName}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amountPaid ?? 0)}</TableCell>
