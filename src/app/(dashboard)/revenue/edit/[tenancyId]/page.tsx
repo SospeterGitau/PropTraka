@@ -88,8 +88,7 @@ const TenancyForm = memo(function TenancyForm({
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
     const newCharges = [...serviceCharges];
     if (field === 'amount') {
-      const numericValue = value === '' ? 0 : parseFloat(value);
-      (newCharges[index] as any)[field] = numericValue;
+      newCharges[index].amount = parseFloat(value) || 0;
     } else {
       (newCharges[index] as any)[field] = value;
     }
@@ -321,7 +320,7 @@ const TenancyForm = memo(function TenancyForm({
                     {serviceCharges.map((charge, index) => (
                         <div key={index} className="flex items-center gap-2">
                         <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                        <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                        <Input type="number" placeholder="Amount" value={charge.amount || ''} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                     ))}
