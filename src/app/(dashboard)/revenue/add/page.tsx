@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { format, eachMonthOfInterval } from 'date-fns';
+import { format } from 'date-fns';
 import type { Property, Transaction, ServiceCharge } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
@@ -23,6 +22,17 @@ import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+}
+
+// Safely creates a date for a specific day of the month, handling cases where the day doesn't exist (e.g., Feb 30th).
+function createSafeMonthDate(year: number, month: number, day: number): Date {
+  const date = new Date(year, month, day);
+  // If the created date's day doesn't match, it means the day was invalid for that month (e.g. day 31 in a 30 day month).
+  // In that case, we roll back to the last day of the correct month.
+  if (date.getMonth() !== month) {
+    return new Date(year, month + 1, 0);
+  }
+  return date;
 }
 
 const TenancyForm = memo(function TenancyForm({
@@ -128,6 +138,8 @@ const TenancyForm = memo(function TenancyForm({
     const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
     const tenancyStartDate = new Date(startYear, startMonth - 1, startDay);
     const tenancyEndDate = new Date(endYear, endMonth - 1, endDay);
+    const dayOfMonth = tenancyStartDate.getDate();
+
 
     if (tenancyEndDate < tenancyStartDate) {
       toast({
@@ -139,19 +151,22 @@ const TenancyForm = memo(function TenancyForm({
       return;
     }
 
-    const months = eachMonthOfInterval({ start: tenancyStartDate, end: tenancyEndDate });
     const tenancyId = `t${Date.now()}`;
 
     const finalServiceCharges = serviceCharges
       .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
       .filter(sc => sc.name && sc.amount > 0);
-
-    const transactionsData = months.map((monthStartDate, index) => {
-      const dateStr = format(monthStartDate, 'yyyy-MM-dd');
-
+      
+    const transactionsData = [];
+    let currentDate = new Date(tenancyStartDate);
+    
+    while (currentDate <= tenancyEndDate) {
+      const isFirstMonth = currentDate.getFullYear() === tenancyStartDate.getFullYear() && currentDate.getMonth() === tenancyStartDate.getMonth();
+      const dueDate = createSafeMonthDate(currentDate.getFullYear(), currentDate.getMonth(), dayOfMonth);
+      
       const newTxData: Partial<Transaction> = {
         tenancyId,
-        date: dateStr,
+        date: format(dueDate, 'yyyy-MM-dd'),
         rent,
         serviceCharges: finalServiceCharges,
         amountPaid: 0,
@@ -159,17 +174,20 @@ const TenancyForm = memo(function TenancyForm({
         propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
         tenant, tenantEmail, tenantPhone,
         type: 'revenue' as const,
-        deposit: index === 0 ? deposit : 0,
+        deposit: isFirstMonth ? deposit : 0,
         tenancyStartDate: tenancyStartDateStr,
         tenancyEndDate: tenancyEndDateStr,
         contractUrl,
         ownerId: user.uid,
       };
-      
-      if (index === 0 && notes) newTxData.notes = notes;
 
-      return newTxData;
-    });
+      if (isFirstMonth && notes) newTxData.notes = notes;
+      
+      transactionsData.push(newTxData);
+
+      // Move to the next month, maintaining the original start day
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    }
 
     const batch = writeBatch(firestore);
     
