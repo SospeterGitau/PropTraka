@@ -534,7 +534,11 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
         <Card>
           <CardHeader>
             <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-            <CardDescription><Skeleton className="h-4 w-3/4" /></CardDescription>
+            <CardDescription asChild>
+                <div className="text-sm text-muted-foreground pt-1">
+                    <Skeleton className="h-4 w-3/4" />
+                </div>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Skeleton className="h-48 w-full" />
