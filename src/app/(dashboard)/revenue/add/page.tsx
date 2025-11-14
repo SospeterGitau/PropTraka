@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, memo } from 'react';
@@ -294,8 +295,8 @@ const TenancyForm = memo(function TenancyForm({
             <CardContent className="space-y-6 p-6">
                 <div className="space-y-2">
                     <Label htmlFor="propertyId">Property</Label>
-                    <Select name="propertyId" id="propertyId" required>
-                    <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
+                    <Select name="propertyId" required>
+                    <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
                     <SelectContent>
                         {properties.map(property => (
                         <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
