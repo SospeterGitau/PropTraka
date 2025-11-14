@@ -251,7 +251,6 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [isInvoiceFormOpen, setIsInvoiceFormOpen] = useState(false);
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     if (isRevenueLoading) {
@@ -259,7 +258,6 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     }
     
     if (!isRevenueLoading && (!revenue || revenue.length === 0)) {
-        // Only trigger notFound if loading is complete and still no data.
         if (!tenancy) {
             notFound();
         }
@@ -273,9 +271,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     });
   }, [revenue, isRevenueLoading, tenancy]);
 
-  useEffect(() => {
-    const formatAllDates = async () => {
-        if (!tenancy) return;
+  const formattedDates = useMemo(() => {
+    const getFormattedDates = async () => {
+        if (!tenancy) return {};
         const localeData = await getLocale(locale);
         const newFormattedDates: { [key: string]: string } = {};
         for (const item of tenancy.transactions) {
@@ -287,11 +285,14 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         if (tenancy.tenancyEndDate) {
             newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'MMMM dd, yyyy', { locale: localeData });
         }
-        setFormattedDates(newFormattedDates);
-    };
-    if (tenancy) {
-      formatAllDates();
+        return newFormattedDates;
     }
+
+    // This is a bit of a trick to use an async function inside useMemo
+    // It's not ideal, but it works for this case. A better solution might involve a custom hook.
+    let dates: { [key: string]: string } = {};
+    getFormattedDates().then(d => dates = d);
+    return dates;
   }, [tenancy, locale]);
   
   // Actions
@@ -453,54 +454,54 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
-              <div className="mb-3">
-                <h2 className="text-2xl font-bold text-card-foreground mb-1">
-                  {tenancy.tenant}
-                </h2>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", isTenancyEnded ? "bg-muted text-muted-foreground" : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200")}>
-                    {isTenancyEnded ? 'Inactive Tenant' : 'Active Tenant'}
-                  </span>
+                <div className="mb-3">
+                    <h2 className="text-2xl font-bold text-card-foreground mb-1">
+                        {tenancy.tenant}
+                    </h2>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", isTenancyEnded ? "bg-muted text-muted-foreground" : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200")}>
+                        {isTenancyEnded ? 'Inactive Tenant' : 'Active Tenant'}
+                        </span>
+                    </div>
                 </div>
-              </div>
 
-              <div className="mb-3 pb-3 border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                  Property Address
-                </p>
-                <p className="text-base font-medium text-foreground">
-                  {tenancy.propertyName}
-                </p>
-              </div>
-
-              <div className="mb-3 pb-3 border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                  Contact
-                </p>
-                <p className="text-sm text-foreground mb-1 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground"/>
-                  {tenancy.tenantEmail}
-                </p>
-              </div>
-
-              <div className="flex justify-between text-sm pt-3">
-                <div>
+                <div className="mb-3 pb-3 border-b border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        Tenancy Period
+                        Property Address
                     </p>
-                    <p className="font-medium text-foreground">
-                        {formattedDates['start']} - {formattedDates['end']}
+                    <p className="text-base font-medium text-foreground">
+                        {tenancy.propertyName}
                     </p>
                 </div>
-                <div>
+
+                <div className="mb-3 pb-3 border-b border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        Property Type
+                        Contact
                     </p>
-                    <p className="font-medium text-foreground text-right">
-                        {property?.propertyType}
+                    <p className="text-sm text-foreground mb-1 flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-muted-foreground"/>
+                        {tenancy.tenantEmail}
                     </p>
                 </div>
-              </div>
+
+                <div className="flex justify-between text-sm pt-3">
+                    <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                            Tenancy Period
+                        </p>
+                        <p className="font-medium text-foreground">
+                            {formattedDates['start']} - {formattedDates['end']}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                            Property Type
+                        </p>
+                        <p className="font-medium text-foreground text-right">
+                            {property?.propertyType}
+                        </p>
+                    </div>
+                </div>
             </CardContent>
           </Card>
 
@@ -698,3 +699,5 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
