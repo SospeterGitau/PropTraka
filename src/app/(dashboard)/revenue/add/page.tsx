@@ -3,7 +3,7 @@
 import { useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { format, getDaysInMonth, differenceInDays, isSameMonth } from 'date-fns';
+import { format, getDaysInMonth, isSameMonth } from 'date-fns';
 import type { Property, Transaction, ServiceCharge as ApiServiceCharge } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
@@ -69,7 +69,7 @@ const TenancyForm = memo(function TenancyForm({
 
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
     const newCharges = [...serviceCharges];
-    (newCharges[index] as any)[field] = value;
+    newCharges[index][field] = value;
     setServiceCharges(newCharges);
   };
   
@@ -171,24 +171,61 @@ const TenancyForm = memo(function TenancyForm({
         const isLastMonth = isSameMonth(currentDate, tenancyEndDate);
         
         const dueDate = createSafeMonthDate(year, month, dayOfMonth);
-
-        let finalRent = rent;
+        const daysInMonth = getDaysInMonth(currentDate);
         let proRataNotes: string | undefined = undefined;
 
-        if (isLastMonth && tenancyEndDate.getDate() < getDaysInMonth(tenancyEndDate)) {
-            const daysInMonth = getDaysInMonth(tenancyEndDate);
-            const dailyRate = rent / daysInMonth;
-            const activeDays = tenancyEndDate.getDate();
-            finalRent = dailyRate * activeDays;
-            proRataNotes = `Pro-rated rent for ${activeDays} days in the final month.`;
+        // ============================================
+        // PRO-RATA RENT CALCULATION (IMPROVED)
+        // ============================================
+        let rentForPeriod = rent; // Default to full rent
+        let occupiedDays = 0;
+
+        // Using UTC dates to avoid timezone-related off-by-one errors
+        const startDay = tenancyStartDate.getUTCDate();
+        const endDay = tenancyEndDate.getUTCDate();
+
+        if (isFirstMonth && isLastMonth) {
+          // SCENARIO 1: Single-month tenancy (e.g., Feb 03 - Feb 23)
+          occupiedDays = endDay - startDay + 1;
+          const dailyRent = rent / daysInMonth;
+          rentForPeriod = dailyRent * occupiedDays;
+          if (occupiedDays !== daysInMonth) {
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
+          }
+        } 
+        else if (isFirstMonth) {
+          // SCENARIO 2: First month of multi-month tenancy
+          occupiedDays = daysInMonth - startDay + 1;
+          const isFullPeriod = startDay === 1;
+          
+          if (!isFullPeriod) {
+            const dailyRent = rent / daysInMonth;
+            rentForPeriod = dailyRent * occupiedDays; // Pro-rated
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+          }
         }
-      
-        const txNotes = isLastMonth ? proRataNotes : (isFirstMonth ? notes : undefined);
+        else if (isLastMonth) {
+          // SCENARIO 3: Last month of multi-month tenancy
+          occupiedDays = endDay;
+          const isFullPeriod = endDay === daysInMonth;
+          
+          if (!isFullPeriod) {
+            const dailyRent = rent / daysInMonth;
+            rentForPeriod = dailyRent * occupiedDays; // Pro-rated
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+          }
+        }
+        // SCENARIO 4: Middle months - always full rent, rentForPeriod is already `rent`
+
+        // Round to 2 decimal places to avoid floating point issues
+        rentForPeriod = Math.round(rentForPeriod * 100) / 100;
+        
+        const txNotes = proRataNotes ? proRataNotes : (isFirstMonth ? notes : undefined);
 
         const newTxData: Partial<Transaction> = {
             tenancyId,
             date: format(dueDate, 'yyyy-MM-dd'),
-            rent: finalRent,
+            rent: rentForPeriod,
             serviceCharges: finalServiceCharges,
             amountPaid: 0,
             propertyId,
