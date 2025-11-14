@@ -179,19 +179,12 @@ const TenancyForm = memo(function TenancyForm({
         let finalRent = rent;
         let proRataNotes: string | undefined = undefined;
 
-        if(isLastMonth && !isSameMonth(tenancyStartDate, tenancyEndDate) && tenancyEndDate.getDate() !== dueDate.getDate()) {
-            const cycleStartDate = dueDate;
-            const daysInCycle = differenceInDays(
-                createSafeMonthDate(year, month + 1, dayOfMonth), 
-                cycleStartDate
-            );
-
-            const activeDaysInCycle = differenceInDays(tenancyEndDate, cycleStartDate) + 1;
-
-            if (activeDaysInCycle > 0 && daysInCycle > 0) {
-                finalRent = (rent / daysInCycle) * activeDaysInCycle;
-                proRataNotes = `Pro-rated rent for ${activeDaysInCycle} days in the final month.`;
-            }
+        if (isLastMonth && tenancyEndDate.getDate() < getDaysInMonth(tenancyEndDate)) {
+            const daysInMonth = getDaysInMonth(tenancyEndDate);
+            const dailyRate = rent / daysInMonth;
+            const activeDays = tenancyEndDate.getDate();
+            finalRent = dailyRate * activeDays;
+            proRataNotes = `Pro-rated rent for ${activeDays} days in the final month.`;
         }
         
         const txNotes = isLastMonth ? proRataNotes : (isFirstMonth ? notes : undefined);
@@ -212,9 +205,9 @@ const TenancyForm = memo(function TenancyForm({
             contractUrl,
             ownerId: user.uid,
         };
-
+        
         if (txNotes) {
-            newTxData.notes = txNotes;
+          newTxData.notes = txNotes;
         }
         
         if (existingTx?.id) newTxData.id = existingTx.id;
