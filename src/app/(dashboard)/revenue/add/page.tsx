@@ -4,7 +4,7 @@ import { useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format, getDaysInMonth, differenceInDays, isSameMonth } from 'date-fns';
-import type { Property, Transaction, ServiceCharge } from '@/lib/types';
+import type { Property, Transaction, ServiceCharge as ApiServiceCharge } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,12 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useDataContext } from '@/context/data-context';
+
+// Local type for form state management to handle string inputs
+type FormServiceCharge = {
+  name: string;
+  amount: string;
+};
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
@@ -48,13 +54,13 @@ const TenancyForm = memo(function TenancyForm({
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
-  const [serviceCharges, setServiceCharges] = useState<ServiceCharge[]>([]);
+  const [serviceCharges, setServiceCharges] = useState<FormServiceCharge[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
   const addServiceCharge = () => {
-    setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
+    setServiceCharges([...serviceCharges, { name: '', amount: '0' }]);
   };
 
   const removeServiceCharge = (index: number) => {
@@ -63,11 +69,7 @@ const TenancyForm = memo(function TenancyForm({
 
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
     const newCharges = [...serviceCharges];
-    if (field === 'amount') {
-      newCharges[index].amount = parseFloat(value) || 0;
-    } else {
-      (newCharges[index] as any)[field] = value;
-    }
+    (newCharges[index] as any)[field] = value;
     setServiceCharges(newCharges);
   };
   
@@ -155,7 +157,7 @@ const TenancyForm = memo(function TenancyForm({
 
     const tenancyId = `t${Date.now()}`;
 
-    const finalServiceCharges = serviceCharges
+    const finalServiceCharges: ApiServiceCharge[] = serviceCharges
       .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
       .filter(sc => sc.name && sc.amount > 0);
       
@@ -308,7 +310,7 @@ const TenancyForm = memo(function TenancyForm({
                     {serviceCharges.map((charge, index) => (
                         <div key={index} className="flex items-center gap-2">
                         <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                        <Input type="number" placeholder="Amount" value={charge.amount.toString()} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                        <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                     ))}
