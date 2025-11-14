@@ -252,7 +252,7 @@ const ExpensesClient = memo(function ExpensesClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Transaction | Omit<Transaction, 'id'>) => {
+  const handleFormSubmit = async (data: Transaction | Omit<Transaction, 'id' | 'ownerId'>) => {
     if (!user) return;
     
     if ('id' in data) { // Editing existing expense

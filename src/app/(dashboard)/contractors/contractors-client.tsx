@@ -89,7 +89,8 @@ const ContractorsClient = memo(function ContractorsClient() {
     if (!user) return;
     
     if ('id' in data) {
-      await updateDoc(doc(firestore, 'contractors', data.id), data);
+      const { id, ...contractorData } = data;
+      await updateDoc(doc(firestore, 'contractors', id), contractorData);
       addChangeLogEntry({
         type: 'Contractor',
         action: 'Updated',

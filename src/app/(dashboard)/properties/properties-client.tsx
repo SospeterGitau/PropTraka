@@ -110,7 +110,8 @@ const PropertiesClient = memo(function PropertiesClient() {
     if (!user) return;
 
     if ('id' in data) {
-      await updateDoc(doc(firestore, 'properties', data.id), data);
+      const { id, ...propertyData } = data;
+      await updateDoc(doc(firestore, 'properties', id), propertyData);
       addChangeLogEntry({
         type: 'Property',
         action: 'Updated',

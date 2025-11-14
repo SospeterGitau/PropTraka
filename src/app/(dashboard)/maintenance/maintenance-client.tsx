@@ -132,7 +132,8 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     if (!user) return;
 
     if ('id' in data) {
-      await updateDoc(doc(firestore, 'maintenanceRequests', data.id), data);
+      const { id, ...requestData } = data;
+      await updateDoc(doc(firestore, 'maintenanceRequests', id), requestData);
       addChangeLogEntry({
         type: 'Maintenance',
         action: 'Updated',
@@ -151,9 +152,9 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     setIsFormOpen(false);
   };
   
-  const handleExpenseFormSubmit = async (data: Transaction) => {
+  const handleExpenseFormSubmit = async (data: Transaction | Omit<Transaction, 'id' | 'ownerId'>) => {
     if(!user) return;
-    const { id, type, ...expenseData } = data;
+    const { id, type, ...expenseData } = data as Transaction;
     const docRef = await addDoc(collection(firestore, 'expenses'), { ...expenseData, type: 'expense', ownerId: user.uid });
     addChangeLogEntry({
       type: 'Expense',
