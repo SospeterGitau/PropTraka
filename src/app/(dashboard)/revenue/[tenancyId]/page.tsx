@@ -34,6 +34,7 @@ import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 
 function PaymentForm({
   isOpen,
@@ -279,10 +280,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             newFormattedDates[item.id] = format(new Date(item.date), 'dd MMM yyyy', { locale: localeData });
         }
         if (tenancy.tenancyStartDate) {
-           newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'dd MMM yyyy', { locale: localeData });
+           newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'PP', { locale: localeData });
         }
         if (tenancy.tenancyEndDate) {
-            newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'dd MMM yyyy', { locale: localeData });
+            newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'PP', { locale: localeData });
         }
         setFormattedDates(newFormattedDates);
     };
@@ -454,7 +455,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         </div>
       </PageHeader>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
            <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
                 <div className="mb-4">
@@ -508,69 +509,54 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-card-foreground">
-                Financial Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Due to Date</span>
-                <span className="text-lg font-bold text-destructive">{formatCurrency(totalDueToDate, locale, currency)}</span>
-              </div>
-
-              <div className="flex justify-between items-baseline">
-                <span className="text-sm text-muted-foreground">Total Paid</span>
-                <span className="text-lg font-bold text-green-600 dark:text-green-500">{formatCurrency(totalPaid, locale, currency)}</span>
-              </div>
-
-              <div className="border-t border-border pt-3 mt-3">
-                <div className={cn("flex justify-between items-baseline")}>
-                    <p className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                    Current Balance
-                    </p>
-                    <p className={cn("text-2xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-foreground')}>
-                    {formatCurrency(currentBalance, locale, currency)}
-                    </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-card-foreground flex items-center gap-2">
-                <BadgeCheck className="w-5 h-5 text-muted-foreground"/>
-                Deposit Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              {isDepositReturned ? (
-                <div className="text-center">
-                   <p className="text-sm font-medium text-muted-foreground mb-2">Deposit Status</p>
-                  <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-muted text-muted-foreground">
-                     <BadgeCheck className="mr-2 h-5 w-5 text-primary"/>
-                    Deposit Returned
+          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow flex flex-col">
+              <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-semibold text-card-foreground">
+                      Financial Overview
+                  </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 flex-grow">
+                  <div className="flex justify-between items-baseline">
+                      <span className="text-sm text-muted-foreground">Total Due to Date</span>
+                      <span className="text-lg font-bold text-destructive">{formatCurrency(totalDueToDate, locale, currency)}</span>
                   </div>
-                </div>
-              ) : isTenancyEnded ? (
-                <Button size="lg" onClick={handleReturnDeposit} disabled={isDepositReturned}>
-                    <CircleDollarSign className="mr-2 h-5 w-5" />
-                    Return Deposit
-                </Button>
-              ) : (
-                <div className="text-center">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Deposit Held</p>
-                  <p className="text-4xl font-bold text-green-600 dark:text-green-400 mb-1">
-                    {formatCurrency(depositAmount, locale, currency)}
-                  </p>
-                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
-                    ✓ Secured
+
+                  <div className="flex justify-between items-baseline">
+                      <span className="text-sm text-muted-foreground">Total Paid</span>
+                      <span className="text-lg font-bold text-green-600 dark:text-green-500">{formatCurrency(totalPaid, locale, currency)}</span>
                   </div>
-                </div>
-              )}
-            </CardContent>
+
+                  <div className="border-t border-border pt-3 mt-3">
+                      <div className={cn("flex justify-between items-baseline")}>
+                          <p className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                              Current Balance
+                          </p>
+                          <p className={cn("text-2xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-foreground')}>
+                              {formatCurrency(currentBalance, locale, currency)}
+                          </p>
+                      </div>
+                  </div>
+              </CardContent>
+              <Separator />
+              <CardFooter className="p-4 flex items-center justify-center">
+                   {isDepositReturned ? (
+                        <div className="text-center">
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-muted text-muted-foreground">
+                                <BadgeCheck className="mr-2 h-5 w-5 text-primary" />
+                                Deposit Returned
+                            </div>
+                        </div>
+                    ) : isTenancyEnded ? (
+                        <Button size="sm" onClick={handleReturnDeposit} disabled={isDepositReturned}>
+                            <CircleDollarSign className="mr-2 h-4 w-4" />
+                            Return Deposit of {formatCurrency(depositAmount, locale, currency)}
+                        </Button>
+                    ) : (
+                        <div className="text-center text-sm text-muted-foreground">
+                            Deposit Held: <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(depositAmount, locale, currency)}</span>
+                        </div>
+                    )}
+              </CardFooter>
           </Card>
       </div>
 
