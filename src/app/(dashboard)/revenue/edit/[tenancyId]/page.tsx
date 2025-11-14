@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, memo } from 'react';
@@ -96,7 +97,7 @@ const TenancyForm = memo(function TenancyForm({
 
   const handleServiceChargeChange = (index: number, field: 'name' | 'amount', value: string) => {
     const newCharges = [...serviceCharges];
-    newCharges[index][field-'] = value;
+    newCharges[index][field] = value;
     setServiceCharges(newCharges);
   };
   
@@ -182,7 +183,6 @@ const TenancyForm = memo(function TenancyForm({
         // PRO-RATA RENT CALCULATION (IMPROVED)
         // ============================================
         let rentForPeriod = rent; // Default to full rent
-        let occupiedDays = 0;
 
         // Using UTC dates to avoid timezone-related off-by-one errors
         const startDay = tenancyStartDate.getUTCDate();
@@ -190,16 +190,17 @@ const TenancyForm = memo(function TenancyForm({
 
         if (isFirstMonth && isLastMonth) {
           // SCENARIO 1: Single-month tenancy (e.g., Feb 03 - Feb 23)
-          occupiedDays = endDay - startDay + 1;
-          const dailyRent = rent / daysInMonth;
-          rentForPeriod = dailyRent * occupiedDays;
-          if (occupiedDays !== daysInMonth) {
+          const occupiedDays = endDay - startDay + 1;
+          const isFullPeriod = occupiedDays >= daysInMonth;
+          if (!isFullPeriod) {
+            const dailyRent = rent / daysInMonth;
+            rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
           }
         } 
         else if (isFirstMonth) {
           // SCENARIO 2: First month of multi-month tenancy
-          occupiedDays = daysInMonth - startDay + 1;
+          const occupiedDays = daysInMonth - startDay + 1;
           const isFullPeriod = startDay === 1;
           
           if (!isFullPeriod) {
@@ -210,8 +211,8 @@ const TenancyForm = memo(function TenancyForm({
         }
         else if (isLastMonth) {
           // SCENARIO 3: Last month of multi-month tenancy
-          occupiedDays = endDay;
-          const isFullPeriod = endDay === daysInMonth;
+          const occupiedDays = endDay;
+          const isFullPeriod = endDay >= daysInMonth;
           
           if (!isFullPeriod) {
             const dailyRent = rent / daysInMonth;
