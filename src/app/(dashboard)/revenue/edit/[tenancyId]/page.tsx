@@ -151,7 +151,13 @@ const TenancyForm = memo(function TenancyForm({
         const year = currentDate.getUTCFullYear();
         const month = currentDate.getUTCMonth();
         const isFirstMonth = year === tenancyStartDate.getUTCFullYear() && month === tenancyStartDate.getUTCMonth();
+        
         const dueDate = createSafeMonthDate(year, month, dayOfMonth);
+        console.log('=== Monthly Record Debug (Edit) ===');
+        console.log('Year:', year, 'Month:', month, 'Day:', dayOfMonth);
+        console.log('Created dueDate:', dueDate);
+        console.log('Formatted dueDate:', format(dueDate, 'yyyy-MM-dd'));
+        console.log('===========================');
 
         const existingTx = existingTransactions.find(tx => {
             if (!tx.date) return false;
