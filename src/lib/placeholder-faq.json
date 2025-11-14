@@ -5,6 +5,10 @@
         "content": "LeaseLync is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales—from those with a single unit to those overseeing large portfolios—efficiently manage their rental properties. It provides a centralised dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of LeaseLync is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place."
     },
     {
+        "title": "How do I navigate the app?",
+        "content": "LeaseLync is designed to be mobile-first and intuitive. Here’s how to find your way around:\n\n1.  **Bottom Navigation Bar:** This is your primary navigation tool. It provides quick access to the four main sections of the app:\n    *   **Dashboard:** Your home screen with a high-level overview of your portfolio's performance.\n    *   **Menu:** The central hub to access every single feature in the app, such as Properties, Revenue, Expenses, Reports, and more.\n    *   **Activity:** A feed showing all recent changes and events in your account.\n    *   **Account:** Manage your settings, subscription, and knowledge base.\n\n2.  **Menu Page:** Think of this as the app's table of contents. From here, you can jump to any management or analysis page, including those not on the main bottom bar.\n\n3.  **Page Headers:** At the top of each page, you'll find the page title and context-specific buttons, such as 'Add Property' or 'Generate Report'."
+    },
+    {
         "title": "How do I sign up or log in?",
         "content": "LeaseLync uses a simplified authentication system. Simply use the Login page to enter your email and a password. If an account with that email already exists, you will be logged in. If not, a new account will be created for you automatically with those credentials. If you forget your password, you can use the 'Forgot Password?' link on the login page to securely reset it via email."
     },
@@ -14,46 +18,46 @@
     },
     {
         "title": "How do I manage my properties?",
-        "content": "The Properties page is where you can add, view, and edit all the properties in your portfolio. When adding a property, you can input key details like address, property type (Domestic or Commercial), building type, number of bedrooms/bathrooms, and financial information such as purchase price, purchase taxes/fees, current value, mortgage balance, and the asking/target rent."
+        "content": "Navigate to **Menu > Properties**. This page is where you can add, view, and edit all the properties in your portfolio. When adding a property, you can input key details like address, property type (Domestic or Commercial), building type, number of bedrooms/bathrooms, and financial information such as purchase price, purchase taxes/fees, current value, mortgage balance, and the asking/target rent."
     },
     {
         "title": "How do I track revenue and tenancies?",
-        "content": "All income is managed on the Revenue page. Revenue is tracked by creating a 'Tenancy,' which links a tenant to a property for a specific lease period. When you add a tenancy, you can set the base rent, a security deposit, and any fixed monthly service charges (e.g., security fees). The app automatically generates the expected monthly payment records. You can then click on a tenancy to view its detailed breakdown and record payments. To handle variable charges like a metered water bill, you can edit the invoice for a specific month to add or adjust charges."
+        "content": "All income is managed by navigating to **Menu > Revenue**. Revenue is tracked by creating a 'Tenancy,' which links a tenant to a property for a specific lease period. When you add a tenancy, you can set the base rent, a security deposit, and any fixed monthly service charges (e.g., security fees). The app automatically generates the expected monthly payment records. You can then click on a tenancy to view its detailed breakdown and record payments. To handle variable charges like a metered water bill, you can edit the invoice for a specific month to add or adjust charges."
     },
     {
         "title": "How do I handle a tenancy that ends early?",
-        "content": "You can end a tenancy earlier than its original end date. Go to the specific tenancy's detail page by clicking on it from the Revenue page. In the header, click the 'End Tenancy' button. A dialog will appear allowing you to select a new, earlier end date. Confirming this action will automatically delete any future, unpaid rent records after the new end date, ensuring your financial projections remain accurate."
+        "content": "You can end a tenancy earlier than its original end date. Navigate to **Menu > Revenue** and click on the specific tenancy. In the header, click the 'End Tenancy' button. A dialog will appear allowing you to select a new, earlier end date. Confirming this action will automatically delete any future, unpaid rent records after the new end date, ensuring your financial projections remain accurate."
     },
     {
         "title": "How do I manage maintenance and repairs?",
-        "content": "The Maintenance page provides a Kanban-style board to track tasks through stages: 'To Do,' 'In Progress,' 'Done,' and 'Cancelled.' You can create new requests, assign them to a property and a contractor, set a priority, and log the reported date. Once a task is moved to 'Done,' you can log the final cost and generate a corresponding expense record with a single click, linking it directly to the completed job."
+        "content": "Navigate to **Menu > Maintenance**. This page provides a Kanban-style board to track tasks through stages: 'To Do,' 'In Progress,' 'Done,' and 'Cancelled.' You can create new requests, assign them to a property and a contractor, set a priority, and log the reported date. Once a task is moved to 'Done,' you can log the final cost and generate a corresponding expense record with a single click, linking it directly to the completed job."
     },
     {
         "title": "How do I manage contractors and vendors?",
-        "content": "You can maintain a directory of your trusted contractors and service providers on the Contractors page. For each contractor, you can store their name, specialty, contact details (email and phone), and any relevant notes. This list is then used to assign jobs in the Maintenance section, keeping your records organised."
+        "content": "You can maintain a directory of your trusted contractors and service providers by navigating to **Menu > Contractors**. For each contractor, you can store their name, specialty, contact details (email and phone), and any relevant notes. This list is then used to assign jobs in the Maintenance section, keeping your records organised."
     },
     {
         "title": "How do I manage expenses?",
-        "content": "Use the Expenses page to log all costs. You can categorise each expense (e.g., Repairs, Insurance), assign it to a property, link it to a contractor from your list, and add notes or a URL to a receipt. The system supports both 'One-off' and 'Recurring' expenses, helping you track everything from a single repair to monthly management fees."
+        "content": "Navigate to **Menu > Expenses** to log all costs. You can categorise each expense (e.g., Repairs, Insurance), assign it to a property, link it to a contractor from your list, and add notes or a URL to a receipt. The system supports both 'One-off' and 'Recurring' expenses, helping you track everything from a single repair to monthly management fees."
     },
     {
         "title": "What kind of reports can I generate?",
-        "content": "The Financial Reports page provides powerful tools to understand your business's performance.\n\n- **Interactive Dashboards:** Switch between a 'Revenue Analysis' view to compare projected vs. actual income, and a 'P&L Statement' view that summarises your income and expenses for any period. You can toggle between monthly and yearly views and navigate through different periods.\n\n- **AI-Powered P&L Statements:** For a more formal report, use the 'P&L Statement' generator. This AI tool creates a professional Profit and Loss statement with an executive summary, suitable for sharing with banks or investors.\n\n- **AI-Powered Market Research:** Get an AI-generated analysis of how your properties' rental prices compare to current market rates in Kenya, complete with data-backed recommendations."
+        "content": "Navigate to **Menu > Reports** for powerful tools to understand your business's performance.\n\n- **Interactive Dashboards:** Switch between a 'Revenue Analysis' view to compare projected vs. actual income, and a 'P&L Statement' view that summarises your income and expenses for any period. You can toggle between monthly and yearly views and navigate through different periods.\n\n- **AI-Powered P&L Statements:** For a more formal report, use the 'P&L Statement' generator. This AI tool creates a professional Profit and Loss statement with an executive summary, suitable for sharing with banks or investors.\n\n- **AI-Powered Market Research:** Get an AI-generated analysis of how your properties' rental prices compare to current market rates, complete with data-backed recommendations."
     },
     {
         "title": "How can I see who is behind on rent?",
-        "content": "The Arrears page automatically lists all tenants with outstanding balances on payments that are past their due date. It shows how much is owed, how many days the payment is overdue, and provides two actions:\n\n- **Send Reminder:** This button opens a pre-filled email to the tenant, which you can send from your own email client.\n\n- **Request Payment:** This button opens a dialog to initiate a payment request. This feature is designed for future integration with payment gateways like Pesapal or InstaSend to automate M-Pesa payment requests."
+        "content": "Navigate to **Menu > Arrears**. This page automatically lists all tenants with outstanding balances on payments that are past their due date. It shows how much is owed, how many days the payment is overdue, and provides two actions:\n\n- **Send Reminder:** This button opens a pre-filled email to the tenant, which you can send from your own email client.\n\n- **Request Payment:** This button opens a dialog to initiate a payment request. This feature is designed for future integration with payment gateways like Pesapal or InstaSend to automate M-Pesa payment requests."
     },
     {
         "title": "What is the Calendar for?",
-        "content": "The Calendar provides a visual timeline of important events. It automatically populates with tenancy start and end dates, logged expense transactions, and reported maintenance requests, giving you a clear view of key dates and activities across your portfolio each month."
+        "content": "Navigate to **Menu > Calendar**. The Calendar provides a visual timeline of important events. It automatically populates with tenancy start and end dates, logged expense transactions, and reported maintenance requests, giving you a clear view of key dates and activities across your portfolio each month."
     },
     {
         "title": "Can I change the currency or other settings?",
-        "content": "Yes. The Account page is where you manage all your personal and application-wide settings. It is organized into four tabs:\n\n- **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name for reports, define your tax residency status, and change your password.\n\n- **Subscription & Billing:** Manage your LeaseLync subscription plan.\n\n- **Changelog:** View a complete activity log of all changes made in your account.\n\n- **Knowledge Base:** Add, edit, or remove the help articles that are used by the FAQ search system."
+        "content": "Yes. Navigate to **Account** using the bottom navigation bar. This page is where you manage all your personal and application-wide settings. It is organized into three tabs:\n\n- **Profile & Settings:** Customise the currency, date format, and color theme. You can also set your company name for reports, define your tax residency status, and change your password.\n\n- **Subscription:** Manage your LeaseLync subscription plan.\n\n- **Knowledge Base:** Add, edit, or remove the help articles that are used by the app's AI chat and help search system."
     },
     {
-        "title": "What is the Changelog for?",
-        "content": "The Changelog provides an audit trail of all significant activities that occur within your account. This includes creating a new property, updating a tenancy, logging an expense, and more. It helps you keep track of all changes made to your portfolio. You can find the Changelog in the Account page under the 'Changelog' tab."
+        "title": "What is the Activity Feed for?",
+        "content": "Navigate to **Activity** using the bottom navigation bar. The Activity Feed provides an audit trail of all significant events that occur within your account. This includes creating a new property, updating a tenancy, logging an expense, and more. It helps you keep track of all changes made to your portfolio."
     }
 ]

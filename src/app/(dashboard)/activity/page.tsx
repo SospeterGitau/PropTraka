@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo, memo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CreditCard, Building2, FileText, HandCoins, Receipt, Wrench } from 'lucide-react';
+import { CreditCard, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck } from 'lucide-react';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import type { ChangeLogEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,7 +38,7 @@ const ChangelogPage = memo(function ChangelogPage() {
       Payment: <HandCoins className="h-4 w-4" />,
       Maintenance: <Wrench className="h-4 w-4" />,
       Contractor: <Wrench className="h-4 w-4" />,
-      Subscription: <CreditCard className="h-4 w-4" />,
+      Subscription: <BadgeCheck className="h-4 w-4" />,
   };
   
   const sortedChangelog = useMemo(() => {
