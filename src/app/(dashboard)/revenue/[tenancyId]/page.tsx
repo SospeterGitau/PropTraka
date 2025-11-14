@@ -459,7 +459,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </div>
               </div>
 
-              <div className="mb-4 pb-4 border-b border-border">
+              <div className="mb-3 pb-3 border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                   Property Address
                 </p>
@@ -468,7 +468,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </p>
               </div>
 
-              <div className="mb-4 pb-4 border-b border-border">
+              <div className="mb-3 pb-3 border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   Contact
                 </p>
@@ -478,7 +478,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </p>
               </div>
 
-              <div className="mb-4 pb-4 border-b border-border">
+              <div className="mb-3 pb-3 border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   Tenancy Period
                 </p>
@@ -551,7 +551,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
               ) : (
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground mb-2">Deposit Held</p>
-                  <p className="text-5xl font-bold text-green-600 dark:text-green-400 mb-1">
+                  <p className="text-4xl font-bold text-green-600 dark:text-green-400 mb-1">
                     {formatCurrency(depositAmount, locale, currency)}
                   </p>
                   <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
@@ -692,5 +692,7 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
 
     
