@@ -36,6 +36,11 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
   return date;
 }
 
+function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 
 const TenancyForm = memo(function TenancyForm({
   tenancyToEdit,
@@ -118,10 +123,8 @@ const TenancyForm = memo(function TenancyForm({
       return;
     }
     
-    const [startYear, startMonth, startDay] = tenancyStartDateStr.split('-').map(Number);
-    const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
-    const tenancyStartDate = new Date(startYear, startMonth - 1, startDay);
-    const tenancyEndDate = new Date(endYear, endMonth - 1, endDay);
+    const tenancyStartDate = parseLocalDate(tenancyStartDateStr);
+    const tenancyEndDate = parseLocalDate(tenancyEndDateStr);
     const dayOfMonth = tenancyStartDate.getDate();
 
     if (tenancyEndDate < tenancyStartDate) {
@@ -149,7 +152,8 @@ const TenancyForm = memo(function TenancyForm({
         const dueDate = createSafeMonthDate(currentDate.getFullYear(), currentDate.getMonth(), dayOfMonth);
 
         const existingTx = existingTransactions.find(tx => {
-            const txDate = new Date(tx.date);
+            if (!tx.date) return false;
+            const txDate = parseLocalDate(tx.date);
             return txDate.getFullYear() === dueDate.getFullYear() && txDate.getMonth() === dueDate.getMonth();
         });
 
@@ -180,10 +184,10 @@ const TenancyForm = memo(function TenancyForm({
     
     const batch = writeBatch(firestore);
     
-    const newTxDates = new Set(transactionsData.map(tx => format(new Date(tx.date!), 'yyyy-MM')));
+    const newTxDates = new Set(transactionsData.map(tx => format(parseLocalDate(tx.date!), 'yyyy-MM')));
     
     existingTransactions.forEach(tx => {
-        const txDate = format(new Date(tx.date), 'yyyy-MM');
+        const txDate = format(parseLocalDate(tx.date), 'yyyy-MM');
         if (!newTxDates.has(txDate)) {
              batch.delete(doc(firestore, 'revenue', tx.id));
         }
@@ -255,11 +259,11 @@ const TenancyForm = memo(function TenancyForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="tenancyStartDate">Tenancy Start Date</Label>
-                        <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(new Date(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
+                        <Input id="tenancyStartDate" name="tenancyStartDate" type="date" defaultValue={tenancyToEdit?.tenancyStartDate ? format(parseLocalDate(tenancyToEdit.tenancyStartDate), 'yyyy-MM-dd') : ''} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="tenancyEndDate">Tenancy End Date</Label>
-                        <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(new Date(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
+                        <Input id="tenancyEndDate" name="tenancyEndDate" type="date" defaultValue={tenancyToEdit?.tenancyEndDate ? format(parseLocalDate(tenancyToEdit.tenancyEndDate), 'yyyy-MM-dd') : ''} required />
                     </div>
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

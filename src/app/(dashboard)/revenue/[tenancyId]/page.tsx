@@ -252,32 +252,29 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [isEndTenancyOpen, setIsEndTenancyOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    if (isRevenueLoading) {
-        setInitialLoadComplete(false);
-        return;
-    }
-
-    if (!isRevenueLoading && revenue.length > 0) {
+    if (!isRevenueLoading && revenue) {
+      if (revenue.length > 0) {
         const representativeTx = revenue[0];
         setTenancy({
             ...representativeTx,
             transactions: revenue.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
         });
+      }
+      setInitialLoadComplete(true);
     }
-    setInitialLoadComplete(true);
   }, [revenue, isRevenueLoading]);
 
 
-  const formattedDates = useMemo(() => {
-    if (!tenancy) return {};
+  useEffect(() => {
+    if (!tenancy) return;
     
-    const localeDataPromise = getLocale(locale);
-    const newFormattedDates: { [key: string]: string } = {};
+    const formatAllDates = async () => {
+        const localeData = await getLocale(locale);
+        const newFormattedDates: { [key: string]: string } = {};
 
-    const formatDates = async () => {
-        const localeData = await localeDataPromise;
         for (const item of tenancy.transactions) {
             newFormattedDates[item.id] = format(new Date(item.date), 'PPP', { locale: localeData });
         }
@@ -287,23 +284,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         if (tenancy.tenancyEndDate) {
             newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'PPP', { locale: localeData });
         }
+        setFormattedDates(newFormattedDates);
     };
-    
-    formatDates();
 
-    for (const item of tenancy.transactions) {
-        if (!newFormattedDates[item.id]) {
-           newFormattedDates[item.id] = format(new Date(item.date), 'PP'); 
-        }
-    }
-     if (tenancy.tenancyStartDate && !newFormattedDates['start']) {
-       newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'PP');
-    }
-    if (tenancy.tenancyEndDate && !newFormattedDates['end']) {
-        newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'PP');
-    }
-
-    return newFormattedDates;
+    formatAllDates();
   }, [tenancy, locale]);
   
   // Actions
