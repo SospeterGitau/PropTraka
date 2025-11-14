@@ -21,9 +21,9 @@ import {
 import { PropertyForm } from '@/components/property-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import type { Property, Transaction } from '@/lib/types';
-import { useUser, useFirestore, useDoc } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { useCollection, useDocumentData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query, DocumentReference } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
@@ -41,9 +41,11 @@ function PropertyDetailPageContent() {
   const { currency, locale } = settings;
 
   // Data Fetching
-  const propertyRef = useMemo(() => propertyId ? doc(firestore, 'properties', propertyId as string) : null, [firestore, propertyId]);
+  const propertyRef = useMemo(() => 
+      doc(firestore, 'properties', propertyId as string) as DocumentReference<Property>
+  , [firestore, propertyId]);
   
-  const { data: property, loading: isPropertyLoading } = useDoc<Property>(propertyRef);
+  const [property, isPropertyLoading] = useDocumentData<Property>(propertyRef);
   
   const revenueQuery = useMemo(() => 
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
