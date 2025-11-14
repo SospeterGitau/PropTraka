@@ -109,8 +109,8 @@ const TenancyForm = memo(function TenancyForm({
     
     const [startYear, startMonth, startDay] = tenancyStartDateStr.split('-').map(Number);
     const [endYear, endMonth, endDay] = tenancyEndDateStr.split('-').map(Number);
-    const tenancyStartDate = new Date(Date.UTC(startYear, startMonth - 1, startDay));
-    const tenancyEndDate = new Date(Date.UTC(endYear, endMonth - 1, endDay));
+    const tenancyStartDate = new Date(startYear, startMonth - 1, startDay);
+    const tenancyEndDate = new Date(endYear, endMonth - 1, endDay);
 
     if (tenancyEndDate < tenancyStartDate) {
       toast({
