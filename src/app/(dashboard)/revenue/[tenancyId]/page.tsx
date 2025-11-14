@@ -273,9 +273,11 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const formattedDates = useMemo(() => {
     if (!tenancy) return {};
     
-    const getFormattedDates = async () => {
-        const localeData = await getLocale(locale);
-        const newFormattedDates: { [key: string]: string } = {};
+    const localeDataPromise = getLocale(locale);
+    const newFormattedDates: { [key: string]: string } = {};
+
+    const formatDates = async () => {
+        const localeData = await localeDataPromise;
         for (const item of tenancy.transactions) {
             newFormattedDates[item.id] = format(new Date(item.date), 'MMM dd, yyyy', { locale: localeData });
         }
@@ -285,13 +287,25 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         if (tenancy.tenancyEndDate) {
             newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'MMMM dd, yyyy', { locale: localeData });
         }
-        return newFormattedDates;
+    };
+    
+    // We don't await here, so it might not be ready on first render, but React will re-render when it is.
+    formatDates();
+
+    // This is synchronous part, so it might return empty on first pass
+    for (const item of tenancy.transactions) {
+        if (!newFormattedDates[item.id]) {
+           newFormattedDates[item.id] = format(new Date(item.date), 'MMM dd, yyyy'); // fallback
+        }
     }
-    // This is not ideal, but it's a quick way to handle the async nature inside useMemo.
-    // A more robust solution might involve a dedicated state for formatted dates updated in a separate effect.
-    let dates: { [key: string]: string } = {};
-    getFormattedDates().then(d => dates = d);
-    return dates;
+     if (tenancy.tenancyStartDate && !newFormattedDates['start']) {
+       newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'MMMM dd, yyyy');
+    }
+    if (tenancy.tenancyEndDate && !newFormattedDates['end']) {
+        newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'MMMM dd, yyyy');
+    }
+
+    return newFormattedDates;
   }, [tenancy, locale]);
   
   // Actions
@@ -415,8 +429,12 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     );
   }
 
-  if (!tenancy) {
+  if (!tenancy && initialLoadComplete) {
     notFound();
+  }
+  
+  if (!tenancy) {
+    return null; // Should be caught by notFound, but satisfies TS
   }
 
 
@@ -457,7 +475,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
-                <div className="mb-3">
+                <div className="mb-4">
                     <h2 className="text-2xl font-bold text-card-foreground mb-1">
                         {tenancy.tenant}
                     </h2>
@@ -468,7 +486,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     </div>
                 </div>
 
-                <div className="mb-3 pb-3 border-b border-border">
+                <div className="mb-4 pb-4 border-b border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                         Property Address
                     </p>
@@ -477,7 +495,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     </p>
                 </div>
 
-                <div className="mb-3 pb-3 border-b border-border">
+                <div className="mb-4 pb-4 border-b border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                         Contact
                     </p>
@@ -487,7 +505,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     </p>
                 </div>
 
-                <div className="flex justify-between text-sm pt-3">
+                <div className="flex justify-between text-sm pt-2">
                     <div className="space-y-1">
                         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             Tenancy Period
@@ -508,7 +526,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
+           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold text-card-foreground">
                 Financial Summary
@@ -548,8 +566,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             <CardContent className="flex flex-col items-center justify-center py-8">
               {isDepositReturned ? (
                 <div className="text-center">
-                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-muted text-muted-foreground">
-                     <BadgeCheck className="mr-2 h-5 w-5"/>
+                   <p className="text-sm font-medium text-muted-foreground mb-2">Deposit Status</p>
+                  <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-muted text-muted-foreground">
+                     <BadgeCheck className="mr-2 h-5 w-5 text-primary"/>
                     Deposit Returned
                   </div>
                 </div>
@@ -702,5 +721,3 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
-
-    
