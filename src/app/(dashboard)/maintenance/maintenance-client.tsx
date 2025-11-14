@@ -130,9 +130,8 @@ const MaintenanceClient = memo(function MaintenanceClient() {
 
   const handleFormSubmit = async (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => {
     if (!user) return;
-    const isEditing = 'id' in data;
 
-    if (isEditing) {
+    if ('id' in data) {
       await updateDoc(doc(firestore, 'maintenanceRequests', data.id), data);
       addChangeLogEntry({
         type: 'Maintenance',

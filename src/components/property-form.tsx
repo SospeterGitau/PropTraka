@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 interface PropertyFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Property, 'id'> | Property) => void;
+  onSubmit: (data: Omit<Property, 'id' | 'ownerId'> | Property) => void;
   property?: Property | null;
 }
 
@@ -48,7 +48,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
     const isEditing = !!property?.id;
     const id = property?.id || `p${Date.now()}`;
 
-    const data: Omit<Property, 'id'> | Property = {
+    const data: Omit<Property, 'id' | 'ownerId'> | Property = {
       ...(isEditing ? { id: property.id } : {}),
       addressLine1: formData.get('addressLine1') as string,
       city: formData.get('city') as string,
@@ -115,7 +115,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                 </div>
                 <div className="space-y-2">
                 <Label htmlFor="buildingType">Building Type</Label>
-                <Select value={buildingType} onValueChange={(value) => setBuildingType(value as Property['buildingType'])} required>
+                <Select name="buildingType" value={buildingType} onValueChange={(value) => setBuildingType(value as Property['buildingType'])} required>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a type" />
                     </SelectTrigger>

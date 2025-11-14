@@ -106,11 +106,10 @@ const PropertiesClient = memo(function PropertiesClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Property, 'id'> | Property) => {
+  const handleFormSubmit = async (data: Omit<Property, 'id' | 'ownerId'> | Property) => {
     if (!user) return;
-    const isEditing = 'id' in data;
 
-    if (isEditing) {
+    if ('id' in data) {
       await updateDoc(doc(firestore, 'properties', data.id), data);
       addChangeLogEntry({
         type: 'Property',

@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 interface ContractorFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Contractor, 'id'> | Contractor) => void;
+  onSubmit: (data: Omit<Contractor, 'id' | 'ownerId'> | Contractor) => void;
   contractor?: Contractor | null;
 }
 
@@ -28,7 +28,7 @@ export function ContractorForm({ isOpen, onClose, onSubmit, contractor }: Contra
     const formData = new FormData(event.currentTarget);
     const isEditing = !!contractor;
 
-    const data: Omit<Contractor, 'id'> | Contractor = {
+    const data: Omit<Contractor, 'id' | 'ownerId'> | Contractor = {
       ...(isEditing ? { id: contractor.id } : {}),
       name: formData.get('name') as string,
       specialty: formData.get('specialty') as string,

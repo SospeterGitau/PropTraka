@@ -252,11 +252,10 @@ const ExpensesClient = memo(function ExpensesClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Transaction) => {
+  const handleFormSubmit = async (data: Transaction | Omit<Transaction, 'id'>) => {
     if (!user) return;
-    const isEditing = !!data.id && expenses?.some(e => e.id === data.id);
     
-    if (isEditing) {
+    if ('id' in data) { // Editing existing expense
       const { id, ...expenseData } = data;
       await updateDoc(doc(firestore, 'expenses', id), expenseData);
       addChangeLogEntry({
@@ -265,9 +264,8 @@ const ExpensesClient = memo(function ExpensesClient() {
         description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was updated.`,
         entityId: data.id,
       });
-    } else {
-      const { id, type, ...expenseData } = data;
-      const docRef = await addDoc(collection(firestore, 'expenses'), { ...expenseData, type: 'expense', ownerId: user.uid });
+    } else { // Creating new expense
+      const docRef = await addDoc(collection(firestore, 'expenses'), { ...data, type: 'expense', ownerId: user.uid });
       addChangeLogEntry({
         type: 'Expense',
         action: 'Created',
@@ -275,6 +273,7 @@ const ExpensesClient = memo(function ExpensesClient() {
         entityId: docRef.id,
       });
     }
+    setIsFormOpen(false);
   };
   
   if (isDataLoading) {

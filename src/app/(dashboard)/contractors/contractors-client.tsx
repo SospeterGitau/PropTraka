@@ -85,17 +85,16 @@ const ContractorsClient = memo(function ContractorsClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Contractor, 'id'>) => {
+  const handleFormSubmit = async (data: Omit<Contractor, 'id' | 'ownerId'> | Contractor) => {
     if (!user) return;
-    const isEditing = !!selectedContractor;
     
-    if (isEditing) {
-      await updateDoc(doc(firestore, 'contractors', selectedContractor!.id), data);
+    if ('id' in data) {
+      await updateDoc(doc(firestore, 'contractors', data.id), data);
       addChangeLogEntry({
         type: 'Contractor',
         action: 'Updated',
         description: `Contractor "${data.name}" was updated.`,
-        entityId: selectedContractor!.id,
+        entityId: data.id,
       });
     } else {
       const docRef = await addDoc(collection(firestore, 'contractors'), { ...data, ownerId: user.uid });
@@ -106,6 +105,7 @@ const ContractorsClient = memo(function ContractorsClient() {
         entityId: docRef.id, 
       });
     }
+    setIsFormOpen(false);
   };
   
   if (isDataLoading) {
