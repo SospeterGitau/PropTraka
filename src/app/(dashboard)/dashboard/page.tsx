@@ -96,11 +96,22 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   const totalMortgage = properties.reduce((acc, p) => acc + p.mortgage, 0);
   const totalEquity = totalPropertyValue - totalMortgage;
   
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
   const totalRevenue = revenue
-    .filter(r => new Date(r.date).getMonth() === new Date().getMonth())
+    .filter(r => {
+      const rDate = new Date(r.date);
+      return rDate.getMonth() === currentMonth && rDate.getFullYear() === currentYear;
+    })
     .reduce((acc, r) => acc + (r.amountPaid ?? 0), 0);
+
   const totalExpenses = expenses
-    .filter(e => new Date(e.date).getMonth() === new Date().getMonth())
+    .filter(e => {
+      const eDate = new Date(e.date);
+      return eDate.getMonth() === currentMonth && eDate.getFullYear() === currentYear;
+    })
     .reduce((acc, e) => acc + (e.amount || 0), 0);
   
   const today = startOfToday();

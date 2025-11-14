@@ -66,7 +66,11 @@ const ArrearsClient = memo(function ArrearsClient() {
 
     const calculatedArrears = tenancies
       .map(tenancy => {
-        const totalDueToDate = tenancy.transactions.reduce((sum, tx) => {
+        
+        // Filter to only include transactions that are due on or before today
+        const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
+
+        const totalDueToDate = dueTransactions.reduce((sum, tx) => {
           const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
           return sum + tx.rent + serviceChargesTotal + (tx.deposit || 0);
         }, 0);
