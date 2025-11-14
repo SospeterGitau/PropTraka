@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
-import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
@@ -33,6 +33,7 @@ import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, dele
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 function PaymentForm({
   isOpen,
@@ -253,12 +254,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    // Prevent running this effect until data has stopped loading
     if (isRevenueLoading) {
       return;
     }
     
-    // If loading is finished and there's still no revenue, then it's a 404.
     if (!isRevenueLoading && (!revenue || revenue.length === 0)) {
       notFound();
       return;
@@ -394,11 +393,14 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     <Skeleton className="h-10 w-24" />
                 </div>
             </PageHeader>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <Skeleton className="h-48" />
+                <Skeleton className="h-48" />
+                <Skeleton className="h-48" />
+            </div>
             <Card>
                 <CardHeader>
                     <Skeleton className="h-8 w-1/3" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-4 w-1/4" />
                 </CardHeader>
                 <CardContent>
                     <Skeleton className="h-48 w-full" />
@@ -436,175 +438,186 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 <CalendarX2 className="mr-2 h-4 w-4" />
                 End Tenancy
             </Button>
-            <Button asChild onClick={() => router.back()}>
-                <Link href="#">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                </Link>
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
         </div>
       </PageHeader>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>{tenancy.tenant}</CardTitle>
-                    <CardDescription>
-                        {tenancy.propertyName}
-                        <br />
-                        {tenancy.tenantEmail} {tenancy.tenantPhone && `· ${tenancy.tenantPhone}`}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                     <div className="text-sm space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Tenancy Period:</span>
-                            <span className="font-medium text-right">{formattedDates['start']} - {formattedDates['end']}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Property Type:</span>
-                            <span className="font-medium">{property?.propertyType} &middot; {property?.buildingType}</span>
-                        </div>
-                     </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Financial Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                     <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Due to Date</span>
-                        <span className="font-medium">{formatCurrency(totalDueToDate, locale, currency)}</span>
-                    </div>
-                     <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Paid</span>
-                        <span className="font-medium">{formatCurrency(totalPaid, locale, currency)}</span>
-                    </div>
-                     <div className="flex justify-between font-semibold text-base border-t pt-2 mt-2">
-                        <span>Current Balance</span>
-                        <span className={cn(currentBalance > 0 ? 'text-destructive' : 'text-primary')}>
-                            {formatCurrency(currentBalance, locale, currency)}
-                        </span>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Deposit Status</CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center">
-                    {isDepositReturned ? (
-                        <Badge variant="secondary" className="text-base">
-                            <BadgeCheck className="mr-2 h-4 w-4 text-green-500"/>
-                            Returned
-                        </Badge>
-                    ) : isTenancyEnded ? (
-                        <Button size="sm" onClick={handleReturnDeposit} disabled={isDepositReturned}>
-                            <CircleDollarSign className="mr-2 h-4 w-4" />
-                            Return Deposit ({formatCurrency(depositAmount, locale, currency)})
-                        </Button>
-                    ) : (
-                        <div className="text-center">
-                            {depositAmount > 0 ? (
-                                <span className="font-bold text-lg">Held <span className="text-base font-medium text-muted-foreground">({formatCurrency(depositAmount, locale, currency)})</span></span>
-                            ) : (
-                                <span className="font-bold text-lg">None</span>
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
-        <div className="lg:col-span-2">
-            <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card>
               <CardHeader>
-                <CardTitle>Monthly Breakdown</CardTitle>
+                  <CardTitle>{tenancy.tenant}</CardTitle>
+                  <CardDescription>
+                      {tenancy.propertyName}
+                      <br />
+                      {tenancy.tenantEmail} {tenancy.tenantPhone && `· ${tenancy.tenantPhone}`}
+                  </CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Total Due</TableHead>
-                      <TableHead className="text-right">Amount Paid</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-center">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tenancy.transactions.map(tx => {
-                      const dueDate = new Date(tx.date);
-                      const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
-                      const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
-                      const paid = tx.amountPaid ?? 0;
-                      const balance = due - paid;
-                      const isOverdue = isBefore(dueDate, today) && balance > 0;
-                      const daysOverdue = isOverdue 
-                        ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
-                        : 0;
-
-                      return (
-                          <TableRow key={tx.id}>
-                            <TableCell>
-                              {formattedDates[tx.id]}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {formatCurrency(due, locale, currency)}
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <button>
-                                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-80 text-sm">
-                                    <div className="space-y-2">
-                                      <h4 className="font-medium">Invoice Breakdown</h4>
-                                      <div className="flex justify-between"><span>Rent:</span> <span>{formatCurrency(tx.rent, locale, currency)}</span></div>
-                                      {tx.serviceCharges?.map((sc, i) => (
-                                         <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount, locale, currency)}</span></div>
-                                      ))}
-                                      {tx.deposit && tx.deposit > 0 && <div className="flex justify-between"><span>Deposit:</span> <span>{formatCurrency(tx.deposit, locale, currency)}</span></div>}
-                                      {tx.notes && <p className="text-xs text-muted-foreground pt-2 border-t mt-2">{tx.notes}</p>}
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">{formatCurrency(paid, locale, currency)}</TableCell>
-                            <TableCell className={cn("text-right font-medium", balance > 0 ? 'text-destructive' : 'text-primary')}>
-                              {formatCurrency(balance, locale, currency)}
-                            </TableCell>
-                            <TableCell>
-                              {isOverdue ? (
-                                <Badge variant="destructive">{daysOverdue} days overdue</Badge>
-                              ) : balance <= 0 ? (
-                                <Badge variant="secondary">Paid</Badge>
-                              ) : null}
-                            </TableCell>
-                            <TableCell className="text-center space-x-2">
-                               <Button size="sm" variant="outline" onClick={() => handleEditInvoice(tx)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleRecordPayment(tx)} disabled={balance <= 0}>
-                                Record Payment
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+                    <div className="text-sm space-y-2">
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Tenancy Period:</span>
+                          <span className="font-medium text-right">{formattedDates['start']} - {formattedDates['end']}</span>
+                      </div>
+                      <div className="flex justify-between">
+                          <span className="text-muted-foreground">Property Type:</span>
+                          <span className="font-medium">{property?.propertyType} &middot; {property?.buildingType}</span>
+                      </div>
+                    </div>
               </CardContent>
-            </Card>
-        </div>
+          </Card>
+
+          <Card>
+              <CardHeader>
+                  <CardTitle>Financial Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Due to Date</span>
+                      <span className="font-medium">{formatCurrency(totalDueToDate, locale, currency)}</span>
+                  </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Total Paid</span>
+                      <span className="font-medium">{formatCurrency(totalPaid, locale, currency)}</span>
+                  </div>
+                    <div className="flex justify-between font-semibold text-base border-t pt-2 mt-2">
+                      <span>Current Balance</span>
+                      <span className={cn(currentBalance > 0 ? 'text-destructive' : 'text-primary')}>
+                          {formatCurrency(currentBalance, locale, currency)}
+                      </span>
+                  </div>
+              </CardContent>
+          </Card>
+
+          <Card>
+              <CardHeader>
+                  <CardTitle>Deposit Status</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center gap-3 h-full">
+                  {isDepositReturned ? (
+                      <Badge variant="secondary" className="text-base py-2 px-4 rounded-md">
+                          <BadgeCheck className="mr-2 h-5 w-5 text-green-500"/>
+                          Returned
+                      </Badge>
+                  ) : isTenancyEnded ? (
+                      <Button size="sm" onClick={handleReturnDeposit} disabled={isDepositReturned}>
+                          <CircleDollarSign className="mr-2 h-4 w-4" />
+                          Return Deposit ({formatCurrency(depositAmount, locale, currency)})
+                      </Button>
+                  ) : (
+                      <div className="text-center">
+                          {depositAmount > 0 ? (
+                              <>
+                                <div className="text-2xl font-bold">{formatCurrency(depositAmount, locale, currency)}</div>
+                                <div className="text-sm text-muted-foreground">Deposit Held</div>
+                              </>
+                          ) : (
+                              <div className="text-lg font-semibold">No Deposit</div>
+                          )}
+                      </div>
+                  )}
+              </CardContent>
+          </Card>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Monthly Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Total Due</TableHead>
+                <TableHead>Amount Paid</TableHead>
+                <TableHead>Balance</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tenancy.transactions.map(tx => {
+                const dueDate = new Date(tx.date);
+                const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+                const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
+                const paid = tx.amountPaid ?? 0;
+                const balance = due - paid;
+                const isOverdue = isBefore(dueDate, today) && balance > 0;
+                const daysOverdue = isOverdue 
+                  ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
+                  : 0;
+
+                return (
+                    <TableRow key={tx.id}>
+                      <TableCell className="font-medium">
+                        {formattedDates[tx.id]}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {formatCurrency(due, locale, currency)}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button>
+                                <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 text-sm">
+                              <div className="space-y-2">
+                                <h4 className="font-medium">Invoice Breakdown</h4>
+                                <div className="flex justify-between"><span>Rent:</span> <span>{formatCurrency(tx.rent, locale, currency)}</span></div>
+                                {tx.serviceCharges?.map((sc, i) => (
+                                    <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount, locale, currency)}</span></div>
+                                ))}
+                                {tx.deposit && tx.deposit > 0 && <div className="flex justify-between"><span>Deposit:</span> <span>{formatCurrency(tx.deposit, locale, currency)}</span></div>}
+                                {tx.notes && <p className="text-xs text-muted-foreground pt-2 border-t mt-2">{tx.notes}</p>}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatCurrency(paid, locale, currency)}</TableCell>
+                      <TableCell className={cn("font-medium", balance > 0 ? 'text-destructive' : 'text-primary')}>
+                        {formatCurrency(balance, locale, currency)}
+                      </TableCell>
+                      <TableCell>
+                        {isOverdue ? (
+                          <Badge variant="destructive">{daysOverdue} days overdue</Badge>
+                        ) : balance <= 0 && paid > 0 ? (
+                          <Badge variant="secondary">Paid</Badge>
+                        ) : (
+                          <Badge variant="outline">Pending</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                      <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onSelect={() => handleRecordPayment(tx)} disabled={balance <= 0}>
+                                      <HandCoins className="mr-2 h-4 w-4" />
+                                      Record Payment
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleEditInvoice(tx)}>
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      Edit Invoice
+                                  </DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
        <PaymentForm
         isOpen={isPaymentFormOpen}
         onClose={() => setIsPaymentFormOpen(false)}
@@ -638,3 +651,5 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
