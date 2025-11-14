@@ -54,7 +54,7 @@ const ChangelogPage = memo(function ChangelogPage() {
         const newFormattedDates: {[key: string]: string} = {};
         for (const item of sortedChangelog) {
             if (item.date) {
-                newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy, HH:mm', { locale: localeData });
+                newFormattedDates[item.id] = format(new Date(item.date), 'PPp', { locale: localeData });
             }
         }
         setFormattedDates(newFormattedDates);

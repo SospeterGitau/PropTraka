@@ -60,13 +60,13 @@ const RevenueClient = memo(function RevenueClient() {
       const newFormattedDates: { [key: string]: string } = {};
       for (const item of revenue) {
         if(item.tenancyId && item.tenancyStartDate && !newFormattedDates[`${item.tenancyId}-start`]) {
-          newFormattedDates[`${item.tenancyId}-start`] = format(new Date(item.tenancyStartDate), 'MMM dd, yyyy', { locale: localeData });
+          newFormattedDates[`${item.tenancyId}-start`] = format(new Date(item.tenancyStartDate), 'PP', { locale: localeData });
         }
         if(item.tenancyId && item.tenancyEndDate && !newFormattedDates[`${item.tenancyId}-end`]) {
-          newFormattedDates[`${item.tenancyId}-end`] = format(new Date(item.tenancyEndDate), 'MMM dd, yyyy', { locale: localeData });
+          newFormattedDates[`${item.tenancyId}-end`] = format(new Date(item.tenancyEndDate), 'PP', { locale: localeData });
         }
         if(item.tenancyId && item.nextDueDate && !newFormattedDates[`${item.tenancyId}-nextDue`]) {
-            newFormattedDates[`${item.tenancyId}-nextDue`] = format(new Date(item.nextDueDate), 'MMM dd, yyyy', { locale: localeData });
+            newFormattedDates[`${item.tenancyId}-nextDue`] = format(new Date(item.nextDueDate), 'PP', { locale: localeData });
         }
       }
       setFormattedDates(newFormattedDates);

@@ -120,7 +120,7 @@ const ArrearsClient = memo(function ArrearsClient() {
       const newFormattedDates: {[key: string]: string} = {};
       for (const arrear of arrears) {
         if (arrear.dueDate && !newFormattedDates[arrear.dueDate]) {
-          newFormattedDates[arrear.dueDate] = format(new Date(arrear.dueDate), 'MMMM dd, yyyy', { locale: localeData });
+          newFormattedDates[arrear.dueDate] = format(new Date(arrear.dueDate), 'PP', { locale: localeData });
         }
       }
       setFormattedDates(newFormattedDates);

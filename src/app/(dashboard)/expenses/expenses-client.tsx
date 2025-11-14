@@ -216,7 +216,7 @@ const ExpensesClient = memo(function ExpensesClient() {
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
       for (const item of expenses) {
-        newFormattedDates[item.id] = format(new Date(item.date), 'MMMM dd, yyyy', { locale: localeData });
+        newFormattedDates[item.id] = format(new Date(item.date), 'PP', { locale: localeData });
       }
       setFormattedDates(newFormattedDates);
     };
