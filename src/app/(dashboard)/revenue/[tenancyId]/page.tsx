@@ -446,100 +446,100 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       </PageHeader>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                <h2 className="text-2xl font-bold text-card-foreground mb-1">
                   {tenancy.tenant}
                 </h2>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", isTenancyEnded ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800")}>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", isTenancyEnded ? "bg-muted text-muted-foreground" : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200")}>
                     {isTenancyEnded ? 'Inactive Tenant' : 'Active Tenant'}
                   </span>
                 </div>
               </div>
 
-              <div className="mb-4 pb-4 border-b border-gray-200">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              <div className="mb-4 pb-4 border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                   Property Address
                 </p>
-                <p className="text-base font-medium text-gray-700">
+                <p className="text-base font-medium text-foreground">
                   {tenancy.propertyName}
                 </p>
               </div>
 
-              <div className="mb-4 pb-4 border-b border-gray-200">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <div className="mb-4 pb-4 border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   Contact
                 </p>
-                <p className="text-sm text-gray-700 mb-1 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400"/>
+                <p className="text-sm text-foreground mb-1 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground"/>
                   {tenancy.tenantEmail}
                 </p>
               </div>
 
-              <div className="mb-4 pb-4 border-b border-gray-200">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <div className="mb-4 pb-4 border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   Tenancy Period
                 </p>
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-foreground">
                   {formattedDates['start']} - {formattedDates['end']}
                 </p>
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                   Property Type
                 </p>
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-foreground">
                   {property?.propertyType} &middot; {property?.buildingType}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-gray-900">
+              <CardTitle className="text-lg font-semibold text-card-foreground">
                 Financial Summary
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
-                <span className="text-sm font-medium text-gray-700">Total Due to Date</span>
-                <span className="text-lg font-bold text-orange-700">{formatCurrency(totalDueToDate, locale, currency)}</span>
+              <div className="flex justify-between items-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/50">
+                <span className="text-sm font-medium text-foreground">Total Due to Date</span>
+                <span className="text-lg font-bold text-orange-700 dark:text-orange-400">{formatCurrency(totalDueToDate, locale, currency)}</span>
               </div>
 
-              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                <span className="text-sm font-medium text-gray-700">Total Paid</span>
-                <span className="text-lg font-bold text-green-700">{formatCurrency(totalPaid, locale, currency)}</span>
+              <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/50">
+                <span className="text-sm font-medium text-foreground">Total Paid</span>
+                <span className="text-lg font-bold text-green-700 dark:text-green-400">{formatCurrency(totalPaid, locale, currency)}</span>
               </div>
 
-              <div className="border-t border-gray-200 my-2"></div>
+              <div className="border-t border-border my-2"></div>
 
-              <div className={cn("p-4 rounded-lg shadow-sm", currentBalance > 0 ? 'bg-red-600' : 'bg-blue-600')}>
-                <p className="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1">
+              <div className={cn("p-4 rounded-lg shadow-sm", currentBalance > 0 ? 'bg-destructive' : 'bg-primary')}>
+                <p className="text-xs font-semibold text-primary-foreground/80 uppercase tracking-wide mb-1">
                   Current Balance
                 </p>
-                <p className="text-3xl font-bold text-white">
+                <p className="text-3xl font-bold text-primary-foreground">
                   {formatCurrency(currentBalance, locale, currency)}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200 shadow-md hover:shadow-lg transition-shadow">
+          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <BadgeCheck className="w-5 h-5 text-emerald-600"/>
+              <CardTitle className="text-lg font-semibold text-card-foreground flex items-center gap-2">
+                <BadgeCheck className="w-5 h-5 text-green-500"/>
                 Deposit Status
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center py-8">
               {isDepositReturned ? (
                 <div className="text-center">
-                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-200 text-gray-800">
-                     <BadgeCheck className="mr-2 h-5 w-5 text-gray-600"/>
+                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-muted text-muted-foreground">
+                     <BadgeCheck className="mr-2 h-5 w-5"/>
                     Deposit Returned
                   </div>
                 </div>
@@ -550,11 +550,11 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </Button>
               ) : (
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Deposit Held</p>
-                  <p className="text-5xl font-bold text-emerald-700 mb-1">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Deposit Held</p>
+                  <p className="text-5xl font-bold text-green-600 dark:text-green-400 mb-1">
                     {formatCurrency(depositAmount, locale, currency)}
                   </p>
-                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                  <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
                     ✓ Secured
                   </div>
                 </div>
@@ -692,3 +692,5 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
