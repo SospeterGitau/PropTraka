@@ -51,7 +51,7 @@ function PropertyDetailPageContent() {
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
   , [firestore, user?.uid]);
   const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
   
   const isDataLoading = isPropertyLoading || isRevenueLoading;
 
@@ -83,27 +83,31 @@ function PropertyDetailPageContent() {
   
   const confirmDelete = async () => {
     if (property) {
-      await deleteDoc(doc(firestore, 'properties', property.id));
+      const propertyToDeleteId = (propertyId as string);
+      await deleteDoc(doc(firestore, 'properties', propertyToDeleteId));
       addChangeLogEntry({
         type: 'Property',
         action: 'Deleted',
         description: `Property "${formatAddress(property)}" was deleted.`,
-        entityId: property.id,
+        entityId: propertyToDeleteId,
       });
       setIsDeleteDialogOpen(false);
       router.push('/properties');
     }
   };
 
-  const handleFormSubmit = async (data: Property) => {
+  const handleFormSubmit = async (data: Omit<Property, 'id'> | Property) => {
     if(propertyRef) {
-      await updateDoc(propertyRef, data as any);
-      addChangeLogEntry({
-        type: 'Property',
-        action: 'Updated',
-        description: `Property "${formatAddress(data)}" was updated.`,
-        entityId: data.id,
-      });
+        if ('id' in data) {
+            const { id, ...propertyData } = data;
+            await updateDoc(propertyRef, propertyData);
+            addChangeLogEntry({
+                type: 'Property',
+                action: 'Updated',
+                description: `Property "${formatAddress(data)}" was updated.`,
+                entityId: data.id,
+            });
+        }
     }
     setIsFormOpen(false);
   };
@@ -125,7 +129,7 @@ function PropertyDetailPageContent() {
   
   const today = new Date();
   const isOccupied = revenue?.some(t => 
-      t.propertyId === property.id && 
+      t.propertyId === propertyId && 
       t.tenancyStartDate && 
       t.tenancyEndDate && 
       new Date(t.tenancyStartDate) <= today && 
@@ -275,3 +279,5 @@ export default function PropertyDetailPage() {
         <PropertyDetailPageContent />
     )
 }
+
+    
