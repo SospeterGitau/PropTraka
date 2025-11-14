@@ -38,7 +38,7 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
 
 function parseLocalDate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 
@@ -125,7 +125,7 @@ const TenancyForm = memo(function TenancyForm({
     
     const tenancyStartDate = parseLocalDate(tenancyStartDateStr);
     const tenancyEndDate = parseLocalDate(tenancyEndDateStr);
-    const dayOfMonth = tenancyStartDate.getDate();
+    const dayOfMonth = tenancyStartDate.getUTCDate();
 
     if (tenancyEndDate < tenancyStartDate) {
       toast({
@@ -148,8 +148,10 @@ const TenancyForm = memo(function TenancyForm({
     let currentDate = new Date(tenancyStartDate);
 
     while(currentDate <= tenancyEndDate) {
-        const isFirstMonth = currentDate.getFullYear() === tenancyStartDate.getFullYear() && currentDate.getMonth() === tenancyStartDate.getMonth();
-        const dueDate = createSafeMonthDate(currentDate.getFullYear(), currentDate.getMonth(), dayOfMonth);
+        const year = currentDate.getUTCFullYear();
+        const month = currentDate.getUTCMonth();
+        const isFirstMonth = year === tenancyStartDate.getUTCFullYear() && month === tenancyStartDate.getUTCMonth();
+        const dueDate = createSafeMonthDate(year, month, dayOfMonth);
 
         const existingTx = existingTransactions.find(tx => {
             if (!tx.date) return false;
@@ -179,7 +181,7 @@ const TenancyForm = memo(function TenancyForm({
 
         transactionsData.push(newTxData);
 
-        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+        currentDate.setUTCMonth(currentDate.getUTCMonth() + 1);
     }
     
     const batch = writeBatch(firestore);

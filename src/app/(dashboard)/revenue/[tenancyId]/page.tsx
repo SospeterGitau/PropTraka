@@ -270,19 +270,19 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
 
   useEffect(() => {
     if (!tenancy) return;
-    
+
     const formatAllDates = async () => {
         const localeData = await getLocale(locale);
         const newFormattedDates: { [key: string]: string } = {};
 
         for (const item of tenancy.transactions) {
-            newFormattedDates[item.id] = format(new Date(item.date), 'PPP', { locale: localeData });
+            newFormattedDates[item.id] = format(new Date(item.date), 'dd MMM yyyy', { locale: localeData });
         }
         if (tenancy.tenancyStartDate) {
-           newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'PPP', { locale: localeData });
+           newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'dd MMM yyyy', { locale: localeData });
         }
         if (tenancy.tenancyEndDate) {
-            newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'PPP', { locale: localeData });
+            newFormattedDates['end'] = format(new Date(tenancy.tenancyEndDate), 'dd MMM yyyy', { locale: localeData });
         }
         setFormattedDates(newFormattedDates);
     };
@@ -455,7 +455,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       </PageHeader>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
+           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
                 <div className="mb-4">
                     <h2 className="text-2xl font-bold text-card-foreground mb-1">
@@ -508,7 +508,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </CardContent>
           </Card>
 
-           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
+          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold text-card-foreground">
                 Financial Summary
