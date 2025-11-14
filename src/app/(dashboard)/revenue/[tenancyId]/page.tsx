@@ -5,7 +5,7 @@
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound, useParams, useRouter } from 'next/navigation';
-import { format, startOfToday, isBefore, isAfter } from 'date-fns';
+import { format, startOfToday, isBefore, isAfter, getDaysInMonth, differenceInDays } from 'date-fns';
 import type { Transaction, ServiceCharge, Property } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
 import { PageHeader } from '@/components/page-header';
@@ -577,7 +577,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tenancy.transactions.map(tx => {
+              {tenancy.transactions.map((tx, index) => {
                 const dueDate = new Date(tx.date);
                 const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
                 const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
@@ -588,10 +588,27 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                   ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
                   : 0;
 
+                const isLastTransaction = index === tenancy.transactions.length - 1;
+                const isProrated = isLastTransaction && tx.notes?.includes('Pro-rated');
+
                 return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">
-                        {formattedDates[tx.id]}
+                        <div className="flex items-center gap-2">
+                           {formattedDates[tx.id]}
+                           {isProrated && (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button>
+                                    <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 text-sm">
+                                  <p>{tx.notes}</p>
+                                </PopoverContent>
+                              </Popover>
+                           )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -610,7 +627,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                     <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount, locale, currency)}</span></div>
                                 ))}
                                 {tx.deposit && tx.deposit > 0 && <div className="flex justify-between"><span>Deposit:</span> <span>{formatCurrency(tx.deposit, locale, currency)}</span></div>}
-                                {tx.notes && <p className="text-xs text-muted-foreground pt-2 border-t mt-2">{tx.notes}</p>}
+                                {tx.notes && !isProrated && <p className="text-xs text-muted-foreground pt-2 border-t mt-2">{tx.notes}</p>}
                               </div>
                             </PopoverContent>
                           </Popover>
@@ -689,5 +706,3 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
-
-    

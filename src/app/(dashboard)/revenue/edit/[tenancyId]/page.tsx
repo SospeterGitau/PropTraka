@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, memo } from 'react';
 import { useRouter, useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, getDaysInMonth, differenceInDays, isSameMonth } from 'date-fns';
 import type { Property, Transaction, ServiceCharge } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
@@ -27,11 +27,10 @@ function formatAddress(property: Property) {
 
 // Safely creates a date for a specific day of the month, handling cases where the day doesn't exist (e.g., Feb 30th).
 function createSafeMonthDate(year: number, month: number, day: number): Date {
-  const date = new Date(year, month, day);
-  // If the created date's day doesn't match, it means the day was invalid for that month (e.g. day 31 in a 30 day month).
-  // In that case, we roll back to the last day of the correct month.
-  if (date.getDate() !== day) {
-    return new Date(year, month + 1, 0);
+  const date = new Date(Date.UTC(year, month, day));
+  const lastDayOfMonth = getDaysInMonth(new Date(Date.UTC(year, month, 1)));
+  if (day > lastDayOfMonth) {
+    return new Date(Date.UTC(year, month, lastDayOfMonth));
   }
   return date;
 }
@@ -157,12 +156,13 @@ const TenancyForm = memo(function TenancyForm({
       .filter(sc => sc.name && sc.amount > 0);
 
     const transactionsData = [];
-    let currentDate = new Date(tenancyStartDate);
+    let currentDate = new Date(tenancyStartDate.getUTCFullYear(), tenancyStartDate.getUTCMonth(), 1);
 
     while(currentDate <= tenancyEndDate) {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         const isFirstMonth = year === tenancyStartDate.getFullYear() && month === tenancyStartDate.getMonth();
+        const isLastMonth = isSameMonth(currentDate, tenancyEndDate);
         
         const dueDate = createSafeMonthDate(year, month, dayOfMonth);
 
@@ -171,11 +171,29 @@ const TenancyForm = memo(function TenancyForm({
             const txDate = parseLocalDate(tx.date);
             return txDate.getFullYear() === dueDate.getFullYear() && txDate.getMonth() === dueDate.getMonth();
         });
+        
+        let finalRent = rent;
+        let proRataNotes: string | undefined = undefined;
+
+        if(isLastMonth && !isSameMonth(tenancyStartDate, tenancyEndDate) && tenancyEndDate.getDate() !== dueDate.getDate()) {
+            const cycleStartDate = dueDate;
+            const daysInCycle = differenceInDays(
+                createSafeMonthDate(year, month + 1, dayOfMonth), 
+                cycleStartDate
+            );
+
+            const activeDaysInCycle = differenceInDays(tenancyEndDate, cycleStartDate) + 1;
+
+            if (activeDaysInCycle > 0 && daysInCycle > 0) {
+                finalRent = (rent / daysInCycle) * activeDaysInCycle;
+                proRataNotes = `Pro-rated rent for ${activeDaysInCycle} days in the final month.`;
+            }
+        }
 
         const newTxData: Partial<Transaction> = {
             tenancyId,
             date: format(dueDate, 'yyyy-MM-dd'),
-            rent,
+            rent: finalRent,
             serviceCharges: finalServiceCharges,
             amountPaid: existingTx?.amountPaid || 0,
             propertyId,
@@ -187,11 +205,11 @@ const TenancyForm = memo(function TenancyForm({
             tenancyEndDate: tenancyEndDateStr,
             contractUrl,
             ownerId: user.uid,
+            notes: isLastMonth ? proRataNotes : (isFirstMonth ? notes : undefined)
         };
         
         if (existingTx?.id) newTxData.id = existingTx.id;
-        if (isFirstMonth && notes) newTxData.notes = notes;
-
+        
         transactionsData.push(newTxData);
 
         let newMonth = month + 1;
