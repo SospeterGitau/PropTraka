@@ -35,7 +35,7 @@ const defaultSettings: Omit<UserSettings, 'subscription'> = {
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const { user, isUserLoading } = useUser();
+  const { user, isAuthLoading } = useUser();
   const { firestore } = useFirebase();
   const { toast } = useToast();
 
@@ -104,12 +104,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user, firestore]);
 
   useEffect(() => {
-    if (!isUserLoading && user) {
+    if (!isAuthLoading && user) {
         fetchAppData();
-    } else if (!isUserLoading && !user) {
+    } else if (!isAuthLoading && !user) {
         setIsLoading(false);
     }
-  }, [isUserLoading, user, fetchAppData]);
+  }, [isAuthLoading, user, fetchAppData]);
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
     if (!user) {
