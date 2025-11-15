@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -131,8 +132,8 @@ export function ExpenseForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="propertyId">Property (optional)</Label>
-            <Select name="propertyId" id="propertyId" defaultValue={transaction?.propertyId || 'none'}>
-              <SelectTrigger>
+            <Select name="propertyId" defaultValue={transaction?.propertyId || 'none'}>
+              <SelectTrigger id="propertyId">
                 <SelectValue placeholder="Select a property" />
               </SelectTrigger>
               <SelectContent>
@@ -203,8 +204,8 @@ export function ExpenseForm({
           {expenseType === 'recurring' && (
             <div className="space-y-2">
               <Label htmlFor="frequency">Frequency</Label>
-              <Select name="frequency" id="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
-                <SelectTrigger>
+              <Select name="frequency" defaultValue={transaction?.frequency || 'monthly'} required>
+                <SelectTrigger id="frequency">
                   <SelectValue placeholder="Select a frequency" />
                 </SelectTrigger>
                 <SelectContent>
