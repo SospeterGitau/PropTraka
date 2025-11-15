@@ -129,11 +129,13 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   );
 
   const totalArrears = tenancies.reduce((total, tenancy) => {
-    const totalDueToDate = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
+    const dueTransactions = tenancy.transactions.filter(tx => isBefore(new Date(tx.date), today));
+    const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
     const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
     const balance = totalDueToDate - totalPaid;
     return total + (balance > 0 ? balance : 0);
   }, 0);
+
 
   const netOperatingIncome = totalRevenue - totalExpenses;
   const noiVariant = netOperatingIncome >= 0 ? 'positive' : 'destructive';
@@ -177,7 +179,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
           icon={CircleAlert}
           title="Arrears"
           value={totalArrears}
-          description="Total outstanding payments"
+          description="Total of all past-due payments"
           variant={totalArrears > 0 ? 'destructive' : 'default'}
         />
       </div>
