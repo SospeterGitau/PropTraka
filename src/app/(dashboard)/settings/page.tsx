@@ -580,7 +580,7 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
             <TableBody>
               {articlesToDisplay.length > 0 ? (
                 articlesToDisplay.map((article, index) => (
-                  <TableRow key={article.id || `placeholder-${index}`}>
+                  <TableRow key={(article as KnowledgeArticle).id || `placeholder-${index}`}>
                     <TableCell className="font-medium">{article.title}</TableCell>
                     <TableCell className="max-w-md truncate">{article.content}</TableCell>
                     <TableCell>
@@ -593,8 +593,8 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onSelect={() => handleEdit(article)}>Edit</DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => handleDelete(article)}>Delete</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleEdit(article as KnowledgeArticle)}>Edit</DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleDelete(article as KnowledgeArticle)}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
