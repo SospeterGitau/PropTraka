@@ -405,7 +405,7 @@ const TenancyForm = memo(function TenancyForm({
 });
 
 export default function AddTenancyPage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isAuthLoading } = useUser();
   const firestore = useFirestore();
 
   const propertiesQuery = useMemo(() => 
@@ -415,7 +415,7 @@ export default function AddTenancyPage() {
   const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
 
-  const isLoading = isUserLoading || isPropertiesLoading;
+  const isLoading = isAuthLoading || isPropertiesLoading;
 
   if (isLoading) {
     return (
