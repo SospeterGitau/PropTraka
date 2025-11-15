@@ -1,6 +1,6 @@
 
 import { cookies } from 'next/headers';
-import type { IronSessionOptions, IronSession } from 'iron-session';
+import type { SessionOptions, IronSession } from 'iron-session';
 import { getIronSession } from 'iron-session';
 
 // Ensure SESSION_PASSWORD is set in your environment variables
@@ -14,7 +14,7 @@ export interface SessionData {
   uid?: string;
 }
 
-export const sessionOptions: IronSessionOptions = {
+export const sessionOptions: SessionOptions = {
   cookieName: 'leaselync_session',
   password: sessionPassword,
   cookieOptions: {
