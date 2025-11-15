@@ -90,9 +90,9 @@ function RevenueAnalysisTab() {
     }
   };
   
-  const handleViewChange = (value: ViewMode | null) => {
-    if (value) {
-      setViewMode(value);
+  const handleViewChange = (value: string) => {
+    if (value === 'month' || value === 'year') {
+      setViewMode(value as ViewMode);
     }
   };
 
@@ -328,9 +328,9 @@ function PnlStatementTab() {
     }
   };
 
-  const handleViewChange = (value: ViewMode | null) => {
-    if (value) {
-      setViewMode(value);
+  const handleViewChange = (value: string) => {
+    if (value === 'month' || value === 'year') {
+      setViewMode(value as ViewMode);
     }
   };
   
@@ -613,5 +613,3 @@ const ReportsClient = memo(function ReportsClient() {
 });
 
 export default ReportsClient;
-
-    
