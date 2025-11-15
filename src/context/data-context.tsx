@@ -2,10 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useUser, useFirebase } from '@/firebase';
-import { doc, getDoc, setDoc, getDocs, collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { ResidencyStatus, Subscription, Property } from '@/lib/types';
+import { doc, getDoc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import type { ResidencyStatus, Subscription } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { seedSampleData } from '@/lib/data-seeder';
 
 export interface UserSettings {
   currency: string;
@@ -21,8 +20,6 @@ interface DataContextValue {
   settings: UserSettings;
   updateSettings: (newSettings: Partial<UserSettings>) => Promise<void>;
   isLoading: boolean;
-  hasSampleData: boolean;
-  clearSampleData: () => Promise<void>;
 }
 
 const defaultSettings: Omit<UserSettings, 'subscription'> = {
@@ -43,7 +40,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] = useState<UserSettings>({ ...defaultSettings, subscription: null });
   const [isLoading, setIsLoading] = useState(true);
-  const [hasSampleData, setHasSampleData] = useState(false);
 
   const fetchAppData = useCallback(async () => {
     if (!user || !firestore) return;
@@ -82,22 +78,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
             userSettings.subscription = subsSnap.docs[0].data() as Subscription;
         }
 
-        // Check for properties and seed if none exist
-        const propertiesQuery = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
-        const propertiesSnap = await getDocs(propertiesQuery);
-        if (propertiesSnap.empty) {
-            await seedSampleData(user.uid);
-            setHasSampleData(true);
-            toast({
-                title: "Welcome!",
-                description: "We've added some sample data to help you get started. You can remove it from the Account page.",
-            });
-        } else {
-            const firstProp = propertiesSnap.docs[0].data() as Property;
-            // A simple heuristic to check if it's sample data
-            setHasSampleData(firstProp.addressLine1 === '45 Uhuru Gardens Lane');
-        }
-
         setSettings(userSettings);
 
     } catch (error) {
@@ -106,7 +86,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } finally {
         setIsLoading(false);
     }
-  }, [user, firestore, toast]);
+  }, [user, firestore]);
 
   useEffect(() => {
     if (!isAuthLoading && user) {
@@ -115,28 +95,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
     }
   }, [isAuthLoading, user, fetchAppData]);
-  
-  const clearSampleData = async () => {
-    if (!user) return;
-    try {
-        const { clearSampleData: clearDataOnServer } = await import('@/lib/data-seeder');
-        await clearDataOnServer(user.uid);
-        setHasSampleData(false);
-        toast({
-            title: "Sample Data Cleared",
-            description: "All sample properties, tenancies, and other records have been removed.",
-        });
-        // Force a reload to clear all local state and refetch from empty DB
-        window.location.reload();
-    } catch (error) {
-        console.error("Failed to clear sample data:", error);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not clear sample data. Please try again.",
-        });
-    }
-  };
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
     if (!user) {
@@ -165,7 +123,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = { settings, updateSettings, isLoading, hasSampleData, clearSampleData };
+  const value = { settings, updateSettings, isLoading };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
