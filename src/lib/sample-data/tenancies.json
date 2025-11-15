@@ -1,0 +1,41 @@
+
+[
+    {
+        "propertyId": "prop1",
+        "tenantName": "Dr. Susan Onyango",
+        "tenantEmail": "susan.onyango.sample@gmail.com",
+        "tenantPhone": "0712345678",
+        "startDate": "2023-08-15",
+        "endDate": "2024-08-14",
+        "rent": 150000,
+        "deposit": 150000,
+        "serviceCharges": [
+            { "name": "Security", "amount": 5000 },
+            { "name": "Trash", "amount": 2000 }
+        ]
+    },
+    {
+        "propertyId": "prop2",
+        "tenantName": "Mark Kipchoge",
+        "tenantEmail": "mark.kipchoge.sample@gmail.com",
+        "tenantPhone": "0723456789",
+        "startDate": "2024-01-01",
+        "endDate": "2024-12-31",
+        "rent": 85000,
+        "deposit": 85000,
+        "serviceCharges": [
+             { "name": "Service Charge", "amount": 10000 }
+        ]
+    },
+    {
+        "propertyId": "prop3",
+        "tenantName": "Coastal Exporters Ltd.",
+        "tenantEmail": "accounts.coastal.sample@gmail.com",
+        "tenantPhone": "0734567890",
+        "startDate": "2023-05-01",
+        "endDate": "2025-04-30",
+        "rent": 300000,
+        "deposit": 600000,
+        "serviceCharges": []
+    }
+]

@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -17,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, AlertTriangle } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFitText } from '@/hooks/use-fit-text';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 
 
 const passwordSchema = z.object({
@@ -46,6 +48,54 @@ const passwordSchema = z.object({
 });
 
 type PasswordFormValues = z.infer<typeof passwordSchema>;
+
+const DataSettings = memo(function DataSettings() {
+    const { hasSampleData, clearSampleData } = useDataContext();
+    const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+    const [isClearing, setIsClearing] = useState(false);
+    
+    const handleConfirmClear = async () => {
+        setIsClearing(true);
+        await clearSampleData();
+        setIsClearing(false);
+        setIsClearConfirmOpen(false);
+    }
+
+    if (!hasSampleData) {
+        return null;
+    }
+
+    return (
+        <>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Data Management</CardTitle>
+                    <CardDescription>Manage the sample data in your account.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>This action is irreversible.</AlertTitle>
+                        <div className="flex justify-between items-center">
+                            <p>Clearing sample data will permanently delete all properties, tenancies, and other records.</p>
+                            <Button variant="destructive" onClick={() => setIsClearConfirmOpen(true)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Clear Sample Data
+                            </Button>
+                        </div>
+                    </Alert>
+                </CardContent>
+            </Card>
+
+            <DeleteConfirmationDialog
+                isOpen={isClearConfirmOpen}
+                onClose={() => setIsClearConfirmOpen(false)}
+                onConfirm={handleConfirmClear}
+                itemName="ALL sample data"
+            />
+        </>
+    );
+})
 
 const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const { theme, setTheme } = useTheme();
@@ -632,36 +682,35 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
 
 export default function AccountPage() {
   const { user } = useUser();
-  
-  // Define your admin email here.
-  // For a real application, you might get this from environment variables.
   const ADMIN_EMAIL = 'sospeter.gitau@gmail.com';
-
   const isAdmin = user?.email === ADMIN_EMAIL;
 
   return (
     <>
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
-        <TabsList className={cn("grid w-full max-w-lg", isAdmin ? "grid-cols-3" : "grid-cols-2")}>
+        <TabsList className={cn("grid w-full max-w-lg mb-6", isAdmin ? "grid-cols-3" : "grid-cols-2")}>
           <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           {isAdmin && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
         </TabsList>
-        <TabsContent value="profile" className="pt-6">
-          <ProfileSettingsTab />
-        </TabsContent>
-        <TabsContent value="subscription" className="pt-6">
-          <SubscriptionBillingTab />
-        </TabsContent>
-        {isAdmin && (
-          <TabsContent value="knowledge" className="pt-6">
-            <KnowledgeBaseTab />
-          </TabsContent>
-        )}
+        <div className="space-y-6">
+            <TabsContent value="profile">
+                <div className="space-y-6">
+                    <ProfileSettingsTab />
+                    <DataSettings />
+                </div>
+            </TabsContent>
+            <TabsContent value="subscription">
+                <SubscriptionBillingTab />
+            </TabsContent>
+            {isAdmin && (
+            <TabsContent value="knowledge">
+                <KnowledgeBaseTab />
+            </TabsContent>
+            )}
+        </div>
       </Tabs>
     </>
   );
 }
-
-    

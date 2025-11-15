@@ -1,0 +1,38 @@
+
+[
+    {
+        "propertyId": "prop1",
+        "description": "Leaking pipe in master bathroom",
+        "status": "Done",
+        "priority": "High",
+        "reportedDate": "2024-05-09",
+        "completedDate": "2024-05-10",
+        "cost": 12000,
+        "contractorId": "cont1"
+    },
+    {
+        "propertyId": "prop2",
+        "description": "Flickering lights in kitchen",
+        "status": "In Progress",
+        "priority": "Medium",
+        "reportedDate": "2024-06-15",
+        "contractorId": "cont2"
+    },
+    {
+        "propertyId": "prop2",
+        "description": "Repaint living room walls",
+        "status": "Done",
+        "priority": "Low",
+        "reportedDate": "2024-06-01",
+        "completedDate": "2024-06-05",
+        "cost": 7500,
+        "contractorId": "cont3"
+    },
+    {
+        "propertyId": null,
+        "description": "File annual tax returns",
+        "status": "To Do",
+        "priority": "Medium",
+        "reportedDate": "2024-06-20"
+    }
+]

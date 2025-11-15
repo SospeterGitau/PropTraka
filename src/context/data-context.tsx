@@ -1,11 +1,13 @@
 
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useUser, useFirebase } from '@/firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { ResidencyStatus, Subscription } from '@/lib/types';
+import type { ResidencyStatus, Subscription, Property } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { seedSampleData } from '@/lib/data-seeder';
 
 export interface UserSettings {
   currency: string;
@@ -21,6 +23,8 @@ interface DataContextValue {
   settings: UserSettings;
   updateSettings: (newSettings: Partial<UserSettings>) => Promise<void>;
   isLoading: boolean;
+  hasSampleData: boolean;
+  clearSampleData: () => Promise<void>;
 }
 
 const defaultSettings: Omit<UserSettings, 'subscription'> = {
@@ -41,6 +45,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] = useState<UserSettings>({ ...defaultSettings, subscription: null });
   const [isLoading, setIsLoading] = useState(true);
+  const [hasSampleData, setHasSampleData] = useState(false);
 
   const fetchAppData = useCallback(async () => {
     if (!user || !firestore) return;
@@ -48,7 +53,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     
     try {
-        // Fetch Settings
         const settingsRef = doc(firestore, 'userSettings', user.uid);
         const settingsSnap = await getDoc(settingsRef);
         let userSettings: UserSettings;
@@ -60,48 +64,51 @@ export function DataProvider({ children }: { children: ReactNode }) {
             await setDoc(settingsRef, { ...defaultSettings, ownerId: user.uid });
         }
 
-        // Fetch Subscription - CRITICAL: ADD ownerId filter
         const subsQuery = query(collection(firestore, 'subscriptions'), where('ownerId', '==', user.uid));
         const subsSnap = await getDocs(subsQuery);
         
         if (subsSnap.empty) {
-            // No subscription found, create a default "Starter" one for new users.
             const subRef = doc(collection(firestore, 'subscriptions'));
             const newSub: Subscription = {
                 id: subRef.id,
                 ownerId: user.uid,
-                plan: 'Starter', // Default to Starter
+                plan: 'Starter',
                 status: 'active',
                 billingCycle: 'monthly',
                 currentPeriodStart: new Date().toISOString(),
                 currentPeriodEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
             };
             await setDoc(subRef, newSub);
-            
-            // Log the creation of the subscription to the changelog
-            await addDoc(collection(firestore, 'changelog'), {
-              ownerId: user.uid, // This was the missing field
-              date: serverTimestamp(),
-              type: 'Subscription',
-              action: 'Created',
-              description: `New "Starter" subscription created.`,
-              entityId: subRef.id,
-            });
-
             userSettings.subscription = newSub;
         } else {
             userSettings.subscription = subsSnap.docs[0].data() as Subscription;
         }
 
+        // Check for properties and seed if none exist
+        const propertiesQuery = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
+        const propertiesSnap = await getDocs(propertiesQuery);
+        if (propertiesSnap.empty) {
+            await seedSampleData(user.uid);
+            setHasSampleData(true);
+            toast({
+                title: "Welcome!",
+                description: "We've added some sample data to help you get started. You can remove it from the Account page.",
+            });
+        } else {
+            const firstProp = propertiesSnap.docs[0].data() as Property;
+            // A simple heuristic to check if it's sample data
+            setHasSampleData(firstProp.addressLine1 === '45 Uhuru Gardens Lane');
+        }
+
         setSettings(userSettings);
 
     } catch (error) {
-        console.error("Error fetching data (subscription):", error);
+        console.error("Error fetching data:", error);
         setSettings({ ...defaultSettings, subscription: null });
     } finally {
         setIsLoading(false);
     }
-  }, [user, firestore]);
+  }, [user, firestore, toast]);
 
   useEffect(() => {
     if (!isAuthLoading && user) {
@@ -110,6 +117,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
     }
   }, [isAuthLoading, user, fetchAppData]);
+  
+  const clearSampleData = async () => {
+    if (!user) return;
+    try {
+        const { clearSampleData: clearDataOnServer } = await import('@/lib/data-seeder');
+        await clearDataOnServer(user.uid);
+        setHasSampleData(false);
+        toast({
+            title: "Sample Data Cleared",
+            description: "All sample properties, tenancies, and other records have been removed.",
+        });
+        // Force a reload to clear all local state and refetch from empty DB
+        window.location.reload();
+    } catch (error) {
+        console.error("Failed to clear sample data:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not clear sample data. Please try again.",
+        });
+    }
+  };
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
     if (!user) {
@@ -122,7 +151,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
     const settingsRef = doc(firestore, 'userSettings', user.uid);
     try {
-      // Don't save subscription data to the userSettings document
       const { subscription, ...settingsToSave } = newSettings;
       const updatedSettings = { ...settings, ...settingsToSave };
       
@@ -139,7 +167,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const value = { settings, updateSettings, isLoading };
+  const value = { settings, updateSettings, isLoading, hasSampleData, clearSampleData };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
