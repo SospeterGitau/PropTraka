@@ -187,7 +187,7 @@ export function ExpenseForm({
               <Label>Expense Type</Label>
               <RadioGroup
                 value={expenseType}
-                onValueChange={(value: Transaction['expenseType']) => setExpenseType(value)}
+                onValueChange={(value) => setExpenseType(value as Transaction['expenseType'])}
                 className="flex gap-4 pt-2"
               >
                 <div className="flex items-center space-x-2">
