@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 function HomePageContent() {
-  const { user, isUserLoading } = useUser();
+  const { user, isAuthLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
@@ -18,7 +18,7 @@ function HomePageContent() {
     }
   }, [user, router]);
 
-  if (isUserLoading || user) {
+  if (isAuthLoading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
