@@ -196,7 +196,7 @@ const TenancyForm = memo(function TenancyForm({
           const occupiedDays = endDay - startDay + 1; // 23 - 3 + 1 = 21 days
           const dailyRent = rent / daysInMonth;
           rentForPeriod = dailyRent * occupiedDays;
-          proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
+          proRataNotes = `Pro-rated rent for ${"$"}{occupiedDays} days.`;
         } 
         else if (isFirstMonth) {
           // SCENARIO 2: First month of multi-month tenancy
@@ -207,7 +207,7 @@ const TenancyForm = memo(function TenancyForm({
           if (!isFullPeriod) {
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+            proRataNotes = `Pro-rated rent for ${"$"}{occupiedDays} days in the first month.`;
           }
         }
         else if (isLastMonth) {
@@ -226,7 +226,7 @@ const TenancyForm = memo(function TenancyForm({
           if (!isFullPeriod && occupiedDays > 0) {
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+            proRataNotes = `Pro-rated rent for ${"$"}{occupiedDays} days in the final month.`;
           }
         }
         // SCENARIO 4: Middle months - use full rent (rentForPeriod already = rent)
@@ -312,8 +312,8 @@ const TenancyForm = memo(function TenancyForm({
             <CardContent className="space-y-6 p-6">
                 <div className="space-y-2">
                     <Label htmlFor="propertyId">Property</Label>
-                    <Select name="propertyId" id="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
-                    <SelectTrigger><SelectValue placeholder="Select a property" /></SelectTrigger>
+                    <Select name="propertyId" defaultValue={tenancyToEdit?.propertyId} required>
+                    <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
                     <SelectContent>
                         {properties.map(property => (
                         <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
