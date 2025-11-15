@@ -80,8 +80,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
         <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-2 py-4 space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="propertyId">Property (Optional)</Label>
-                <Select name="propertyId" id="propertyId" defaultValue={request?.propertyId || 'none'}>
-                    <SelectTrigger>
+                <Select name="propertyId" defaultValue={request?.propertyId || 'none'}>
+                    <SelectTrigger id="propertyId">
                         <SelectValue placeholder="Select a property" />
                     </SelectTrigger>
                     <SelectContent>
@@ -100,8 +100,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
             
              <div className="space-y-2">
                 <Label htmlFor="contractorId">Assigned Contractor (Optional)</Label>
-                <Select name="contractorId" id="contractorId" defaultValue={request?.contractorId || 'none'}>
-                    <SelectTrigger>
+                <Select name="contractorId" defaultValue={request?.contractorId || 'none'}>
+                    <SelectTrigger id="contractorId">
                         <SelectValue placeholder="Select a contractor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -116,8 +116,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="priority">Priority</Label>
-                    <Select name="priority" id="priority" defaultValue={request?.priority || 'Medium'} required>
-                        <SelectTrigger>
+                    <Select name="priority" defaultValue={request?.priority || 'Medium'} required>
+                        <SelectTrigger id="priority">
                             <SelectValue placeholder="Select a priority" />
                         </SelectTrigger>
                         <SelectContent>
@@ -130,8 +130,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
-                    <Select name="status" id="status" defaultValue={request?.status || 'To Do'} required>
-                        <SelectTrigger>
+                    <Select name="status" defaultValue={request?.status || 'To Do'} required>
+                        <SelectTrigger id="status">
                             <SelectValue placeholder="Select a status" />
                         </SelectTrigger>
                         <SelectContent>
