@@ -94,7 +94,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
 
   const totalPropertyValue = properties.reduce((acc, p) => acc + p.currentValue, 0);
   const totalMortgage = properties.reduce((acc, p) => acc + p.mortgage, 0);
-  const totalEquity = totalPropertyValue - totalMortgage;
+  const portfolioNetWorth = totalPropertyValue - totalMortgage;
   
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -129,9 +129,13 @@ const DashboardPageContent = memo(function DashboardPageContent() {
   );
 
   const totalArrears = tenancies.reduce((total, tenancy) => {
+    // Only consider payments due on or before today
     const dueTransactions = tenancy.transactions.filter(tx => isBefore(new Date(tx.date), today));
+    // Calculate total amount that *should* have been paid by now
     const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
+    // Calculate total amount actually paid across all transactions for the tenancy
     const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
+    // The balance is what's owed from past due dates
     const balance = totalDueToDate - totalPaid;
     return total + (balance > 0 ? balance : 0);
   }, 0);
@@ -152,9 +156,9 @@ const DashboardPageContent = memo(function DashboardPageContent() {
         />
         <KpiCard
           icon={Banknote}
-          title="Total Portfolio Equity"
-          value={totalEquity}
-          description="Property value minus outstanding mortgage"
+          title="Portfolio Net Worth"
+          value={portfolioNetWorth}
+          description="Total property value minus outstanding debt"
         />
         <KpiCard
           icon={TrendingUp}
