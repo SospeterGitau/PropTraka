@@ -1,6 +1,3 @@
-
-
-
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -92,6 +89,7 @@ const DataSettings = memo(function DataSettings() {
                 onClose={() => setIsClearConfirmOpen(false)}
                 onConfirm={handleConfirmClear}
                 itemName="ALL sample data"
+                isDestructive={isClearing}
             />
         </>
     );

@@ -1,4 +1,3 @@
-
 'use server';
 
 import { writeBatch, collection, getDocs, query, where, doc } from 'firebase/firestore';
@@ -19,7 +18,7 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
 }
 
 export async function seedSampleData(userId: string) {
-  const { firestore } = getFirebase();
+  const { firestore } = await getFirebase();
   const batch = writeBatch(firestore);
 
   // 1. Seed Properties
@@ -151,7 +150,7 @@ export async function seedSampleData(userId: string) {
 }
 
 export async function clearSampleData(userId: string) {
-    const { firestore } = getFirebase();
+    const { firestore } = await getFirebase();
     const collections = ['properties', 'revenue', 'expenses', 'maintenanceRequests', 'contractors'];
     
     const batch = writeBatch(firestore);

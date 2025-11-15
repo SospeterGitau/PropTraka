@@ -1,4 +1,3 @@
-
 [
     {
         "propertyId": "prop1",
@@ -36,4 +35,5 @@
         "notes": "Repainted the living room walls.",
         "expenseType": "one-off"
     }
-]
+
+    

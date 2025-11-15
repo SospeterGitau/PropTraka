@@ -1,4 +1,3 @@
-
 [
     {
         "propertyId": "prop1",
@@ -38,4 +37,5 @@
         "deposit": 600000,
         "serviceCharges": []
     }
-]
+
+    
