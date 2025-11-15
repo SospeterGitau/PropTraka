@@ -97,8 +97,8 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                             ) : filteredArticles.length > 0 ? (
                                 filteredArticles.map((article, index) => (
                                 <button
-                                    key={article.id || `placeholder-${index}`}
-                                    onClick={() => setActiveArticle(article)}
+                                    key={`article-${index}`}
+                                    onClick={() => setActiveArticle(article as KnowledgeArticle)}
                                     className="w-full text-left p-3 rounded-md hover:bg-muted flex items-center justify-between"
                                 >
                                     <span className="font-medium text-sm">{article.title}</span>
