@@ -35,7 +35,7 @@ function HomePageContent() {
         </p>
         <div className="flex gap-4">
           <Button size="lg" asChild>
-            <Link href="/login">Login</Link>
+            <Link href="/signin">Login</Link>
           </Button>
         </div>
       </main>
