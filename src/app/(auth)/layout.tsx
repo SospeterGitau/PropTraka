@@ -10,9 +10,9 @@ export default function AuthLayout({
 }) {
   return (
     <FirebaseClientProvider>
-        <main className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
+        <div className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
             {children}
-        </main>
+        </div>
     </FirebaseClientProvider>
   );
 }
