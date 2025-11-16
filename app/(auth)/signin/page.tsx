@@ -22,11 +22,20 @@ import { Loader2 } from 'lucide-react';
 import {
   getAuth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { SocialAuthButtons } from '@/components/auth/social-auth-buttons';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
 
 
 const loginSchema = z.object({
@@ -36,8 +45,16 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+const passwordResetSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+type PasswordResetFormValues = z.infer<typeof passwordResetSchema>;
+
+
 export default function SignInPage() {
   const [isPending, startTransition] = useTransition();
+  const [isResetPending, startResetTransition] = useTransition();
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -49,6 +66,10 @@ export default function SignInPage() {
     defaultValues: {
       email: 'sospeter.gitau@gmail.com',
     }
+  });
+
+  const passwordResetForm = useForm<PasswordResetFormValues>({
+    resolver: zodResolver(passwordResetSchema),
   });
 
   const onSubmit = (data: LoginFormValues) => {
@@ -76,6 +97,26 @@ export default function SignInPage() {
     });
   };
 
+  const handlePasswordReset = (data: PasswordResetFormValues) => {
+    startResetTransition(async () => {
+      const auth = getAuth();
+      try {
+        await sendPasswordResetEmail(auth, data.email);
+        toast({
+          title: "Password Reset Email Sent",
+          description: `If an account exists for ${data.email}, you will receive an email with instructions.`,
+        });
+        setIsResetDialogOpen(false);
+      } catch (error: any) {
+         toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: error.message,
+        });
+      }
+    });
+  };
+
   const handleGoogleSignIn = () => {
      startTransition(async () => {
         const auth = getAuth();
@@ -96,14 +137,14 @@ export default function SignInPage() {
   }
 
   return (
+    <>
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center p-6 space-y-2">
         <CardTitle className="text-2xl">Welcome to LeaseLync</CardTitle>
-        <CardDescription>Enter your credentials to sign in or create an account.</CardDescription>
+        <CardDescription>Enter your credentials to sign in to your account.</CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
-            <h3 className="font-bold text-center">Log In</h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -120,12 +161,14 @@ export default function SignInPage() {
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                    href="/forgot-password"
-                    className="h-auto p-0 text-xs text-primary underline-offset-4 hover:underline"
+                 <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto p-0 text-xs"
+                  onClick={() => setIsResetDialogOpen(true)}
                 >
-                    Forgot Password?
-                </Link>
+                  Forgot Password?
+                </Button>
                 </div>
                 <Input
                 id="password"
@@ -143,7 +186,7 @@ export default function SignInPage() {
                     Please wait
                 </>
                 ) : (
-                'Login or Sign Up'
+                'Sign In'
                 )}
             </Button>
             </form>
@@ -176,5 +219,40 @@ export default function SignInPage() {
         </div>
       </CardContent>
     </Card>
+
+    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Forgot Password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={passwordResetForm.handleSubmit(handlePasswordReset)}>
+            <div className="py-4">
+              <Label htmlFor="reset-email">Email Address</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="m@example.com"
+                {...passwordResetForm.register('email')}
+              />
+              {passwordResetForm.formState.errors.email && (
+                  <p className="text-sm text-destructive mt-2">{passwordResetForm.formState.errors.email.message}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isResetPending}>
+                {isResetPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Send Reset Link
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
