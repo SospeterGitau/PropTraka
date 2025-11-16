@@ -1,7 +1,6 @@
-
 'use client';
 
-import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { FirebaseClientProvider } from "../../src/firebase/client-provider";
 
 export default function AuthLayout({
   children,
