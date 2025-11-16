@@ -48,12 +48,13 @@ export function SocialAuthButtons({ onGoogleSignIn, isPending }: SocialAuthButto
                     <Button
                         key={provider.name}
                         variant="outline"
-                        className="w-full justify-center bg-card border border-border hover:bg-muted"
+                        type="button"
+                        className="w-full"
                         onClick={provider.action ? () => provider.action({ onGoogleSignIn, isPending }) : undefined}
                         disabled={provider.disabled || isPending}
                     >
                          {isPending && !provider.disabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <provider.icon />}
-                         Log in with {provider.name}
+                         {provider.name}
                     </Button>
                 );
 
