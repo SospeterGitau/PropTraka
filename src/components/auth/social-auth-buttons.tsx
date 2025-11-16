@@ -34,45 +34,45 @@ interface SocialAuthButtonsProps {
     isPending: boolean;
 }
 
-const socialButtons = [
-    { name: 'Google', icon: GoogleIcon, action: (props: SocialAuthButtonsProps) => props.onGoogleSignIn, disabled: false },
-    { name: 'Facebook', icon: FacebookIcon, disabled: true },
-    { name: 'Apple', icon: AppleIcon, disabled: true },
-]
-
 export function SocialAuthButtons({ onGoogleSignIn, isPending }: SocialAuthButtonsProps) {
+    const socialProviders = [
+        { name: 'Google', icon: GoogleIcon, action: onGoogleSignIn, disabled: false },
+        { name: 'Facebook', icon: FacebookIcon, action: () => {}, disabled: true },
+        { name: 'Apple', icon: AppleIcon, action: () => {}, disabled: true },
+    ];
+
     return (
         <div className="space-y-2">
-            {socialButtons.map(provider => {
-                const button = (
+            {socialProviders.map(provider => {
+                const buttonContent = (
                     <Button
                         key={provider.name}
                         variant="outline"
                         type="button"
                         className="w-full"
-                        onClick={provider.action ? () => provider.action({ onGoogleSignIn, isPending }) : undefined}
+                        onClick={provider.action}
                         disabled={provider.disabled || isPending}
                     >
-                         {isPending && !provider.disabled ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <provider.icon />}
+                         {(isPending && !provider.disabled) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <provider.icon />}
                          {provider.name}
                     </Button>
                 );
 
-                if(provider.disabled) {
+                if (provider.disabled) {
                     return (
                         <TooltipProvider key={provider.name}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="w-full cursor-not-allowed">{button}</div>
+                                    <div className="w-full cursor-not-allowed">{buttonContent}</div>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                 <p>Coming soon!</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                    )
+                    );
                 }
-                return button;
+                return buttonContent;
             })}
         </div>
     );
