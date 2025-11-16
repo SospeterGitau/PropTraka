@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2 } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFitText } from '@/hooks/use-fit-text';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { logout } from '@/app/(dashboard)/actions';
 
 
 const passwordSchema = z.object({
@@ -291,6 +293,14 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             </div>
           )}
         </CardContent>
+         <CardFooter className="border-t p-6">
+          <form action={logout} className="w-full">
+            <Button variant="outline" className="w-full sm:w-auto">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </form>
+        </CardFooter>
       </Card>
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
@@ -657,3 +667,5 @@ export default function AccountPage() {
     </>
   );
 }
+
+    
