@@ -53,6 +53,7 @@ type PasswordResetFormValues = z.infer<typeof passwordResetSchema>;
 
 export default function SignInPage() {
   const [isPending, startTransition] = useTransition();
+  const [isGooglePending, setIsGooglePending] = useState(false);
   const [isResetPending, startResetTransition] = useTransition();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -117,23 +118,22 @@ export default function SignInPage() {
     });
   };
 
-  const handleGoogleSignIn = () => {
-     startTransition(async () => {
-        const auth = getAuth();
-        const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-            // On successful sign-in, the onAuthStateChanged listener will trigger
-            // the session creation and redirect.
-            await createSession();
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Google Sign-In Failed",
-                description: error.message,
-            });
-        }
-    });
+  const handleGoogleSignIn = async () => {
+    setIsGooglePending(true);
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        await createSession();
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.message,
+        });
+    } finally {
+        setIsGooglePending(false);
+    }
   }
 
   return (
@@ -204,7 +204,7 @@ export default function SignInPage() {
 
             <SocialAuthButtons 
                 onGoogleSignIn={handleGoogleSignIn} 
-                isPending={isPending}
+                isPending={isGooglePending}
             />
 
              <p className="text-center text-sm text-muted-foreground">
