@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -15,7 +14,7 @@ function HomePageContent() {
 
   useEffect(() => {
     if (!isAuthLoading && user) {
-      router.replace('/dashboard');
+      router.replace('/');
     }
   }, [user, isAuthLoading, router]);
 
