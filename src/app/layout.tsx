@@ -1,4 +1,3 @@
-
 import type { ReactNode } from 'react';
 import { ThemeProvider } from '@/context/theme-context';
 import { Toaster } from '@/components/ui/toaster';

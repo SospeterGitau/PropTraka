@@ -17,5 +17,5 @@ export async function createSession() {
   session.isLoggedIn = true; 
   await session.save();
 
-  redirect('/dashboard');
+  redirect('/');
 }
