@@ -1,3 +1,4 @@
+
 'use client';
 
 import { DataProvider } from '@/context/data-context';
