@@ -20,12 +20,21 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' ,
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
       },
     ],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard',
+        destination: '/',
+        permanent: true,
+      },
+    ]
   },
   webpack: (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');
