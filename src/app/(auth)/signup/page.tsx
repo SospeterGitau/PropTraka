@@ -58,6 +58,11 @@ export default function SignUpPage() {
         });
         await createSession();
       } catch (error: any) {
+        // Ignore NEXT_REDIRECT - it's not an error, just Next.js redirecting
+        if (error.message?.includes('NEXT_REDIRECT')) {
+            return; // Let the redirect happen without showing error
+        }
+        
         if (error.code === 'auth/email-already-in-use') {
             toast({
                 variant: "destructive",

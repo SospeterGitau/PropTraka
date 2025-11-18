@@ -81,6 +81,11 @@ export default function SignInPage() {
         // Session creation and redirect will be handled by the auth state listener
         await createSession();
       } catch (signInError: any) {
+         // Ignore NEXT_REDIRECT - it's not an error, just Next.js redirecting
+         if (signInError.message?.includes('NEXT_REDIRECT')) {
+           return; // Let the redirect happen without showing error
+         }
+         
          if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
           toast({
             variant: 'destructive',
