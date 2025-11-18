@@ -1,4 +1,3 @@
-
 'use server';
 
 import { redirect } from 'next/navigation';
@@ -20,3 +19,8 @@ export async function createSession() {
   redirect('/');
 }
 
+export async function logout() {
+  const session = await getSession();
+  await session.destroy();
+  redirect('/');
+}

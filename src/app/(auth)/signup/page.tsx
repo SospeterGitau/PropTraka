@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createSession } from '@/app/login/actions';
+import { createSession } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignUpPage() {
   const [isPending, startTransition] = useTransition();
+  const [isGooglePending, setIsGooglePending] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -74,21 +75,22 @@ export default function SignUpPage() {
     });
   };
 
-  const handleGoogleSignIn = () => {
-     startTransition(async () => {
-        const auth = getAuth();
-        const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-            await createSession();
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Google Sign-In Failed",
-                description: error.message,
-            });
-        }
-    });
+  const handleGoogleSignIn = async () => {
+    setIsGooglePending(true);
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        await createSession();
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Google Sign-In Failed",
+            description: error.message,
+        });
+    } finally {
+        setIsGooglePending(false);
+    }
   }
 
   return (
@@ -148,7 +150,7 @@ export default function SignUpPage() {
 
             <SocialAuthButtons 
                 onGoogleSignIn={handleGoogleSignIn} 
-                isPending={isPending}
+                isPending={isGooglePending}
             />
 
              <p className="text-center text-sm text-muted-foreground">

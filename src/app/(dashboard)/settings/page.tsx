@@ -38,7 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFitText } from '@/hooks/use-fit-text';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { logout } from '@/app/(dashboard)/actions';
+import { logout } from '@/app/actions';
 
 
 const passwordSchema = z.object({
@@ -667,5 +667,3 @@ export default function AccountPage() {
     </>
   );
 }
-
-    
