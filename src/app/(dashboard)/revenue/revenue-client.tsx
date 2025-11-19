@@ -128,39 +128,41 @@ const RevenueClient = memo(function RevenueClient() {
     );
   }
 
-  const tenancies = Object.values(
-    (revenue || []).reduce((acc, tx) => {
-      const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
-      if (!acc[tenancyId]) {
-        acc[tenancyId] = {
-          ...tx,
-          transactions: [],
+  const tenancies = useMemo(() => {
+    return Object.values(
+      (revenue || []).reduce((acc, tx) => {
+        const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
+        if (!acc[tenancyId]) {
+          acc[tenancyId] = {
+            ...tx,
+            transactions: [],
+          };
+        }
+        acc[tenancyId].transactions.push(tx);
+        return acc;
+      }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
+    ).map(tenancy => {
+        const today = startOfToday();
+        const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        const unpaidTransactions = sortedTransactions.filter(tx => {
+          const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
+          const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
+          const paid = tx.amountPaid ?? 0;
+          return paid < due;
+        });
+  
+        const earliestOverdue = unpaidTransactions.find(tx => isBefore(new Date(tx.date), today));
+        const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
+  
+        const nextDueTransaction = earliestOverdue || nextUpcoming;
+        
+        return {
+            ...tenancy,
+            nextDueDate: nextDueTransaction?.date,
         };
-      }
-      acc[tenancyId].transactions.push(tx);
-      return acc;
-    }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
-  ).map(tenancy => {
-      const today = startOfToday();
-      const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-      const unpaidTransactions = sortedTransactions.filter(tx => {
-        const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
-        const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
-        const paid = tx.amountPaid ?? 0;
-        return paid < due;
-      });
-
-      const earliestOverdue = unpaidTransactions.find(tx => isBefore(new Date(tx.date), today));
-      const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
-
-      const nextDueTransaction = earliestOverdue || nextUpcoming;
-      
-      return {
-          ...tenancy,
-          nextDueDate: nextDueTransaction?.date,
-      };
-  });
+    });
+  }, [revenue]);
 
   return (
     <>
