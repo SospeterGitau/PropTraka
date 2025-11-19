@@ -843,18 +843,16 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
 
 
 export default function AccountPage() {
-  const { user } = useUser();
-  const ADMIN_EMAIL = 'sospeter.gitau@gmail.com';
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
     <>
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
-        <TabsList className={cn("grid w-full max-w-lg mb-6", isAdmin ? "grid-cols-3" : "grid-cols-2")}>
+        <TabsList className={cn("grid w-full max-w-lg mb-6", isDevelopment ? "grid-cols-3" : "grid-cols-2")}>
           <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          {isAdmin && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
+          {isDevelopment && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile">
             <ProfileSettingsTab />
@@ -862,7 +860,7 @@ export default function AccountPage() {
         <TabsContent value="subscription">
             <SubscriptionBillingTab />
         </TabsContent>
-        {isAdmin && (
+        {isDevelopment && (
         <TabsContent value="knowledge">
             <KnowledgeBaseTab />
         </TabsContent>
