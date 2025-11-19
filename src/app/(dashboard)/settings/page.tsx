@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -25,7 +26,7 @@ import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query, getDocs, where, query } from 'firebase/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
@@ -40,6 +41,7 @@ import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { logout } from '@/app/actions';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 const passwordSchema = z.object({
@@ -51,6 +53,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
+  const { firestore } = useFirebase();
   const {
     settings,
     updateSettings,
@@ -68,6 +71,9 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
   const [tempSettings, setTempSettings] = useState(settings);
   const [originalTheme, setOriginalTheme] = useState(theme);
+
+  const [isClearingChat, setIsClearingChat] = useState(false);
+  const [isClearChatDialogOpen, setIsClearChatDialogOpen] = useState(false);
 
   const handleEdit = () => {
     setOriginalTheme(theme); 
@@ -158,6 +164,36 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
       }
     });
   };
+
+  const handleClearChatHistory = async () => {
+    if (!user || !firestore) return;
+    setIsClearingChat(true);
+
+    try {
+        const q = query(collection(firestore, 'chatMessages'), where('ownerId', '==', user.uid));
+        const snapshot = await getDocs(q);
+        
+        if(snapshot.empty) {
+            toast({ title: 'No Messages', description: 'Your chat history is already empty.' });
+            setIsClearChatDialogOpen(false);
+            setIsClearingChat(false);
+            return;
+        }
+
+        const batch = writeBatch(firestore);
+        snapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        toast({ title: 'Chat History Cleared', description: 'Your conversation with the AI assistant has been reset.' });
+    } catch(error) {
+         toast({ variant: 'destructive', title: 'Error', description: 'Could not clear chat history. Please try again.' });
+    } finally {
+        setIsClearChatDialogOpen(false);
+        setIsClearingChat(false);
+    }
+  }
 
   if (isDataLoading || !tempSettings) {
     return <p>Loading settings...</p>;
@@ -412,6 +448,26 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               </CardContent>
             </Card>
         </fieldset>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Data Management</CardTitle>
+                <CardDescription>Manage your application data.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
+                    <div>
+                        <h3 className="font-medium text-destructive">Clear Chat History</h3>
+                        <p className="text-sm text-muted-foreground max-w-md">Permanently delete all conversations with the AI assistant. This action cannot be undone.</p>
+                    </div>
+                    <Button variant="destructive" onClick={() => setIsClearChatDialogOpen(true)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Clear History
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+
         <Card>
             <CardHeader>
                 <CardTitle className="text-destructive">Sign Out</CardTitle>
@@ -460,6 +516,14 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
           </form>
         </DialogContent>
       </Dialog>
+      
+      <DeleteConfirmationDialog 
+        isOpen={isClearChatDialogOpen}
+        onClose={() => setIsClearChatDialogOpen(false)}
+        onConfirm={handleClearChatHistory}
+        itemName="your entire AI chat history"
+        isDestructive={isClearingChat}
+      />
     </>
   );
 });
@@ -807,3 +871,4 @@ export default function AccountPage() {
     </>
   );
 }
+
