@@ -619,15 +619,30 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                               </button>
                             </PopoverTrigger>
                             <PopoverContent className="w-80 text-sm">
-                              <div className="space-y-2">
-                                <h4 className="font-medium">Invoice Breakdown</h4>
-                                <div className="flex justify-between"><span>Rent:</span> <span>{formatCurrency(tx.rent, locale, currency)}</span></div>
-                                {tx.serviceCharges?.map((sc, i) => (
-                                    <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount, locale, currency)}</span></div>
-                                ))}
-                                {tx.deposit && tx.deposit > 0 && <div className="flex justify-between"><span>Deposit:</span> <span>{formatCurrency(tx.deposit, locale, currency)}</span></div>}
-                                {tx.notes && !isProrated && <p className="text-xs text-muted-foreground pt-2 border-t mt-2">{tx.notes}</p>}
-                              </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-medium">Invoice Breakdown</h4>
+                                    <div className="flex justify-between">
+                                    <span>Rent:</span>
+                                    <span>{formatCurrency(tx.rent, locale, currency)}</span>
+                                    </div>
+                                    {tx.serviceCharges?.map((sc, i) => (
+                                        <div key={i} className="flex justify-between">
+                                        <span>{sc.name}:</span>
+                                        <span>{formatCurrency(sc.amount, locale, currency)}</span>
+                                        </div>
+                                    ))}
+                                    {tx.deposit && tx.deposit > 0 && (
+                                    <div className="flex justify-between">
+                                        <span>Deposit:</span>
+                                        <span>{formatCurrency(tx.deposit, locale, currency)}</span>
+                                    </div>
+                                    )}
+                                    {tx.notes && !isProrated && (
+                                    <p className="text-xs text-muted-foreground pt-2 border-t mt-2">
+                                        {tx.notes}
+                                    </p>
+                                    )}
+                                </div>
                             </PopoverContent>
                           </Popover>
                         </div>
@@ -705,6 +720,8 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
 
     
 

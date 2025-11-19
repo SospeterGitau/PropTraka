@@ -189,8 +189,8 @@ const TenancyForm = memo(function TenancyForm({
         
         let rentForPeriod = rent; // Default to full rent
 
-        const startDay = tenancyStartDate.getUTCDate();
-        const endDay = tenancyEndDate.getUTCDate();
+        const startDay = tenancyStartDate.getDate();
+        const endDay = tenancyEndDate.getDate();
 
         if (isFirstMonth && isLastMonth) {
             const occupiedDays = endDay - startDay + 1;
@@ -442,3 +442,5 @@ export default function EditTenancyPage() {
     </>
   );
 }
+
+    

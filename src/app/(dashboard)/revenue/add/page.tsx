@@ -176,19 +176,22 @@ const TenancyForm = memo(function TenancyForm({
         let proRataNotes: string | undefined = undefined;
         let rentForPeriod = rent; // Default to full rent
 
-        const startDay = tenancyStartDate.getUTCDate();
-        const endDay = tenancyEndDate.getUTCDate();
+        const startDay = tenancyStartDate.getDate();
+        const endDay = tenancyEndDate.getDate();
         
-        if (isFirstMonth) {
+        if (isFirstMonth && isLastMonth) {
+            const occupiedDays = endDay - startDay + 1;
+            const dailyRent = rent / daysInMonth;
+            rentForPeriod = dailyRent * occupiedDays;
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
+        } else if (isFirstMonth) {
             const occupiedDays = daysInMonth - startDay + 1;
             if (occupiedDays < daysInMonth) {
-                 const dailyRent = rent / daysInMonth;
-                 rentForPeriod = dailyRent * occupiedDays;
-                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+                const dailyRent = rent / daysInMonth;
+                rentForPeriod = dailyRent * occupiedDays;
+                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
             }
-        }
-        
-        if (isLastMonth && !isFirstMonth) {
+        } else if (isLastMonth) {
              const occupiedDays = endDay;
              if (occupiedDays < daysInMonth) {
                  const dailyRent = rent / daysInMonth;
@@ -197,13 +200,6 @@ const TenancyForm = memo(function TenancyForm({
              }
         }
         
-        if (isFirstMonth && isLastMonth) {
-            const occupiedDays = endDay - startDay + 1;
-            const dailyRent = rent / daysInMonth;
-            rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-        }
-
         rentForPeriod = Math.round(rentForPeriod * 100) / 100;
         
         const txNotes = proRataNotes ? proRataNotes : (isFirstMonth ? notes : undefined);
@@ -437,5 +433,7 @@ export default function AddTenancyPage() {
     </>
   );
 }
+
+    
 
     
