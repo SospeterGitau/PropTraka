@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -432,11 +433,18 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
 const PlanPrice = ({ plan }: { plan: SubscriptionPlan }) => {
     return (
-        <div className="flex items-baseline justify-center gap-1 my-6">
-            <span className="text-4xl font-bold tracking-tight">
-                {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
-            </span>
-            {plan.price !== null && <span className="text-muted-foreground">/month</span>}
+        <div className="flex items-baseline justify-center gap-2 my-6">
+            {plan.price !== null ? (
+                <>
+                    <span className="text-muted-foreground">KSh</span>
+                    <span className="text-3xl font-bold tracking-tight">
+                        {plan.price.toLocaleString()}
+                    </span>
+                    <span className="text-muted-foreground">/month</span>
+                </>
+            ) : (
+                <span className="text-3xl font-bold tracking-tight">Custom</span>
+            )}
         </div>
     );
 };
