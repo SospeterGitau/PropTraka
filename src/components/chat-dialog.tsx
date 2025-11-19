@@ -3,7 +3,8 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
-import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useUser, useFirestore, errorEmitter } from '@/firebase';
+import type { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { ChatMessage, KnowledgeArticle, SecurityRuleContext } from '@/lib/types';
@@ -84,12 +85,13 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const messagesCollectionRef = collection(firestore, 'chatMessages');
     const messageWithTimestamp = { ...userMessage, timestamp: serverTimestamp() };
 
-    addDoc(messagesCollectionRef, messageWithTimestamp)
-      .then(async (docRef) => {
+    try {
+        await addDoc(messagesCollectionRef, messageWithTimestamp);
+        
         const kbToUse = (knowledgeBase && knowledgeBase.length > 0) ? knowledgeBase : placeholderFaq;
         const response = await getChatResponse({
-          question: input,
-          knowledgeBase: JSON.stringify(kbToUse),
+            question: input,
+            knowledgeBase: JSON.stringify(kbToUse),
         });
         
         await addDoc(collection(firestore, 'chatMessages'), { 
@@ -98,8 +100,8 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             content: response.answer, 
             timestamp: serverTimestamp() 
         });
-      })
-      .catch((serverError) => {
+
+    } catch (serverError) {
         const permissionError = new FirestorePermissionError({
           path: messagesCollectionRef.path,
           operation: 'create',
@@ -107,9 +109,9 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         } satisfies SecurityRuleContext);
         
         errorEmitter.emit('permission-error', permissionError);
-      }).finally(() => {
+    } finally {
         setIsPending(false);
-      });
+    }
   };
 
   return (
