@@ -70,13 +70,13 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [email, setEmail] = useState(user?.email || '');
 
   const [tempSettings, setTempSettings] = useState(settings);
-  const [originalTheme, setOriginalTheme] = useState(theme);
+  const [originalSettings, setOriginalSettings] = useState(settings);
 
   const [isClearingChat, setIsClearingChat] = useState(false);
   const [isClearChatDialogOpen, setIsClearChatDialogOpen] = useState(false);
 
   const handleEdit = () => {
-    setOriginalTheme(theme); 
+    setOriginalSettings(settings);
     setTempSettings(settings);
     setDisplayName(user?.displayName || '');
     setEmail(user?.email || '');
@@ -125,8 +125,11 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
 
   const handleCancel = () => {
-    setTheme(originalTheme);
-    setTempSettings(settings); 
+    setTempSettings(originalSettings);
+    // Revert the live theme to its original state if it was changed
+    if (theme !== originalSettings.theme) {
+      setTheme(originalSettings.theme || 'system');
+    }
     setIsEditing(false);
   };
 
@@ -140,10 +143,21 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   });
   
   useEffect(() => {
-    setTempSettings(settings);
+    // When not in editing mode, ensure tempSettings is in sync with global settings
+    if (!isEditing) {
+      setTempSettings(settings);
+    }
     setDisplayName(user?.displayName || '');
     setEmail(user?.email || '');
-  }, [settings, user]);
+  }, [settings, user, isEditing]);
+
+  // When in editing mode, apply the temporary theme for live preview
+  useEffect(() => {
+      if (isEditing && tempSettings.theme) {
+          setTheme(tempSettings.theme);
+      }
+  }, [isEditing, tempSettings.theme, setTheme]);
+
 
   const handleChangePassword = (data: PasswordFormValues) => {
     startPasswordTransition(async () => {
@@ -396,8 +410,8 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               <CardContent>
                   <Label>Colour Scheme</Label>
                    <RadioGroup
-                      value={theme}
-                      onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
+                      value={tempSettings.theme}
+                      onValueChange={(value) => setTempSettings({...tempSettings, theme: value as 'light' | 'dark' | 'system'})}
                       className="grid max-w-md grid-cols-3 gap-4 pt-2"
                     >
                       <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
