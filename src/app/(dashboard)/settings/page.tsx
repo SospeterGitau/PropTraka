@@ -410,8 +410,12 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               <CardContent>
                   <Label>Colour Scheme</Label>
                    <RadioGroup
-                      value={tempSettings.theme}
-                      onValueChange={(value) => setTempSettings({...tempSettings, theme: value as 'light' | 'dark' | 'system'})}
+                      value={isEditing ? tempSettings.theme : theme}
+                      onValueChange={(value) => {
+                        if (isEditing) {
+                          setTempSettings({...tempSettings, theme: value as 'light' | 'dark' | 'system'})
+                        }
+                      }}
                       className="grid max-w-md grid-cols-3 gap-4 pt-2"
                     >
                       <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
