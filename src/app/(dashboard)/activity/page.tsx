@@ -14,7 +14,7 @@ import { getLocale } from '@/lib/locales';
 import { useDataContext } from '@/context/data-context';
 import { useUser, useFirestore } from '@/firebase';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
-import { Query } from 'firebase/firestore';
+import { Query, Timestamp } from 'firebase/firestore';
 
 
 const ChangelogPage = memo(function ChangelogPage() {
@@ -44,7 +44,11 @@ const ChangelogPage = memo(function ChangelogPage() {
   const sortedChangelog = useMemo(() => {
     if (!changelogSnapshot) return [];
     const data = changelogSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ChangeLogEntry));
-    return [...data].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...data].sort((a, b) => {
+        const dateA = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
+        const dateB = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
+        return dateB.getTime() - dateA.getTime();
+    });
   }, [changelogSnapshot]);
 
   useEffect(() => {
@@ -54,7 +58,11 @@ const ChangelogPage = memo(function ChangelogPage() {
         const newFormattedDates: {[key: string]: string} = {};
         for (const item of sortedChangelog) {
             if (item.date) {
-                newFormattedDates[item.id] = format(new Date(item.date), 'PP, hh:mm a', { locale: localeData });
+                // Safely convert Firestore Timestamp or string to a JS Date object
+                const dateObject = item.date instanceof Timestamp ? item.date.toDate() : new Date(item.date);
+                if (!isNaN(dateObject.getTime())) { // Check if the date is valid
+                  newFormattedDates[item.id] = format(dateObject, 'PP, hh:mm a', { locale: localeData });
+                }
             }
         }
         setFormattedDates(newFormattedDates);
