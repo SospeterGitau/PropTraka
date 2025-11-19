@@ -41,15 +41,11 @@ const ArrearsClient = memo(function ArrearsClient() {
   const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
 
-  const [arrears, setArrears] = useState<ArrearEntry[]>([]);
-  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
-  const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
-  const [selectedArrear, setSelectedArrear] = useState<ArrearEntry | null>(null);
-
-  useEffect(() => {
-    if (!revenue) return;
+  const arrears = useMemo(() => {
+    if (!revenue) return [];
+    
     const today = startOfToday();
-
+  
     const tenancies = Object.values(
       revenue.reduce((acc, tx) => {
         if (!tx.tenancyId) return acc;
@@ -63,13 +59,13 @@ const ArrearsClient = memo(function ArrearsClient() {
         return acc;
       }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
     );
-
+  
     const calculatedArrears = tenancies
       .map(tenancy => {
         
         // Filter to only include transactions that are due on or before today
         const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
-
+  
         const totalDueToDate = dueTransactions.reduce((sum, tx) => {
           const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
           return sum + tx.rent + serviceChargesTotal + (tx.deposit || 0);
@@ -77,9 +73,9 @@ const ArrearsClient = memo(function ArrearsClient() {
         
         const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid || 0), 0);
         const amountOwed = totalDueToDate - totalPaid;
-
+  
         if (amountOwed <= 0) return null;
-
+  
         const firstUnpaidTx = tenancy.transactions
           .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
           .find(tx => {
@@ -89,17 +85,16 @@ const ArrearsClient = memo(function ArrearsClient() {
           
         const dueDate = firstUnpaidTx ? new Date(firstUnpaidTx.date) : new Date(tenancy.transactions[0].date);
         const daysOverdue = differenceInCalendarDays(today, dueDate);
-
-        // This simplified breakdown isn't perfect but gives a general idea.
+  
         const totalDepositDue = tenancy.transactions.reduce((sum, tx) => sum + (tx.deposit || 0), 0);
         const totalRentAndChargesDue = totalDueToDate - totalDepositDue;
-
+  
         const paidTowardsDeposit = Math.min(totalPaid, totalDepositDue);
         const remainingAfterDeposit = totalPaid - paidTowardsDeposit;
         
         const depositOwed = totalDepositDue - paidTowardsDeposit;
         const rentAndChargesOwed = totalRentAndChargesDue - remainingAfterDeposit;
-
+  
         return {
           tenant: tenancy.tenant!,
           tenantEmail: tenancy.tenantEmail!,
@@ -115,9 +110,13 @@ const ArrearsClient = memo(function ArrearsClient() {
       })
       .filter((a): a is NonNullable<ArrearEntry> => a !== null);
     
-    setArrears(calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue));
+    return calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue);
   }, [revenue]);
   
+  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
+  const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
+  const [selectedArrear, setSelectedArrear] = useState<ArrearEntry | null>(null);
+
   useEffect(() => {
     const formatAllDates = async () => {
       const localeData = await getLocale(locale);
