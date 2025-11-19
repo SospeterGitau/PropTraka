@@ -208,7 +208,7 @@ const RevenueClient = memo(function RevenueClient() {
                             const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
                             
                             if (hasOverdue) {
-                                statusBadge = <Badge variant="destructive">Overdue {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
+                                statusBadge = <Badge variant="destructive">Overdue</Badge>
                             } else if (tenancy.nextDueDate && !hasOverdue) {
                                  statusBadge = <Badge variant="default">Upcoming</Badge>
                             } else if (!isTenancyActive && totalBalance <= 0) {
