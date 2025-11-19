@@ -125,10 +125,17 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
 
   const handleCancel = () => {
+    // Revert temporary settings state
     setTempSettings(originalSettings);
-    // Revert the live theme to its original state if it was changed
-    if (theme !== originalSettings.theme) {
-      setTheme(originalSettings.theme || 'system');
+    // Explicitly revert the live theme if it was changed during edit mode
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    if (originalSettings.theme) {
+        let effectiveTheme = originalSettings.theme;
+        if (effectiveTheme === 'system') {
+            effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        root.classList.add(effectiveTheme);
     }
     setIsEditing(false);
   };
@@ -153,10 +160,17 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
   // When in editing mode, apply the temporary theme for live preview
   useEffect(() => {
-      if (isEditing && tempSettings.theme) {
-          setTheme(tempSettings.theme);
-      }
-  }, [isEditing, tempSettings.theme, setTheme]);
+    if (isEditing && tempSettings.theme) {
+        const root = window.document.documentElement;
+        root.classList.remove('light', 'dark');
+        
+        let effectiveTheme = tempSettings.theme;
+        if (effectiveTheme === 'system') {
+          effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        root.classList.add(effectiveTheme);
+    }
+  }, [isEditing, tempSettings.theme]);
 
 
   const handleChangePassword = (data: PasswordFormValues) => {
