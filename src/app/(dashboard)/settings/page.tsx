@@ -361,38 +361,37 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                   </div>
               </CardContent>
             </Card>
-            
-             <Card>
-                <CardHeader>
-                    <CardTitle>Security &amp; Account Actions</CardTitle>
-                </CardHeader>
-                <CardFooter className="border-t p-6 flex-col items-start gap-4">
-                    <div className="flex items-center justify-between w-full">
-                        <div>
-                            <h3 className="font-medium">Password</h3>
-                            <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
-                        </div>
-                        <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
-                        Change Password
-                        </Button>
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between w-full">
-                        <div>
-                            <h3 className="font-medium text-destructive">Sign Out</h3>
-                            <p className="text-sm text-muted-foreground">End your current session.</p>
-                        </div>
-                        <form action={logout}>
-                            <Button variant="destructive">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Sign Out
-                            </Button>
-                        </form>
-                    </div>
-                </CardFooter>
-            </Card>
         </fieldset>
-
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Security &amp; Account Actions</CardTitle>
+            </CardHeader>
+            <CardFooter className="border-t p-6 flex-col items-start gap-4">
+                <div className="flex items-center justify-between w-full">
+                    <div>
+                        <h3 className="font-medium">Password</h3>
+                        <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
+                    Change Password
+                    </Button>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between w-full">
+                    <div>
+                        <h3 className="font-medium text-destructive">Sign Out</h3>
+                        <p className="text-sm text-muted-foreground">End your current session.</p>
+                    </div>
+                    <form action={logout}>
+                        <Button variant="destructive">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out
+                        </Button>
+                    </form>
+                </div>
+            </CardFooter>
+        </Card>
       </div>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
@@ -432,14 +431,12 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 });
 
 const PlanPrice = ({ plan }: { plan: SubscriptionPlan }) => {
-    const { fontSize, ref } = useFitText();
-
     return (
-        <div ref={ref} className="h-12 flex items-baseline justify-center gap-1">
-            <span style={{ fontSize }} className="font-bold whitespace-nowrap">
+        <div className="flex items-baseline justify-center gap-1 my-6">
+            <span className="text-4xl font-bold tracking-tight">
                 {plan.price !== null ? `KSh ${plan.price.toLocaleString()}` : 'Custom'}
             </span>
-            {plan.price !== null && <span className="text-muted-foreground text-sm self-end">/month</span>}
+            {plan.price !== null && <span className="text-muted-foreground">/month</span>}
         </div>
     );
 };
@@ -515,9 +512,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                     <p className="text-sm text-muted-foreground pt-1 min-h-[40px]">{plan.description}</p>
                                 </CardHeader>
                                 
-                                <div className="my-6">
-                                  <PlanPrice plan={plan} />
-                                </div>
+                                <PlanPrice plan={plan} />
                                 
                                 <Separator />
 
