@@ -86,7 +86,16 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     const messageWithTimestamp = { ...userMessage, timestamp: serverTimestamp() };
 
     try {
-        await addDoc(messagesCollectionRef, messageWithTimestamp);
+        await addDoc(messagesCollectionRef, messageWithTimestamp)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: messagesCollectionRef.path,
+              operation: 'create',
+              requestResourceData: messageWithTimestamp,
+            } satisfies SecurityRuleContext);
+            
+            errorEmitter.emit('permission-error', permissionError);
+        });
         
         const kbToUse = (knowledgeBase && knowledgeBase.length > 0) ? knowledgeBase : placeholderFaq;
         const response = await getChatResponse({
@@ -135,8 +144,8 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     messages.map((message) => (
                          <div key={message.id} className={cn("flex items-end gap-2", message.role === 'user' ? 'justify-end' : 'justify-start')}>
                             {message.role === 'model' && (
-                                <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
-                                    <AvatarFallback><Bot size={20} /></AvatarFallback>
+                                <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="bg-primary text-primary-foreground"><Bot size={20} /></AvatarFallback>
                                 </Avatar>
                             )}
                             <div className={cn("p-3 rounded-lg max-w-[80%]", message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
@@ -159,8 +168,8 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 )}
                  {isPending && (
                     <div className="flex items-end gap-2 justify-start">
-                         <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
-                            <AvatarFallback><Bot size={20} /></AvatarFallback>
+                         <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-primary text-primary-foreground"><Bot size={20} /></AvatarFallback>
                         </Avatar>
                         <div className="p-3 rounded-lg bg-muted">
                            <Loader2 className="h-5 w-5 animate-spin"/>
