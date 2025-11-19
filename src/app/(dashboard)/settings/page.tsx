@@ -183,6 +183,51 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         <fieldset disabled={!isEditing} className="space-y-6">
             <Card>
                 <CardHeader>
+                    <CardTitle>Security</CardTitle>
+                    <CardDescription>Manage your account credentials and session.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <fieldset className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="displayName">Full Name</Label>
+                                <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your full name" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email Address</Label>
+                                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
+                            </div>
+                        </div>
+                    </fieldset>
+                </CardContent>
+                <CardFooter className="border-t p-6 flex-col items-start gap-4">
+                    <div className="flex items-center justify-between w-full">
+                        <div>
+                            <h3 className="font-medium">Password</h3>
+                            <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
+                        </div>
+                        <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
+                        Change Password
+                        </Button>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between w-full">
+                        <div>
+                            <h3 className="font-medium text-destructive">Sign Out</h3>
+                            <p className="text-sm text-muted-foreground">End your current session.</p>
+                        </div>
+                        <form action={logout}>
+                            <Button variant="destructive">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Sign Out
+                            </Button>
+                        </form>
+                    </div>
+                </CardFooter>
+            </Card>
+
+            <Card>
+                <CardHeader>
                     <CardTitle>User Profile</CardTitle>
                     <CardDescription>This helps us tailor the experience to your needs.</CardDescription>
                 </CardHeader>
@@ -338,51 +383,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               </CardContent>
             </Card>
         </fieldset>
-        
-        <Card>
-            <CardHeader>
-                <CardTitle>Security</CardTitle>
-                <CardDescription>Manage your account credentials and session.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <fieldset disabled={!isEditing} className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="displayName">Full Name</Label>
-                            <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your full name" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email Address</Label>
-                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
-                        </div>
-                    </div>
-                </fieldset>
-            </CardContent>
-            <CardFooter className="border-t p-6 flex-col items-start gap-4">
-                <div className="flex items-center justify-between w-full">
-                    <div>
-                        <h3 className="font-medium">Password</h3>
-                        <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
-                    </div>
-                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
-                    Change Password
-                    </Button>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between w-full">
-                    <div>
-                        <h3 className="font-medium text-destructive">Sign Out</h3>
-                        <p className="text-sm text-muted-foreground">End your current session.</p>
-                    </div>
-                    <form action={logout}>
-                        <Button variant="destructive">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign Out
-                        </Button>
-                    </form>
-                </div>
-            </CardFooter>
-        </Card>
       </div>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
@@ -431,7 +431,7 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
             {price !== null ? (
                 <>
                     <span className="text-muted-foreground text-2xl">KSh</span>
-                    <span className="text-4xl font-bold tracking-tight">{price.toLocaleString()}</span>
+                    <span className="text-4xl font-bold tracking-tight">{(price).toLocaleString()}</span>
                     <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
                 </>
             ) : (
