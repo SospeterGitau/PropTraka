@@ -177,7 +177,8 @@
         "companyName": { "type": "string" },
         "residencyStatus": { "type": "string", "enum": ["resident", "non-resident"] },
         "isPnlReportEnabled": { "type": "boolean" },
-        "isMarketResearchEnabled": { "type": "boolean" }
+        "isMarketResearchEnabled": { "type": "boolean" },
+        "theme": { "type": "string", "enum": ["dark", "light", "system"] }
       },
       "required": ["ownerId", "currency", "locale", "residencyStatus"]
     }

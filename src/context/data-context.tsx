@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
@@ -5,6 +6,7 @@ import { useUser, useFirebase } from '@/firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import type { ResidencyStatus, Subscription } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from './theme-context';
 
 export interface UserSettings {
   currency: string;
@@ -13,7 +15,8 @@ export interface UserSettings {
   residencyStatus: ResidencyStatus;
   isPnlReportEnabled: boolean;
   isMarketResearchEnabled: boolean;
-  subscription?: Subscription | null; // Add subscription to settings
+  subscription?: Subscription | null;
+  theme?: 'dark' | 'light' | 'system';
 }
 
 interface DataContextValue {
@@ -22,7 +25,7 @@ interface DataContextValue {
   isLoading: boolean;
 }
 
-const defaultSettings: Omit<UserSettings, 'subscription'> = {
+const defaultSettings: Omit<UserSettings, 'subscription' | 'theme'> = {
   currency: 'KES',
   locale: 'en-GB',
   companyName: 'My Property Portfolio',
@@ -37,8 +40,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user, isAuthLoading } = useUser();
   const { firestore } = useFirebase();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
-  const [settings, setSettings] = useState<UserSettings>({ ...defaultSettings, subscription: null });
+  const [settings, setSettings] = useState<UserSettings>({ ...defaultSettings, subscription: null, theme: 'system' });
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAppData = useCallback(async () => {
@@ -54,8 +58,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (settingsSnap.exists()) {
             userSettings = { ...defaultSettings, ...settingsSnap.data() } as UserSettings;
         } else {
-            userSettings = defaultSettings as UserSettings;
-            await setDoc(settingsRef, { ...defaultSettings, ownerId: user.uid });
+            userSettings = { ...defaultSettings, theme: 'system' } as UserSettings;
+            await setDoc(settingsRef, { ...userSettings, ownerId: user.uid });
+        }
+        
+        // Apply the theme from loaded settings
+        if (userSettings.theme) {
+            setTheme(userSettings.theme);
         }
 
         const subsQuery = query(collection(firestore, 'subscriptions'), where('ownerId', '==', user.uid));
@@ -82,11 +91,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     } catch (error) {
         console.error("Error fetching data:", error);
-        setSettings({ ...defaultSettings, subscription: null });
+        setSettings({ ...defaultSettings, subscription: null, theme: 'system' });
     } finally {
         setIsLoading(false);
     }
-  }, [user, firestore]);
+  }, [user, firestore, setTheme]);
 
   useEffect(() => {
     if (!isAuthLoading && user) {
@@ -112,6 +121,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       
       await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true });
       setSettings(updatedSettings);
+
+       // If the theme was part of the update, apply it
+      if (settingsToSave.theme) {
+        setTheme(settingsToSave.theme);
+      }
       
     } catch (error) {
       console.error("Error updating settings:", error);

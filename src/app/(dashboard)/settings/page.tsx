@@ -60,16 +60,39 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
   
-  // Create a temporary state for the theme to manage changes before saving
-  const [tempTheme, setTempTheme] = useState(theme);
   const [tempSettings, setTempSettings] = useState(settings);
+  const [originalTheme, setOriginalTheme] = useState(theme);
 
-  useEffect(() => {
-    // When the main settings or theme context changes, update our temporary states
+  // When editing starts, capture the current state of settings and theme
+  const handleEdit = () => {
+    setOriginalTheme(theme);
     setTempSettings(settings);
-    setTempTheme(theme);
-  }, [settings, theme]);
+    setIsEditing(true);
+  };
+  
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    if (isEditing) {
+      setTheme(newTheme); // Apply theme change immediately for preview
+    }
+  };
 
+  const handleSave = async () => {
+    if (tempSettings) {
+      // The theme is already applied via `setTheme`, so we just need to persist other settings.
+      // We pass the currently active theme to be saved.
+      await updateSettings({ ...tempSettings, theme });
+    }
+    setIsEditing(false);
+    toast({ title: "Settings Saved", description: "Your preferences have been updated." });
+  };
+
+  const handleCancel = () => {
+    // Revert any non-theme settings
+    setTempSettings(settings);
+    // Revert the theme to its original state before editing began
+    setTheme(originalTheme);
+    setIsEditing(false);
+  };
 
   const {
     register,
@@ -81,29 +104,9 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   });
   
   useEffect(() => {
-    // When editing mode is toggled, reset temp states to match the main context
-    if (!isEditing) {
-      setTempSettings(settings);
-      setTempTheme(theme);
-    }
-  }, [isEditing, settings, theme]);
-
-  const handleSave = async () => {
-    if (tempSettings) {
-      await updateSettings(tempSettings);
-    }
-    // Only apply the theme change on save
-    setTheme(tempTheme);
-    setIsEditing(false);
-    toast({ title: "Settings Saved", description: "Your preferences have been updated." });
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    // On cancel, revert temp states to match the main context
+    // When the main settings context changes (e.g., after loading), update our temporary states
     setTempSettings(settings);
-    setTempTheme(theme);
-  };
+  }, [settings]);
 
   const handleChangePassword = (data: PasswordFormValues) => {
     startPasswordTransition(async () => {
@@ -140,7 +143,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     <Button onClick={handleSave}>Save Changes</Button>
                 </>
             ) : (
-                <Button onClick={() => setIsEditing(true)}>Edit</Button>
+                <Button onClick={handleEdit}>Edit</Button>
             )}
         </div>
       </div>
@@ -211,25 +214,25 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               <CardContent>
                   <Label>Colour Scheme</Label>
                    <RadioGroup
-                      value={tempTheme}
-                      onValueChange={(value: "light" | "dark" | "system") => setTempTheme(value)}
+                      value={theme}
+                      onValueChange={(value: "light" | "dark" | "system") => handleThemeChange(value)}
                       className="grid max-w-md grid-cols-3 gap-4 pt-2"
                     >
-                      <Label className="[&:has([data-state=checked])>div]:border-primary">
+                      <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
                         <RadioGroupItem value="light" className="sr-only" />
                         <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
                           <Sun className="h-8 w-8" />
                         </div>
                         <span className="block w-full p-2 text-center font-normal">Light</span>
                       </Label>
-                      <Label className="[&:has([data-state=checked])>div]:border-primary">
+                      <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
                         <RadioGroupItem value="dark" className="sr-only" />
                         <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
                            <Moon className="h-8 w-8" />
                         </div>
                         <span className="block w-full p-2 text-center font-normal">Dark</span>
                       </Label>
-                       <Label className="[&:has([data-state=checked])>div]:border-primary">
+                       <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
                         <RadioGroupItem value="system" className="sr-only" />
                          <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
                             <Laptop className="h-8 w-8" />
