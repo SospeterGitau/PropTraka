@@ -106,6 +106,19 @@
       },
       "required": ["name", "specialty", "ownerId"]
     },
+    "chatMessage": {
+      "title": "Chat Message",
+      "description": "A message in the AI chat interface.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "role", "content", "timestamp"]
+    },
     "changeLogEntry": {
         "title": "Change Log Entry",
         "description": "An entry in the activity changelog.",
@@ -128,11 +141,15 @@
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Free", "Pro"] },
-        "status": { "type": "string", "enum": ["active", "cancelled", "past_due"] },
+        "plan": { "type": "string", "enum": ["Free", "Starter", "Growth", "Professional", "Enterprise"] },
+        "status": { "type": "string", "enum": ["active", "trial", "cancelled", "overdue", "past_due"] },
         "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
         "currentPeriodStart": { "type": "string", "format": "date-time" },
-        "currentPeriodEnd": { "type": "string", "format": "date-time" }
+        "currentPeriodEnd": { "type": "string", "format": "date-time" },
+        "units_managed": { "type": "number" },
+        "payment_customer_id": { "type": "string" },
+        "next_billing_date": { "type": "string", "format": "date-time" },
+        "last_payment_status": { "type": "string" }
       },
       "required": ["ownerId", "plan", "status", "billingCycle"]
     },
@@ -153,6 +170,32 @@
         "datePaid": { "type": "string", "format": "date-time" }
       },
       "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
+    },
+    "userSettings": {
+      "title": "User Settings",
+      "description": "Stores user-specific application settings and preferences.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "currency": { "type": "string" },
+        "locale": { "type": "string" },
+        "companyName": { "type": "string" },
+        "residencyStatus": { "type": "string", "enum": ["resident", "non-resident"] },
+        "isPnlReportEnabled": { "type": "boolean" },
+        "isMarketResearchEnabled": { "type": "boolean" },
+        "theme": { "type": "string", "enum": ["dark", "light", "system"] },
+        "role": { "type": "string", "enum": ["Individual Landlord", "Property Manager", "Real Estate Agent", "Investor"] },
+        "portfolioSize": { "type": "string", "enum": ["1-5", "6-20", "21-50", "50+"] },
+        "areasOfInterest": { "type": "array", "items": { "type": "string" } },
+        "billingAddressLine1": { "type": "string" },
+        "billingAddressLine2": { "type": "string" },
+        "billingCity": { "type": "string" },
+        "billingCounty": { "type": "string" },
+        "billingPostalCode": { "type": "string" },
+        "billingCountry": { "type": "string" },
+        "vatPin": { "type": "string" }
+      },
+      "required": ["ownerId"]
     }
   },
   "auth": {
@@ -183,6 +226,10 @@
         "schema": { "$ref": "#/entities/changeLogEntry" },
         "description": "Stores activity log entries."
     },
+    "/chatMessages/{messageId}": {
+        "schema": { "$ref": "#/entities/chatMessage" },
+        "description": "Stores messages for the AI chat assistant."
+    },
     "/subscriptions/{subscriptionId}": {
         "schema": { "$ref": "#/entities/subscription" },
         "description": "Stores user subscription details."
@@ -190,6 +237,10 @@
     "/invoices/{invoiceId}": {
         "schema": { "$ref": "#/entities/invoice" },
         "description": "Stores tenant payment invoices."
+    },
+    "/userSettings/{userId}": {
+      "schema": { "$ref": "#/entities/userSettings" },
+      "description": "Stores settings for a specific user."
     }
   }
 }

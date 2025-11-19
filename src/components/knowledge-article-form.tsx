@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 interface KnowledgeArticleFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<KnowledgeArticle, 'id'> | KnowledgeArticle) => void;
+  onSubmit: (data: Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle) => void;
   article?: KnowledgeArticle | null;
 }
 
@@ -27,7 +27,7 @@ export function KnowledgeArticleForm({ isOpen, onClose, onSubmit, article }: Kno
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     
-    const data: Omit<KnowledgeArticle, 'id'> | KnowledgeArticle = {
+    const data: Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle = {
       ...(article ? { id: article.id } : {}),
       title: formData.get('title') as string,
       content: formData.get('content') as string,
