@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -199,68 +199,29 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             </CardHeader>
             <CardContent>
                 <Label>Colour Scheme</Label>
-                <RadioGroup
+                 <RadioGroup
                     value={theme}
                     onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}
-                    className="grid max-w-md grid-cols-3 gap-8 pt-2"
+                    className="grid max-w-md grid-cols-3 gap-4 pt-2"
                   >
                     <Label className="[&:has([data-state=checked])>div]:border-primary">
                       <RadioGroupItem value="light" className="sr-only" />
-                      <div className="items-center rounded-md border-2 border-muted p-1 hover:border-accent">
-                        <div className="space-y-2 rounded-sm bg-[#F0F0F0] p-2">
-                          <div className="space-y-2 rounded-md bg-white p-2 shadow-sm">
-                            <div className="h-2 w-[80px] rounded-lg bg-[#F0F0F0]" />
-                            <div className="h-2 w-[100px] rounded-lg bg-[#F0F0F0]" />
-                          </div>
-                          <div className="flex items-center space-x-2 rounded-md bg-white p-2 shadow-sm">
-                            <div className="h-4 w-4 rounded-full bg-[#F0F0F0]" />
-                            <div className="h-2 w-[100px] rounded-lg bg-[#F0F0F0]" />
-                          </div>
-                          <div className="flex items-center space-x-2 rounded-md bg-white p-2 shadow-sm">
-                            <div className="h-4 w-4 rounded-full bg-[#F0F0F0]" />
-                            <div className="h-2 w-[100px] rounded-lg bg-[#F0F0F0]" />
-                          </div>
-                        </div>
+                      <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
+                        <Sun className="h-8 w-8" />
                       </div>
                       <span className="block w-full p-2 text-center font-normal">Light</span>
                     </Label>
                     <Label className="[&:has([data-state=checked])>div]:border-primary">
                       <RadioGroupItem value="dark" className="sr-only" />
-                      <div className="items-center rounded-md border-2 border-muted bg-popover p-1 hover:bg-accent hover:text-accent-foreground">
-                        <div className="space-y-2 rounded-sm bg-neutral-950 p-2">
-                          <div className="space-y-2 rounded-md bg-neutral-800 p-2 shadow-sm">
-                            <div className="h-2 w-[80px] rounded-lg bg-neutral-400" />
-                            <div className="h-2 w-[100px] rounded-lg bg-neutral-400" />
-                          </div>
-                          <div className="flex items-center space-x-2 rounded-md bg-neutral-800 p-2 shadow-sm">
-                            <div className="h-4 w-4 rounded-full bg-neutral-400" />
-                            <div className="h-2 w-[100px] rounded-lg bg-neutral-400" />
-                          </div>
-                          <div className="flex items-center space-x-2 rounded-md bg-neutral-800 p-2 shadow-sm">
-                            <div className="h-4 w-4 rounded-full bg-neutral-400" />
-                            <div className="h-2 w-[100px] rounded-lg bg-neutral-400" />
-                          </div>
-                        </div>
+                      <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
+                         <Moon className="h-8 w-8" />
                       </div>
                       <span className="block w-full p-2 text-center font-normal">Dark</span>
                     </Label>
                      <Label className="[&:has([data-state=checked])>div]:border-primary">
                       <RadioGroupItem value="system" className="sr-only" />
-                       <div className="items-center rounded-md border-2 border-muted bg-gradient-to-r from-neutral-950 to-white p-1 hover:bg-accent hover:text-accent-foreground">
-                          <div className="space-y-2 rounded-sm bg-gradient-to-r from-neutral-900 to-gray-100 p-2">
-                            <div className="space-y-2 rounded-md bg-gradient-to-r from-neutral-800 to-white p-2 shadow-sm">
-                              <div className="h-2 w-[80px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
-                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
-                            </div>
-                            <div className="flex items-center space-x-2 rounded-md bg-gradient-to-r from-neutral-800 to-white p-2 shadow-sm">
-                              <div className="h-4 w-4 rounded-full bg-gradient-to-r from-neutral-400 to-gray-300" />
-                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
-                            </div>
-                            <div className="flex items-center space-x-2 rounded-md bg-gradient-to-r from-neutral-800 to-white p-2 shadow-sm">
-                              <div className="h-4 w-4 rounded-full bg-gradient-to-r from-neutral-400 to-gray-300" />
-                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
-                            </div>
-                          </div>
+                       <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
+                          <Laptop className="h-8 w-8" />
                         </div>
                       <span className="block w-full p-2 text-center font-normal">System</span>
                     </Label>
