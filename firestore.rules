@@ -1,5 +1,4 @@
 
-
 rules_version = '2';
 
 /**
@@ -32,6 +31,7 @@ service cloud.firestore {
      * - /subscriptions
      * - /userSettings
      * - /knowledgeBase
+     * - /chatMessages
      */
     match /{collection}/{docId} {
       // Allow read/write operations if the user is the owner of the document.
