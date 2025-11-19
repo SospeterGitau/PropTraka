@@ -9,16 +9,16 @@ body {
 
 @layer base {
   :root {
-    --background: 240 5% 96.1%; /* Light Gray */
-    --foreground: 224 71.4% 4.1%; /* Almost Black */
+    --background: 240 10% 98%;
+    --foreground: 224 71.4% 4.1%; 
 
-    --card: 0 0% 100%; /* White */
+    --card: 0 0% 100%;
     --card-foreground: 224 71.4% 4.1%;
  
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
  
-    --primary: 210 14% 47%; /* Slate Blue */
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 98%;
  
     --secondary: 240 4.8% 95.9%;
@@ -27,26 +27,24 @@ body {
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
  
-    --accent: 120 25% 65%; /* Soft Green */
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 210 14% 47%;
+    --ring: 217 91% 60%;
  
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    /* Consistent Chart Colors */
-    --chart-1: 210 14% 47%; /* Slate Blue (Primary) */
-    --chart-2: 120 25% 55%; /* Slightly darker Soft Green (Accent) */
-    --chart-3: 0 72% 51%; /* Red */
-    --chart-4: 38 92% 50%; /* Orange/Yellow */
-    --chart-5: 180 44% 49%; /* Teal */
+    --chart-1: 217 91% 60%; 
+    --chart-2: 120 25% 55%;
+    --chart-3: 0 72% 51%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 180 44% 49%;
 
-    /* Sidebar inherits from main theme */
     --sidebar-background: hsl(var(--card));
     --sidebar-foreground: hsl(var(--card-foreground));
     --sidebar-primary: hsl(var(--primary));
@@ -58,42 +56,40 @@ body {
   }
  
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 222 84% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 3.9%;
+    --card: 222 84% 5%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 222 84% 5%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 206 90% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 217 10% 65%;
     
-    --accent: 120 25% 65%; /* Soft Green */
+    --accent: 217 33% 17%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 206 90% 50%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 217 91% 60%;
 
-    /* Consistent Chart Colors for Dark Mode */
-    --chart-1: 206 90% 50%; /* Primary Blue */
-    --chart-2: 120 25% 65%; /* Soft Green */
-    --chart-3: 0 72% 51%; /* Red */
-    --chart-4: 48 96% 50%; /* Orange/Yellow */
-    --chart-5: 180 44% 49%; /* Teal */
+    --chart-1: 217 91% 60%;
+    --chart-2: 120 25% 65%;
+    --chart-3: 0 72% 51%;
+    --chart-4: 48 96% 50%;
+    --chart-5: 180 44% 49%;
     
-    /* Sidebar inherits from main theme */
     --sidebar-background: hsl(var(--card));
     --sidebar-foreground: hsl(var(--card-foreground));
     --sidebar-primary: hsl(var(--primary));
@@ -114,7 +110,6 @@ body {
   }
 }
 
-/* Hide spin buttons on number inputs */
 @layer utilities {
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button {
