@@ -187,14 +187,14 @@ function InvoiceForm({
               <div key={index} className="flex items-center gap-2">
                 <Input
                   placeholder="Charge Name (e.g., Water)"
-                  value={charge.name}
+                  defaultValue={charge.name}
                   onChange={(e) => handleChargeChange(index, 'name', e.target.value)}
                   className="flex-1"
                 />
                 <Input
                   type="number"
                   placeholder="Amount"
-                  value={charge.amount}
+                  defaultValue={charge.amount}
                   onChange={(e) => handleChargeChange(index, 'amount', e.target.value)}
                   className="w-32"
                 />
