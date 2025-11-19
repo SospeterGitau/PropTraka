@@ -73,6 +73,14 @@ const TenancyForm = memo(function TenancyForm({
     tenancyToEdit?.tenancyEndDate ? parseLocalDate(tenancyToEdit.tenancyEndDate) : undefined
   );
 
+  const initialDeposit = useMemo(() => {
+    if (!tenancyToEdit?.tenancyId || !revenue) return 0;
+    const firstTransaction = revenue
+      .filter(t => t.tenancyId === tenancyToEdit.tenancyId)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+    return firstTransaction?.deposit || 0;
+  }, [tenancyToEdit, revenue]);
+
   useEffect(() => {
     if (tenancyToEdit) {
       setServiceCharges(
@@ -196,7 +204,7 @@ const TenancyForm = memo(function TenancyForm({
           const occupiedDays = endDay - startDay + 1; // 23 - 3 + 1 = 21 days
           const dailyRent = rent / daysInMonth;
           rentForPeriod = dailyRent * occupiedDays;
-          proRataNotes = `Pro-rated rent for ${"$"}{occupiedDays} days.`;
+          proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
         } 
         else if (isFirstMonth) {
           // SCENARIO 2: First month of multi-month tenancy
@@ -207,7 +215,7 @@ const TenancyForm = memo(function TenancyForm({
           if (!isFullPeriod) {
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${"$"}{occupiedDays} days in the first month.`;
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
           }
         }
         else if (isLastMonth) {
@@ -226,7 +234,7 @@ const TenancyForm = memo(function TenancyForm({
           if (!isFullPeriod && occupiedDays > 0) {
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${"$"}{occupiedDays} days in the final month.`;
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
           }
         }
         // SCENARIO 4: Middle months - use full rent (rentForPeriod already = rent)
@@ -361,7 +369,7 @@ const TenancyForm = memo(function TenancyForm({
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-                        <Input id="deposit" name="deposit" type="number" defaultValue={tenancyToEdit?.deposit} />
+                        <Input id="deposit" name="deposit" type="number" defaultValue={initialDeposit} />
                     </div>
                 </div>
                 <div className="space-y-2">
