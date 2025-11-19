@@ -11,7 +11,7 @@ The user's rental property portfolio data is provided below. This data will serv
 For each property in the portfolio, perform the following steps:
 
 a) **Location Identification:** 
-Accurately identify the city, and specific submarket or neighborhood for each property.
+Accurately identify the city, and specific submarket or neighbourhood for each property.
 
 b) **Market Rent Research:** 
 Research and determine the current average market rent for comparable properties. 'Comparable' means properties with the same property type (e.g., Domestic, Commercial), building type (e.g., Detached House, Flat, Office), similar number of bedrooms, bathrooms, and size (e.g., sq ft or sq m). Account for general property condition and amenities if sufficient data is available or can be reasonably inferred.

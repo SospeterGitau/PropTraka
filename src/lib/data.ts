@@ -1,6 +1,6 @@
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
- * used across the application. Centralizing these types helps ensure data consistency,
+ * used across the application. Centralising these types helps ensure data consistency,
  * improves code readability, and provides strong typing for props, state, and API responses.
  */
 

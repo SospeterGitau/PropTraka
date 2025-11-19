@@ -63,23 +63,20 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [tempSettings, setTempSettings] = useState(settings);
   const [originalTheme, setOriginalTheme] = useState(theme);
 
-  // When editing starts, capture the current state of settings and theme
   const handleEdit = () => {
-    setOriginalTheme(theme);
+    setOriginalTheme(theme); 
     setTempSettings(settings);
     setIsEditing(true);
   };
   
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     if (isEditing) {
-      setTheme(newTheme); // Apply theme change immediately for preview
+      setTheme(newTheme);
     }
   };
 
   const handleSave = async () => {
     if (tempSettings) {
-      // The theme is already applied via `setTheme`, so we just need to persist other settings.
-      // We pass the currently active theme to be saved.
       await updateSettings({ ...tempSettings, theme });
     }
     setIsEditing(false);
@@ -87,10 +84,8 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
 
   const handleCancel = () => {
-    // Revert any non-theme settings
-    setTempSettings(settings);
-    // Revert the theme to its original state before editing began
     setTheme(originalTheme);
+    setTempSettings(settings); 
     setIsEditing(false);
   };
 
@@ -104,7 +99,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   });
   
   useEffect(() => {
-    // When the main settings context changes (e.g., after loading), update our temporary states
     setTempSettings(settings);
   }, [settings]);
 
@@ -152,7 +146,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             <Card>
               <CardHeader>
                 <CardTitle>Reporting</CardTitle>
-                <CardDescription>Customize details for your financial reports.</CardDescription>
+                <CardDescription>Customise details for your financial reports.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
