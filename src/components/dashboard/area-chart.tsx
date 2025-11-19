@@ -40,7 +40,7 @@ export default function AreaChartComponent({ revenue, expenses }: AreaChartProps
 
   const chartData = Array.from({ length: 6 }).map((_, i) => {
     const d = subMonths(new Date(), 5 - i);
-    const month = format(d, 'MMMM');
+    const month = format(d, 'MMM');
     const monthStart = startOfMonth(d);
 
     const monthlyRevenue = revenue
@@ -78,13 +78,18 @@ export default function AreaChartComponent({ revenue, expenses }: AreaChartProps
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
               <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
               <Tooltip 
+                cursor={{ fill: 'hsl(var(--accent))' }}
                 content={<ChartTooltipContent 
+                    indicator="dot"
                     formatter={(value, name) => (
-                    <div className="flex flex-col">
-                        <span className="text-muted-foreground">{name}</span>
-                        <span>{formatCurrency(Number(value))}</span>
-                    </div>
-                )}
+                      <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: chartConfig[name as keyof typeof chartConfig].color }} />
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground capitalize">{name}</span>
+                            <span className="font-bold">{formatCurrency(Number(value))}</span>
+                          </div>
+                      </div>
+                    )}
                 />}
               />
               <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-4))" fillOpacity={1} fill="url(#colorExpenses)" />
