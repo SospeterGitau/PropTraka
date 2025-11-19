@@ -51,7 +51,7 @@ const RevenueClient = memo(function RevenueClient() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
-
+  
   const tenancies = useMemo(() => {
     return Object.values(
       (revenue || []).reduce((acc, tx) => {
@@ -88,6 +88,7 @@ const RevenueClient = memo(function RevenueClient() {
     });
   }, [revenue]);
 
+
   useEffect(() => {
     if (!revenue) return;
     const formatAllDates = async () => {
@@ -100,14 +101,17 @@ const RevenueClient = memo(function RevenueClient() {
         if(item.tenancyId && item.tenancyEndDate && !newFormattedDates[`${item.tenancyId}-end`]) {
           newFormattedDates[`${item.tenancyId}-end`] = format(new Date(item.tenancyEndDate), 'PP', { locale: localeData });
         }
-        if(item.tenancyId && item.nextDueDate && !newFormattedDates[`${item.tenancyId}-nextDue`]) {
-            newFormattedDates[`${item.tenancyId}-nextDue`] = format(new Date(item.nextDueDate), 'PP', { locale: localeData });
-        }
+      }
+      // This needs to be separate because `tenancies` depends on `revenue`
+      for (const tenancy of tenancies) {
+          if (tenancy.tenancyId && tenancy.nextDueDate && !newFormattedDates[`${tenancy.tenancyId}-nextDue`]) {
+            newFormattedDates[`${tenancy.tenancyId}-nextDue`] = format(new Date(tenancy.nextDueDate), 'PP', { locale: localeData });
+          }
       }
       setFormattedDates(newFormattedDates);
     };
     formatAllDates();
-  }, [revenue, locale]);
+  }, [revenue, tenancies, locale]);
 
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
     if (!user) return;
@@ -206,7 +210,7 @@ const RevenueClient = memo(function RevenueClient() {
                             if (hasOverdue) {
                                 statusBadge = <Badge variant="destructive">Overdue {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
                             } else if (tenancy.nextDueDate && !hasOverdue) {
-                                 statusBadge = <Badge variant="outline">Upcoming {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
+                                 statusBadge = <Badge variant="default">Upcoming {formattedDates[`${tenancy.tenancyId}-nextDue`]}</Badge>
                             } else if (!isTenancyActive && totalBalance <= 0) {
                                 statusBadge = <Badge variant="secondary">Completed</Badge>;
                             } else if (isTenancyActive && totalBalance <= 0) {
