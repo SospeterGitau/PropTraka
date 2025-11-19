@@ -2,10 +2,10 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Bot, User, Send, Loader2, Sparkles, X } from 'lucide-react';
+import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { ChatMessage, KnowledgeArticle, SecurityRuleContext } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,6 +91,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           question: input,
           knowledgeBase: JSON.stringify(kbToUse),
         });
+        
         await addDoc(collection(firestore, 'chatMessages'), { 
             ownerId: user.uid, 
             role: 'model', 
@@ -114,12 +115,11 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[70vh] max-h-[700px]">
-        <DialogHeader className="p-4 border-b flex-row flex justify-between items-center">
+        <DialogHeader className="p-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
             AI Assistant
           </DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7"><X className="h-4 w-4"/></Button>
         </DialogHeader>
 
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
