@@ -14,7 +14,7 @@ import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPla
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAuth, updatePassword, updateProfile, updateEmail } from 'firebase/auth';
+import { getAuth, updatePassword, updateProfile, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop, User as UserIcon } from 'lucide-react';
 import { z } from 'zod';
@@ -77,29 +77,51 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
   
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    if (isEditing) {
-      setTheme(newTheme);
-    }
+    setTheme(newTheme);
   };
 
   const handleSave = async () => {
     const auth = getAuth();
-    if (tempSettings && auth.currentUser) {
-        // Update Firebase Auth profile
-        try {
-            await updateProfile(auth.currentUser, { displayName });
-            // Updating email is a sensitive operation, you might want to reauthenticate the user first
-            // For now, we'll only update displayName as it's safer.
-            // await updateEmail(auth.currentUser, email);
-        } catch (error: any) {
-            toast({ variant: 'destructive', title: 'Profile Update Error', description: error.message });
-        }
+    const currentUser = auth.currentUser;
 
-        // Update app settings in Firestore
-        await updateSettings({ ...tempSettings, theme });
+    if (tempSettings && currentUser) {
+        let profileUpdated = false;
+        let emailUpdated = false;
+
+        try {
+            // Update display name if it has changed
+            if (displayName !== currentUser.displayName) {
+                await updateProfile(currentUser, { displayName });
+                profileUpdated = true;
+            }
+            
+            // Update email if it has changed
+            if (email !== currentUser.email) {
+                await updateEmail(currentUser, email);
+                emailUpdated = true;
+            }
+            
+            // Update app settings in Firestore
+            await updateSettings({ ...tempSettings, theme });
+
+            if (profileUpdated || emailUpdated) {
+                toast({ title: "Profile Updated", description: "Your name and/or email have been changed." });
+            }
+            toast({ title: "Settings Saved", description: "Your preferences have been updated." });
+
+        } catch (error: any) {
+            if (error.code === 'auth/requires-recent-login') {
+                toast({ 
+                    variant: 'destructive', 
+                    title: 'Authentication Required', 
+                    description: 'Changing your email is a sensitive action. Please sign out and sign in again before retrying.' 
+                });
+            } else {
+                toast({ variant: 'destructive', title: 'Update Error', description: error.message });
+            }
+        }
     }
     setIsEditing(false);
-    toast({ title: "Settings Saved", description: "Your preferences have been updated." });
   };
 
   const handleCancel = () => {
@@ -138,7 +160,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         setIsPasswordDialogOpen(false);
         reset();
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        toast({ variant: 'destructive', title: 'Error', description: 'This is a sensitive operation. Please sign out and sign back in before changing your password.' });
       }
     });
   };
@@ -177,8 +199,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="email">Email Address</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" disabled />
-                        <p className="text-xs text-muted-foreground">Updating your email address is currently not supported.</p>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
                     </div>
                   </div>
               </CardContent>
@@ -188,7 +209,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                         <h3 className="font-medium">Password</h3>
                         <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
                     </div>
-                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)} disabled={isEditing}>
+                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
                       Change Password
                     </Button>
                  </div>
@@ -333,7 +354,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
           <DialogHeader>
             <DialogTitle>Change Password</DialogTitle>
             <DialogDescription>
-              Enter a new password for your account. You will be logged out after changing it.
+              Enter a new password for your account.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleChangePassword)}>
