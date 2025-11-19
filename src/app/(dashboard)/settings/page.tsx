@@ -24,7 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useFirebase } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query, getDocs, where, query } from 'firebase/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
@@ -871,4 +871,3 @@ export default function AccountPage() {
     </>
   );
 }
-
