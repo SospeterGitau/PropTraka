@@ -14,9 +14,9 @@ import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPla
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAuth, updatePassword } from 'firebase/auth';
+import { getAuth, updatePassword, updateProfile, updateEmail } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop, User as UserIcon } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,6 +48,7 @@ const passwordSchema = z.object({
 type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const ProfileSettingsTab = memo(function ProfileSettingsTab() {
+  const { user } = useUser();
   const { theme, setTheme } = useTheme();
   const {
     settings,
@@ -60,12 +61,18 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
   
+  // States for user profile fields
+  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [email, setEmail] = useState(user?.email || '');
+
   const [tempSettings, setTempSettings] = useState(settings);
   const [originalTheme, setOriginalTheme] = useState(theme);
 
   const handleEdit = () => {
     setOriginalTheme(theme); 
     setTempSettings(settings);
+    setDisplayName(user?.displayName || '');
+    setEmail(user?.email || '');
     setIsEditing(true);
   };
   
@@ -76,8 +83,20 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
 
   const handleSave = async () => {
-    if (tempSettings) {
-      await updateSettings({ ...tempSettings, theme });
+    const auth = getAuth();
+    if (tempSettings && auth.currentUser) {
+        // Update Firebase Auth profile
+        try {
+            await updateProfile(auth.currentUser, { displayName });
+            // Updating email is a sensitive operation, you might want to reauthenticate the user first
+            // For now, we'll only update displayName as it's safer.
+            // await updateEmail(auth.currentUser, email);
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Profile Update Error', description: error.message });
+        }
+
+        // Update app settings in Firestore
+        await updateSettings({ ...tempSettings, theme });
     }
     setIsEditing(false);
     toast({ title: "Settings Saved", description: "Your preferences have been updated." });
@@ -100,19 +119,21 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   
   useEffect(() => {
     setTempSettings(settings);
-  }, [settings]);
+    setDisplayName(user?.displayName || '');
+    setEmail(user?.email || '');
+  }, [settings, user]);
 
   const handleChangePassword = (data: PasswordFormValues) => {
     startPasswordTransition(async () => {
       const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
         toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to change your password.' });
         return;
       }
 
       try {
-        await updatePassword(user, data.newPassword);
+        await updatePassword(currentUser, data.newPassword);
         toast({ title: 'Success', description: 'Your password has been updated.' });
         setIsPasswordDialogOpen(false);
         reset();
@@ -143,6 +164,50 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
       </div>
       <div className="space-y-6">
         <fieldset disabled={!isEditing} className="space-y-6">
+             <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>Manage your account details and password.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="displayName">Full Name</Label>
+                        <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your full name" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" disabled />
+                        <p className="text-xs text-muted-foreground">Updating your email address is currently not supported.</p>
+                    </div>
+                  </div>
+              </CardContent>
+              <CardFooter className="border-t p-6 flex-col items-start gap-4">
+                 <div className="flex items-center justify-between w-full">
+                    <div>
+                        <h3 className="font-medium">Password</h3>
+                        <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
+                    </div>
+                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)} disabled={isEditing}>
+                      Change Password
+                    </Button>
+                 </div>
+                  <Separator />
+                  <div className="flex items-center justify-between w-full">
+                    <div>
+                        <h3 className="font-medium text-destructive">Sign Out</h3>
+                        <p className="text-sm text-muted-foreground">End your current session.</p>
+                    </div>
+                     <form action={logout}>
+                        <Button variant="destructive">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out
+                        </Button>
+                    </form>
+                  </div>
+              </CardFooter>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Reporting</CardTitle>
@@ -261,25 +326,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             </Card>
         </fieldset>
 
-        <Card>
-          <CardHeader>
-              <CardTitle>Security</CardTitle>
-              <CardDescription>Manage your account security settings.</CardDescription>
-          </CardHeader>
-          <CardContent>
-              <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
-                  Change Password
-              </Button>
-          </CardContent>
-          <CardFooter className="border-t p-6">
-              <form action={logout}>
-                  <Button variant="destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                  </Button>
-              </form>
-          </CardFooter>
-        </Card>
       </div>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
