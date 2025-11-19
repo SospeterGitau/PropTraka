@@ -632,10 +632,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                         </div>
                                     ))}
                                     {tx.deposit && tx.deposit > 0 && (
-                                    <div className="flex justify-between">
+                                      <div className="flex justify-between">
                                         <span>Deposit:</span>
                                         <span>{formatCurrency(tx.deposit, locale, currency)}</span>
-                                    </div>
+                                      </div>
                                     )}
                                     {tx.notes && !isProrated && (
                                     <p className="text-xs text-muted-foreground pt-2 border-t mt-2">
@@ -720,9 +720,3 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
-
-    
-
-    
-
-    
