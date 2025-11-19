@@ -133,7 +133,7 @@ function InvoiceForm({
 
   useEffect(() => {
     if (transaction) {
-      setRent(transaction.rent || 0); 
+      setRent(transaction.rent || 0);
       setServiceCharges(transaction.serviceCharges || []);
     }
   }, [transaction]);
