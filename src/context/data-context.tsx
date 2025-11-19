@@ -4,23 +4,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useUser, useFirebase } from '@/firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
-import type { ResidencyStatus, Subscription } from '@/lib/types';
+import type { ResidencyStatus, Subscription, UserSettings } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from './theme-context';
-
-export interface UserSettings {
-  currency: string;
-  locale: string;
-  companyName: string;
-  residencyStatus: ResidencyStatus;
-  isPnlReportEnabled: boolean;
-  isMarketResearchEnabled: boolean;
-  subscription?: Subscription | null;
-  theme?: 'dark' | 'light' | 'system';
-  role?: 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor';
-  portfolioSize?: '1-5' | '6-20' | '21-50' | '50+';
-  areasOfInterest?: string[];
-}
 
 interface DataContextValue {
   settings: UserSettings;

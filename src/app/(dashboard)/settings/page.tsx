@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -210,20 +209,44 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                         Change Password
                         </Button>
                     </div>
-                    <Separator />
-                    <div className="flex items-center justify-between w-full">
-                        <div>
-                            <h3 className="font-medium text-destructive">Sign Out</h3>
-                            <p className="text-sm text-muted-foreground">End your current session.</p>
-                        </div>
-                        <form action={logout}>
-                            <Button variant="destructive">
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Sign Out
-                            </Button>
-                        </form>
-                    </div>
                 </CardFooter>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Billing Information</CardTitle>
+                    <CardDescription>This information will be used for invoices and payment processing.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="billingAddressLine1">Address Line 1</Label>
+                            <Input id="billingAddressLine1" value={tempSettings.billingAddressLine1 || ''} onChange={(e) => setTempSettings({...tempSettings, billingAddressLine1: e.target.value})} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="billingAddressLine2">Address Line 2 (Optional)</Label>
+                            <Input id="billingAddressLine2" value={tempSettings.billingAddressLine2 || ''} onChange={(e) => setTempSettings({...tempSettings, billingAddressLine2: e.target.value})} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="billingCity">City</Label>
+                            <Input id="billingCity" value={tempSettings.billingCity || ''} onChange={(e) => setTempSettings({...tempSettings, billingCity: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="billingPostalCode">Postal Code</Label>
+                            <Input id="billingPostalCode" value={tempSettings.billingPostalCode || ''} onChange={(e) => setTempSettings({...tempSettings, billingPostalCode: e.target.value})} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="billingCountry">Country</Label>
+                            <Input id="billingCountry" value={tempSettings.billingCountry || ''} onChange={(e) => setTempSettings({...tempSettings, billingCountry: e.target.value})} />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="vatPin">VAT / KRA PIN (Optional)</Label>
+                        <Input id="vatPin" value={tempSettings.vatPin || ''} onChange={(e) => setTempSettings({...tempSettings, vatPin: e.target.value})} />
+                    </div>
+                </CardContent>
             </Card>
 
             <Card>
@@ -383,6 +406,20 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               </CardContent>
             </Card>
         </fieldset>
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-destructive">Sign Out</CardTitle>
+                <CardDescription>End your current session on this device.</CardDescription>
+            </CardHeader>
+            <CardFooter>
+                 <form action={logout}>
+                    <Button variant="destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                    </Button>
+                </form>
+            </CardFooter>
+        </Card>
       </div>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>

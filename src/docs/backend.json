@@ -173,7 +173,13 @@
         "theme": { "type": "string", "enum": ["dark", "light", "system"] },
         "role": { "type": "string", "enum": ["Individual Landlord", "Property Manager", "Real Estate Agent", "Investor"] },
         "portfolioSize": { "type": "string", "enum": ["1-5", "6-20", "21-50", "50+"] },
-        "areasOfInterest": { "type": "array", "items": { "type": "string" } }
+        "areasOfInterest": { "type": "array", "items": { "type": "string" } },
+        "billingAddressLine1": { "type": "string" },
+        "billingAddressLine2": { "type": "string" },
+        "billingCity": { "type": "string" },
+        "billingPostalCode": { "type": "string" },
+        "billingCountry": { "type": "string" },
+        "vatPin": { "type": "string" }
       },
       "required": ["ownerId"]
     }

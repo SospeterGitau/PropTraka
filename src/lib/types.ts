@@ -244,6 +244,25 @@ export interface ChangeLogEntry {
   entityId: string;
 }
 
+export interface UserSettings {
+    currency: string;
+    locale: string;
+    companyName: string;
+    residencyStatus: ResidencyStatus;
+    isPnlReportEnabled: boolean;
+    isMarketResearchEnabled: boolean;
+    subscription?: Subscription | null;
+    theme?: 'dark' | 'light' | 'system';
+    role?: 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor';
+    portfolioSize?: '1-5' | '6-20' | '21-50' | '50+';
+    areasOfInterest?: string[];
+    billingAddressLine1?: string;
+    billingAddressLine2?: string;
+    billingCity?: string;
+    billingPostalCode?: string;
+    billingCountry?: string;
+    vatPin?: string;
+}
 
 // ====== AI Flow Types ======
 
