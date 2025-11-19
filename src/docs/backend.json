@@ -177,6 +177,7 @@
         "billingAddressLine1": { "type": "string" },
         "billingAddressLine2": { "type": "string" },
         "billingCity": { "type": "string" },
+        "billingCounty": { "type": "string" },
         "billingPostalCode": { "type": "string" },
         "billingCountry": { "type": "string" },
         "vatPin": { "type": "string" }

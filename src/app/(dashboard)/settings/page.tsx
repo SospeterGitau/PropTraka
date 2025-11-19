@@ -180,7 +180,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
       </div>
       <div className="space-y-6">
         <fieldset disabled={!isEditing} className="space-y-6">
-            <Card>
+             <Card>
                 <CardHeader>
                     <CardTitle>Security</CardTitle>
                     <CardDescription>Manage your account credentials and session.</CardDescription>
@@ -224,7 +224,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                             <Input id="billingAddressLine1" value={tempSettings.billingAddressLine1 || ''} onChange={(e) => setTempSettings({...tempSettings, billingAddressLine1: e.target.value})} />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="billingAddressLine2">Address Line 2 (Optional)</Label>
+                            <Label htmlFor="billingAddressLine2">Address Line 2 (or P.O. Box)</Label>
                             <Input id="billingAddressLine2" value={tempSettings.billingAddressLine2 || ''} onChange={(e) => setTempSettings({...tempSettings, billingAddressLine2: e.target.value})} />
                         </div>
                     </div>
@@ -234,17 +234,23 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                             <Input id="billingCity" value={tempSettings.billingCity || ''} onChange={(e) => setTempSettings({...tempSettings, billingCity: e.target.value})} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="billingPostalCode">Postal Code</Label>
+                            <Label htmlFor="billingCounty">County</Label>
+                            <Input id="billingCounty" value={tempSettings.billingCounty || ''} onChange={(e) => setTempSettings({...tempSettings, billingCounty: e.target.value})} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="billingPostalCode">Postal / Area Code</Label>
                             <Input id="billingPostalCode" value={tempSettings.billingPostalCode || ''} onChange={(e) => setTempSettings({...tempSettings, billingPostalCode: e.target.value})} />
                         </div>
+                    </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <div className="space-y-2">
                             <Label htmlFor="billingCountry">Country</Label>
                             <Input id="billingCountry" value={tempSettings.billingCountry || ''} onChange={(e) => setTempSettings({...tempSettings, billingCountry: e.target.value})} />
                         </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="vatPin">VAT / KRA PIN (Optional)</Label>
-                        <Input id="vatPin" value={tempSettings.vatPin || ''} onChange={(e) => setTempSettings({...tempSettings, vatPin: e.target.value})} />
+                        <div className="space-y-2">
+                            <Label htmlFor="vatPin">VAT / KRA PIN (Optional)</Label>
+                            <Input id="vatPin" value={tempSettings.vatPin || ''} onChange={(e) => setTempSettings({...tempSettings, vatPin: e.target.value})} />
+                        </div>
                     </div>
                 </CardContent>
             </Card>

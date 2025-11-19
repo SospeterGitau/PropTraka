@@ -259,6 +259,7 @@ export interface UserSettings {
     billingAddressLine1?: string;
     billingAddressLine2?: string;
     billingCity?: string;
+    billingCounty?: string;
     billingPostalCode?: string;
     billingCountry?: string;
     vatPin?: string;
