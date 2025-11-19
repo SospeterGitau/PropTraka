@@ -121,77 +121,85 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-                <CardTitle>Profile & Settings</CardTitle>
-                <CardDescription>Manage your application settings. Click "Edit" to make changes.</CardDescription>
-            </div>
-             {!isEditing && (
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Profile & Settings</h2>
+        <div className="flex gap-2">
+            {isEditing ? (
+                <>
+                    <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                    <Button onClick={handleSave}>Save Changes</Button>
+                </>
+            ) : (
                 <Button onClick={() => setIsEditing(true)}>Edit</Button>
             )}
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <fieldset disabled={!isEditing} className="space-y-8">
-            <div>
-              <h3 className="text-lg font-medium">Reporting</h3>
-               <Separator className="my-2" />
-               <div className="space-y-4 pt-2">
-                 <div className="space-y-2">
-                    <Label>Company Name</Label>
-                    <Input value={tempSettings.companyName} onChange={(e) => setTempSettings({...tempSettings, companyName: e.target.value})} placeholder="Your Company Ltd." />
-                </div>
-                 <div className="space-y-2">
-                    <Label>Residency Status (for Tax Calculation)</Label>
-                    <RadioGroup value={tempSettings.residencyStatus} onValueChange={(v) => setTempSettings({...tempSettings, residencyStatus: v as ResidencyStatus})} className="flex gap-4 pt-2">
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="resident" id="resident" />
-                            <Label htmlFor="resident">Resident</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="non-resident" id="non-resident" />
-                            <Label htmlFor="non-resident">Non-Resident</Label>
-                        </div>
-                    </RadioGroup>
-                 </div>
+        </div>
+      </div>
+      <fieldset disabled={!isEditing} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Reporting</CardTitle>
+              <CardDescription>Customize details for your financial reports.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Company Name</Label>
+                <Input value={tempSettings.companyName} onChange={(e) => setTempSettings({...tempSettings, companyName: e.target.value})} placeholder="Your Company Ltd." />
               </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium">Regional</h3>
-              <Separator className="my-2" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="space-y-2">
-                  <Label>Currency</Label>
-                  <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({...tempSettings, currency: v})}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
-                        <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                        <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Date Format</Label>
-                  <Select value={tempSettings.locale} onValueChange={(v) => setTempSettings({...tempSettings, locale: v})}>
-                    <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
-                        <SelectItem value="en-US">MM/DD/YYYY</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Residency Status (for Tax Calculation)</Label>
+                <RadioGroup value={tempSettings.residencyStatus} onValueChange={(v) => setTempSettings({...tempSettings, residencyStatus: v as ResidencyStatus})} className="flex gap-4 pt-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="resident" id="resident" />
+                    <Label htmlFor="resident">Resident</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="non-resident" id="non-resident" />
+                    <Label htmlFor="non-resident">Non-Resident</Label>
+                  </div>
+                </RadioGroup>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Regional</CardTitle>
+              <CardDescription>Set your currency and date format preferences.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Currency</Label>
+                <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({...tempSettings, currency: v})}>
+                  <SelectTrigger><SelectValue/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
+                    <SelectItem value="USD">USD - US Dollar</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date Format</Label>
+                <Select value={tempSettings.locale} onValueChange={(v) => setTempSettings({...tempSettings, locale: v})}>
+                  <SelectTrigger><SelectValue/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
+                    <SelectItem value="en-US">MM/DD/YYYY</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <h3 className="text-lg font-medium">Appearance</h3>
-              <Separator className="my-2" />
-               <div className="space-y-2 pt-2">
+          <Card>
+            <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>Choose how PropTraka looks and feels.</CardDescription>
+            </CardHeader>
+            <CardContent>
                 <Label>Colour Scheme</Label>
-                 <RadioGroup
+                <RadioGroup
                     value={theme}
                     onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}
                     className="grid max-w-md grid-cols-3 gap-8 pt-2"
@@ -219,18 +227,18 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     <Label className="[&:has([data-state=checked])>div]:border-primary">
                       <RadioGroupItem value="dark" className="sr-only" />
                       <div className="items-center rounded-md border-2 border-muted bg-popover p-1 hover:bg-accent hover:text-accent-foreground">
-                        <div className="space-y-2 rounded-sm bg-[#060606] p-2">
-                          <div className="space-y-2 rounded-md bg-[#1F1F1F] p-2 shadow-sm">
-                            <div className="h-2 w-[80px] rounded-lg bg-slate-400" />
-                            <div className="h-2 w-[100px] rounded-lg bg-slate-400" />
+                        <div className="space-y-2 rounded-sm bg-neutral-950 p-2">
+                          <div className="space-y-2 rounded-md bg-neutral-800 p-2 shadow-sm">
+                            <div className="h-2 w-[80px] rounded-lg bg-neutral-400" />
+                            <div className="h-2 w-[100px] rounded-lg bg-neutral-400" />
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md bg-[#1F1F1F] p-2 shadow-sm">
-                            <div className="h-4 w-4 rounded-full bg-slate-400" />
-                            <div className="h-2 w-[100px] rounded-lg bg-slate-400" />
+                          <div className="flex items-center space-x-2 rounded-md bg-neutral-800 p-2 shadow-sm">
+                            <div className="h-4 w-4 rounded-full bg-neutral-400" />
+                            <div className="h-2 w-[100px] rounded-lg bg-neutral-400" />
                           </div>
-                          <div className="flex items-center space-x-2 rounded-md bg-[#1F1F1F] p-2 shadow-sm">
-                            <div className="h-4 w-4 rounded-full bg-slate-400" />
-                            <div className="h-2 w-[100px] rounded-lg bg-slate-400" />
+                          <div className="flex items-center space-x-2 rounded-md bg-neutral-800 p-2 shadow-sm">
+                            <div className="h-4 w-4 rounded-full bg-neutral-400" />
+                            <div className="h-2 w-[100px] rounded-lg bg-neutral-400" />
                           </div>
                         </div>
                       </div>
@@ -238,70 +246,72 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     </Label>
                      <Label className="[&:has([data-state=checked])>div]:border-primary">
                       <RadioGroupItem value="system" className="sr-only" />
-                       <div className="items-center rounded-md border-2 border-muted bg-gradient-to-r from-[#060606] to-white p-1 hover:bg-accent hover:text-accent-foreground">
-                          <div className="space-y-2 rounded-sm bg-gradient-to-r from-[#121212] to-gray-100 p-2">
-                            <div className="space-y-2 rounded-md bg-gradient-to-r from-[#1F1F1F] to-white p-2 shadow-sm">
-                              <div className="h-2 w-[80px] rounded-lg bg-gradient-to-r from-slate-400 to-gray-300" />
-                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-slate-400 to-gray-300" />
+                       <div className="items-center rounded-md border-2 border-muted bg-gradient-to-r from-neutral-950 to-white p-1 hover:bg-accent hover:text-accent-foreground">
+                          <div className="space-y-2 rounded-sm bg-gradient-to-r from-neutral-900 to-gray-100 p-2">
+                            <div className="space-y-2 rounded-md bg-gradient-to-r from-neutral-800 to-white p-2 shadow-sm">
+                              <div className="h-2 w-[80px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
+                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
                             </div>
-                            <div className="flex items-center space-x-2 rounded-md bg-gradient-to-r from-[#1F1F1F] to-white p-2 shadow-sm">
-                              <div className="h-4 w-4 rounded-full bg-gradient-to-r from-slate-400 to-gray-300" />
-                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-slate-400 to-gray-300" />
+                            <div className="flex items-center space-x-2 rounded-md bg-gradient-to-r from-neutral-800 to-white p-2 shadow-sm">
+                              <div className="h-4 w-4 rounded-full bg-gradient-to-r from-neutral-400 to-gray-300" />
+                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
                             </div>
-                            <div className="flex items-center space-x-2 rounded-md bg-gradient-to-r from-[#1F1F1F] to-white p-2 shadow-sm">
-                              <div className="h-4 w-4 rounded-full bg-gradient-to-r from-slate-400 to-gray-300" />
-                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-slate-400 to-gray-300" />
+                            <div className="flex items-center space-x-2 rounded-md bg-gradient-to-r from-neutral-800 to-white p-2 shadow-sm">
+                              <div className="h-4 w-4 rounded-full bg-gradient-to-r from-neutral-400 to-gray-300" />
+                              <div className="h-2 w-[100px] rounded-lg bg-gradient-to-r from-neutral-400 to-gray-300" />
                             </div>
                           </div>
                         </div>
                       <span className="block w-full p-2 text-center font-normal">System</span>
                     </Label>
                   </RadioGroup>
-               </div>
-            </div>
-
-            <div>
-                <h3 className="text-lg font-medium">AI Features</h3>
-                <Separator className="my-2" />
-                <div className="space-y-4 pt-2">
-                    <div className="flex items-center space-x-2">
-                        <Switch id="pnl-switch" checked={tempSettings.isPnlReportEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isPnlReportEnabled: checked})} />
-                        <Label htmlFor="pnl-switch">Enable AI P&L Statement Generation</Label>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+                <CardTitle>AI Features</CardTitle>
+                <CardDescription>Enable or disable AI-powered functionality.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="pnl-switch">AI P&L Statement Generation</Label>
+                        <p className="text-xs text-muted-foreground">Allow AI to generate formal Profit & Loss statements.</p>
                     </div>
-                     <div className="flex items-center space-x-2">
-                        <Switch id="market-research-switch" checked={tempSettings.isMarketResearchEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isMarketResearchEnabled: checked})} />
-                        <Label htmlFor="market-research-switch">Enable AI Market Research Generation</Label>
-                    </div>
+                    <Switch id="pnl-switch" checked={tempSettings.isPnlReportEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isPnlReportEnabled: checked})} />
                 </div>
-            </div>
+                 <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                       <Label htmlFor="market-research-switch">AI Market Research Generation</Label>
+                        <p className="text-xs text-muted-foreground">Allow AI to generate market analysis reports for your portfolio.</p>
+                    </div>
+                    <Switch id="market-research-switch" checked={tempSettings.isMarketResearchEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isMarketResearchEnabled: checked})} />
+                </div>
+            </CardContent>
+          </Card>
+      </fieldset>
 
-            <div>
-              <h3 className="text-lg font-medium">Security</h3>
-              <Separator className="my-2" />
-              <div className="pt-2">
-                 <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)} disabled={isEditing}>
-                    Change Password
-                </Button>
-              </div>
-            </div>
-
-          </fieldset>
-          {isEditing && (
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={handleCancel} className="min-w-24">Cancel</Button>
-              <Button onClick={handleSave} className="min-w-32">Save Changes</Button>
-            </div>
-          )}
-        </CardContent>
-         <CardFooter className="border-t p-6">
-          <form action={logout} className="w-full">
-            <Button variant="outline" className="w-full sm:w-auto">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+      <Card>
+        <CardHeader>
+            <CardTitle>Security</CardTitle>
+            <CardDescription>Manage your account security settings.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
+                Change Password
             </Button>
-          </form>
+        </CardContent>
+        <CardFooter className="border-t p-6">
+            <form action={logout}>
+                <Button variant="destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                </Button>
+            </form>
         </CardFooter>
       </Card>
+
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
           <DialogHeader>
