@@ -40,6 +40,7 @@ import { useFitText } from '@/hooks/use-fit-text';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { logout } from '@/app/actions';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 
 const passwordSchema = z.object({
@@ -431,16 +432,19 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   );
 });
 
-const PlanPrice = ({ plan }: { plan: SubscriptionPlan }) => {
+const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycle: 'monthly' | 'yearly' }) => {
+    const price = billingCycle === 'yearly'
+        ? plan.price !== null ? plan.price * 12 * 0.85 : null // 15% discount for yearly
+        : plan.price;
+
     return (
         <div className="flex items-baseline justify-center gap-2 my-6">
-            {plan.price !== null ? (
+            {price !== null ? (
                 <>
-                    <span className="text-muted-foreground">KSh</span>
                     <span className="text-3xl font-bold tracking-tight">
-                        {plan.price.toLocaleString()}
+                        <span className="text-muted-foreground text-xl">KSh</span> {price.toLocaleString()}
                     </span>
-                    <span className="text-muted-foreground">/month</span>
+                    <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
                 </>
             ) : (
                 <span className="text-3xl font-bold tracking-tight">Custom</span>
@@ -454,6 +458,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     const { settings, isLoading } = useDataContext();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     
     const currentPlanName = settings.subscription?.plan;
     const [selectedPlan, setSelectedPlan] = useState<string | null>(currentPlanName || null);
@@ -484,6 +489,14 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 <h2 className="text-3xl font-bold tracking-tight">Choose Your Plan</h2>
                 <p className="text-muted-foreground mt-2 max-w-xl mx-auto">Select the plan that best fits the size and needs of your property portfolio.</p>
             </div>
+
+            <div className="flex justify-center">
+                <ToggleGroup type="single" value={billingCycle} onValueChange={(value: 'monthly' | 'yearly') => value && setBillingCycle(value)} defaultValue="monthly">
+                    <ToggleGroupItem value="monthly">Monthly</ToggleGroupItem>
+                    <ToggleGroupItem value="yearly">Yearly (Save 15%)</ToggleGroupItem>
+                </ToggleGroup>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
                 {allPlans.map((plan) => {
                     const isCurrent = plan.name === currentPlanName;
@@ -520,7 +533,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                     <p className="text-sm text-muted-foreground pt-1 min-h-[40px]">{plan.description}</p>
                                 </CardHeader>
                                 
-                                <PlanPrice plan={plan} />
+                                <PlanPrice plan={plan} billingCycle={billingCycle} />
                                 
                                 <Separator />
 
