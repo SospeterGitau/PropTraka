@@ -4,7 +4,8 @@
 import {generateReportSummary} from '@/ai/flows/generate-report-summary';
 import {generatePnlReport as generatePnlReportFlow} from '@/ai/flows/generate-pnl-report';
 import {generateMarketResearch} from '@/ai/flows/generate-market-research';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput } from '@/lib/types';
+import {getChatResponse as getChatResponseFlow} from '@/ai/flows/get-chat-response-flow';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -93,5 +94,15 @@ export async function getMarketResearch(input: GenerateMarketResearchInput): Pro
             error: code,
             hint: msg,
         };
+    }
+}
+
+export async function getChatResponse(input: { question: string; knowledgeBase: string; }): Promise<{answer: string}> {
+    try {
+        const result = await getChatResponseFlow(input);
+        return { answer: result.answer };
+    } catch (e: any) {
+        console.error('Error getting chat response:', e);
+        return { answer: "I'm sorry, I encountered an error and couldn't process your request. Please try again." };
     }
 }

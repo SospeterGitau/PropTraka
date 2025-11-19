@@ -6,7 +6,7 @@ import { Bot, User, Send, Loader2, Sparkles, X } from 'lucide-react';
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { ChatMessage, SecurityRuleContext } from '@/lib/types';
+import type { ChatMessage, KnowledgeArticle, SecurityRuleContext } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -21,8 +21,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { cn } from '@/lib/utils';
-// This action will need to be created
-// import { getChatResponse } from '@/lib/actions';
+import { getChatResponse } from '@/lib/actions';
+import placeholderFaq from '@/lib/placeholder-faq.json';
 
 
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -35,8 +35,17 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const messagesQuery = useMemo(() => 
     user?.uid ? createUserQuery(firestore, 'chatMessages', user.uid) : null
   , [firestore, user?.uid]);
+  
+  const knowledgeBaseQuery = useMemo(() =>
+    user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null
+  , [firestore, user?.uid]);
 
   const [messagesSnapshot, isLoading] = useCollection(messagesQuery);
+  const [knowledgeBaseSnapshot, isKbLoading] = useCollection(knowledgeBaseQuery);
+
+  const knowledgeBase = useMemo(() => 
+    knowledgeBaseSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as KnowledgeArticle)) || []
+  , [knowledgeBaseSnapshot]);
 
   const messages = useMemo(() => 
     messagesSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as ChatMessage))
@@ -77,10 +86,17 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
     addDoc(messagesCollectionRef, messageWithTimestamp)
       .then(async (docRef) => {
-        // Here you would call your AI backend
-        // const response = await getChatResponse(input);
-        // await addDoc(collection(firestore, 'chatMessages'), { ...response, ownerId: user.uid, timestamp: serverTimestamp() });
-        setIsPending(false);
+        const kbToUse = (knowledgeBase && knowledgeBase.length > 0) ? knowledgeBase : placeholderFaq;
+        const response = await getChatResponse({
+          question: input,
+          knowledgeBase: JSON.stringify(kbToUse),
+        });
+        await addDoc(collection(firestore, 'chatMessages'), { 
+            ownerId: user.uid, 
+            role: 'model', 
+            content: response.answer, 
+            timestamp: serverTimestamp() 
+        });
       })
       .catch((serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -90,6 +106,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         } satisfies SecurityRuleContext);
         
         errorEmitter.emit('permission-error', permissionError);
+      }).finally(() => {
         setIsPending(false);
       });
   };

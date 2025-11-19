@@ -1,5 +1,4 @@
 
-
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
  * used across the application. Centralising these types helps ensure data consistency,
@@ -333,4 +332,19 @@ export interface GenerateMarketResearchOutput {
   report: string | null;
   error?: string | null;
   hint?: string | null;
+}
+
+/**
+ * Input for the `getChatResponse` AI flow.
+ */
+export interface GetChatResponseInput {
+    question: string;
+    knowledgeBase: string; // JSON string of KnowledgeArticle[]
+}
+
+/**
+ * Output for the `getChatResponse` AI flow.
+ */
+export interface GetChatResponseOutput {
+    answer: string;
 }
