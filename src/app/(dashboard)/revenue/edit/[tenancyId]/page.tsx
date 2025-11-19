@@ -189,31 +189,30 @@ const TenancyForm = memo(function TenancyForm({
         
         let rentForPeriod = rent; // Default to full rent
 
-        const startDay = tenancyStartDate.getDate();
-        const endDay = tenancyEndDate.getDate();
-
         if (isFirstMonth && isLastMonth) {
+            const startDay = tenancyStartDate.getDate();
+            const endDay = tenancyEndDate.getDate();
             const occupiedDays = endDay - startDay + 1;
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
         } else if (isFirstMonth) {
+            const startDay = tenancyStartDate.getDate();
             const occupiedDays = daysInMonth - startDay + 1;
-            const isFullPeriod = startDay === 1;
             
-            if (!isFullPeriod) {
-                const dailyRent = rent / daysInMonth;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+            if (occupiedDays < daysInMonth) {
+                 const dailyRent = rent / daysInMonth;
+                 rentForPeriod = dailyRent * occupiedDays;
+                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
             }
         } else if (isLastMonth) {
+            const endDay = tenancyEndDate.getDate();
             const occupiedDays = endDay;
-            const isFullPeriod = endDay === daysInMonth;
-            
-            if (!isFullPeriod && occupiedDays > 0) {
-                const dailyRent = rent / daysInMonth;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+             
+            if (occupiedDays < daysInMonth) {
+                 const dailyRent = rent / daysInMonth;
+                 rentForPeriod = dailyRent * occupiedDays;
+                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
             }
         }
         
@@ -442,5 +441,7 @@ export default function EditTenancyPage() {
     </>
   );
 }
+
+    
 
     
