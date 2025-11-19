@@ -174,60 +174,36 @@ const TenancyForm = memo(function TenancyForm({
         const dueDate = createSafeMonthDate(year, month, dayOfMonth);
         const daysInMonth = getDaysInMonth(currentDate);
         let proRataNotes: string | undefined = undefined;
-
-        // ============================================
-        // PRO-RATA RENT CALCULATION (CORRECTED)
-        // ============================================
         let rentForPeriod = rent; // Default to full rent
 
-        // Get the billing cycle day (from tenancy start)
-        const billingDay = dayOfMonth; // e.g., 3 for Feb 03
-
-        // Using UTC dates to avoid timezone issues
         const startDay = tenancyStartDate.getUTCDate();
         const endDay = tenancyEndDate.getUTCDate();
 
         if (isFirstMonth && isLastMonth) {
-          // SCENARIO 1: Single-month tenancy (e.g., Feb 03 - Feb 23, 2025)
-          const occupiedDays = endDay - startDay + 1; // 23 - 3 + 1 = 21 days
-          const dailyRent = rent / daysInMonth;
-          rentForPeriod = dailyRent * occupiedDays;
-          proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-        } 
-        else if (isFirstMonth) {
-          // SCENARIO 2: First month of multi-month tenancy
-          // e.g., Feb 03 to Feb 28 (or 29)
-          const occupiedDays = daysInMonth - startDay + 1; // 28 - 3 + 1 = 26 days
-          const isFullPeriod = startDay === 1; // Started on 1st = full month
-          
-          if (!isFullPeriod) {
+            const occupiedDays = endDay - startDay + 1;
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
-          }
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
+        } else if (isFirstMonth) {
+            const occupiedDays = daysInMonth - startDay + 1;
+            const isFullPeriod = startDay === 1;
+            
+            if (!isFullPeriod) {
+                const dailyRent = rent / daysInMonth;
+                rentForPeriod = dailyRent * occupiedDays;
+                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+            }
+        } else if (isLastMonth) {
+            const occupiedDays = endDay;
+            const isFullPeriod = endDay === daysInMonth;
+            
+            if (!isFullPeriod && occupiedDays > 0) {
+                const dailyRent = rent / daysInMonth;
+                rentForPeriod = dailyRent * occupiedDays;
+                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+            }
         }
-        else if (isLastMonth) {
-          // SCENARIO 3: Last month of multi-month tenancy
-          // CRITICAL FIX: Account for the billing cycle day
-          // e.g., Feb 03, 2026 to Feb 23, 2026
-          
-          // Billing starts on the billing cycle day (e.g., 3rd)
-          // Billing ends on the tenancy end day (e.g., 23rd)
-          const occupiedDays = endDay - billingDay + 1; // 23 - 3 + 1 = 21 days
-          
-          // Check if this is actually a full billing period
-          // (e.g., if end day is last day of month AND billing day is 1st)
-          const isFullPeriod = (endDay === daysInMonth && billingDay === 1);
-          
-          if (!isFullPeriod && occupiedDays > 0) {
-            const dailyRent = rent / daysInMonth;
-            rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
-          }
-        }
-        // SCENARIO 4: Middle months - use full rent (rentForPeriod already = rent)
 
-        // Round to 2 decimal places
         rentForPeriod = Math.round(rentForPeriod * 100) / 100;
         
         const txNotes = proRataNotes ? proRataNotes : (isFirstMonth ? notes : undefined);
