@@ -34,7 +34,7 @@
     },
     {
         "title": "How do I manage contractors and vendors?",
-        "content": "PropTraka allows you to keep an organized directory of your trusted contractors and service providers. Navigate to **Menu > Contractors** to access this feature. Here, you can add, view, edit, or delete contractor profiles. For each contractor, you can store their name, specialty (e.g., Plumbing, Electrical, General), contact details (email and phone), and any other relevant notes. This list is then directly integrated with the Maintenance section, allowing you to quickly assign jobs to the correct vendor, keeping all your records neat and inter-connected."
+        "content": "PropTraka allows you to keep an organised directory of your trusted contractors and service providers. Navigate to **Menu > Contractors** to access this feature. Here, you can add, view, edit, or delete contractor profiles. For each contractor, you can store their name, speciality (e.g., Plumbing, Electrical, General), contact details (email and phone), and any other relevant notes. This list is then directly integrated with the Maintenance section, allowing you to quickly assign jobs to the correct vendor, keeping all your records neat and inter-connected."
     },
     {
         "title": "How do I manage expenses?",
@@ -46,15 +46,19 @@
     },
     {
         "title": "How can I see who is behind on rent?",
-        "content": "Navigate to **Menu > Arrears**. This page is your dedicated collections center and automatically displays a list of all tenants who have outstanding balances on payments that are past their due date. For each tenant in arrears, the table clearly shows:\n\n- How much is owed.\n- Which property the arrears relate to.\n- How many days the payment is overdue.\n\nTo help you take action, two options are provided:\n1.  **Send Reminder:** This button opens your default email client with a pre-filled, professional email to the tenant, which you can review and send.\n2.  **Request Payment:** This button opens a dialog to initiate a payment request. This feature is designed for future integration with payment gateways like Pesapal or InstaSend to automate M-Pesa payment requests directly to the tenant's phone."
+        "content": "Navigate to **Menu > Arrears**. This page is your dedicated collections centre and automatically displays a list of all tenants who have outstanding balances on payments that are past their due date. For each tenant in arrears, the table clearly shows:\n\n- How much is owed.\n- Which property the arrears relate to.\n- How many days the payment is overdue.\n\nTo help you take action, two options are provided:\n1.  **Send Reminder:** This button opens your default email client with a pre-filled, professional email to the tenant, which you can review and send.\n2.  **Request Payment:** This button opens a dialog to initiate a payment request. This feature is designed for future integration with payment gateways like Pesapal or InstaSend to automate M-Pesa payment requests directly to the tenant's phone."
     },
     {
         "title": "What is the Calendar for?",
         "content": "Navigate to **Menu > Calendar**. The Calendar provides a visual timeline of important events across your entire portfolio, helping you see what's happening at a glance. It automatically populates with key dates from other sections of the app, including:\n\n- **Tenancy Events:** Tenancy start and end dates.\n- **Financial Events:** Dates of logged expense transactions.\n- **Maintenance Events:** The reported dates for all maintenance requests.\n\nThis centralized view helps you anticipate vacancies, track when expenses were incurred, and see when maintenance issues were first reported, all in one convenient monthly layout."
     },
     {
-        "title": "Can I change the currency or other settings?",
-        "content": "Yes, full customisation is available. Navigate to **Account** using the main bottom navigation bar. This page is where you manage all your personal and application-wide settings. It is organized into three tabs:\n\n- **Profile & Settings:** This is where you control the core experience of the app. You can change the display currency (e.g., KES, USD), set your preferred date format (e.g., DD/MM/YYYY), and choose a visual theme (Light, Dark, or System). You can also set your company name to be used in reports, define your tax residency status for accurate P&L calculations, and change your account password.\n\n- **Subscription:** This tab allows you to view and manage your PropTraka subscription plan.\n\n- **Knowledge Base:** This powerful feature allows you to add, edit, or remove the help articles that are used by the app's AI chat and help search system. Customising this allows the AI to provide answers tailored to your specific needs or business processes."
+        "title": "How do I change my settings and profile?",
+        "content": "Navigate to **Account** using the main bottom navigation bar. This page is your central location for managing all your personal and application-wide settings. On the 'Profile & Settings' tab, you can:\n\n- **Update Security Details:** Change your full name, email address, and update your password.\n- **Manage Profile Information:** Specify your role (e.g., Landlord, Property Manager) and portfolio size to help tailor the app experience.\n- **Customise Regional Settings:** Change the display currency (e.g., KES, USD), set your preferred date format (e.g., DD/MM/YYYY), and choose a visual theme (Light, Dark, or System).\n- **Set Reporting Details:** Define your company name for use in financial reports and set your tax residency status for accurate P&L calculations."
+    },
+    {
+      "title": "How do I manage my billing information?",
+      "content": "You can manage your billing address and payment details from the **Account** page. In the 'Profile & Settings' tab, there is a dedicated 'Billing Information' card. Here, you can enter and update your address details, including city, county, and postal/area code. You can also add a VAT or KRA PIN if required. This information will be used for generating invoices for your subscription and for processing payments through integrated services like IntaSend or Pesapal."
     },
     {
         "title": "What is the Activity Feed for?",
