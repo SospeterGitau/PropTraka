@@ -80,7 +80,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     if (isEditing) {
-      setTempSettings(prev => ({...prev, theme: newTheme}));
       setTheme(newTheme); // Apply theme immediately for preview
     }
   };
@@ -89,9 +88,14 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
-    if (tempSettings && currentUser) {
+    if (currentUser) {
         let profileUpdated = false;
         let emailUpdated = false;
+        
+        const finalSettings = {
+            ...tempSettings,
+            theme: theme, // Ensure the previewed theme is saved
+        };
 
         try {
             if (displayName !== currentUser.displayName) {
@@ -104,7 +108,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                 emailUpdated = true;
             }
             
-            await updateSettings(tempSettings);
+            await updateSettings(finalSettings);
 
             if (profileUpdated || emailUpdated) {
                 toast({ title: "Profile Updated", description: "Your name and/or email have been changed." });
@@ -161,7 +165,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         toast({ title: 'Success', description: 'Your password has been updated.' });
         setIsPasswordDialogOpen(false);
         reset();
-      } catch (error: any) {
+      } catch (error: any) => {
         toast({ variant: 'destructive', title: 'Error', description: 'This is a sensitive operation. Please sign out and sign back in before changing your password.' });
       }
     });
@@ -312,7 +316,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               <CardContent>
                   <Label>Colour Scheme</Label>
                    <RadioGroup
-                      value={tempSettings.theme}
+                      value={theme}
                       onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
                       className="grid max-w-md grid-cols-3 gap-4 pt-2"
                     >
@@ -441,13 +445,13 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
         <div className="flex items-baseline justify-center gap-2 my-6">
             {price !== null ? (
                 <>
-                    <span className="text-3xl font-bold tracking-tight">
-                        <span className="text-muted-foreground text-xl">KSh</span> {price.toLocaleString()}
+                    <span className="text-2xl font-bold tracking-tight">
+                        <span className="text-muted-foreground text-lg">KSh</span> {price.toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
                 </>
             ) : (
-                <span className="text-3xl font-bold tracking-tight">Custom</span>
+                <span className="text-2xl font-bold tracking-tight">Custom</span>
             )}
         </div>
     );
