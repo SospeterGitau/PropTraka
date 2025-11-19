@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -706,3 +705,5 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
