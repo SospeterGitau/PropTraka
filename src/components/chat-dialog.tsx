@@ -3,10 +3,10 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Bot, User, Send, Loader2, Sparkles, X } from 'lucide-react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { ChatMessage } from '@/lib/types';
+import type { ChatMessage, SecurityRuleContext } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -61,7 +61,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !user) return;
+    if (!input.trim() || !user || !firestore) return;
 
     const userMessage: Omit<ChatMessage, 'id' | 'timestamp'> = {
       role: 'user',
@@ -72,15 +72,26 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setInput('');
     setIsPending(true);
 
-    try {
-        await addDoc(collection(firestore, 'chatMessages'), { ...userMessage, timestamp: serverTimestamp() });
+    const messagesCollectionRef = collection(firestore, 'chatMessages');
+    const messageWithTimestamp = { ...userMessage, timestamp: serverTimestamp() };
+
+    addDoc(messagesCollectionRef, messageWithTimestamp)
+      .then(async (docRef) => {
+        // Here you would call your AI backend
         // const response = await getChatResponse(input);
         // await addDoc(collection(firestore, 'chatMessages'), { ...response, ownerId: user.uid, timestamp: serverTimestamp() });
-    } catch (error) {
-        console.error("Error sending message:", error);
-    } finally {
         setIsPending(false);
-    }
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: messagesCollectionRef.path,
+          operation: 'create',
+          requestResourceData: messageWithTimestamp,
+        } satisfies SecurityRuleContext);
+        
+        errorEmitter.emit('permission-error', permissionError);
+        setIsPending(false);
+      });
   };
 
   return (

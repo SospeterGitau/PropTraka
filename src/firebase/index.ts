@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview This file serves as the primary entry point for all Firebase-related
  * functionality in the application. It acts as a "barrel" file, re-exporting modules

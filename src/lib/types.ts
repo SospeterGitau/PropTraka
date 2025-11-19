@@ -1,10 +1,21 @@
 
+
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
  * used across the application. Centralising these types helps ensure data consistency,
  * improves code readability, and provides strong typing for props, state, and API responses.
  */
 
+
+/**
+ * Represents the context for a Firestore security rule evaluation.
+ * This is used to construct detailed error messages for debugging.
+ */
+export type SecurityRuleContext = {
+  path: string;
+  operation: 'get' | 'list' | 'create' | 'update' | 'delete' | 'write';
+  requestResourceData?: any;
+};
 
 /**
  * Represents the tax residency status of the user, affecting P&L calculations.
