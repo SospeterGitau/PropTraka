@@ -176,28 +176,31 @@ const TenancyForm = memo(function TenancyForm({
         let proRataNotes: string | undefined = undefined;
         let rentForPeriod = rent; // Default to full rent
 
-        const startDay = tenancyStartDate.getDate();
-        const endDay = tenancyEndDate.getDate();
-        
         if (isFirstMonth && isLastMonth) {
+            const startDay = tenancyStartDate.getDate();
+            const endDay = tenancyEndDate.getDate();
             const occupiedDays = endDay - startDay + 1;
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
         } else if (isFirstMonth) {
+            const startDay = tenancyStartDate.getDate();
             const occupiedDays = daysInMonth - startDay + 1;
+            
             if (occupiedDays < daysInMonth) {
-                const dailyRent = rent / daysInMonth;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+                 const dailyRent = rent / daysInMonth;
+                 rentForPeriod = dailyRent * occupiedDays;
+                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
             }
         } else if (isLastMonth) {
-             const occupiedDays = endDay;
-             if (occupiedDays < daysInMonth) {
+            const endDay = tenancyEndDate.getDate();
+            const occupiedDays = endDay;
+             
+            if (occupiedDays < daysInMonth) {
                  const dailyRent = rent / daysInMonth;
                  rentForPeriod = dailyRent * occupiedDays;
                  proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
-             }
+            }
         }
         
         rentForPeriod = Math.round(rentForPeriod * 100) / 100;
@@ -433,7 +436,5 @@ export default function AddTenancyPage() {
     </>
   );
 }
-
-    
 
     
