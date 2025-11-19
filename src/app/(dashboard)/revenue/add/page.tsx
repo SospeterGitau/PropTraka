@@ -178,30 +178,30 @@ const TenancyForm = memo(function TenancyForm({
 
         const startDay = tenancyStartDate.getUTCDate();
         const endDay = tenancyEndDate.getUTCDate();
-
+        
+        if (isFirstMonth) {
+            const occupiedDays = daysInMonth - startDay + 1;
+            if (occupiedDays < daysInMonth) {
+                 const dailyRent = rent / daysInMonth;
+                 rentForPeriod = dailyRent * occupiedDays;
+                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+            }
+        }
+        
+        if (isLastMonth && !isFirstMonth) {
+             const occupiedDays = endDay;
+             if (occupiedDays < daysInMonth) {
+                 const dailyRent = rent / daysInMonth;
+                 rentForPeriod = dailyRent * occupiedDays;
+                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+             }
+        }
+        
         if (isFirstMonth && isLastMonth) {
             const occupiedDays = endDay - startDay + 1;
             const dailyRent = rent / daysInMonth;
             rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-        } else if (isFirstMonth) {
-            const occupiedDays = daysInMonth - startDay + 1;
-            const isFullPeriod = startDay === 1;
-            
-            if (!isFullPeriod) {
-                const dailyRent = rent / daysInMonth;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
-            }
-        } else if (isLastMonth) {
-            const occupiedDays = endDay;
-            const isFullPeriod = endDay === daysInMonth;
-            
-            if (!isFullPeriod && occupiedDays > 0) {
-                const dailyRent = rent / daysInMonth;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
-            }
         }
 
         rentForPeriod = Math.round(rentForPeriod * 100) / 100;
@@ -437,3 +437,5 @@ export default function AddTenancyPage() {
     </>
   );
 }
+
+    
