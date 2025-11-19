@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Label } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -58,7 +59,6 @@ function getShortAddress(property: Property) {
 export default function BarChartComponent({ properties, revenue, expenses }: BarChartProps) {
   const { settings } = useDataContext();
   const { currency, locale, residencyStatus } = settings;
-  const currentYear = new Date().getFullYear();
   
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
@@ -70,25 +70,28 @@ export default function BarChartComponent({ properties, revenue, expenses }: Bar
     return amount.toString();
   };
 
-  const chartData = properties.map(property => {
-    const propertyRevenue = revenue
-      .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
-      .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0);
-    
-    const propertyExpenses = expenses
-      .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const chartData = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return properties.map(property => {
+      const propertyRevenue = revenue
+        .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
+        .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0);
+      
+      const propertyExpenses = expenses
+        .filter(t => t.propertyId === property.id && new Date(t.date).getFullYear() === currentYear)
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-    const isTaxable = residencyStatus === 'resident' && property.propertyType === 'Domestic';
-    const taxOnRevenue = isTaxable ? propertyRevenue * 0.075 : 0;
-    const profit = propertyRevenue - propertyExpenses - taxOnRevenue;
+      const isTaxable = residencyStatus === 'resident' && property.propertyType === 'Domestic';
+      const taxOnRevenue = isTaxable ? propertyRevenue * 0.075 : 0;
+      const profit = propertyRevenue - propertyExpenses - taxOnRevenue;
 
-    return { 
-      property: getShortAddress(property),
-      fullAddress: property.addressLine1,
-      profit: profit > 0 ? profit : 0,
-    };
-  }).sort((a, b) => a.profit - b.profit); // Sort ascending for horizontal chart
+      return { 
+        property: getShortAddress(property),
+        fullAddress: property.addressLine1,
+        profit: profit > 0 ? profit : 0,
+      };
+    }).sort((a, b) => a.profit - b.profit);
+  }, [properties, revenue, expenses, residencyStatus]);
 
   const dynamicHeight = `${Math.max(chartData.length * 40 + 80, 250)}px`;
 
