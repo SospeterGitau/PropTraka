@@ -118,7 +118,6 @@ function InvoiceForm({
   onClose,
   onSubmit,
   transaction,
-  fullTenancyRent, // The full contractual rent for the tenancy
   locale,
   currency,
 }: {
@@ -126,7 +125,6 @@ function InvoiceForm({
   onClose: () => void;
   onSubmit: (transaction: Transaction) => void;
   transaction: Transaction | null;
-  fullTenancyRent: number; // New prop
   locale: string;
   currency: string;
 }) {
@@ -135,11 +133,10 @@ function InvoiceForm({
 
   useEffect(() => {
     if (transaction) {
-      // Use the full tenancy rent for the form, not the transaction's pro-rata rent
-      setRent(fullTenancyRent || 0); 
+      setRent(transaction.rent || 0); 
       setServiceCharges(transaction.serviceCharges || []);
     }
-  }, [transaction, fullTenancyRent]);
+  }, [transaction]);
 
   const handleAddCharge = () => {
     setServiceCharges([...serviceCharges, { name: '', amount: 0 }]);
@@ -162,8 +159,6 @@ function InvoiceForm({
   const handleSubmit = () => {
     if (!transaction) return;
     
-    // The rent value from the form input IS the new rent for this specific period.
-    // If it was pro-rata before, this will overwrite it. This is the desired behavior for editing.
     const updatedTransaction = {
       ...transaction,
       rent: rent,
@@ -218,7 +213,7 @@ function InvoiceForm({
                 {serviceCharges.map((sc, i) => (
                     <div key={i} className="flex justify-between"><span>{sc.name}:</span> <span>{formatCurrency(sc.amount, locale, currency)}</span></div>
                 ))}
-                {transaction.deposit && <div className="flex justify-between"><span>Deposit:</span> <span className="font-medium">{formatCurrency(transaction.deposit, locale, currency)}</span></div>}
+                {transaction.deposit && transaction.deposit > 0 && <div className="flex justify-between"><span>Deposit:</span> <span className="font-medium">{formatCurrency(transaction.deposit, locale, currency)}</span></div>}
                 <hr className="my-1 border-border" />
                 <div className="flex justify-between font-semibold"><span>Total Due:</span> <span>{formatCurrency(totalDue, locale, currency)}</span></div>
             </div>
@@ -437,7 +432,6 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const depositAmount = firstTransaction.deposit || 0;
   const isDepositReturned = firstTransaction.depositReturned || false;
   const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
-  const fullTenancyRent = tenancy.transactions.find(t => !t.notes?.includes('Pro-rated'))?.rent || tenancy.rent;
 
 
   return (
@@ -710,7 +704,6 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         onClose={() => setIsInvoiceFormOpen(false)}
         onSubmit={handleInvoiceFormSubmit}
         transaction={selectedTransaction}
-        fullTenancyRent={fullTenancyRent}
         locale={locale}
         currency={currency}
       />
