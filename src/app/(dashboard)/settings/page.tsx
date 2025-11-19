@@ -60,11 +60,15 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
   
+  // Create a temporary state for the theme to manage changes before saving
+  const [tempTheme, setTempTheme] = useState(theme);
   const [tempSettings, setTempSettings] = useState(settings);
 
   useEffect(() => {
+    // When the main settings or theme context changes, update our temporary states
     setTempSettings(settings);
-  }, [settings]);
+    setTempTheme(theme);
+  }, [settings, theme]);
 
 
   const {
@@ -77,22 +81,28 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   });
   
   useEffect(() => {
+    // When editing mode is toggled, reset temp states to match the main context
     if (!isEditing) {
       setTempSettings(settings);
+      setTempTheme(theme);
     }
-  }, [isEditing, settings]);
+  }, [isEditing, settings, theme]);
 
   const handleSave = async () => {
     if (tempSettings) {
       await updateSettings(tempSettings);
     }
+    // Only apply the theme change on save
+    setTheme(tempTheme);
     setIsEditing(false);
     toast({ title: "Settings Saved", description: "Your preferences have been updated." });
   };
 
   const handleCancel = () => {
     setIsEditing(false);
+    // On cancel, revert temp states to match the main context
     setTempSettings(settings);
+    setTempTheme(theme);
   };
 
   const handleChangePassword = (data: PasswordFormValues) => {
@@ -134,144 +144,146 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             )}
         </div>
       </div>
-      <fieldset disabled={!isEditing} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reporting</CardTitle>
-              <CardDescription>Customize details for your financial reports.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Company Name</Label>
-                <Input value={tempSettings.companyName} onChange={(e) => setTempSettings({...tempSettings, companyName: e.target.value})} placeholder="Your Company Ltd." />
-              </div>
-              <div className="space-y-2">
-                <Label>Residency Status (for Tax Calculation)</Label>
-                <RadioGroup value={tempSettings.residencyStatus} onValueChange={(v) => setTempSettings({...tempSettings, residencyStatus: v as ResidencyStatus})} className="flex gap-4 pt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="resident" id="resident" />
-                    <Label htmlFor="resident">Resident</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="non-resident" id="non-resident" />
-                    <Label htmlFor="non-resident">Non-Resident</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Regional</CardTitle>
-              <CardDescription>Set your currency and date format preferences.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Currency</Label>
-                <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({...tempSettings, currency: v})}>
-                  <SelectTrigger><SelectValue/></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date Format</Label>
-                <Select value={tempSettings.locale} onValueChange={(v) => setTempSettings({...tempSettings, locale: v})}>
-                  <SelectTrigger><SelectValue/></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
-                    <SelectItem value="en-US">MM/DD/YYYY</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-                <CardDescription>Choose how PropTraka looks and feels.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Label>Colour Scheme</Label>
-                 <RadioGroup
-                    value={theme}
-                    onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}
-                    className="grid max-w-md grid-cols-3 gap-4 pt-2"
-                  >
-                    <Label className="[&:has([data-state=checked])>div]:border-primary">
-                      <RadioGroupItem value="light" className="sr-only" />
-                      <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
-                        <Sun className="h-8 w-8" />
-                      </div>
-                      <span className="block w-full p-2 text-center font-normal">Light</span>
-                    </Label>
-                    <Label className="[&:has([data-state=checked])>div]:border-primary">
-                      <RadioGroupItem value="dark" className="sr-only" />
-                      <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
-                         <Moon className="h-8 w-8" />
-                      </div>
-                      <span className="block w-full p-2 text-center font-normal">Dark</span>
-                    </Label>
-                     <Label className="[&:has([data-state=checked])>div]:border-primary">
-                      <RadioGroupItem value="system" className="sr-only" />
-                       <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
-                          <Laptop className="h-8 w-8" />
-                        </div>
-                      <span className="block w-full p-2 text-center font-normal">System</span>
-                    </Label>
+      <div className="space-y-6">
+        <fieldset disabled={!isEditing} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reporting</CardTitle>
+                <CardDescription>Customize details for your financial reports.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Company Name</Label>
+                  <Input value={tempSettings.companyName} onChange={(e) => setTempSettings({...tempSettings, companyName: e.target.value})} placeholder="Your Company Ltd." />
+                </div>
+                <div className="space-y-2">
+                  <Label>Residency Status (for Tax Calculation)</Label>
+                  <RadioGroup value={tempSettings.residencyStatus} onValueChange={(v) => setTempSettings({...tempSettings, residencyStatus: v as ResidencyStatus})} className="flex gap-4 pt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="resident" id="resident" />
+                      <Label htmlFor="resident">Resident</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="non-resident" id="non-resident" />
+                      <Label htmlFor="non-resident">Non-Resident</Label>
+                    </div>
                   </RadioGroup>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-                <CardTitle>AI Features</CardTitle>
-                <CardDescription>Enable or disable AI-powered functionality.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                        <Label htmlFor="pnl-switch">AI P&L Statement Generation</Label>
-                        <p className="text-xs text-muted-foreground">Allow AI to generate formal Profit & Loss statements.</p>
-                    </div>
-                    <Switch id="pnl-switch" checked={tempSettings.isPnlReportEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isPnlReportEnabled: checked})} />
                 </div>
-                 <div className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                       <Label htmlFor="market-research-switch">AI Market Research Generation</Label>
-                        <p className="text-xs text-muted-foreground">Allow AI to generate market analysis reports for your portfolio.</p>
-                    </div>
-                    <Switch id="market-research-switch" checked={tempSettings.isMarketResearchEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isMarketResearchEnabled: checked})} />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Regional</CardTitle>
+                <CardDescription>Set your currency and date format preferences.</CardDescription>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Currency</Label>
+                  <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({...tempSettings, currency: v})}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
+                      <SelectItem value="USD">USD - US Dollar</SelectItem>
+                      <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                      <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-            </CardContent>
-          </Card>
-      </fieldset>
+                <div className="space-y-2">
+                  <Label>Date Format</Label>
+                  <Select value={tempSettings.locale} onValueChange={(v) => setTempSettings({...tempSettings, locale: v})}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
+                      <SelectItem value="en-US">MM/DD/YYYY</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
 
-      <Card>
-        <CardHeader>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>Manage your account security settings.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
-                Change Password
-            </Button>
-        </CardContent>
-        <CardFooter className="border-t p-6">
-            <form action={logout}>
-                <Button variant="destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                </Button>
-            </form>
-        </CardFooter>
-      </Card>
+            <Card>
+              <CardHeader>
+                  <CardTitle>Appearance</CardTitle>
+                  <CardDescription>Choose how PropTraka looks and feels.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <Label>Colour Scheme</Label>
+                   <RadioGroup
+                      value={tempTheme}
+                      onValueChange={(value: "light" | "dark" | "system") => setTempTheme(value)}
+                      className="grid max-w-md grid-cols-3 gap-4 pt-2"
+                    >
+                      <Label className="[&:has([data-state=checked])>div]:border-primary">
+                        <RadioGroupItem value="light" className="sr-only" />
+                        <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
+                          <Sun className="h-8 w-8" />
+                        </div>
+                        <span className="block w-full p-2 text-center font-normal">Light</span>
+                      </Label>
+                      <Label className="[&:has([data-state=checked])>div]:border-primary">
+                        <RadioGroupItem value="dark" className="sr-only" />
+                        <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
+                           <Moon className="h-8 w-8" />
+                        </div>
+                        <span className="block w-full p-2 text-center font-normal">Dark</span>
+                      </Label>
+                       <Label className="[&:has([data-state=checked])>div]:border-primary">
+                        <RadioGroupItem value="system" className="sr-only" />
+                         <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted p-4 hover:border-accent">
+                            <Laptop className="h-8 w-8" />
+                          </div>
+                        <span className="block w-full p-2 text-center font-normal">System</span>
+                      </Label>
+                    </RadioGroup>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                  <CardTitle>AI Features</CardTitle>
+                  <CardDescription>Enable or disable AI-powered functionality.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                          <Label htmlFor="pnl-switch">AI P&L Statement Generation</Label>
+                          <p className="text-xs text-muted-foreground">Allow AI to generate formal Profit & Loss statements.</p>
+                      </div>
+                      <Switch id="pnl-switch" checked={tempSettings.isPnlReportEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isPnlReportEnabled: checked})} />
+                  </div>
+                   <div className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                         <Label htmlFor="market-research-switch">AI Market Research Generation</Label>
+                          <p className="text-xs text-muted-foreground">Allow AI to generate market analysis reports for your portfolio.</p>
+                      </div>
+                      <Switch id="market-research-switch" checked={tempSettings.isMarketResearchEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isMarketResearchEnabled: checked})} />
+                  </div>
+              </CardContent>
+            </Card>
+        </fieldset>
+
+        <Card>
+          <CardHeader>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>Manage your account security settings.</CardDescription>
+          </CardHeader>
+          <CardContent>
+              <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
+                  Change Password
+              </Button>
+          </CardContent>
+          <CardFooter className="border-t p-6">
+              <form action={logout}>
+                  <Button variant="destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                  </Button>
+              </form>
+          </CardFooter>
+        </Card>
+      </div>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent>
