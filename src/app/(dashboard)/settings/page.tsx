@@ -77,12 +77,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
     setEmail(user?.email || '');
     setIsEditing(true);
   };
-  
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    if (isEditing) {
-      setTheme(newTheme); // Apply theme immediately for preview
-    }
-  };
 
   const handleSave = async () => {
     const auth = getAuth();
@@ -92,11 +86,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         let profileUpdated = false;
         let emailUpdated = false;
         
-        const finalSettings = {
-            ...tempSettings,
-            theme: theme, // Ensure the previewed theme is saved
-        };
-
         try {
             if (displayName !== currentUser.displayName) {
                 await updateProfile(currentUser, { displayName });
@@ -108,7 +97,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                 emailUpdated = true;
             }
             
-            await updateSettings(finalSettings);
+            await updateSettings(tempSettings);
 
             if (profileUpdated || emailUpdated) {
                 toast({ title: "Profile Updated", description: "Your name and/or email have been changed." });
@@ -165,7 +154,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         toast({ title: 'Success', description: 'Your password has been updated.' });
         setIsPasswordDialogOpen(false);
         reset();
-      } catch (error: any) => {
+      } catch (error: any) {
         toast({ variant: 'destructive', title: 'Error', description: 'This is a sensitive operation. Please sign out and sign back in before changing your password.' });
       }
     });
@@ -192,25 +181,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
       </div>
       <div className="space-y-6">
         <fieldset disabled={!isEditing} className="space-y-6">
-             <Card>
-              <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Manage your account details.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label htmlFor="displayName">Full Name</Label>
-                        <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your full name" />
-                    </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
-                    </div>
-                  </div>
-              </CardContent>
-            </Card>
-
             <Card>
                 <CardHeader>
                     <CardTitle>User Profile</CardTitle>
@@ -317,7 +287,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                   <Label>Colour Scheme</Label>
                    <RadioGroup
                       value={theme}
-                      onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
+                      onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
                       className="grid max-w-md grid-cols-3 gap-4 pt-2"
                     >
                       <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
@@ -371,8 +341,23 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         
         <Card>
             <CardHeader>
-                <CardTitle>Security &amp; Account Actions</CardTitle>
+                <CardTitle>Security</CardTitle>
+                <CardDescription>Manage your account credentials and session.</CardDescription>
             </CardHeader>
+            <CardContent>
+                <fieldset disabled={!isEditing} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="displayName">Full Name</Label>
+                            <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your full name" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email Address</Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
+                        </div>
+                    </div>
+                </fieldset>
+            </CardContent>
             <CardFooter className="border-t p-6 flex-col items-start gap-4">
                 <div className="flex items-center justify-between w-full">
                     <div>
@@ -442,16 +427,15 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
         : plan.price;
 
     return (
-        <div className="flex items-baseline justify-center gap-2 my-6">
+        <div className="flex items-baseline justify-center gap-1 my-6">
             {price !== null ? (
                 <>
-                    <span className="text-2xl font-bold tracking-tight">
-                        <span className="text-muted-foreground text-lg">KSh</span> {price.toLocaleString()}
-                    </span>
+                    <span className="text-muted-foreground text-2xl">KSh</span>
+                    <span className="text-4xl font-bold tracking-tight">{price.toLocaleString()}</span>
                     <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
                 </>
             ) : (
-                <span className="text-2xl font-bold tracking-tight">Custom</span>
+                <span className="text-4xl font-bold tracking-tight">Custom</span>
             )}
         </div>
     );
