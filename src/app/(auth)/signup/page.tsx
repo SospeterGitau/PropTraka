@@ -101,7 +101,7 @@ export default function SignUpPage() {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center p-6 space-y-2">
-        <CardTitle className="text-2xl">Welcome to LeaseLync</CardTitle>
+        <CardTitle className="text-2xl">Welcome to PropTraka</CardTitle>
         <CardDescription>Create your account to get started.</CardDescription>
       </CardHeader>
       <CardContent className="p-6">

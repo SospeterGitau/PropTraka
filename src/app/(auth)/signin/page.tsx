@@ -145,7 +145,7 @@ export default function SignInPage() {
     <>
     <Card className="w-full max-w-sm">
       <CardHeader className="text-center p-6 space-y-2">
-        <CardTitle className="text-2xl">Welcome to LeaseLync</CardTitle>
+        <CardTitle className="text-2xl">Welcome to PropTraka</CardTitle>
         <CardDescription>Enter your credentials to sign in to your account.</CardDescription>
       </CardHeader>
       <CardContent className="p-6">

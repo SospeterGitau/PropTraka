@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'Our privacy policy outlines how LeaseLync collects, uses, and manages personal data, clarifying our role as a Data Processor and your responsibilities as a Data Controller under the Kenya Data Protection Act, 2019 (DPA).',
+  description: 'Our privacy policy outlines how PropTraka collects, uses, and manages personal data, clarifying our role as a Data Processor and your responsibilities as a Data Controller under the Kenya Data Protection Act, 2019 (DPA).',
 };
 
 export default function PrivacyPolicyPage() {
@@ -19,11 +19,11 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">1. Introduction</h2>
         <p>
-          Welcome to LeaseLync. This Privacy Policy explains how LeaseLync processes personal data. A critical distinction under data protection laws, including the Kenya Data Protection Act, 2019 (DPA), is the role of the Data Controller and the Data Processor.
+          Welcome to PropTraka. This Privacy Policy explains how PropTraka processes personal data. A critical distinction under data protection laws, including the Kenya Data Protection Act, 2019 (DPA), is the role of the Data Controller and the Data Processor.
         </p>
         <ul>
-            <li><strong>You, the user of LeaseLync, are the Data Controller.</strong> You own and control the personal data of your tenants that you enter into the application.</li>
-            <li><strong>LeaseLync acts as the Data Processor on your behalf.</strong> Our application stores and processes this data based on your instructions to provide you with property management services.</li>
+            <li><strong>You, the user of PropTraka, are the Data Controller.</strong> You own and control the personal data of your tenants that you enter into the application.</li>
+            <li><strong>PropTraka acts as the Data Processor on your behalf.</strong> Our application stores and processes this data based on your instructions to provide you with property management services.</li>
         </ul>
         <p>
           This policy details our role as a Data Processor and your responsibilities as a Data Controller under the DPA.
@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">2. Data We Process on Your Behalf</h2>
         <p>
-          LeaseLync processes the following categories of personal data about your tenants ("Data Subjects"), which you provide:
+          PropTraka processes the following categories of personal data about your tenants ("Data Subjects"), which you provide:
         </p>
         <ul>
           <li><strong>Identity and Contact Data:</strong> Tenant's full name, email address, and phone number.</li>
@@ -40,7 +40,7 @@ export default function PrivacyPolicyPage() {
         
         <h2 className="pt-4 font-bold">3. Data We Collect for Service Improvement</h2>
         <p>
-          To maintain and improve our service, LeaseLync also collects anonymous usage data through Google Analytics for Firebase. This includes:
+          To maintain and improve our service, PropTraka also collects anonymous usage data through Google Analytics for Firebase. This includes:
         </p>
         <ul>
             <li><strong>Usage Data:</strong> Information such as which pages are visited (e.g., `/dashboard`, `/properties`), features used, and general interaction patterns.</li>
@@ -51,7 +51,7 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">4. Purpose of Data Processing</h2>
         <p>
-          As a Data Processor, LeaseLync uses the personal data you provide exclusively to:
+          As a Data Processor, PropTraka uses the personal data you provide exclusively to:
         </p>
         <ul>
           <li>Associate revenue and expense transactions with specific tenancies and properties.</li>
@@ -71,24 +71,24 @@ export default function PrivacyPolicyPage() {
 
         <h2 className="pt-4 font-bold">6. Data Storage and Security</h2>
         <p>
-          All data you enter into LeaseLync is stored securely in Google Cloud Firestore. We take the following measures to protect it:
+          All data you enter into PropTraka is stored securely in Google Cloud Firestore. We take the following measures to protect it:
         </p>
          <ul>
             <li><strong>Access Control:</strong> Firestore Security Rules ensure that only you, the authenticated owner of the data, can read, create, update, or delete your information.</li>
             <li><strong>Encryption:</strong> All data is automatically encrypted in transit between the app and Google's servers, and encrypted at rest when stored in Firestore.</li>
         </ul>
         <p>
-          You are responsible for securing your account credentials and the devices on which you use LeaseLync.
+          You are responsible for securing your account credentials and the devices on which you use PropTraka.
         </p>
         
         <h2 className="pt-4 font-bold">7. Data Retention</h2>
         <p>
-          LeaseLync retains tenant data as long as their tenancy records exist within your account. As the Data Controller, it is your responsibility to remove personal data when it is no longer necessary for its original purpose. You can permanently delete a tenancy and all associated personal information at any time from the app.
+          PropTraka retains tenant data as long as their tenancy records exist within your account. As the Data Controller, it is your responsibility to remove personal data when it is no longer necessary for its original purpose. You can permanently delete a tenancy and all associated personal information at any time from the app.
         </p>
 
         <h2 className="pt-4 font-bold">8. Data Subject Rights</h2>
         <p>
-          Under the DPA, tenants have rights over their personal data. You, as the Data Controller, are responsible for handling their requests. LeaseLync provides you with the tools to fulfill these rights:
+          Under the DPA, tenants have rights over their personal data. You, as the Data Controller, are responsible for handling their requests. PropTraka provides you with the tools to fulfill these rights:
         </p>
         <ul>
           <li><strong>Right to Access:</strong> You can access all tenant data via the Revenue, Arrears, and specific Tenancy Detail pages.</li>

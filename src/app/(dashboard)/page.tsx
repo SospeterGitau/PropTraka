@@ -79,7 +79,7 @@ const DashboardPageContent = memo(function DashboardPageContent() {
                     <div className="mx-auto bg-muted rounded-full p-4 w-fit">
                         <Building className="w-12 h-12 text-muted-foreground" />
                     </div>
-                    <CardTitle className="mt-4 !text-2xl">Welcome to LeaseLync</CardTitle>
+                    <CardTitle className="mt-4 !text-2xl">Welcome to PropTraka</CardTitle>
                     <CardDescription className="max-w-md mx-auto">Get started by adding your first property to your portfolio. Once added, you can begin tracking revenue, expenses, and more.</CardDescription>
                 </CardHeader>
                 <CardContent>

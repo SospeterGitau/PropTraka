@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Contact Us',
-  description: 'Get in touch with the LeaseLync team. We are here to help with any questions or feedback you may have.',
+  description: 'Get in touch with the PropTraka team. We are here to help with any questions or feedback you may have.',
 };
 
 export default function ContactPage() {
@@ -62,8 +62,8 @@ export default function ContactPage() {
                         <Mail className="h-6 w-6 text-primary mt-1" />
                         <div>
                             <h3 className="font-semibold">Email</h3>
-                            <a href="mailto:support@leaselync.app" className="text-sm text-muted-foreground hover:text-primary">
-                                support@leaselync.app
+                            <a href="mailto:support@proptraka.app" className="text-sm text-muted-foreground hover:text-primary">
+                                support@proptraka.app
                             </a>
                         </div>
                     </div>

@@ -12,7 +12,7 @@ import placeholderFaq from '@/lib/placeholder-faq.json';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions (FAQ)',
-  description: 'Find answers to common questions about LeaseLync, including how to manage properties, track revenue, handle maintenance, and use AI reporting features.',
+  description: 'Find answers to common questions about PropTraka, including how to manage properties, track revenue, handle maintenance, and use AI reporting features.',
 };
 
 const faqJsonLd = {
@@ -41,9 +41,9 @@ export default function FaqPage() {
         <Accordion type="single" collapsible className="w-full">
           {placeholderFaq.map((item, index) => (
              <AccordionItem value={`item-${index}`} key={index}>
-              <AccordionTrigger className="text-lg font-semibold">{item.title}</AccordionTrigger>
+              <AccordionTrigger className="text-lg font-semibold">{item.title.replace(/LeaseLync/g, 'PropTraka')}</AccordionTrigger>
               <AccordionContent className="text-base leading-relaxed">
-                <p dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />
+                <p dangerouslySetInnerHTML={{ __html: item.content.replace(/LeaseLync/g, 'PropTraka').replace(/\n/g, '<br />') }} />
               </AccordionContent>
             </AccordionItem>
           ))}

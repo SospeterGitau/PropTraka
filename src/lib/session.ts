@@ -15,7 +15,7 @@ export interface SessionData {
 }
 
 export const sessionOptions: SessionOptions = {
-  cookieName: 'leaselync_session',
+  cookieName: 'proptraka_session',
   password: sessionPassword,
   cookieOptions: {
     // Set secure to true, which is required for SameSite=None

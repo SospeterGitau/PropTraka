@@ -25,7 +25,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Menu',
-    description: 'Navigate through all the features of LeaseLync.',
+    description: 'Navigate through all the features of PropTraka.',
 };
 
 const manageNavItems = [
