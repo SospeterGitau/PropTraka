@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -178,7 +179,7 @@ function InvoiceForm({
         <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <div className="space-y-2">
             <Label htmlFor="rent">Base Rent</Label>
-            <Input id="rent" type="number" value={rent} onChange={(e) => setRent(Number(e.target.value))} />
+            <Input id="rent" type="number" defaultValue={rent} onChange={(e) => setRent(Number(e.target.value))} />
           </div>
           <div className="space-y-2">
             <Label>Service Charges</Label>
