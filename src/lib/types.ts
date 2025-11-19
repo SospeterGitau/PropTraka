@@ -238,7 +238,7 @@ export interface ChangeLogEntry {
   id: string;
   ownerId?: string; // Foreign key to the user
   date: string;
-  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance' | 'Contractor';
+  type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance' | 'Contractor' | 'Subscription' | 'User';
   action: 'Created' | 'Updated' | 'Deleted';
   description: string;
   entityId: string;

@@ -24,12 +24,18 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  updateProfile
 } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { SocialAuthButtons } from '@/components/auth/social-auth-buttons';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const signupSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.string().optional(),
+  portfolioSize: z.string().optional(),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -50,17 +56,29 @@ export default function SignUpPage() {
   const onSubmit = (data: SignupFormValues) => {
     startTransition(async () => {
       const auth = getAuth();
+      const firestore = getFirestore();
       try {
-        await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const user = userCredential.user;
+        
+        await updateProfile(user, { displayName: data.fullName });
+
+        // Save additional profile info to Firestore
+        const userSettingsRef = doc(firestore, 'userSettings', user.uid);
+        await setDoc(userSettingsRef, {
+            ownerId: user.uid,
+            role: data.role || null,
+            portfolioSize: data.portfolioSize || null,
+        }, { merge: true });
+
         toast({
             title: "Account Created",
             description: "Welcome! Your new account has been successfully created.",
         });
         await createSession();
       } catch (error: any) {
-        // Ignore NEXT_REDIRECT - it's not an error, just Next.js redirecting
         if (error.message?.includes('NEXT_REDIRECT')) {
-            return; // Let the redirect happen without showing error
+            return;
         }
         
         if (error.code === 'auth/email-already-in-use') {
@@ -99,7 +117,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-lg">
       <CardHeader className="text-center p-6 space-y-2">
         <CardTitle className="text-2xl">Welcome to PropTraka</CardTitle>
         <CardDescription>Create your account to get started.</CardDescription>
@@ -107,6 +125,17 @@ export default function SignUpPage() {
       <CardContent className="p-6">
         <div className="space-y-4">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                id="fullName"
+                placeholder="e.g. John Doe"
+                {...register('fullName')}
+                />
+                {errors.fullName && (
+                <p className="text-sm text-destructive">{errors.fullName.message}</p>
+                )}
+            </div>
             <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -130,6 +159,34 @@ export default function SignUpPage() {
                 <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="role">I am a...</Label>
+                <Select name="role">
+                    <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
+                        <SelectItem value="Property Manager">Property Manager</SelectItem>
+                        <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
+                        <SelectItem value="Investor">Investor</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="portfolioSize">I manage...</Label>
+                <Select name="portfolioSize">
+                    <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="1-5">1-5 Units</SelectItem>
+                        <SelectItem value="6-20">6-20 Units</SelectItem>
+                        <SelectItem value="21-50">21-50 Units</SelectItem>
+                        <SelectItem value="50+">50+ Units</SelectItem>
+                    </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? (
                 <>

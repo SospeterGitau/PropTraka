@@ -77,7 +77,10 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
   
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme);
+    if (isEditing) {
+      setTempSettings(prev => ({...prev, theme: newTheme}));
+      setTheme(newTheme); // Apply theme immediately for preview
+    }
   };
 
   const handleSave = async () => {
@@ -89,20 +92,17 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         let emailUpdated = false;
 
         try {
-            // Update display name if it has changed
             if (displayName !== currentUser.displayName) {
                 await updateProfile(currentUser, { displayName });
                 profileUpdated = true;
             }
             
-            // Update email if it has changed
             if (email !== currentUser.email) {
                 await updateEmail(currentUser, email);
                 emailUpdated = true;
             }
             
-            // Update app settings in Firestore
-            await updateSettings({ ...tempSettings, theme });
+            await updateSettings(tempSettings);
 
             if (profileUpdated || emailUpdated) {
                 toast({ title: "Profile Updated", description: "Your name and/or email have been changed." });
@@ -189,7 +189,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
              <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Manage your account details and password.</CardDescription>
+                <CardDescription>Manage your account details.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -203,30 +203,46 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     </div>
                   </div>
               </CardContent>
-              <CardFooter className="border-t p-6 flex-col items-start gap-4">
-                 <div className="flex items-center justify-between w-full">
-                    <div>
-                        <h3 className="font-medium">Password</h3>
-                        <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>User Profile</CardTitle>
+                    <CardDescription>This helps us tailor the experience to your needs.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="role">Your Role</Label>
+                            <Select name="role" value={tempSettings.role} onValueChange={(v) => setTempSettings({...tempSettings, role: v})}>
+                                <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
+                                    <SelectItem value="Property Manager">Property Manager</SelectItem>
+                                    <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
+                                    <SelectItem value="Investor">Investor</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="portfolioSize">Portfolio Size</Label>
+                            <Select name="portfolioSize" value={tempSettings.portfolioSize} onValueChange={(v) => setTempSettings({...tempSettings, portfolioSize: v})}>
+                                <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1-5">1-5 Units</SelectItem>
+                                    <SelectItem value="6-20">6-20 Units</SelectItem>
+                                    <SelectItem value="21-50">21-50 Units</SelectItem>
+                                    <SelectItem value="50+">50+ Units</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
-                      Change Password
-                    </Button>
-                 </div>
-                  <Separator />
-                  <div className="flex items-center justify-between w-full">
-                    <div>
-                        <h3 className="font-medium text-destructive">Sign Out</h3>
-                        <p className="text-sm text-muted-foreground">End your current session.</p>
+                    <div className="space-y-2">
+                        <Label htmlFor="areasOfInterest">Areas of Interest for Investment</Label>
+                        <Input id="areasOfInterest" value={(tempSettings.areasOfInterest || []).join(', ')} onChange={(e) => setTempSettings({...tempSettings, areasOfInterest: e.target.value.split(',').map(s => s.trim())})} placeholder="e.g. Kilimani, Nyali, Nakuru Town" />
+                        <p className="text-xs text-muted-foreground">Separate multiple areas with a comma.</p>
                     </div>
-                     <form action={logout}>
-                        <Button variant="destructive">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign Out
-                        </Button>
-                    </form>
-                  </div>
-              </CardFooter>
+                </CardContent>
             </Card>
 
             <Card>
@@ -294,8 +310,8 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               <CardContent>
                   <Label>Colour Scheme</Label>
                    <RadioGroup
-                      value={theme}
-                      onValueChange={(value: "light" | "dark" | "system") => handleThemeChange(value)}
+                      value={tempSettings.theme}
+                      onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
                       className="grid max-w-md grid-cols-3 gap-4 pt-2"
                     >
                       <Label className="[&:has([data-state=checked])>div]:border-primary cursor-pointer">
@@ -331,7 +347,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
               <CardContent className="space-y-4">
                   <div className="flex items-center justify-between rounded-lg border p-3">
                       <div className="space-y-0.5">
-                          <Label htmlFor="pnl-switch">AI P&L Statement Generation</Label>
+                          <Label htmlFor="pnl-switch">AI P&amp;L Statement Generation</Label>
                           <p className="text-xs text-muted-foreground">Allow AI to generate formal Profit & Loss statements.</p>
                       </div>
                       <Switch id="pnl-switch" checked={tempSettings.isPnlReportEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isPnlReportEnabled: checked})} />
@@ -344,6 +360,36 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                       <Switch id="market-research-switch" checked={tempSettings.isMarketResearchEnabled} onCheckedChange={(checked) => setTempSettings({...tempSettings, isMarketResearchEnabled: checked})} />
                   </div>
               </CardContent>
+            </Card>
+            
+             <Card>
+                <CardHeader>
+                    <CardTitle>Security &amp; Account Actions</CardTitle>
+                </CardHeader>
+                <CardFooter className="border-t p-6 flex-col items-start gap-4">
+                    <div className="flex items-center justify-between w-full">
+                        <div>
+                            <h3 className="font-medium">Password</h3>
+                            <p className="text-sm text-muted-foreground">Change your password to secure your account.</p>
+                        </div>
+                        <Button type="button" variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
+                        Change Password
+                        </Button>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between w-full">
+                        <div>
+                            <h3 className="font-medium text-destructive">Sign Out</h3>
+                            <p className="text-sm text-muted-foreground">End your current session.</p>
+                        </div>
+                        <form action={logout}>
+                            <Button variant="destructive">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                Sign Out
+                            </Button>
+                        </form>
+                    </div>
+                </CardFooter>
             </Card>
         </fieldset>
 

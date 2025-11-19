@@ -17,6 +17,9 @@ export interface UserSettings {
   isMarketResearchEnabled: boolean;
   subscription?: Subscription | null;
   theme?: 'dark' | 'light' | 'system';
+  role?: 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor';
+  portfolioSize?: '1-5' | '6-20' | '21-50' | '50+';
+  areasOfInterest?: string[];
 }
 
 interface DataContextValue {
@@ -62,7 +65,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
             await setDoc(settingsRef, { ...userSettings, ownerId: user.uid });
         }
         
-        // Apply the theme from loaded settings
         if (userSettings.theme) {
             setTheme(userSettings.theme);
         }
@@ -122,7 +124,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true });
       setSettings(updatedSettings);
 
-       // If the theme was part of the update, apply it
       if (settingsToSave.theme) {
         setTheme(settingsToSave.theme);
       }

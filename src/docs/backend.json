@@ -158,33 +158,24 @@
       },
       "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
     },
-    "subscription_plan": {
-        "title": "Subscription Plan",
-        "description": "Defines a subscription tier.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "monthly_price": { "type": "number" },
-            "per_unit_price": { "type": "number" },
-            "description": { "type": "string" },
-            "core_features": { "type": "array", "items": { "type": "string" } },
-            "transaction_limit": { "type": "number" },
-            "support_level": { "type": "string" }
-        },
-        "required": ["name", "description"]
-    },
-    "app_feature": {
-        "title": "App Feature",
-        "description": "Defines a feature within the application.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "name": { "type": "string" },
-            "description": { "type": "string" },
-            "page_url": { "type": "string" }
-        },
-        "required": ["name", "description"]
+    "userSettings": {
+      "title": "User Settings",
+      "description": "Stores user-specific application settings and preferences.",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "currency": { "type": "string" },
+        "locale": { "type": "string" },
+        "companyName": { "type": "string" },
+        "residencyStatus": { "type": "string", "enum": ["resident", "non-resident"] },
+        "isPnlReportEnabled": { "type": "boolean" },
+        "isMarketResearchEnabled": { "type": "boolean" },
+        "theme": { "type": "string", "enum": ["dark", "light", "system"] },
+        "role": { "type": "string", "enum": ["Individual Landlord", "Property Manager", "Real Estate Agent", "Investor"] },
+        "portfolioSize": { "type": "string", "enum": ["1-5", "6-20", "21-50", "50+"] },
+        "areasOfInterest": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["ownerId"]
     }
   },
   "auth": {
@@ -223,13 +214,9 @@
         "schema": { "$ref": "#/entities/invoice" },
         "description": "Stores tenant payment invoices."
     },
-    "/subscription_plans/{planId}": {
-      "schema": { "$ref": "#/entities/subscription_plan" },
-      "description": "Configuration for subscription plans (read-only)."
-    },
-    "/app_features/{featureId}": {
-      "schema": { "$ref": "#/entities/app_feature" },
-      "description": "Configuration for application features (read-only)."
+    "/userSettings/{userId}": {
+      "schema": { "$ref": "#/entities/userSettings" },
+      "description": "Stores settings for a specific user."
     }
   }
 }
