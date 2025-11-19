@@ -120,7 +120,7 @@ export default function SignUpPage() {
     <Card className="w-full max-w-lg">
       <CardHeader className="text-center p-6 space-y-2">
         <CardTitle className="text-2xl">Welcome to PropTraka</CardTitle>
-        <CardDescription>Create your account to get started.</CardDescription>
+        <CardDescription>Create an account to start your property management journey.</CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">

@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
       <CardHeader className="text-center p-6 space-y-2">
         <CardTitle className="text-2xl">Reset Your Password</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a link to get back into your account.
+          Enter your PropTraka account email to receive a password reset link.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">

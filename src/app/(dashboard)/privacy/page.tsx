@@ -4,8 +4,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description: 'Our privacy policy outlines how PropTraka collects, uses, and manages personal data, clarifying our role as a Data Processor and your responsibilities as a Data Controller under the Kenya Data Protection Act, 2019 (DPA).',
+  title: 'Privacy Policy for PropTraka',
+  description: 'Our privacy policy details how PropTraka handles personal data, clarifying our role as a Data Processor and your responsibilities as a Data Controller under data protection laws like the Kenya Data Protection Act (DPA). Learn about your data, security, and rights.',
 };
 
 export default function PrivacyPolicyPage() {
