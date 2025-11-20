@@ -464,7 +464,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 <CardContent className="space-y-4">
                      <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Status</span>
-                        <Badge variant={isTenancyEnded ? 'outline' : 'secondary'}>
+                        <Badge variant={isTenancyEnded ? 'outline' : 'default'}>
                             {isTenancyEnded ? 'Inactive' : 'Active'}
                         </Badge>
                     </div>
