@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -516,26 +515,26 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                       Financial Overview
                   </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 flex-grow">
+              <CardContent className="space-y-3 flex-grow p-6">
                   <div className="flex justify-between items-baseline">
                       <span className="text-sm text-muted-foreground">Total Due to Date</span>
-                      <span className="text-lg font-bold text-destructive">{formatCurrency(totalDueToDate, locale, currency)}</span>
+                      <span className="text-lg font-semibold text-destructive">{formatCurrency(totalDueToDate, locale, currency)}</span>
                   </div>
 
                   <div className="flex justify-between items-baseline">
                       <span className="text-sm text-muted-foreground">Total Paid</span>
-                      <span className="text-lg font-bold text-green-600 dark:text-green-500">{formatCurrency(totalPaid, locale, currency)}</span>
+                      <span className="text-lg font-semibold text-green-600 dark:text-green-500">{formatCurrency(totalPaid, locale, currency)}</span>
                   </div>
 
-                  <div className="border-t border-border pt-3 mt-3">
-                      <div className={cn("flex justify-between items-baseline")}>
-                          <p className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                              Current Balance
-                          </p>
-                          <p className={cn("text-2xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-foreground')}>
-                              {formatCurrency(currentBalance, locale, currency)}
-                          </p>
-                      </div>
+                  <Separator className="my-4" />
+
+                  <div className={cn("flex justify-between items-baseline")}>
+                      <p className="text-base font-semibold text-foreground uppercase tracking-wide">
+                          Current Balance
+                      </p>
+                      <p className={cn("text-3xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-green-600 dark:text-green-500')}>
+                          {formatCurrency(currentBalance, locale, currency)}
+                      </p>
                   </div>
               </CardContent>
               <Separator />
@@ -591,7 +590,8 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 
                 const isFirstTransaction = index === 0;
                 const isLastTransaction = index === tenancy.transactions.length - 1;
-                const isProrated = (isFirstTransaction || isLastTransaction) && tx.notes?.includes('Pro-rated');
+                const isProratedFirst = isFirstTransaction && tx.notes?.includes('Pro-rated');
+                const isProratedLast = isLastTransaction && tx.notes?.includes('Pro-rated');
 
 
                 return (
@@ -599,7 +599,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                            {formattedDates[tx.id]}
-                           {isProrated && (
+                           {(isProratedFirst || isProratedLast) && (
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <button>
@@ -641,7 +641,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                         <span>{formatCurrency(tx.deposit, locale, currency)}</span>
                                       </div>
                                     )}
-                                    {tx.notes && !isProrated && (
+                                    {tx.notes && !isProratedFirst && !isProratedLast && (
                                     <p className="text-xs text-muted-foreground pt-2 border-t mt-2">
                                         {tx.notes}
                                     </p>
@@ -724,5 +724,3 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
-
-    
