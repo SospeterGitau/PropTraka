@@ -6,6 +6,7 @@ import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
 import { getAnalytics, Analytics } from 'firebase/analytics';
+import { getPerformance, Performance } from 'firebase/performance';
 import { app } from './index';
 
 interface FirebaseContextValue {
@@ -13,6 +14,7 @@ interface FirebaseContextValue {
   firestore: Firestore;
   functions: Functions;
   analytics: Analytics | null;
+  performance: Performance | null;
   user: User | null;
   isAuthLoading: boolean;
 }
@@ -26,6 +28,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const firestore = getFirestore(app);
   const functions = getFunctions(app);
   const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+  const performance = typeof window !== 'undefined' ? getPerformance(app) : null;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -54,7 +57,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <FirebaseContext.Provider value={{ auth, firestore, functions, analytics, user, isAuthLoading }}>
+    <FirebaseContext.Provider value={{ auth, firestore, functions, analytics, performance, user, isAuthLoading }}>
       {children}
     </FirebaseContext.Provider>
   );

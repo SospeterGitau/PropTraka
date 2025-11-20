@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview This file serves as the primary entry point for all Firebase-related
  * functionality in the application. It acts as a "barrel" file, re-exporting modules
@@ -19,6 +20,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getPerformance, Performance } from 'firebase/performance';
 
 // This function ensures a single instance of the Firebase app is created.
 const getFirebaseApp = (): FirebaseApp => {
@@ -32,9 +34,10 @@ const app = getFirebaseApp();
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+const performance = typeof window !== 'undefined' ? getPerformance(app) : null;
 
 // Export the initialized services
-export { app, auth, firestore, analytics };
+export { app, auth, firestore, analytics, performance };
 
 
 export function initializeFirebase() {
@@ -49,6 +52,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
     auth: getAuth(firebaseApp),
     firestore: getFirestore(firebaseApp),
     analytics: typeof window !== 'undefined' ? getAnalytics(firebaseApp) : null,
+    performance: typeof window !== 'undefined' ? getPerformance(firebaseApp) : null,
   };
 }
 
