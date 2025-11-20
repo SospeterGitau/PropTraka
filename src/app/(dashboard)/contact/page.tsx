@@ -65,8 +65,8 @@ export default function ContactPage() {
                             <SelectItem value="Feature Request">Feature Request</SelectItem>
                             <SelectItem value="Feedback & Suggestions">Feedback &amp; Suggestions</SelectItem>
                             <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
                             <SelectItem value="Technical Issue / Bug Report">Technical Issue / Bug Report</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
