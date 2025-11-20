@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -479,7 +480,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 </CardContent>
             </Card>
 
-            <Card className="flex flex-col">
+             <Card className="flex flex-col">
               <CardHeader>
                   <CardTitle>Financial Overview</CardTitle>
               </CardHeader>
@@ -588,13 +589,13 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                 <div className="space-y-2">
                                     <h4 className="font-medium">Invoice Breakdown</h4>
                                     <div className="flex justify-between">
-                                    <span>Rent:</span>
-                                    <span>{formatCurrency(tx.rent, locale, currency)}</span>
+                                      <span>Rent:</span>
+                                      <span>{formatCurrency(tx.rent, locale, currency)}</span>
                                     </div>
                                     {tx.serviceCharges?.map((sc, i) => (
                                         <div key={i} className="flex justify-between">
-                                        <span>{sc.name}:</span>
-                                        <span>{formatCurrency(sc.amount, locale, currency)}</span>
+                                          <span>{sc.name}:</span>
+                                          <span>{formatCurrency(sc.amount, locale, currency)}</span>
                                         </div>
                                     ))}
                                     {tx.deposit && tx.deposit > 0 && (
