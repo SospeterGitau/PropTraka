@@ -18,14 +18,16 @@ export const metadata: Metadata = {
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "mainEntity": placeholderFaq.map(item => ({
-    "@type": "Question",
-    "name": item.title,
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": item.content.replace(/<br\s*\/?>/g, '\n') // Convert <br> to newlines for plain text
-    }
-  }))
+  "mainEntity": placeholderFaq.flatMap(category => 
+    category.questions.map(item => ({
+      "@type": "Question",
+      "name": item.title,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.content.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?b>/gi, '')
+      }
+    }))
+  )
 };
 
 
@@ -37,17 +39,22 @@ export default function FaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <PageHeader title="Frequently Asked Questions" />
-      <div className="max-w-4xl mx-auto">
-        <Accordion type="single" collapsible className="w-full">
-          {placeholderFaq.map((item, index) => (
-             <AccordionItem value={`item-${index}`} key={index}>
-              <AccordionTrigger className="text-lg font-semibold text-left">{item.title.replace(/LeaseLync/g, 'PropTraka')}</AccordionTrigger>
-              <AccordionContent className="text-base leading-relaxed">
-                <p dangerouslySetInnerHTML={{ __html: item.content.replace(/LeaseLync/g, 'PropTraka').replace(/\n/g, '<br />') }} />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+      <div className="max-w-4xl mx-auto space-y-8">
+        {placeholderFaq.map((category, categoryIndex) => (
+          <div key={categoryIndex}>
+            <h2 className="text-2xl font-bold mb-4">{category.category}</h2>
+            <Accordion type="single" collapsible className="w-full">
+              {category.questions.map((item, itemIndex) => (
+                 <AccordionItem value={`item-${categoryIndex}-${itemIndex}`} key={itemIndex}>
+                  <AccordionTrigger className="text-lg font-semibold text-left">{item.title}</AccordionTrigger>
+                  <AccordionContent className="text-base leading-relaxed">
+                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: item.content }} />
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        ))}
       </div>
     </>
   );

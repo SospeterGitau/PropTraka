@@ -1,71 +1,91 @@
 
 [
     {
-        "title": "About PropTraka: What is it and who is it for?",
-        "content": "PropTraka is a comprehensive, mobile-first web application designed to help landlords and property managers of all scales—from those with a single unit to those overseeing large portfolios—efficiently manage their rental properties. It provides a centralised dashboard with a suite of powerful tools for tracking income and expenses, managing property and tenant details, monitoring maintenance tasks, generating financial reports, and staying on top of tenant arrears. The goal of PropTraka is to simplify property management, automate financial tracking, and provide clear, actionable insights into the performance of your real estate assets, all in one accessible place."
+        "category": "Getting Started",
+        "questions": [
+            {
+                "title": "What is PropTraka and who is it for?",
+                "content": "<b>PropTraka is a property management app designed for landlords and property managers of any scale.</b><br/><br/>It simplifies rental management by providing a central dashboard to track finances, manage properties and tenants, monitor maintenance, and generate insightful reports, helping you run your portfolio more efficiently."
+            },
+            {
+                "title": "How do I sign up or log in?",
+                "content": "<b>You can sign in or create an account using your email and password or your Google account.</b><br/><br/>Simply head to the Sign In page. If you use an email that isn't registered, an account will be created for you automatically. For a password-free experience, use the 'Sign in with Google' option. If you forget your password, you can use the 'Forgot Password?' link to reset it."
+            },
+            {
+                "title": "How do I navigate the app?",
+                "content": "<b>Navigate the app using the main Bottom Navigation Bar and the AI Assistant.</b><br/><br/>The app's primary navigation consists of:<br/><ul><li><b>Dashboard:</b> Your home screen with a high-level financial overview.</li><li><b>Menu:</b> The central hub to access all features like Properties, Revenue, and Reports.</li><li><b>Activity:</b> A real-time feed of all changes made in your account.</li><li><b>Account:</b> Manage your profile, app settings, and subscription.</li></ul>You can also use the floating chat bubble to ask the AI for help at any time."
+            },
+            {
+                "title": "How does the Dashboard work?",
+                "content": "<b>The Dashboard gives you an instant, high-level overview of your portfolio's financial health.</b><br/><br/>It features two main sections:<br/><ul><li><b>Key Performance Indicators (KPIs):</b> These cards at the top show your most critical live metrics, including Total Property Value, Portfolio Net Worth, monthly Revenue and Expenses, Net Operating Income, and total Arrears.</li><li><b>Charts & Graphs:</b> These visuals show your cash flow trends over the last six months and a breakdown of your year-to-date, after-tax profit for each individual property.</li></ul>"
+            }
+        ]
     },
     {
-        "title": "How do I navigate the app?",
-        "content": "PropTraka is designed to be mobile-first and intuitive, using a few key navigation elements to help you find everything you need.\n\n1.  **Bottom Navigation Bar:** This is your primary navigation tool, always visible at the bottom of the screen. It provides instant access to the four main sections of the app:\n    *   **Dashboard:** Your home screen. It gives you an immediate, high-level overview of your portfolio's financial health with key metrics (KPIs) and cash flow charts.\n    *   **Menu:** The central hub for accessing every feature. If you can't find something, start here. It's an organized list of links to all management pages like Properties, Revenue, Expenses, and analysis tools like Reports and Calendar.\n    *   **Activity:** A real-time chronological feed of all significant events and changes made within your account. This is your audit trail for new properties, updated tenancies, logged expenses, and more.\n    *   **Account:** This is where you manage your application preferences and user profile. You can change your password, adjust settings like currency and date format, manage your subscription, and customize the AI's knowledge base.\n\n2.  **AI Assistant:** The floating chat bubble gives you access to a conversational AI assistant. You can ask it questions in natural language to get help, find features, or understand how something works.\n\n3.  **Page Headers:** At the top of each page, a clear header tells you where you are and provides context-specific action buttons. For example, on the 'Properties' page, you'll find an 'Add Property' button, while the 'Reports' page will have a 'Generate Report' button."
+        "category": "Core Features",
+        "questions": [
+            {
+                "title": "How do I manage my properties?",
+                "content": "<b>Manage all your properties from the 'Properties' page, accessible via the main Menu.</b><br/><br/>From here, you can add, view, and edit every asset in your portfolio. When adding a property, you can log its address, type (Domestic or Commercial), building specifications, and crucial financial data like its purchase price, current value, mortgage balance, and target rent."
+            },
+            {
+                "title": "How do I track revenue and create a tenancy?",
+                "content": "<b>Track income by creating 'Tenancies' on the 'Revenue' page from the main Menu.</b><br/><br/>Instead of logging one-off payments, you create a tenancy that links a tenant to a property for a specific lease period. When you set the monthly rent, deposit, and any service charges, the app automatically generates an invoice record for every month of the lease, saving you manual data entry."
+            },
+            {
+                "title": "How do I record a payment from a tenant?",
+                "content": "<b>Record payments within a specific tenancy's detail page.</b><br/><br/>First, navigate to <b>Menu > Revenue</b> and click on the tenancy you wish to update. This will take you to the monthly breakdown for that tenant. Find the month you want to record a payment for and use the action menu (...) to select 'Record Payment'. You can then enter the amount paid."
+            },
+            {
+                "title": "How do I manage expenses?",
+                "content": "<b>Log all property-related costs from the 'Expenses' page, found in the main Menu.</b><br/><br/>The expense form lets you categorise each cost (e.g., Repairs, Insurance), link it to a specific property or mark it as a general business expense, and assign it to a contractor. You can also specify if it's a one-off or recurring expense and attach a link to a receipt for your records."
+            },
+            {
+                "title": "How do I handle a tenancy that ends early?",
+                "content": "<b>End a tenancy early from its detail page to automatically clean up future unpaid rent records.</b><br/><br/>Navigate to <b>Menu > Revenue</b> and click on the relevant tenancy. In the header, click the 'End Tenancy' button and select the new, earlier end date. The app will automatically find and delete any future, unpaid invoices scheduled after this date, ensuring your financial records remain accurate."
+            },
+            {
+                "title": "How can I see who is behind on rent?",
+                "content": "<b>Use the 'Arrears' page from the main Menu to see all overdue payments.</b><br/><br/>This page automatically lists all tenants with outstanding balances on past-due invoices. It shows you who owes money, how much they owe, and how many days the payment is overdue. From here, you can use the action buttons to send a pre-filled email reminder or initiate a payment request."
+            }
+        ]
     },
     {
-        "title": "How does the AI Assistant work?",
-        "content": "The AI Assistant is a conversational helper designed to provide you with instant support. You can access it anytime via the floating chat bubble.\n\n- **Ask Questions Naturally:** You can ask questions in plain English, just as you would to a person (e.g., \"How do I record a payment?\" or \"What's the best way to handle arrears?\").\n\n- **Powered by a Knowledge Base:** The AI's primary source of information is the app's own Knowledge Base, which you can view and manage in **Account > Knowledge Base**. This ensures its answers are accurate and specific to PropTraka's features.\n\n- **General Knowledge:** If the AI can't find an answer in the Knowledge Base, it will use its general knowledge to try and provide a helpful response. It will always tell you when an answer is based on its general knowledge rather than app-specific information.\n\n- **Persistent Conversations:** Your chat history is saved, so you can close the chat, navigate elsewhere in the app, and reopen it to continue your conversation right where you left off."
+        "category": "Advanced Tools & AI",
+        "questions": [
+            {
+                "title": "How do I manage maintenance and repairs?",
+                "content": "<b>Manage all maintenance tasks using the Kanban board on the 'Maintenance' page.</b><br/><br/>This tool lets you visually track jobs from 'To Do' to 'Done'. When creating a request, you can add a description, set a priority, and assign it to a property and contractor. Once a task is marked as 'Done' and a cost is entered, you can instantly create a corresponding expense record with a single click."
+            },
+            {
+                "title": "What kind of reports can I generate?",
+                "content": "<b>Generate interactive financial dashboards and formal AI-powered reports from the 'Reports' page.</b><br/><br/>This section contains two live analysis tabs for Revenue and P&L. Additionally, you can use the AI tools in the header to generate formal documents:<br/><ul><li><b>AI P&L Statement:</b> Creates a downloadable Profit and Loss statement, complete with a narrative summary suitable for stakeholders.</li><li><b>AI Market Research:</b> Generates a detailed analysis of how your rental prices compare to current market rates, with data-backed recommendations.</li></ul>"
+            },
+            {
+                "title": "How does the AI Assistant work?",
+                "content": "<b>The AI Assistant is a conversational helper you can ask for information about the app.</b><br/><br/>Accessed via the floating chat bubble, the AI uses the app's official Knowledge Base to answer your questions accurately. If it can't find a specific answer, it will use its general knowledge and inform you. Your chat history is saved, allowing you to continue conversations at any time."
+            },
+            {
+                "title": "What is the Calendar for?",
+                "content": "<b>The Calendar provides a visual timeline of all key events across your portfolio.</b><br/><br/>Found in the <b>Menu</b>, it automatically plots important dates from other sections of the app, including tenancy start/end dates, expense transaction dates, and the reported dates of maintenance requests. This helps you anticipate vacancies and track activities at a glance."
+            }
+        ]
     },
     {
-        "title": "How do I sign up or log in?",
-        "content": "To get started, navigate to the Sign In page. You can sign in using your email and password, or with a single click using your Google account.\n\n- **Email & Password:** Enter your email and a password. If an account with that email already exists, the system will log you in. If not, a new account will be created automatically, and you'll be logged in. This means you don't have to worry about separate sign-up and login forms.\n\n- **Google Sign-In:** Click 'Sign in with Google' for a faster, password-free experience.\n\nIf you ever forget your password, you can use the 'Forgot Password?' link on the login page to securely reset it via an email link."
-    },
-    {
-        "title": "How does the Dashboard work?",
-        "content": "The Dashboard is your command center, providing a high-level, at-a-glance overview of your entire portfolio's financial health. It consists of two main parts:\n\n1.  **Key Performance Indicators (KPIs):** These are six cards at the top of the page showing critical, real-time metrics:\n    *   **Total Property Value:** The sum of the 'Current Value' of all properties in your portfolio.\n    *   **Portfolio Net Worth:** Your net worth in property assets, calculated as Total Property Value minus the total outstanding Mortgage balances.\n    *   **Revenue (This Month):** Total income received in the current calendar month.\n    *   **Expenses (This Month):** Total costs incurred in the current calendar month.\n    *   **Net Operating Income:** The difference between monthly revenue and expenses (profit before tax). This card will change color to red for a loss or green for a profit.\n    *   **Arrears:** The total amount of outstanding payments currently owed by all tenants.\n\n2.  **Charts & Graphs:**\n    *   **Overview Area Chart:** This interactive chart shows your revenue vs. expenses over the last six months, giving you a clear visual of your cash flow trends.\n    *   **Profit by Property Bar Chart:** This interactive horizontal bar chart breaks down the year-to-date, after-tax profit for each individual property, helping you quickly identify your most and least profitable assets."
-    },
-    {
-        "title": "How do I manage my properties?",
-        "content": "All property management is handled from **Menu > Properties**. This page serves as your central directory for every asset you own.\n\n- **Adding a Property:** Click the 'Add Property' button to open a form. Here you can input all the essential details of a property.\n- **Key Information:** You can store the full address, property type (Domestic for residential or Commercial), and building type (e.g., Flat, Detached House, Office). You can also log specifications like the number of bedrooms, bathrooms, and floor size.\n- **Financials:** Critically, this is where you input the financial data for each property, including its purchase price, purchase-related taxes & fees, current market value, outstanding mortgage balance, and the target or asking rent you aim to achieve.\n- **Viewing & Editing:** All your properties are listed in a table. You can click on any property to go to its dedicated detail page, where you can view all its information in one place. From either the list or the detail page, you can choose to edit or delete a property."
-    },
-    {
-        "title": "How do I track revenue and tenancies?",
-        "content": "All income is managed by creating and maintaining tenancies. You can find this section under **Menu > Revenue**.\n\n- **Creating a Tenancy:** Revenue is not logged as one-off payments. Instead, you create a 'Tenancy' by clicking the 'Add Tenancy' button. A tenancy links a specific tenant to one of your properties for a defined lease period (e.g., July 6, 2025, to July 5, 2026).\n\n- **Automated Record Generation:** When you create a tenancy, you set the base monthly rent, a one-time security deposit (due with the first payment), and any fixed monthly service charges (like security or trash collection). The application then automatically generates a payment record for every month of the lease term, based on the day of the month the tenancy started. For example, a tenancy starting on July 6th will have due dates on July 6th, August 6th, September 6th, and so on.\n\n- **Recording Payments:** From the main Revenue page, you can see a summary of all tenancies. Click on a specific tenancy to see its detailed monthly breakdown. Here, you can record payments against each month's invoice.\n\n- **Handling Variable Charges:** If you need to add a one-time or variable charge to a specific month (e.g., a metered water bill), you can click 'Edit Invoice' for that month and add or adjust the service charges as needed without affecting other months."
-    },
-    {
-        "title": "How do I handle a tenancy that ends early?",
-        "content": "You can easily adjust a tenancy if a tenant leaves before the original lease end date. First, navigate to **Menu > Revenue** and click on the specific tenancy you wish to modify. On the tenancy detail page, you will find an 'End Tenancy' button in the header.\n\nClicking this button will open a dialog where you can select a new, earlier end date. When you confirm this change, the application will automatically perform a cleanup action: it will find and permanently delete all future, unpaid rent records that were scheduled after this new end date. This ensures your financial projections and arrears calculations remain accurate and do not include amounts that are no longer due."
-    },
-    {
-        "title": "How do I manage maintenance and repairs?",
-        "content": "All maintenance tasks, from minor repairs to major renovations, are managed on the **Menu > Maintenance** page. This section features a powerful Kanban-style board that allows you to visually track the progress of each task.\n\n- **Workflow Stages:** The board is divided into four columns representing the lifecycle of a task: 'To Do', 'In Progress', 'Done', and 'Cancelled'.\n\n- **Creating a Request:** You can create a new request, describe the issue, assign it a priority level (from Low to Emergency), and link it to a specific property and one of your saved contractors.\n\n- **Tracking Progress:** You can easily move a task from one column to another by using the dropdown menu on the task card. This gives you a clear and immediate overview of all ongoing work.\n\n- **Logging Costs & Expenses:** Once a task is moved to the 'Done' column, you can log the final cost. A 'Create Expense' button will then become available on the task card. Clicking this creates a pre-filled expense record with all the details from the maintenance job, which you can then save directly to your expense log. This seamless integration saves time and prevents double-entry."
-    },
-    {
-        "title": "How do I manage contractors and vendors?",
-        "content": "PropTraka allows you to keep an organised directory of your trusted contractors and service providers. Navigate to **Menu > Contractors** to access this feature. Here, you can add, view, edit, or delete contractor profiles. For each contractor, you can store their name, speciality (e.g., Plumbing, Electrical, General), contact details (email and phone), and any other relevant notes. This list is then directly integrated with the Maintenance section, allowing you to quickly assign jobs to the correct vendor, keeping all your records neat and inter-connected."
-    },
-    {
-        "title": "How do I manage expenses?",
-        "content": "You can log and track all your property-related costs by navigating to **Menu > Expenses**. The expense form is designed to capture all necessary details for accurate bookkeeping.\n\n- **Categorisation:** You can assign each expense to a category (e.g., Repairs, Insurance, Management Fees) and link it to a specific property or mark it as a general business expense.\n\n- **Vendor Linking:** You can link the expense to a contractor from your saved list, making it easy to track how much you're spending with each vendor.\n\n- **One-off vs. Recurring:** The system supports both 'One-off' expenses for singular costs and 'Recurring' expenses for regular payments like management fees or subscriptions. For recurring expenses, you can set a frequency (e.g., monthly, quarterly).\n\n- **Receipts & Notes:** You can add notes for context and include a URL to an online receipt or document (e.g., a link to a PDF in Google Drive or Dropbox)."
-    },
-    {
-        "title": "What kind of reports can I generate?",
-        "content": "The **Menu > Reports** page offers powerful tools to understand your business's performance. It is split into two main tabs:\n\n1.  **Revenue Analysis:** This interactive dashboard is designed for you to explore revenue performance. It features a chart comparing your 'Gross Potential Income' (what you should have earned) against your 'Net Rental Income' (what you actually collected). This view clearly visualizes losses from vacant properties and unpaid rent (credit loss). You can toggle the view between a 'Month' or 'Year' scope and navigate through different time periods.\n\n2.  **P&L Statement:** This tab provides a live, interactive Profit and Loss statement. It summarises your total revenue and expenses for a selected period and breaks them down into tables. It also calculates your Net Operating Income and an estimated after-tax profit. Like the Revenue Analysis, you can switch between 'Month' and 'Year' views.\n\nIn addition to these dashboards, you can use the AI-powered report generators (buttons in the page header):\n- **AI-Powered P&L Statements:** This tool generates a formal, downloadable Profit and Loss statement, complete with a narrative executive summary. It's suitable for sharing with banks or investors.\n- **AI-Powered Market Research:** This tool provides an in-depth analysis of how your properties' rental prices compare to current market rates, complete with data-backed recommendations for adjustments."
-    },
-    {
-        "title": "How can I see who is behind on rent?",
-        "content": "Navigate to **Menu > Arrears**. This page is your dedicated collections centre and automatically displays a list of all tenants who have outstanding balances on payments that are past their due date. For each tenant in arrears, the table clearly shows:\n\n- How much is owed.\n- Which property the arrears relate to.\n- How many days the payment is overdue.\n\nTo help you take action, two options are provided:\n1.  **Send Reminder:** This button opens your default email client with a pre-filled, professional email to the tenant, which you can review and send.\n2.  **Request Payment:** This button opens a dialog to initiate a payment request. This feature is designed for future integration with payment gateways like Pesapal or InstaSend to automate M-Pesa payment requests directly to the tenant's phone."
-    },
-    {
-        "title": "What is the Calendar for?",
-        "content": "Navigate to **Menu > Calendar**. The Calendar provides a visual timeline of important events across your entire portfolio, helping you see what's happening at a glance. It automatically populates with key dates from other sections of the app, including:\n\n- **Tenancy Events:** Tenancy start and end dates.\n- **Financial Events:** Dates of logged expense transactions.\n- **Maintenance Events:** The reported dates for all maintenance requests.\n\nThis centralized view helps you anticipate vacancies, track when expenses were incurred, and see when maintenance issues were first reported, all in one convenient monthly layout."
-    },
-    {
-        "title": "How do I change my settings and profile?",
-        "content": "Navigate to **Account** using the main bottom navigation bar. This page is your central location for managing all your personal and application-wide settings. On the 'Profile & Settings' tab, you can:\n\n- **Update Security Details:** Change your full name, email address, and update your password.\n- **Manage Profile Information:** Specify your role (e.g., Landlord, Property Manager) and portfolio size to help tailor the app experience.\n- **Customise Regional Settings:** Change the display currency (e.g., KES, USD), set your preferred date format (e.g., DD/MM/YYYY), and choose a visual theme (Light, Dark, or System).\n- **Set Reporting Details:** Define your company name for use in financial reports and set your tax residency status for accurate P&L calculations.\n- **Clear AI Chat History:** Under 'Data Management', you can permanently delete your entire conversation history with the AI assistant."
-    },
-    {
-        "title": "How do I manage my billing information?",
-        "content": "You can manage your billing address and payment details from the **Account** page. In the 'Profile & Settings' tab, there is a dedicated 'Billing Information' card. Here, you can enter and update your address details, including city, county, and postal/area code. You can also add a VAT or KRA PIN if required. This information will be used for generating invoices for your subscription and for processing payments through integrated services like IntaSend or Pesapal."
-    },
-    {
-        "title": "What is the Activity Feed for?",
-        "content": "Navigate to **Activity** using the main bottom navigation bar. The Activity Feed serves as a comprehensive, real-time audit trail for every significant action taken within your account. It displays a chronological list of events, such as:\n\n- A new property being added.\n- A tenancy being created or updated.\n- An expense being logged.\n- A payment being recorded.\n- A maintenance request status being changed.\n\nEach entry is timestamped and includes a clear description of the action, the type of entity it affected (e.g., 'Property', 'Tenancy'), and who performed it. This makes it easy to review recent changes and keep track of all administrative activities across your portfolio."
+        "category": "Account & Support",
+        "questions": [
+            {
+                "title": "How do I change my settings and profile?",
+                "content": "<b>Manage all your preferences from the 'Account' page on the main navigation bar.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information."
+            },
+            {
+                "title": "How do I manage the AI's Knowledge Base?",
+                "content": "<b>(Development Only) You can add, edit, or delete articles in the AI's knowledge base from the 'Account' page.</b><br/><br/>Under the 'Knowledge Base' tab, you can manage the content the AI Assistant uses to answer user questions. You can seed the database with the default FAQs or create custom articles to tailor its expertise. This tab is only visible in the development environment."
+            },
+            {
+                "title": "What is the Activity Feed for?",
+                "content": "<b>The Activity Feed provides a complete audit trail of all actions taken in your account.</b><br/><br/>Accessible from the main navigation bar, this feed shows a timestamped, chronological list of events like new properties, updated tenancies, logged expenses, and status changes on maintenance requests, making it easy to review all recent activity."
+            }
+        ]
     }
 ]
