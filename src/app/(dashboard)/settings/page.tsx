@@ -103,6 +103,9 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             }
             
             await updateSettings(tempSettings);
+            if (tempSettings.theme) {
+              setTheme(tempSettings.theme)
+            }
 
             if (profileUpdated || emailUpdated) {
                 toast({ title: "Profile Updated", description: "Your name and/or email have been changed." });
@@ -125,18 +128,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   };
 
   const handleCancel = () => {
-    // Revert temporary settings state
     setTempSettings(originalSettings);
-    // Explicitly revert the live theme if it was changed during edit mode
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    if (originalSettings.theme) {
-        let effectiveTheme = originalSettings.theme;
-        if (effectiveTheme === 'system') {
-            effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        root.classList.add(effectiveTheme);
-    }
     setIsEditing(false);
   };
 
@@ -150,7 +142,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   });
   
   useEffect(() => {
-    // When not in editing mode, ensure tempSettings is in sync with global settings
     if (!isEditing) {
       setTempSettings(settings);
     }
@@ -158,19 +149,29 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
     setEmail(user?.email || '');
   }, [settings, user, isEditing]);
 
-  // When in editing mode, apply the temporary theme for live preview
   useEffect(() => {
-    if (isEditing && tempSettings.theme) {
-        const root = window.document.documentElement;
-        root.classList.remove('light', 'dark');
-        
-        let effectiveTheme = tempSettings.theme;
-        if (effectiveTheme === 'system') {
-          effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        root.classList.add(effectiveTheme);
+    if (!isEditing) return;
+
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    let effectiveTheme = tempSettings.theme || 'system';
+    if (effectiveTheme === 'system') {
+        effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-  }, [isEditing, tempSettings.theme]);
+    root.classList.add(effectiveTheme);
+    
+    return () => {
+      // On cleanup, revert to the originally saved global theme
+      const globalTheme = settings.theme || 'system';
+      let effectiveGlobalTheme = globalTheme;
+      if (effectiveGlobalTheme === 'system') {
+        effectiveGlobalTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      root.classList.remove('light', 'dark');
+      root.classList.add(effectiveGlobalTheme);
+    }
+  }, [isEditing, tempSettings.theme, settings.theme]);
 
 
   const handleChangePassword = (data: PasswordFormValues) => {
@@ -231,7 +232,8 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
     <>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Profile & Settings</h2>
-        <div className="flex gap-2">
+        <div className="flex justify-end min-w-[200px]">
+          <div className="flex gap-2">
             {isEditing ? (
                 <>
                     <Button variant="outline" onClick={handleCancel}>Cancel</Button>
@@ -240,6 +242,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             ) : (
                 <Button onClick={handleEdit}>Edit</Button>
             )}
+          </div>
         </div>
       </div>
       <div className="space-y-6">
@@ -714,12 +717,13 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const articles = useMemo(() => articlesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as KnowledgeArticle)) || [], [articlesSnapshot]);
 
 
-    const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq;
+    const articlesToDisplay = (articles && articles.length > 0) ? articles : placeholderFaq.flatMap(cat => cat.questions.map(q => ({ id: '', ...q })));
+
 
     const handleSeedData = async () => {
         if (!user) return;
         const batch = writeBatch(firestore);
-        placeholderFaq.forEach(article => {
+        placeholderFaq.flatMap(cat => cat.questions).forEach(article => {
             const docRef = doc(collection(firestore, 'knowledgeBase'));
             batch.set(docRef, { ...article, ownerId: user.uid });
         });
