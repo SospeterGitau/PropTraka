@@ -394,8 +394,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     <Skeleton className="h-10 w-24" />
                 </div>
             </PageHeader>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <Skeleton className="h-48" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <Skeleton className="h-48" />
                 <Skeleton className="h-48" />
             </div>
@@ -429,7 +428,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const firstTransaction = tenancy.transactions[0];
   const depositAmount = firstTransaction.deposit || 0;
   const isDepositReturned = firstTransaction.depositReturned || false;
-  const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : isBefore(new Date(), new Date());
+  const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
 
 
   return (
@@ -456,106 +455,69 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       </PageHeader>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-           <Card className="bg-card shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-                <div className="mb-4">
-                    <h2 className="text-2xl font-bold text-card-foreground mb-1">
-                        {tenancy.tenant}
-                    </h2>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", isTenancyEnded ? "bg-muted text-muted-foreground" : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200")}>
-                        {isTenancyEnded ? 'Inactive Tenant' : 'Active Tenant'}
-                        </span>
+           <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl font-bold">{tenancy.tenant}</CardTitle>
+                    <CardDescription>{tenancy.propertyName}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <div className="flex justify-between items-center text-sm mb-4">
+                        <span className="text-muted-foreground">Status</span>
+                        <Badge variant={isTenancyEnded ? 'outline' : 'secondary'}>
+                            {isTenancyEnded ? 'Inactive' : 'Active'}
+                        </Badge>
                     </div>
-                </div>
-
-                <div className="mb-4 pb-4 border-b border-border">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        Property Address
-                    </p>
-                    <p className="text-base font-medium text-foreground">
-                        {tenancy.propertyName}
-                    </p>
-                </div>
-
-                <div className="mb-4 pb-4 border-b border-border">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                        Contact
-                    </p>
-                    <p className="text-sm text-foreground mb-1 flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-muted-foreground"/>
-                        {tenancy.tenantEmail}
-                    </p>
-                </div>
-
-                <div className="flex justify-between text-sm pt-2">
-                    <div className="space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            Tenancy Period
-                        </p>
-                        <p className="font-medium text-foreground">
-                            {formattedDates['start']} - {formattedDates['end']}
-                        </p>
+                    <div className="flex justify-between items-center text-sm mb-4">
+                        <span className="text-muted-foreground">Tenancy Period</span>
+                        <span className="font-medium">{formattedDates['start']} - {formattedDates['end']}</span>
                     </div>
-                    <div className="space-y-1 text-right">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                            Property Type
-                        </p>
-                        <p className="font-medium text-foreground">
-                            {property?.propertyType}
-                        </p>
+                     <div className="text-sm">
+                        <p className="text-muted-foreground">Contact</p>
+                        <p>{tenancy.tenantEmail}</p>
+                        {tenancy.tenantPhone && <p>{tenancy.tenantPhone}</p>}
                     </div>
-                </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+            </Card>
 
-          <Card className="bg-card shadow-md hover:shadow-lg transition-shadow flex flex-col">
-              <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-card-foreground">
-                      Financial Overview
-                  </CardTitle>
+            <Card className="flex flex-col">
+              <CardHeader>
+                  <CardTitle>Financial Overview</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 flex-grow p-6">
-                  <div className="flex justify-between items-baseline">
-                      <span className="text-sm text-muted-foreground">Total Due to Date</span>
-                      <span className="text-lg font-semibold text-destructive">{formatCurrency(totalDueToDate, locale, currency)}</span>
+              <CardContent className="flex-grow space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Total Due to Date</span>
+                      <span className="font-semibold">{formatCurrency(totalDueToDate, locale, currency)}</span>
                   </div>
-
-                  <div className="flex justify-between items-baseline">
-                      <span className="text-sm text-muted-foreground">Total Paid</span>
-                      <span className="text-lg font-semibold text-green-600 dark:text-green-500">{formatCurrency(totalPaid, locale, currency)}</span>
+                  <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Total Paid</span>
+                      <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(totalPaid, locale, currency)}</span>
                   </div>
-
-                  <Separator className="my-4" />
-
-                  <div className={cn("flex justify-between items-baseline")}>
-                      <p className="text-base font-semibold text-foreground uppercase tracking-wide">
-                          Current Balance
-                      </p>
-                      <p className={cn("text-3xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-green-600 dark:text-green-500')}>
+                  <Separator />
+                  <div className="flex justify-between items-center">
+                      <p className="text-base font-semibold uppercase">Current Balance</p>
+                      <p className={cn("text-3xl font-bold", currentBalance > 0 ? 'text-destructive' : 'text-green-600 dark:text-green-400')}>
                           {formatCurrency(currentBalance, locale, currency)}
                       </p>
                   </div>
               </CardContent>
-              <Separator />
-              <CardFooter className="p-4 flex items-center justify-center">
+              <CardFooter className="p-4 border-t bg-muted/50 flex items-center justify-center">
                    {isDepositReturned ? (
                         <div className="text-center">
-                            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-muted text-muted-foreground">
-                                <BadgeCheck className="mr-2 h-5 w-5 text-primary" />
+                            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/50 dark:text-green-200 dark:border-green-700">
+                                <BadgeCheck className="mr-2 h-5 w-5" />
                                 Deposit Returned
                             </div>
                         </div>
-                    ) : isTenancyEnded ? (
+                    ) : isTenancyEnded && depositAmount > 0 ? (
                         <Button size="sm" onClick={handleReturnDeposit} disabled={isDepositReturned}>
                             <CircleDollarSign className="mr-2 h-4 w-4" />
                             Return Deposit of {formatCurrency(depositAmount, locale, currency)}
                         </Button>
-                    ) : (
+                    ) : depositAmount > 0 ? (
                         <div className="text-center text-sm text-muted-foreground">
-                            Deposit Held: <span className="font-bold text-green-600 dark:text-green-400">{formatCurrency(depositAmount, locale, currency)}</span>
+                            Deposit Held: <span className="font-bold text-foreground">{formatCurrency(depositAmount, locale, currency)}</span>
                         </div>
-                    )}
+                    ) : null}
               </CardFooter>
           </Card>
       </div>
