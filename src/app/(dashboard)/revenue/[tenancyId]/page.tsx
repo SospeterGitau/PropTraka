@@ -543,7 +543,8 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
               {tenancy.transactions.map((tx, index) => {
                 const dueDate = new Date(tx.date);
                 const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
-                const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
+                const depositForPeriod = tx.deposit || 0;
+                const due = tx.rent + totalServiceCharges + depositForPeriod;
                 const paid = tx.amountPaid ?? 0;
                 const balance = due - paid;
                 const isOverdue = isBefore(dueDate, today) && balance > 0;
@@ -598,10 +599,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                           <span>{formatCurrency(sc.amount, locale, currency)}</span>
                                         </div>
                                     ))}
-                                    {tx.deposit && tx.deposit > 0 && (
+                                    {depositForPeriod > 0 && (
                                       <div className="flex justify-between">
                                         <span>Deposit:</span>
-                                        <span>{formatCurrency(tx.deposit, locale, currency)}</span>
+                                        <span>{formatCurrency(depositForPeriod, locale, currency)}</span>
                                       </div>
                                     )}
                                     {tx.notes && !isProratedFirst && !isProratedLast && (
