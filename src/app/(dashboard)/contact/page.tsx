@@ -59,14 +59,14 @@ export default function ContactPage() {
                             <SelectValue placeholder="Select a subject..." />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="General Inquiry">General Inquiry</SelectItem>
-                            <SelectItem value="Billing & Subscription">Billing &amp; Subscription</SelectItem>
-                            <SelectItem value="Technical Issue / Bug Report">Technical Issue / Bug Report</SelectItem>
-                            <SelectItem value="Feature Request">Feature Request</SelectItem>
                             <SelectItem value="Account Access Problem">Account Access Problem</SelectItem>
+                            <SelectItem value="Billing & Subscription">Billing &amp; Subscription</SelectItem>
                             <SelectItem value="Data & Reporting Question">Data &amp; Reporting Question</SelectItem>
+                            <SelectItem value="Feature Request">Feature Request</SelectItem>
                             <SelectItem value="Feedback & Suggestions">Feedback &amp; Suggestions</SelectItem>
+                            <SelectItem value="General Inquiry">General Inquiry</SelectItem>
                             <SelectItem value="Other">Other</SelectItem>
+                            <SelectItem value="Technical Issue / Bug Report">Technical Issue / Bug Report</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
