@@ -473,14 +473,13 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                         <span className="font-medium">{formattedDates['start']} - {formattedDates['end']}</span>
                     </div>
                      <div className="text-sm space-y-2">
-                        <p className="text-muted-foreground">Contact</p>
                         <div className="flex items-center gap-2">
-                           <span className="w-10 text-muted-foreground">Email:</span>
+                           <span className="font-medium text-muted-foreground">Email:</span>
                            <a href={`mailto:${tenancy.tenantEmail}`} className="text-primary hover:underline">{tenancy.tenantEmail}</a>
                         </div>
                         {tenancy.tenantPhone && (
                            <div className="flex items-center gap-2">
-                             <span className="w-10 text-muted-foreground">Tel:</span>
+                             <span className="font-medium text-muted-foreground">Tel:</span>
                              <a href={`tel:${tenancy.tenantPhone}`} className="hover:underline">{tenancy.tenantPhone}</a>
                            </div>
                         )}
@@ -552,7 +551,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 const dueDate = new Date(tx.date);
                 const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
                 const depositForPeriod = tx.deposit || 0;
-                const due = tx.rent + totalServiceCharges + depositForPeriod;
+                const due = tx.rent + totalServiceCharges + (tx.deposit || 0);
                 const paid = tx.amountPaid ?? 0;
                 const balance = due - paid;
                 const isOverdue = isBefore(dueDate, today) && balance > 0;
@@ -631,7 +630,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                         {isOverdue ? (
                           <Badge variant="destructive">{daysOverdue} days overdue</Badge>
                         ) : balance <= 0 && paid > 0 ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-200 dark:border-green-700">Paid</Badge>
+                           <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-200 dark:border-green-700">Paid</Badge>
                         ) : (
                           <Badge variant="secondary">Pending</Badge>
                         )}
