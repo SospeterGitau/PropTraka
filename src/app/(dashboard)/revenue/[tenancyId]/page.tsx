@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -431,7 +430,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const firstTransaction = tenancy.transactions[0];
   const depositAmount = firstTransaction.deposit || 0;
   const isDepositReturned = firstTransaction.depositReturned || false;
-  const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
+  const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : isBefore(new Date(), new Date());
 
 
   return (
@@ -589,9 +588,11 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 const daysOverdue = isOverdue 
                   ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
                   : 0;
-
+                
+                const isFirstTransaction = index === 0;
                 const isLastTransaction = index === tenancy.transactions.length - 1;
-                const isProrated = isLastTransaction && tx.notes?.includes('Pro-rated');
+                const isProrated = (isFirstTransaction || isLastTransaction) && tx.notes?.includes('Pro-rated');
+
 
                 return (
                     <TableRow key={tx.id}>
@@ -723,3 +724,5 @@ export default function TenancyDetailPage() {
         <TenancyDetailPageContent />
     )
 }
+
+    
