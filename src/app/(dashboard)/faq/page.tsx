@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Metadata } from 'next';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 
@@ -41,19 +42,23 @@ export default function FaqPage() {
       <PageHeader title="Frequently Asked Questions" />
       <div className="max-w-4xl mx-auto space-y-8">
         {placeholderFaq.map((category, categoryIndex) => (
-          <div key={categoryIndex}>
-            <h2 className="text-2xl font-bold mb-4">{category.category}</h2>
-            <Accordion type="single" collapsible className="w-full">
-              {category.questions.map((item, itemIndex) => (
-                 <AccordionItem value={`item-${categoryIndex}-${itemIndex}`} key={itemIndex}>
-                  <AccordionTrigger className="text-lg font-semibold text-left">{item.title}</AccordionTrigger>
-                  <AccordionContent className="text-base leading-relaxed">
-                    <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: item.content }} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </div>
+          <Card key={categoryIndex}>
+            <CardHeader>
+                <CardTitle className="text-2xl">{category.category}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                {category.questions.map((item, itemIndex) => (
+                    <AccordionItem value={`item-${categoryIndex}-${itemIndex}`} key={itemIndex}>
+                        <AccordionTrigger className="text-lg font-semibold text-left">{item.title}</AccordionTrigger>
+                        <AccordionContent className="text-base leading-relaxed">
+                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: item.content }} />
+                        </AccordionContent>
+                    </AccordionItem>
+                ))}
+                </Accordion>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </>
