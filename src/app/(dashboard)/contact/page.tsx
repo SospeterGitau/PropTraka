@@ -1,4 +1,7 @@
 
+'use client';
+
+import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -6,14 +9,25 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch with the PropTraka team. We are here to help with any questions or feedback you may have.',
-};
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ContactPage() {
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [name, setName] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const ticketId = `PPT-${Date.now()}`;
+    const mailtoSubject = encodeURIComponent(`[Ticket# ${ticketId}] - ${subject}`);
+    const mailtoBody = encodeURIComponent(
+        `Dear PropTraka Support,\n\nI am writing to you regarding the subject: ${subject}.\n\nMy message is:\n${message}\n\nThank you,\n${name}`
+    );
+    
+    // This will open the user's default email client
+    window.location.href = `mailto:support@proptraka.app?subject=${mailtoSubject}&body=${mailtoBody}`;
+  };
+
   return (
     <>
       <PageHeader title="Contact Us" />
@@ -27,24 +41,38 @@ export default function ContactPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" placeholder="Enter your name" />
+                    <Input id="name" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="Enter your email" />
+                    <Input id="email" type="email" placeholder="Enter your email" required />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="What is your message about?" />
+                    <Label htmlFor="subject">Subject</Label>
+                    <Select onValueChange={setSubject} required>
+                        <SelectTrigger id="subject">
+                            <SelectValue placeholder="Select a subject..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                            <SelectItem value="Billing & Subscription">Billing &amp; Subscription</SelectItem>
+                            <SelectItem value="Technical Issue / Bug Report">Technical Issue / Bug Report</SelectItem>
+                            <SelectItem value="Feature Request">Feature Request</SelectItem>
+                            <SelectItem value="Account Access Problem">Account Access Problem</SelectItem>
+                            <SelectItem value="Data & Reporting Question">Data &amp; Reporting Question</SelectItem>
+                            <SelectItem value="Feedback & Suggestions">Feedback &amp; Suggestions</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" placeholder="Your message..." className="min-h-[150px]" />
+                  <Textarea id="message" placeholder="Your message..." className="min-h-[150px]" value={message} onChange={(e) => setMessage(e.target.value)} required />
                 </div>
                 <Button type="submit" className="w-full">Send Message</Button>
               </form>
