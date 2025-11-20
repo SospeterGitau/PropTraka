@@ -461,21 +461,29 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     <CardTitle className="text-2xl font-bold">{tenancy.tenant}</CardTitle>
                     <CardDescription>{tenancy.propertyName}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                     <div className="flex justify-between items-center text-sm mb-4">
+                <CardContent className="space-y-4">
+                     <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Status</span>
                         <Badge variant={isTenancyEnded ? 'outline' : 'secondary'}>
                             {isTenancyEnded ? 'Inactive' : 'Active'}
                         </Badge>
                     </div>
-                    <div className="flex justify-between items-center text-sm mb-4">
+                    <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Tenancy Period</span>
                         <span className="font-medium">{formattedDates['start']} - {formattedDates['end']}</span>
                     </div>
-                     <div className="text-sm">
+                     <div className="text-sm space-y-2">
                         <p className="text-muted-foreground">Contact</p>
-                        <p>{tenancy.tenantEmail}</p>
-                        {tenancy.tenantPhone && <p>{tenancy.tenantPhone}</p>}
+                        <div className="flex items-center gap-2">
+                           <span className="w-10 text-muted-foreground">Email:</span>
+                           <a href={`mailto:${tenancy.tenantEmail}`} className="text-primary hover:underline">{tenancy.tenantEmail}</a>
+                        </div>
+                        {tenancy.tenantPhone && (
+                           <div className="flex items-center gap-2">
+                             <span className="w-10 text-muted-foreground">Tel:</span>
+                             <a href={`tel:${tenancy.tenantPhone}`} className="hover:underline">{tenancy.tenantPhone}</a>
+                           </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -623,9 +631,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                         {isOverdue ? (
                           <Badge variant="destructive">{daysOverdue} days overdue</Badge>
                         ) : balance <= 0 && paid > 0 ? (
-                          <Badge variant="secondary">Paid</Badge>
+                          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-200 dark:border-green-700">Paid</Badge>
                         ) : (
-                          <Badge variant="outline">Pending</Badge>
+                          <Badge variant="secondary">Pending</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
