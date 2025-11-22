@@ -562,53 +562,50 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                           {formattedDates[tx.id]}
-                           {tx.notes && (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <button>
-                                    <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80 text-sm">
-                                  <p>{tx.notes}</p>
-                                </PopoverContent>
-                              </Popover>
-                           )}
-                        </div>
+                        {formattedDates[tx.id]}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {formatCurrency(due, locale, currency)}
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button>
-                                <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80 text-sm">
-                                <div className="space-y-2">
-                                    <h4 className="font-medium">Invoice Breakdown</h4>
-                                    <div className="flex justify-between">
-                                      <span>Rent:</span>
-                                      <span>{formatCurrency(tx.rent, locale, currency)}</span>
-                                    </div>
-                                    {tx.serviceCharges?.map((sc, i) => (
-                                        <div key={i} className="flex justify-between">
-                                          <span>{sc.name}:</span>
-                                          <span>{formatCurrency(sc.amount, locale, currency)}</span>
-                                        </div>
-                                    ))}
-                                    {depositForPeriod > 0 && (
+                          {(tx.serviceCharges && tx.serviceCharges.length > 0) || (depositForPeriod > 0) || tx.notes ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button>
+                                  <Info className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 text-sm">
+                                  <div className="space-y-2">
+                                      <h4 className="font-medium">Invoice Breakdown</h4>
                                       <div className="flex justify-between">
-                                        <span>Deposit:</span>
-                                        <span>{formatCurrency(depositForPeriod, locale, currency)}</span>
+                                        <span>Rent:</span>
+                                        <span>{formatCurrency(tx.rent, locale, currency)}</span>
                                       </div>
-                                    )}
-                                </div>
-                            </PopoverContent>
-                          </Popover>
+                                      {tx.serviceCharges?.map((sc, i) => (
+                                          <div key={i} className="flex justify-between">
+                                            <span>{sc.name}:</span>
+                                            <span>{formatCurrency(sc.amount, locale, currency)}</span>
+                                          </div>
+                                      ))}
+                                      {depositForPeriod > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>Deposit:</span>
+                                          <span>{formatCurrency(depositForPeriod, locale, currency)}</span>
+                                        </div>
+                                      )}
+                                      {tx.notes && (
+                                        <>
+                                        <Separator className="my-2" />
+                                        <div>
+                                            <h4 className="font-medium mb-1">Notes</h4>
+                                            <p className="text-muted-foreground">{tx.notes}</p>
+                                        </div>
+                                        </>
+                                      )}
+                                  </div>
+                              </PopoverContent>
+                            </Popover>
+                          ) : null}
                         </div>
                       </TableCell>
                       <TableCell>{formatCurrency(paid, locale, currency)}</TableCell>
