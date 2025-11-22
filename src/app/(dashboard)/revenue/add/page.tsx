@@ -208,7 +208,7 @@ const TenancyForm = memo(function TenancyForm({
                 const periodDays = Math.round((oneDayBeforeNextDue.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                 const occupiedDays = Math.round((oneDayBeforeNextDue.getTime() - tenancyStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                 
-                if (periodDays > 0) {
+                if (periodDays > 0 && occupiedDays > 0) {
                   const dailyRent = rent / periodDays;
                   rentForPeriod = dailyRent * occupiedDays;
                   proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
@@ -225,7 +225,7 @@ const TenancyForm = memo(function TenancyForm({
                  oneDayBeforeDueDate.setDate(oneDayBeforeDueDate.getDate() - 1);
                  const periodDays = Math.round((oneDayBeforeDueDate.getTime() - prevDueDate.getTime()) / (1000 * 60 * 60 * 24));
 
-                 if (periodDays > 0) {
+                 if (periodDays > 0 && occupiedDays > 0) {
                     const dailyRent = rent / periodDays;
                     rentForPeriod = dailyRent * occupiedDays;
                     proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
@@ -235,7 +235,7 @@ const TenancyForm = memo(function TenancyForm({
         
         rentForPeriod = Math.round(rentForPeriod * 100) / 100;
         
-        const txNotes = proRataNotes ? proRataNotes : (isFirstMonth ? notes : undefined);
+        const txNotes = proRataNotes || (isFirstMonth ? notes : undefined);
 
         const newTxData: Partial<Transaction> = {
             tenancyId,
@@ -461,4 +461,5 @@ export default function AddTenancyPage() {
     </>
   );
 }
+
 
