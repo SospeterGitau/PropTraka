@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -125,7 +126,7 @@ export function ExpenseForm({
         <DialogHeader>
           <DialogTitle>{transaction?.id ? 'Edit' : 'Add'} Expense</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2 py-4">
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
             <DatePicker date={date} setDate={setDate} locale={settings.locale} />
@@ -259,8 +260,9 @@ export function ExpenseForm({
             <Input id="amount" name="amount" type="number" step="0.01" defaultValue={transaction?.amount} required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="receiptUrl">Receipt/File Link (optional)</Label>
+            <Label htmlFor="receiptUrl">Receipt/Document Link (optional)</Label>
             <Input id="receiptUrl" name="receiptUrl" type="url" defaultValue={transaction?.receiptUrl} placeholder="https://example.com/receipt.pdf" />
+            <p className="text-xs text-muted-foreground">This is for linking to external document storage like Google Drive or Dropbox.</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>

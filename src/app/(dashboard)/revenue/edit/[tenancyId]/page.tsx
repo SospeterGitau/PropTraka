@@ -254,9 +254,11 @@ const TenancyForm = memo(function TenancyForm({
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
                 const periodDays = Math.round((nextDueDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
                 
-                const dailyRent = rent / periodDays;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+                if (periodDays > 0) {
+                    const dailyRent = rent / periodDays;
+                    rentForPeriod = dailyRent * occupiedDays;
+                    proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+                }
             }
         }
         
@@ -264,7 +266,7 @@ const TenancyForm = memo(function TenancyForm({
         
         const txNotes = proRataNotes || (isFirstMonth ? notes : undefined);
 
-        const newTxData: Partial<Omit<Transaction, 'notes'>> & { notes?: string, id?: string } = {
+        const newTxData: Partial<Transaction> & { id?: string } = {
             tenancyId,
             date: format(dueDate, 'yyyy-MM-dd'),
             rent: rentForPeriod,
@@ -422,8 +424,9 @@ const TenancyForm = memo(function TenancyForm({
             </CardHeader>
             <CardContent className="space-y-6 p-6">
                  <div className="space-y-2">
-                    <Label htmlFor="contractUrl">Contract Link (optional)</Label>
+                    <Label htmlFor="contractUrl">Contract Document Link (optional)</Label>
                     <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
+                    <p className="text-xs text-muted-foreground">This is for linking to external document storage like Google Drive or Dropbox.</p>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notes (optional)</Label>
