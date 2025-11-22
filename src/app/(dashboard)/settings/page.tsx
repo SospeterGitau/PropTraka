@@ -1003,43 +1003,56 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
   );
 });
 
+const SettingsTabs = () => {
+    const { settings, isLoading } = useDataContext();
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
+    if (isLoading) {
+        return (
+            <div className="mb-6">
+                <Skeleton className="h-10 w-full max-w-lg" />
+            </div>
+        );
+    }
+    
+    const isEnterprise = settings?.subscription?.plan === 'Enterprise';
+
+    return (
+        <Tabs defaultValue="profile">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-lg mb-6">
+                <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
+                <TabsTrigger value="subscription">Subscription</TabsTrigger>
+                {isEnterprise && <TabsTrigger value="api-access">API Access</TabsTrigger>}
+                {isDevelopment && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
+            </TabsList>
+            
+            <TabsContent value="profile">
+                <ProfileSettingsTab />
+            </TabsContent>
+            <TabsContent value="subscription">
+                <SubscriptionBillingTab />
+            </TabsContent>
+            {isEnterprise && (
+                <TabsContent value="api-access">
+                    <ApiAccessTab />
+                </TabsContent>
+            )}
+            {isDevelopment && (
+                <TabsContent value="knowledge">
+                    <KnowledgeBaseTab />
+                </TabsContent>
+            )}
+        </Tabs>
+    );
+};
+
 
 export default function AccountPage() {
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const { settings } = useDataContext();
-  const isEnterprise = settings?.subscription?.plan === 'Enterprise';
-
   return (
     <>
       <PageHeader title="Account" />
-      <Tabs defaultValue="profile">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-lg mb-6">
-          <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
-          <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          {isEnterprise && <TabsTrigger value="api-access">API Access</TabsTrigger>}
-          {isDevelopment && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
-        </TabsList>
-        
-        <TabsContent value="profile">
-            <ProfileSettingsTab />
-        </TabsContent>
-
-        <TabsContent value="subscription">
-            <SubscriptionBillingTab />
-        </TabsContent>
-        
-        {isEnterprise && (
-            <TabsContent value="api-access">
-                <ApiAccessTab />
-            </TabsContent>
-        )}
-
-        {isDevelopment && (
-            <TabsContent value="knowledge">
-                <KnowledgeBaseTab />
-            </TabsContent>
-        )}
-      </Tabs>
+      <SettingsTabs />
     </>
   );
 }
+
