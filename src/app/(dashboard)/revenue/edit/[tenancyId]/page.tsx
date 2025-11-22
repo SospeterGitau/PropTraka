@@ -66,12 +66,8 @@ const TenancyForm = memo(function TenancyForm({
   const [serviceCharges, setServiceCharges] = useState<FormServiceCharge[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    tenancyToEdit?.tenancyStartDate ? parseLocalDate(tenancyToEdit.tenancyStartDate) : undefined
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    tenancyToEdit?.tenancyEndDate ? parseLocalDate(tenancyToEdit.tenancyEndDate) : undefined
-  );
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
   const [rentDueDate, setRentDueDate] = useState<Date | undefined>();
 
 
@@ -198,7 +194,6 @@ const TenancyForm = memo(function TenancyForm({
         const isLastMonth = isSameMonth(currentDate, tenancyEndDate);
         
         const dueDate = createSafeMonthDate(year, month, rentDueDateDay);
-        const daysInMonth = getDaysInMonth(currentDate);
         let proRataNotes: string | undefined = undefined;
 
         const existingTx = existingTransactions.find(tx => {
@@ -213,44 +208,45 @@ const TenancyForm = memo(function TenancyForm({
             const startDay = tenancyStartDate.getDate();
             const endDay = tenancyEndDate.getDate();
             const occupiedDays = endDay - startDay + 1;
-            const dailyRent = rent / daysInMonth;
+            const daysInBillingPeriod = getDaysInMonth(currentDate);
+            const dailyRent = rent / daysInBillingPeriod;
             rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
         } else if (isFirstMonth) { // First month of a multi-month tenancy
             const startDay = tenancyStartDate.getDate();
-            // Only pro-rate if the tenancy doesn't start on the rent due day
+            
             if (startDay !== rentDueDateDay) {
-                // Calculate days from start date to the day before next due date
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, rentDueDateDay);
                 const oneDayBeforeNextDue = new Date(nextDueDate);
                 oneDayBeforeNextDue.setDate(oneDayBeforeNextDue.getDate() - 1);
                 
-                // Days in this rental period (from due date to day before next due)
                 const periodDays = Math.round((oneDayBeforeNextDue.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                
-                // Days tenant actually occupies (from move-in to day before next due)
                 const occupiedDays = Math.round((oneDayBeforeNextDue.getTime() - tenancyStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                 
-                const dailyRent = rent / periodDays;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+                if (periodDays > 0) {
+                    const dailyRent = rent / periodDays;
+                    rentForPeriod = dailyRent * occupiedDays;
+                    proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+                }
             }
         } else if (isLastMonth) { // Last month of a multi-month tenancy
              const endDay = tenancyEndDate.getDate();
-             const prevDueDate = createSafeMonthDate(month === 0 ? year - 1 : year, (month - 1 + 12) % 12, rentDueDateDay);
-             const dayBeforeEnd = new Date(tenancyEndDate.getTime() - 86400000);
-             const dayBeforePrevDue = new Date(prevDueDate.getTime() - 86400000);
-
              const lastDayOfFullPeriod = (rentDueDateDay === 1) ? getDaysInMonth(new Date(year, month - 1)) : rentDueDateDay - 1;
 
              if (endDay !== lastDayOfFullPeriod) {
-                 const occupiedDays = endDay - prevDueDate.getDate() + 1;
-                 const daysInPeriod = getDaysInMonth(currentDate); // Or period days logic
-                 const dailyRent = rent / daysInPeriod;
-                 rentForPeriod = dailyRent * occupiedDays;
-                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+                 const prevDueDate = createSafeMonthDate(month === 0 ? year - 1 : year, (month - 1 + 12) % 12, rentDueDateDay);
+                 const occupiedDays = Math.round((tenancyEndDate.getTime() - prevDueDate.getTime()) / (1000 * 60 * 60 * 24));
+                 const oneDayBeforeDueDate = new Date(dueDate);
+                 oneDayBeforeDueDate.setDate(oneDayBeforeDueDate.getDate() - 1);
+                 const periodDays = Math.round((oneDayBeforeDueDate.getTime() - prevDueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                 if (periodDays > 0) {
+                    const dailyRent = rent / periodDays;
+                    rentForPeriod = dailyRent * occupiedDays;
+                    proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+                 }
              }
         }
         

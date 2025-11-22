@@ -547,7 +547,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tenancy.transactions.map((tx, index) => {
+              {tenancy.transactions.map((tx) => {
                 const dueDate = new Date(tx.date);
                 const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
                 const depositForPeriod = tx.deposit || 0;
@@ -559,18 +559,12 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                   ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24))
                   : 0;
                 
-                const isFirstTransaction = index === 0;
-                const isLastTransaction = index === tenancy.transactions.length - 1;
-                const isProratedFirst = isFirstTransaction && tx.notes?.includes('Pro-rated');
-                const isProratedLast = isLastTransaction && tx.notes?.includes('Pro-rated');
-
-
                 return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                            {formattedDates[tx.id]}
-                           {(isProratedFirst || isProratedLast) && (
+                           {tx.notes && (
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <button>
@@ -611,11 +605,6 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                         <span>Deposit:</span>
                                         <span>{formatCurrency(depositForPeriod, locale, currency)}</span>
                                       </div>
-                                    )}
-                                    {tx.notes && !isProratedFirst && !isProratedLast && (
-                                    <p className="text-xs text-muted-foreground pt-2 border-t mt-2">
-                                        {tx.notes}
-                                    </p>
                                     )}
                                 </div>
                             </PopoverContent>
