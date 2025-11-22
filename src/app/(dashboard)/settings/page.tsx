@@ -26,7 +26,7 @@ import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query, getDocs, where, query, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query, getDocs, where, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
@@ -1009,17 +1009,11 @@ export default function AccountPage() {
   const { settings } = useDataContext();
   const isEnterprise = settings?.subscription?.plan === 'Enterprise';
 
-  const navItems = ['profile', 'subscription'];
-  if (isEnterprise) navItems.push('api-access');
-  if (isDevelopment) navItems.push('knowledge');
-  
-  const gridCols = `grid-cols-${navItems.length}`;
-
   return (
     <>
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
-        <TabsList className={cn("grid w-full max-w-lg mb-6", gridCols)}>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-lg mb-6">
           <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           {isEnterprise && <TabsTrigger value="api-access">API Access</TabsTrigger>}
@@ -1045,4 +1039,3 @@ export default function AccountPage() {
     </>
   );
 }
-
