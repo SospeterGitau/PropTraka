@@ -60,10 +60,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         
         if (subsSnap.empty) {
             const subRef = doc(collection(firestore, 'subscriptions'));
+            
+            // Assign Enterprise plan for the specified user, otherwise default to Starter
+            const planForNewUser = user.email === 'sospeter.gitau@gmail.com' ? 'Enterprise' : 'Starter';
+
             const newSub: Subscription = {
                 id: subRef.id,
                 ownerId: user.uid,
-                plan: 'Starter',
+                plan: planForNewUser,
                 status: 'active',
                 billingCycle: 'monthly',
                 currentPeriodStart: new Date().toISOString(),
