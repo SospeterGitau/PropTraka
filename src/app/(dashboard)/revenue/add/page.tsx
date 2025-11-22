@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, memo } from 'react';
@@ -198,6 +197,7 @@ const TenancyForm = memo(function TenancyForm({
         } else if (isFirstMonth) { // First month of a multi-month tenancy
             const startDay = tenancyStartDate.getDate();
             
+            // CRITICAL: Only pro-rate if tenancy start date is different from rent due date
             if (startDay !== dayOfMonth) {
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
@@ -461,6 +461,3 @@ export default function AddTenancyPage() {
     </>
   );
 }
-
-
-
