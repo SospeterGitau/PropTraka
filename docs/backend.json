@@ -37,6 +37,7 @@
         "ownerId": { "type": "string" },
         "date": { "type": "string", "format": "date" },
         "rent": { "type": "number" },
+        "rentDueDate": { "type": "number" },
         "serviceCharges": {
           "type": "array",
           "items": {
@@ -196,6 +197,18 @@
         "vatPin": { "type": "string" }
       },
       "required": ["ownerId"]
+    },
+    "apiKey": {
+      "title": "API Key",
+      "description": "An API key for programmatic access to the user's data.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastUsed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "createdAt"]
     }
   },
   "auth": {
@@ -241,6 +254,10 @@
     "/userSettings/{userId}": {
       "schema": { "$ref": "#/entities/userSettings" },
       "description": "Stores settings for a specific user."
+    },
+    "/apiKeys/{keyId}": {
+      "schema": { "$ref": "#/entities/apiKey" },
+      "description": "Stores user API keys. The document ID is the hashed API key."
     }
   }
 }

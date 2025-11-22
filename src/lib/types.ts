@@ -73,6 +73,7 @@ export interface Transaction {
   ownerId?: string; // Foreign key to the user
   date: string; // ISO date string (YYYY-MM-DD)
   rent: number; // Base rent amount due for a period (used in revenue)
+  rentDueDate?: number; // Day of the month rent is due (1-31)
   serviceCharges?: ServiceCharge[]; // Additional charges for a period (used in revenue)
   propertyId?: string;
   propertyName: string;
