@@ -180,14 +180,13 @@ const TenancyForm = memo(function TenancyForm({
         if (isFirstMonth && isLastMonth) { // Tenancy starts and ends in the same month
             const startDay = tenancyStartDate.getDate();
             const endDay = tenancyEndDate.getDate();
-            if (startDay !== endDay) { // Only pro-rate if it's not a single day tenancy for some reason
-                const occupiedDays = endDay - startDay + 1;
-                const dailyRent = rent / daysInMonth;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-            }
+            const occupiedDays = endDay - startDay + 1;
+            const dailyRent = rent / daysInMonth;
+            rentForPeriod = dailyRent * occupiedDays;
+            proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
         } else if (isFirstMonth) { // First month of a multi-month tenancy
             const startDay = tenancyStartDate.getDate();
+
             // Only pro-rate if the tenancy doesn't start on the rent due day
             if (startDay !== dayOfMonth) {
                 // Calculate days from start date to the day before next due date
@@ -207,6 +206,7 @@ const TenancyForm = memo(function TenancyForm({
                 rentForPeriod = dailyRent * occupiedDays;
                 proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
             }
+            // If startDay === dayOfMonth, rentForPeriod remains full rent (no pro-rating)
         } else if (isLastMonth) { // Last month of a multi-month tenancy
             const endDay = tenancyEndDate.getDate();
             // The "full" period ends the day before the next due date.
@@ -455,4 +455,5 @@ export default function AddTenancyPage() {
 }
 
     
+
 
