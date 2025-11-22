@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
  * used across the application. Centralising these types helps ensure data consistency,
@@ -91,6 +92,9 @@ export interface Transaction {
   tenancyStartDate?: string;
   tenancyEndDate?: string;
   contractUrl?: string;
+  applicationFormUrl?: string;
+  moveInChecklistUrl?: string;
+  moveOutChecklistUrl?: string;
 
   // Expense-related fields
   contractorId?: string;

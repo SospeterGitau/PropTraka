@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
-import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
@@ -437,6 +437,30 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     <>
       <PageHeader title="Tenancy Details">
         <div className="flex items-center gap-2">
+            {tenancy.applicationFormUrl && (
+              <Button asChild variant="outline">
+                <Link href={tenancy.applicationFormUrl} target="_blank">
+                  <FileInput className="mr-2 h-4 w-4" />
+                  Application
+                </Link>
+              </Button>
+            )}
+            {tenancy.moveInChecklistUrl && (
+              <Button asChild variant="outline">
+                <Link href={tenancy.moveInChecklistUrl} target="_blank">
+                  <ListChecks className="mr-2 h-4 w-4" />
+                  Move-in List
+                </Link>
+              </Button>
+            )}
+            {tenancy.moveOutChecklistUrl && (
+              <Button asChild variant="outline">
+                <Link href={tenancy.moveOutChecklistUrl} target="_blank">
+                  <ListChecks className="mr-2 h-4 w-4" />
+                  Move-out List
+                </Link>
+              </Button>
+            )}
             {tenancy.contractUrl && (
               <Button asChild variant="outline">
                 <Link href={tenancy.contractUrl} target="_blank">
@@ -568,7 +592,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {formatCurrency(due, locale, currency)}
-                          {tx.notes || (tx.serviceCharges && tx.serviceCharges.length > 0) || (depositForPeriod > 0) ? (
+                          {(tx.notes || (tx.serviceCharges && tx.serviceCharges.length > 0) || (depositForPeriod > 0)) && (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <button>
@@ -606,7 +630,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                   </div>
                               </PopoverContent>
                             </Popover>
-                          ) : null}
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>{formatCurrency(paid, locale, currency)}</TableCell>

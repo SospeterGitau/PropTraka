@@ -114,6 +114,9 @@ const TenancyForm = memo(function TenancyForm({
     const rent = Number(formData.get('rent'));
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
+    const applicationFormUrl = formData.get('applicationFormUrl') as string;
+    const moveInChecklistUrl = formData.get('moveInChecklistUrl') as string;
+    const moveOutChecklistUrl = formData.get('moveOutChecklistUrl') as string;
     const notes = formData.get('notes') as string;
     const consent = formData.get('consent') as string;
 
@@ -198,7 +201,6 @@ const TenancyForm = memo(function TenancyForm({
         } else if (isFirstMonth) { // First month of a multi-month tenancy
             const startDay = tenancyStartDate.getDate();
             
-            // CRITICAL: Only pro-rate if tenancy start date is different from rent due date
             if (startDay !== dayOfMonth) {
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
@@ -218,19 +220,12 @@ const TenancyForm = memo(function TenancyForm({
         } else if (isLastMonth) { // Last month of a multi-month tenancy
             const endDay = tenancyEndDate.getDate();
             
-            // The rental period for this month starts on the due date (dayOfMonth)
-            // and ends on the tenancy end date (endDay)
-
-            // If the end date falls before the due date in the same month, tenant pays nothing
-            // (This shouldn't happen in normal tenancies, but we handle it)
             if (endDay < dayOfMonth) {
                 rentForPeriod = 0;
                 proRataNotes = `Tenancy ended before rent due date.`;
             } else {
-                // Calculate occupied days FROM due date TO end date
                 const occupiedDays = endDay - dayOfMonth + 1;
                 
-                // Calculate full period days (due date to day before next due)
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
@@ -263,6 +258,9 @@ const TenancyForm = memo(function TenancyForm({
             tenancyStartDate: tenancyStartDateStr,
             tenancyEndDate: tenancyEndDateStr,
             contractUrl,
+            applicationFormUrl,
+            moveInChecklistUrl,
+            moveOutChecklistUrl,
             ownerId: user.uid,
         };
 
@@ -381,18 +379,30 @@ const TenancyForm = memo(function TenancyForm({
 
         <Card>
              <CardHeader>
-                <CardTitle>Additional Information</CardTitle>
-                <CardDescription>Add a contract link, notes, and confirm tenant consent.</CardDescription>
+                <CardTitle>Additional Information & Documents</CardTitle>
+                <CardDescription>Add document links, notes, and confirm tenant consent.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
                  <div className="space-y-2">
-                    <Label htmlFor="contractUrl">Contract Document Link (optional)</Label>
+                    <Label htmlFor="contractUrl">Tenancy Agreement (Document Storage Link)</Label>
                     <Input id="contractUrl" name="contractUrl" type="url" placeholder="https://docs.google.com/..." />
-                    <p className="text-xs text-muted-foreground">This is for linking to external document storage like Google Drive or Dropbox.</p>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="applicationFormUrl">Application Form (Document Storage Link)</Label>
+                    <Input id="applicationFormUrl" name="applicationFormUrl" type="url" placeholder="https://docs.google.com/..." />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="moveInChecklistUrl">Move-in Checklist (Document Storage Link)</Label>
+                    <Input id="moveInChecklistUrl" name="moveInChecklistUrl" type="url" placeholder="https://docs.google.com/..." />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="moveOutChecklistUrl">Move-out Checklist (Document Storage Link)</Label>
+                    <Input id="moveOutChecklistUrl" name="moveOutChecklistUrl" type="url" placeholder="https://docs.google.com/..." />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notes (optional)</Label>
                     <Textarea id="notes" name="notes" placeholder="Any initial notes about this tenancy..." />
+                    <p className="text-xs text-muted-foreground">Notes will only be added to the first month's invoice.</p>
                 </div>
                 <div className="items-top flex space-x-2 pt-2">
                     <Checkbox id="consent" name="consent" />
