@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo, memo } from 'react';
@@ -72,6 +71,10 @@ const TenancyForm = memo(function TenancyForm({
   const [endDate, setEndDate] = useState<Date | undefined>(
     tenancyToEdit?.tenancyEndDate ? parseLocalDate(tenancyToEdit.tenancyEndDate) : undefined
   );
+    const [rentDueDate, setRentDueDate] = useState<Date | undefined>(
+    tenancyToEdit?.rentDueDate ? new Date(new Date().getFullYear(), new Date().getMonth(), tenancyToEdit.rentDueDate) : undefined
+  );
+
 
   const initialDeposit = useMemo(() => {
     if (!tenancyToEdit?.tenancyId || !revenue) return 0;
@@ -88,10 +91,14 @@ const TenancyForm = memo(function TenancyForm({
       );
       setStartDate(tenancyToEdit.tenancyStartDate ? parseLocalDate(tenancyToEdit.tenancyStartDate) : undefined);
       setEndDate(tenancyToEdit.tenancyEndDate ? parseLocalDate(tenancyToEdit.tenancyEndDate) : undefined);
+       setRentDueDate(
+        tenancyToEdit.rentDueDate ? new Date(2000, 0, tenancyToEdit.rentDueDate) : undefined
+      );
     } else {
       setServiceCharges([]);
       setStartDate(undefined);
       setEndDate(undefined);
+      setRentDueDate(undefined);
     }
   }, [tenancyToEdit]);
 
@@ -123,15 +130,17 @@ const TenancyForm = memo(function TenancyForm({
     if (!user || !revenue || !tenancyToEdit) return;
     setIsSubmitting(true);
     
-    if (!startDate || !endDate) {
+    if (!startDate || !endDate || !rentDueDate) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Tenancy start and end dates are required.",
+        description: "Tenancy start date, end date, and rent payment day are required.",
       });
       setIsSubmitting(false);
       return;
     }
+    const rentDueDateDay = rentDueDate.getDate();
+
 
     const tenancyStartDateStr = format(startDate, 'yyyy-MM-dd');
     const tenancyEndDateStr = format(endDate, 'yyyy-MM-dd');
@@ -143,7 +152,6 @@ const TenancyForm = memo(function TenancyForm({
     const tenantEmail = formData.get('tenantEmail') as string;
     const tenantPhone = formData.get('tenantPhone') as string;
     const rent = Number(formData.get('rent'));
-    const rentDueDateDay = Number(formData.get('rentDueDate'));
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
     const notes = formData.get('notes') as string;
@@ -315,16 +323,6 @@ const TenancyForm = memo(function TenancyForm({
 
   if (!tenancyToEdit) return <div>Loading tenancy...</div>
 
-  const daySuffix = (day: number) => {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
@@ -382,16 +380,9 @@ const TenancyForm = memo(function TenancyForm({
                         <Label htmlFor="rent">Monthly Rent</Label>
                         <Input id="rent" name="rent" type="number" defaultValue={tenancyToEdit?.rent} required />
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="rentDueDate">Rent Payment Day</Label>
-                        <Select name="rentDueDate" defaultValue={tenancyToEdit?.rentDueDate?.toString()} required>
-                            <SelectTrigger id="rentDueDate"><SelectValue placeholder="Select a day" /></SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                    <SelectItem key={day} value={day.toString()}>{day}{daySuffix(day)}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                    <div className="space-y-2">
+                         <Label>Rent Payment Day</Label>
+                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings.locale} />
                     </div>
                 </div>
                  <div className="space-y-2">

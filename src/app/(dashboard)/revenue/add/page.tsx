@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, memo } from 'react';
@@ -59,6 +58,7 @@ const TenancyForm = memo(function TenancyForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [rentDueDate, setRentDueDate] = useState<Date | undefined>();
 
   const addServiceCharge = () => {
     setServiceCharges([...serviceCharges, { name: '', amount: '0' }]);
@@ -90,15 +90,16 @@ const TenancyForm = memo(function TenancyForm({
 
     const formData = new FormData(event.currentTarget);
     
-    if (!startDate || !endDate) {
+    if (!startDate || !endDate || !rentDueDate) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Tenancy start and end dates are required.",
+        description: "Tenancy start date, end date, and rent payment day are required.",
       });
       setIsSubmitting(false);
       return;
     }
+    const rentDueDateDay = rentDueDate.getDate();
 
     const tenancyStartDateStr = format(startDate, 'yyyy-MM-dd');
     const tenancyEndDateStr = format(endDate, 'yyyy-MM-dd');
@@ -109,7 +110,6 @@ const TenancyForm = memo(function TenancyForm({
     const tenantEmail = formData.get('tenantEmail') as string;
     const tenantPhone = formData.get('tenantPhone') as string;
     const rent = Number(formData.get('rent'));
-    const rentDueDateDay = Number(formData.get('rentDueDate'));
     const deposit = Number(formData.get('deposit'));
     const contractUrl = formData.get('contractUrl') as string;
     const notes = formData.get('notes') as string;
@@ -280,16 +280,6 @@ const TenancyForm = memo(function TenancyForm({
     router.push('/revenue');
   };
 
-  const daySuffix = (day: number) => {
-    if (day > 3 && day < 21) return 'th';
-    switch (day % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
@@ -348,15 +338,8 @@ const TenancyForm = memo(function TenancyForm({
                         <Input id="rent" name="rent" type="number" required />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="rentDueDate">Rent Payment Day</Label>
-                        <Select name="rentDueDate" required>
-                            <SelectTrigger id="rentDueDate"><SelectValue placeholder="Select a day" /></SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                                    <SelectItem key={day} value={day.toString()}>{day}{daySuffix(day)}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Label>Rent Payment Day</Label>
+                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings.locale} />
                     </div>
                 </div>
                  <div className="space-y-2">
