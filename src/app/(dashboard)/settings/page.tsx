@@ -1019,17 +1019,21 @@ export default function AccountPage() {
           {isEnterprise && <TabsTrigger value="api-access">API Access</TabsTrigger>}
           {isDevelopment && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
         </TabsList>
+        
         <TabsContent value="profile">
             <ProfileSettingsTab />
         </TabsContent>
+
         <TabsContent value="subscription">
             <SubscriptionBillingTab />
         </TabsContent>
+        
         {isEnterprise && (
             <TabsContent value="api-access">
                 <ApiAccessTab />
             </TabsContent>
         )}
+
         {isDevelopment && (
             <TabsContent value="knowledge">
                 <KnowledgeBaseTab />
