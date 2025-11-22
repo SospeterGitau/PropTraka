@@ -190,7 +190,7 @@ const TenancyForm = memo(function TenancyForm({
         let proRataNotes: string | undefined = undefined;
         let rentForPeriod = rent; // Default to full rent
 
-        if (isFirstMonth && isLastMonth) { // Tenancy starts and ends in the same month
+        if (isFirstMonth && isLastMonth) {
             const startDay = tenancyStartDate.getDate();
             const endDay = tenancyEndDate.getDate();
             const occupiedDays = endDay - startDay + 1;
@@ -198,39 +198,33 @@ const TenancyForm = memo(function TenancyForm({
             const dailyRent = rent / daysInBillingPeriod;
             rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-        } else if (isFirstMonth) { // First month of a multi-month tenancy
+        } else if (isFirstMonth) {
             const startDay = tenancyStartDate.getDate();
-            
             if (startDay !== dayOfMonth) {
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
                 const oneDayBeforeNextDue = new Date(nextDueDate);
                 oneDayBeforeNextDue.setDate(oneDayBeforeNextDue.getDate() - 1);
-                
                 const periodDays = Math.round((oneDayBeforeNextDue.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                 const occupiedDays = Math.round((oneDayBeforeNextDue.getTime() - tenancyStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                
                 if (periodDays > 0 && occupiedDays > 0) {
-                  const dailyRent = rent / periodDays;
-                  rentForPeriod = dailyRent * occupiedDays;
-                  proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
+                    const dailyRent = rent / periodDays;
+                    rentForPeriod = dailyRent * occupiedDays;
+                    proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
                 }
             }
-        } else if (isLastMonth) { // Last month of a multi-month tenancy
+        } else if (isLastMonth) {
             const endDay = tenancyEndDate.getDate();
-            
             if (endDay < dayOfMonth) {
                 rentForPeriod = 0;
                 proRataNotes = `Tenancy ended before rent due date.`;
             } else {
                 const occupiedDays = endDay - dayOfMonth + 1;
-                
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
                 const periodDays = Math.round((nextDueDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-                
                 if (periodDays > 0) {
                     const dailyRent = rent / periodDays;
                     rentForPeriod = dailyRent * occupiedDays;
@@ -380,23 +374,25 @@ const TenancyForm = memo(function TenancyForm({
         <Card>
              <CardHeader>
                 <CardTitle>Additional Information & Documents</CardTitle>
-                <CardDescription>Add document links, notes, and confirm tenant consent.</CardDescription>
+                <CardDescription>
+                    Provide links to documents stored in services like Google Drive or Dropbox.
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
                  <div className="space-y-2">
-                    <Label htmlFor="contractUrl">Tenancy Agreement (Document Storage Link)</Label>
+                    <Label htmlFor="contractUrl">Tenancy Agreement</Label>
                     <Input id="contractUrl" name="contractUrl" type="url" placeholder="https://docs.google.com/..." />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="applicationFormUrl">Application Form (Document Storage Link)</Label>
+                    <Label htmlFor="applicationFormUrl">Application Form</Label>
                     <Input id="applicationFormUrl" name="applicationFormUrl" type="url" placeholder="https://docs.google.com/..." />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="moveInChecklistUrl">Move-in Checklist (Document Storage Link)</Label>
+                    <Label htmlFor="moveInChecklistUrl">Move-in Checklist</Label>
                     <Input id="moveInChecklistUrl" name="moveInChecklistUrl" type="url" placeholder="https://docs.google.com/..." />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="moveOutChecklistUrl">Move-out Checklist (Document Storage Link)</Label>
+                    <Label htmlFor="moveOutChecklistUrl">Move-out Checklist</Label>
                     <Input id="moveOutChecklistUrl" name="moveOutChecklistUrl" type="url" placeholder="https://docs.google.com/..." />
                 </div>
                 <div className="space-y-2">
