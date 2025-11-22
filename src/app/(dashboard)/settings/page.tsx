@@ -1015,7 +1015,9 @@ const SettingsTabs = () => {
         );
     }
     
-    const isEnterprise = settings?.subscription?.plan === 'Enterprise';
+    // In development: show to all users for testing
+    // In production: only show to Enterprise users
+    const isEnterprise = isDevelopment || settings?.subscription?.plan === 'Enterprise';
 
     return (
         <Tabs defaultValue="profile">
@@ -1055,4 +1057,5 @@ export default function AccountPage() {
     </>
   );
 }
+
 
