@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -567,7 +568,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {formatCurrency(due, locale, currency)}
-                          {(tx.serviceCharges && tx.serviceCharges.length > 0) || (depositForPeriod > 0) || tx.notes ? (
+                          {tx.notes || (tx.serviceCharges && tx.serviceCharges.length > 0) || (depositForPeriod > 0) ? (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <button>
@@ -598,7 +599,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                         <Separator className="my-2" />
                                         <div>
                                             <h4 className="font-medium mb-1">Notes</h4>
-                                            <p className="text-muted-foreground">{tx.notes}</p>
+                                            <p className="text-muted-foreground whitespace-pre-wrap">{tx.notes}</p>
                                         </div>
                                         </>
                                       )}
