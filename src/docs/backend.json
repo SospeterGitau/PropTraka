@@ -106,6 +106,19 @@
       },
       "required": ["name", "specialty", "ownerId"]
     },
+    "chatMessage": {
+      "title": "Chat Message",
+      "description": "A message in the AI chat interface.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "role", "content", "timestamp"]
+    },
     "changeLogEntry": {
         "title": "Change Log Entry",
         "description": "An entry in the activity changelog.",
@@ -183,6 +196,18 @@
         "vatPin": { "type": "string" }
       },
       "required": ["ownerId"]
+    },
+    "apiKey": {
+      "title": "API Key",
+      "description": "An API key for programmatic access to the user's data.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastUsed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "createdAt"]
     }
   },
   "auth": {
@@ -213,6 +238,10 @@
         "schema": { "$ref": "#/entities/changeLogEntry" },
         "description": "Stores activity log entries."
     },
+    "/chatMessages/{messageId}": {
+        "schema": { "$ref": "#/entities/chatMessage" },
+        "description": "Stores messages for the AI chat assistant."
+    },
     "/subscriptions/{subscriptionId}": {
         "schema": { "$ref": "#/entities/subscription" },
         "description": "Stores user subscription details."
@@ -224,6 +253,10 @@
     "/userSettings/{userId}": {
       "schema": { "$ref": "#/entities/userSettings" },
       "description": "Stores settings for a specific user."
+    },
+    "/apiKeys/{keyId}": {
+      "schema": { "$ref": "#/entities/apiKey" },
+      "description": "Stores user API keys. The document ID is the hashed API key."
     }
   }
 }

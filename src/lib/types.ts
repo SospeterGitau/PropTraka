@@ -275,6 +275,17 @@ export interface UserSettings {
     vatPin?: string;
 }
 
+/**
+ * Represents an API key for a user.
+ */
+export interface ApiKey {
+  id: string; // Document ID is the API key itself
+  ownerId: string;
+  createdAt: any; // Firestore ServerTimestamp
+  lastUsed?: any;
+}
+
+
 // ====== AI Flow Types ======
 
 /**

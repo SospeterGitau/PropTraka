@@ -79,6 +79,10 @@
                 "content": "<b>Manage all your preferences from the 'Account' page on the main navigation bar.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information."
             },
             {
+                "title": "How do I use the PropTraka API?",
+                "content": "<b>API access is available for Enterprise plan users to programmatically interact with their data.</b><br/><br/>If you are on the Enterprise plan, you can generate a secure API key from the 'API Access' tab on the 'Account' page. This key allows you to build custom integrations, sync data with your other business systems, and automate workflows. The API is designed for developers and requires technical knowledge to use."
+            },
+            {
                 "title": "How do I manage the AI's Knowledge Base?",
                 "content": "<b>(Development Only) You can add, edit, or delete articles in the AI's knowledge base from the 'Account' page.</b><br/><br/>Under the 'Knowledge Base' tab, you can manage the content the AI Assistant uses to answer user questions. You can seed the database with the default FAQs or create custom articles to tailor its expertise. This tab is only visible in the development environment."
             },
