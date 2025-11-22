@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, memo } from 'react';
@@ -367,7 +368,7 @@ const TenancyForm = memo(function TenancyForm({
                         <DatePicker date={startDate} setDate={setStartDate} locale={settings.locale} />
                     </div>
                      <div className="space-y-2">
-                         <Label>Rent Payment Day</Label>
+                         <Label>Rent Payment Date</Label>
                         <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings.locale} />
                     </div>
                     <div className="space-y-2">
