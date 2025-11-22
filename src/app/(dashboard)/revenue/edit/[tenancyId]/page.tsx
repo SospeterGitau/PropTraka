@@ -135,7 +135,7 @@ const TenancyForm = memo(function TenancyForm({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Tenancy start date, end date, and rent payment day are required.",
+        description: "Tenancy start date, end date, and rent payment date are required.",
       });
       setIsSubmitting(false);
       return;
@@ -217,7 +217,7 @@ const TenancyForm = memo(function TenancyForm({
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
         } else if (isFirstMonth) { // First month of a multi-month tenancy
             const startDay = tenancyStartDate.getDate();
-            
+            // Only pro-rate if the tenancy doesn't start on the rent due day
             if (startDay !== rentDueDateDay) {
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
