@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, memo } from 'react';
@@ -253,7 +254,7 @@ const TenancyForm = memo(function TenancyForm({
             tenancyEndDate: tenancyEndDateStr,
             contractUrl,
             ownerId: user.uid,
-            notes: txNotes,
+            ...txNotes && { notes: txNotes }
         };
       
         transactionsData.push(newTxData);
