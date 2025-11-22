@@ -11,22 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature, Subscription } from '@/lib/types';
+import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature, Subscription, ApiKey } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getAuth, updatePassword, updateProfile, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { getAuth, updatePassword, updateProfile, updateEmail } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop, User as UserIcon } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop, User as UserIcon, Copy } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
-import { useUser, useFirestore, useFirebase } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query, getDocs, where, query } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, Query, getDocs, where, query, serverTimestamp } from 'firebase/firestore';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { KnowledgeArticleForm } from '@/components/knowledge-article-form';
@@ -36,12 +36,12 @@ import { cn } from '@/lib/utils';
 import allPlans from '@/lib/subscription-plans.json';
 import allFeatures from '@/lib/app-features.json';
 import { Badge } from '@/components/ui/badge';
-import { useFitText } from '@/hooks/use-fit-text';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { logout } from '@/app/actions';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { format } from 'date-fns';
 
 
 const passwordSchema = z.object({
@@ -53,7 +53,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 const ProfileSettingsTab = memo(function ProfileSettingsTab() {
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
-  const { firestore } = useFirebase();
+  const { firestore } = useUser();
   const {
     settings,
     updateSettings,
@@ -602,8 +602,6 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
               title: "Confirm Subscription",
               description: `This is where you would integrate with IntaSend to change the plan to ${planName}.`,
           });
-          // In a real app, you would navigate to a checkout page or call an API here.
-          // For now, we just show the toast.
         });
     }
 
@@ -702,6 +700,134 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
         </div>
     );
 });
+
+const ApiAccessTab = memo(function ApiAccessTab() {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    
+    const apiKeysQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'apiKeys', user.uid) : null, [firestore, user?.uid]);
+    const [apiKeysSnapshot, isKeysLoading] = useCollection(apiKeysQuery as Query<ApiKey> | null);
+    const apiKeys = useMemo(() => apiKeysSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as ApiKey)) || [], [apiKeysSnapshot]);
+
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [newKey, setNewKey] = useState<string | null>(null);
+
+    const handleGenerateKey = async () => {
+        if (!user || !firestore) return;
+        setIsGenerating(true);
+        setNewKey(null);
+
+        try {
+            // In a real app, this would be a call to a secure cloud function
+            // that generates a cryptographically secure random string.
+            // For this demo, we'll create a simple, readable one.
+            const key = `proptraka_dev_${user.uid.slice(0, 5)}_${Date.now()}`;
+            const keyDocRef = doc(firestore, 'apiKeys', key);
+            
+            await setDoc(keyDocRef, {
+                ownerId: user.uid,
+                createdAt: serverTimestamp(),
+            });
+
+            setNewKey(key);
+            toast({
+                title: "API Key Generated",
+                description: "Your new API key has been created successfully.",
+            });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not generate API key.' });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+    
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: "Copied!", description: "API key copied to clipboard." });
+    };
+
+    if (isKeysLoading) {
+        return <Skeleton className="h-48 w-full" />;
+    }
+
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>API Access</CardTitle>
+                    <CardDescription>Manage API keys for programmatic access to your data.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Alert>
+                        <AlertTitle>API Endpoint</AlertTitle>
+                        <AlertDescription>
+                            Your base API endpoint is: <code className="font-mono bg-muted p-1 rounded-sm">/api/v1</code>
+                        </AlertDescription>
+                    </Alert>
+                </CardContent>
+                <CardFooter className="flex-col items-start gap-4">
+                     <div className="flex items-center justify-between w-full">
+                        <div>
+                            <h3 className="font-medium">Generate New Key</h3>
+                            <p className="text-sm text-muted-foreground">Create a new key to use with the API.</p>
+                        </div>
+                        <Button onClick={handleGenerateKey} disabled={isGenerating}>
+                            {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Generate Key
+                        </Button>
+                    </div>
+                    {newKey && (
+                        <Alert variant="default" className="w-full flex items-center justify-between">
+                            <div>
+                                <AlertTitle>New Key Generated!</AlertTitle>
+                                <AlertDescription className="break-all font-mono text-sm">{newKey}</AlertDescription>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => copyToClipboard(newKey)}>
+                                <Copy className="h-4 w-4" />
+                            </Button>
+                        </Alert>
+                    )}
+                </CardFooter>
+            </Card>
+
+             <Card>
+                <CardHeader>
+                    <CardTitle>Your API Keys</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>API Key (Hashed)</TableHead>
+                                <TableHead>Created At</TableHead>
+                                <TableHead>Last Used</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {apiKeys.length > 0 ? (
+                                apiKeys.map(key => (
+                                    <TableRow key={key.id}>
+                                        <TableCell className="font-mono">...{key.id.slice(-8)}</TableCell>
+                                        <TableCell>{key.createdAt ? format(key.createdAt.toDate(), 'PP, p') : 'N/A'}</TableCell>
+                                        <TableCell>{key.lastUsed ? format(key.lastUsed.toDate(), 'PP, p') : 'Never'}</TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={3} className="text-center h-24">
+                                        No API keys have been generated yet.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+             </Card>
+        </div>
+    );
+});
+
 
 const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
     const { user } = useUser();
@@ -880,14 +1006,23 @@ const KnowledgeBaseTab = memo(function KnowledgeBaseTab() {
 
 export default function AccountPage() {
   const isDevelopment = process.env.NODE_ENV === 'development';
+  const { settings } = useDataContext();
+  const isEnterprise = settings?.subscription?.plan === 'Enterprise';
+
+  const navItems = ['profile', 'subscription'];
+  if (isEnterprise) navItems.push('api-access');
+  if (isDevelopment) navItems.push('knowledge');
+  
+  const gridCols = `grid-cols-${navItems.length}`;
 
   return (
     <>
       <PageHeader title="Account" />
       <Tabs defaultValue="profile">
-        <TabsList className={cn("grid w-full max-w-lg mb-6", isDevelopment ? "grid-cols-3" : "grid-cols-2")}>
+        <TabsList className={cn("grid w-full max-w-lg mb-6", gridCols)}>
           <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
+          {isEnterprise && <TabsTrigger value="api-access">API Access</TabsTrigger>}
           {isDevelopment && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile">
@@ -896,12 +1031,18 @@ export default function AccountPage() {
         <TabsContent value="subscription">
             <SubscriptionBillingTab />
         </TabsContent>
+        {isEnterprise && (
+            <TabsContent value="api-access">
+                <ApiAccessTab />
+            </TabsContent>
+        )}
         {isDevelopment && (
-        <TabsContent value="knowledge">
-            <KnowledgeBaseTab />
-        </TabsContent>
+            <TabsContent value="knowledge">
+                <KnowledgeBaseTab />
+            </TabsContent>
         )}
       </Tabs>
     </>
   );
 }
+
