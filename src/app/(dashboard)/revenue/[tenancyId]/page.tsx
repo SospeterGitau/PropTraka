@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
-import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput, Edit, ChevronDown } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput, Edit, ChevronDown, Landmark } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
@@ -541,8 +541,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                             Return Deposit of {formatCurrency(depositAmount, locale, currency)}
                         </Button>
                     ) : depositAmount > 0 ? (
-                        <div className="text-center text-sm text-muted-foreground">
-                            Deposit Held: <span className="font-bold text-foreground">{formatCurrency(depositAmount, locale, currency)}</span>
+                        <div className="flex items-center text-center text-sm text-muted-foreground">
+                            <Landmark className="mr-2 h-4 w-4" />
+                            Deposit Held: <span className="font-bold text-foreground ml-1">{formatCurrency(depositAmount, locale, currency)}</span>
                         </div>
                     ) : null}
               </CardFooter>
