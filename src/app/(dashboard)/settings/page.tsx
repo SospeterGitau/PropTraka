@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -681,19 +682,17 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 return (
                                     <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
                                         <div className="flex flex-col items-center justify-start h-full">
-                                            {isMostPopular && !isCurrent && (
-                                                <Badge variant="secondary" className="font-semibold mb-2">
-                                                    <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
-                                                    Most Popular
-                                                </Badge>
-                                            )}
-                                             {isCurrent && (
-                                                <Badge variant="default" className="mb-2">
-                                                    Current Plan
-                                                </Badge>
-                                            )}
-                                            <div className="min-h-[24px] mb-2"></div>
-                                            <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                            <div className="flex h-12 flex-col items-center justify-center">
+                                                {isMostPopular ? (
+                                                    <Badge variant="secondary" className="font-semibold mb-2">
+                                                        <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
+                                                        Most Popular
+                                                    </Badge>
+                                                ) : (
+                                                   <div className="h-6 mb-2" /> // Placeholder for alignment
+                                                )}
+                                                <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                            </div>
                                             <p className="text-sm text-muted-foreground min-h-[40px] mt-1 flex-grow">{plan.description}</p>
                                             <div className="mt-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
                                              <Button
@@ -1108,3 +1107,4 @@ export default function AccountPage() {
     </>
   );
 }
+
