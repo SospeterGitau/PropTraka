@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, memo, useTransition, useMemo } from 'react';
+import React, { useState, useEffect, memo, useTransition, useMemo } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
