@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -675,7 +674,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
-                            <TableHead className="w-[250px] text-lg font-semibold">Features</TableHead>
+                            <TableHead className="w-[220px] p-2"></TableHead>
                             {allPlans.map(plan => {
                                 const isCurrent = plan.name === currentPlanName;
                                 const isMostPopular = plan.name === 'Professional';
