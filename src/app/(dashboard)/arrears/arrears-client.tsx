@@ -67,9 +67,10 @@ const ArrearsClient = memo(function ArrearsClient() {
     const calculatedArrears = tenancies
       .map(tenancy => {
         
-        // Filter to only include transactions that are due on or before today
-        const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
-  
+        const dueTransactions = tenancy.transactions
+          .filter(tx => !isBefore(today, new Date(tx.date)))
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
         const totalDueToDate = dueTransactions.reduce((sum, tx) => {
           const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
           return sum + tx.rent + serviceChargesTotal + (tx.deposit || 0);
@@ -90,28 +91,32 @@ const ArrearsClient = memo(function ArrearsClient() {
         const dueDate = firstUnpaidTx ? new Date(firstUnpaidTx.date) : new Date(tenancy.transactions[0].date);
         const daysOverdue = differenceInCalendarDays(today, dueDate);
   
-        // Detailed breakdown
-        const totalRentDue = dueTransactions.reduce((sum, tx) => sum + tx.rent, 0);
-        const totalDepositDue = dueTransactions.reduce((sum, tx) => sum + (tx.deposit || 0), 0);
-        const totalServiceChargesDue = dueTransactions.reduce((sum, tx) => sum + (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0), 0);
-        
-        const paidTowardsDeposit = Math.min(totalPaid, totalDepositDue);
-        const remainingAfterDeposit = totalPaid - paidTowardsDeposit;
+        // Detailed breakdown with periods
+        let breakdown = '';
+        let paidTracker = totalPaid;
 
-        const paidTowardsRent = Math.min(remainingAfterDeposit, totalRentDue);
-        const remainingAfterRent = remainingAfterDeposit - paidTowardsRent;
+        for (const tx of dueTransactions) {
+            const periodDue = tx.rent + (tx.serviceCharges || []).reduce((sc, charge) => sc + charge.amount, 0) + (tx.deposit || 0);
+            const paidForPeriod = Math.min(paidTracker, periodDue);
+            const balanceForPeriod = periodDue - paidForPeriod;
+            paidTracker -= paidForPeriod;
 
-        const depositOwed = totalDepositDue - paidTowardsDeposit;
-        const rentOwed = totalRentDue - paidTowardsRent;
-        const serviceChargesOwed = totalServiceChargesDue - remainingAfterRent;
-        
-        let breakdown = `- Rent: ${formatCurrency(rentOwed, locale, currency)}`;
-        if (depositOwed > 0) {
-            breakdown += `\n- Deposit: ${formatCurrency(depositOwed, locale, currency)}`;
+            if (balanceForPeriod > 0.01) { // Use a small epsilon for float comparison
+                breakdown += `\nFor the period of ${format(new Date(tx.date), 'MMMM yyyy')}:\n`;
+                
+                const rentDue = tx.rent;
+                const paidTowardsRent = Math.min(paidTracker, rentDue);
+                const rentOwed = rentDue - paidTowardsRent;
+                if (rentOwed > 0) breakdown += `- Rent: ${formatCurrency(rentOwed, locale, currency)}\n`;
+                
+                (tx.serviceCharges || []).forEach(sc => {
+                  const paidTowardsSc = Math.min(paidTracker, sc.amount);
+                  const scOwed = sc.amount - paidTowardsSc;
+                  if (scOwed > 0) breakdown += `- ${sc.name}: ${formatCurrency(scOwed, locale, currency)}\n`;
+                });
+            }
         }
-        if (serviceChargesOwed > 0) {
-           breakdown += `\n- Service Charges: ${formatCurrency(serviceChargesOwed, locale, currency)}`;
-        }
+        breakdown = breakdown.trim();
 
 
         return {
@@ -121,14 +126,11 @@ const ArrearsClient = memo(function ArrearsClient() {
           propertyAddress: tenancy.propertyName,
           amountOwed,
           dueDate: format(dueDate, 'yyyy-MM-dd'),
-          rentOwed,
-          depositOwed,
-          serviceChargesOwed, 
           daysOverdue,
           breakdown,
         };
       })
-      .filter((a): a is NonNullable<ArrearEntry> => a !== null);
+      .filter((a): a is NonNullable<ArrearEntry> => a !== null && a.amountOwed > 0.01);
     
     return calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue);
   }, [revenue, currency, locale]);
@@ -223,7 +225,6 @@ const ArrearsClient = memo(function ArrearsClient() {
                   <TableHead>Property</TableHead>
                   <TableHead>First Due Date</TableHead>
                   <TableHead>Days Overdue</TableHead>
-                  <TableHead>Owed For</TableHead>
                   <TableHead className="text-right">Amount Owed</TableHead>
                   <TableHead className="text-center">Action</TableHead>
                 </TableRow>
@@ -231,7 +232,7 @@ const ArrearsClient = memo(function ArrearsClient() {
               <TableBody>
                 {arrears.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       No tenants are currently in arrears.
                     </TableCell>
                   </TableRow>
@@ -245,13 +246,6 @@ const ArrearsClient = memo(function ArrearsClient() {
                           <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
                         </TableCell>
                         <TableCell>{arrear.daysOverdue} days</TableCell>
-                        <TableCell>
-                            <div className="flex flex-col items-start text-sm">
-                                {arrear.rentOwed > 0 && <span>Rent</span>}
-                                {arrear.serviceChargesOwed > 0 && <span>Service Charges</span>}
-                                {arrear.depositOwed > 0 && <span>Deposit</span>}
-                            </div>
-                        </TableCell>
                         <TableCell className="text-right font-semibold text-destructive">
                           {formatCurrency(arrear.amountOwed, locale, currency)}
                         </TableCell>

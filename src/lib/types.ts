@@ -120,10 +120,7 @@ export interface ArrearEntry {
   propertyAddress: string;
   amountOwed: number;
   dueDate: string;
-  rentOwed: number;
-  depositOwed: number;
   daysOverdue: number;
-  serviceChargesOwed: number;
   breakdown: string;
 }
 
