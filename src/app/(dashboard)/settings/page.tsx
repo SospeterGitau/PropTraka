@@ -674,29 +674,30 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
-                            <TableHead className="w-[220px] p-2"></TableHead>
+                            <TableHead className="w-[200px] p-2"></TableHead>
                             {allPlans.map(plan => {
                                 const isCurrent = plan.name === currentPlanName;
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
-                                    <TableHead key={plan.id} className={cn("w-[220px] p-2 text-center border-l pt-12", isCurrent && "bg-primary/10")}>
-                                        <div className="relative">
+                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
+                                        <div className="flex flex-col items-center justify-start h-full">
                                             {isMostPopular && !isCurrent && (
-                                                <Badge variant="secondary" className="absolute -top-8 left-1/2 -translate-x-1/2 font-semibold">
+                                                <Badge variant="secondary" className="font-semibold mb-2">
                                                     <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                                     Most Popular
                                                 </Badge>
                                             )}
                                              {isCurrent && (
-                                                <Badge variant="default" className="absolute -top-8 left-1/2 -translate-x-1/2">
+                                                <Badge variant="default" className="mb-2">
                                                     Current Plan
                                                 </Badge>
                                             )}
-                                            <h3 className="text-xl font-bold text-foreground mt-2">{plan.name}</h3>
-                                            <p className="text-sm text-muted-foreground min-h-[40px] mt-1">{plan.description}</p>
+                                            <div className="min-h-[24px] mb-2"></div>
+                                            <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                            <p className="text-sm text-muted-foreground min-h-[40px] mt-1 flex-grow">{plan.description}</p>
                                             <div className="mt-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
                                              <Button
-                                                className="w-full mt-2"
+                                                className="w-full mt-4"
                                                 variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
                                                 onClick={() => handleChoosePlan(plan.name)}
                                                 disabled={isPending || isCurrent}
@@ -730,11 +731,11 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                                 )}
                                             </TableCell>
                                             {allPlans.map(plan => (
-                                                <TableCell key={plan.id} className={cn("text-center border-l", plan.name === currentPlanName && "bg-primary/10")}>
+                                                <TableCell key={plan.id} className={cn("text-center border-l p-2", plan.name === currentPlanName && "bg-primary/10")}>
                                                     {plan.features.includes(feature.id) ? (
                                                         <Check className="h-5 w-5 text-green-500 mx-auto" />
                                                     ) : (
-                                                        <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                                                        <span className="text-muted-foreground text-lg">&ndash;</span>
                                                     )}
                                                 </TableCell>
                                             ))}
