@@ -123,6 +123,18 @@
       },
       "required": ["ownerId", "role", "content", "timestamp"]
     },
+    "knowledgeArticle": {
+      "title": "Knowledge Article",
+      "description": "An article in the AI's knowledge base.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "required": ["title", "content", "ownerId"]
+    },
     "changeLogEntry": {
         "title": "Change Log Entry",
         "description": "An entry in the activity changelog.",
@@ -145,7 +157,7 @@
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Starter", "Growth", "Professional", "Enterprise"] },
+        "plan": { "type": "string", "enum": ["Free", "Starter", "Growth", "Professional", "Enterprise"] },
         "status": { "type": "string", "enum": ["active", "trial", "cancelled", "overdue", "past_due"] },
         "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
         "currentPeriodStart": { "type": "string", "format": "date-time" },
@@ -197,12 +209,7 @@
         "billingCounty": { "type": "string" },
         "billingPostalCode": { "type": "string" },
         "billingCountry": { "type": "string" },
-        "vatPin": { "type": "string" },
-        "templateApplicationFormUrl": { "type": "string" },
-        "templateLandlordAssessmentFormUrl": { "type": "string" },
-        "templateTenancyAgreementUrl": { "type": "string" },
-        "templateMoveInChecklistUrl": { "type": "string" },
-        "templateMoveOutChecklistUrl": { "type": "string" }
+        "vatPin": { "type": "string" }
       },
       "required": ["ownerId"]
     },
@@ -250,6 +257,10 @@
     "/chatMessages/{messageId}": {
         "schema": { "$ref": "#/entities/chatMessage" },
         "description": "Stores messages for the AI chat assistant."
+    },
+    "/knowledgeBase/{articleId}": {
+      "schema": { "$ref": "#/entities/knowledgeArticle" },
+      "description": "Stores AI knowledge base articles."
     },
     "/subscriptions/{subscriptionId}": {
         "schema": { "$ref": "#/entities/subscription" },

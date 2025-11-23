@@ -13,7 +13,7 @@
             },
             {
                 "title": "How do I navigate the app?",
-                "content": "<b>Navigate the app using the main Bottom Navigation Bar and the AI Assistant.</b><br/><br/>The app's primary navigation consists of:<br/><ul><li><b>Dashboard:</b> Your home screen with a high-level financial overview.</li><li><b>Menu:</b> The central hub to access all features like Properties, Revenue, and Reports.</li><li><b>Activity:</b> A real-time feed of all changes made in your account.</li><li><b>Account:</b> Manage your profile, app settings, and subscription.</li></ul>You can also use the floating chat bubble to ask the AI for help at any time."
+                "content": "<b>Navigate the app using the main Bottom Navigation Bar and the AI Assistant.</b><br/><br/>The app's primary navigation consists of:<br/><ul><li><b>Dashboard:</b> Your home screen with a high-level financial overview.</li><li><b>Properties:</b> Manage all your property assets.</li><li><b>Revenue:</b> Track your income and manage tenancies.</li><li><b>Maintenance:</b> Manage repair and maintenance tasks.</li></ul>You can access all other pages like Reports, Arrears, and your Account settings by tapping the 'More' button in the header of any page. You can also use the floating chat bubble to ask the AI for help at any time."
             },
             {
                 "title": "How does the Dashboard work?",
@@ -26,19 +26,19 @@
         "questions": [
             {
                 "title": "How do I manage my properties?",
-                "content": "<b>Manage all your properties from the 'Properties' page, accessible via the main Menu.</b><br/><br/>From here, you can add, view, and edit every asset in your portfolio. When adding a property, you can log its address, type (Domestic or Commercial), building specifications, and crucial financial data like its purchase price, current value, mortgage balance, and target rent."
+                "content": "<b>Manage all your properties from the 'Properties' page, accessible via the main bottom navigation bar.</b><br/><br/>From here, you can add, view, and edit every asset in your portfolio. When adding a property, you can log its address, type (Domestic or Commercial), building specifications, and crucial financial data like its purchase price, current value, mortgage balance, and target rent."
             },
             {
                 "title": "How do I track revenue and create a tenancy?",
-                "content": "<b>Track income by creating 'Tenancies' on the 'Revenue' page from the main Menu.</b><br/><br/>Instead of logging one-off payments, you create a tenancy that links a tenant to a property for a specific lease period. When you set the monthly rent, deposit, and any service charges, the app automatically generates an invoice record for every month of the lease, saving you manual data entry."
+                "content": "<b>Track income by creating 'Tenancies' on the 'Revenue' page from the main bottom navigation bar.</b><br/><br/>Instead of logging one-off payments, you create a tenancy that links a tenant to a property for a specific lease period. When you set the monthly rent, deposit, and any service charges, the app automatically generates an invoice record for every month of the lease, saving you manual data entry."
             },
             {
                 "title": "How do I record a payment from a tenant?",
-                "content": "<b>Record payments within a specific tenancy's detail page.</b><br/><br/>First, navigate to <b>Menu > Revenue</b> and click on the tenancy you wish to update. This will take you to the monthly breakdown for that tenant. Find the month you want to record a payment for and use the action menu (...) to select 'Record Payment'. You can then enter the amount paid."
+                "content": "<b>Record payments within a specific tenancy's detail page.</b><br/><br/>First, navigate to <b>Revenue</b> from the bottom navigation bar and click on the tenancy you wish to update. This will take you to the monthly breakdown for that tenant. Find the month you want to record a payment for and use the action menu (...) to select 'Record Payment'. You can then enter the amount paid."
             },
             {
                 "title": "How do I manage expenses?",
-                "content": "<b>Log all property-related costs from the 'Expenses' page, found in the main Menu.</b><br/><br/>The expense form lets you categorise each cost (e.g., Repairs, Insurance), link it to a specific property or mark it as a general business expense, and assign it to a contractor. You can also specify if it's a one-off or recurring expense and attach a link to a receipt for your records."
+                "content": "<b>Log all property-related costs from the 'Expenses' page, found on the 'More' page.</b><br/><br/>The expense form lets you categorise each cost (e.g., Repairs, Insurance), link it to a specific property or mark it as a general business expense, and assign it to a contractor. You can also specify if it's a one-off or recurring expense and attach a link to a receipt for your records."
             },
             {
                 "title": "How does document management work?",
@@ -46,11 +46,11 @@
             },
             {
                 "title": "How do I handle a tenancy that ends early?",
-                "content": "<b>End a tenancy early from its detail page to automatically clean up future unpaid rent records.</b><br/><br/>Navigate to <b>Menu > Revenue</b> and click on the relevant tenancy. In the header, click the 'End Tenancy' button and select the new, earlier end date. The app will automatically find and delete any future, unpaid invoices scheduled after this date, ensuring your financial records remain accurate."
+                "content": "<b>End a tenancy early from its detail page to automatically clean up future unpaid rent records.</b><br/><br/>Navigate to <b>Revenue</b> and click on the relevant tenancy. In the header, click the 'Actions' dropdown and select 'End Tenancy Early'. Choose the new, earlier end date. The app will automatically find and delete any future, unpaid invoices scheduled after this date, ensuring your financial records remain accurate."
             },
             {
                 "title": "How can I see who is behind on rent?",
-                "content": "<b>Use the 'Arrears' page from the main Menu to see all overdue payments.</b><br/><br/>This page automatically lists all tenants with outstanding balances on past-due invoices. It shows you who owes money, how much they owe, and how many days the payment is overdue. From here, you can use the action buttons to send a pre-filled email reminder or initiate a payment request."
+                "content": "<b>Use the 'Arrears' page from the 'More' page to see all overdue payments.</b><br/><br/>This page automatically lists all tenants with outstanding balances on past-due invoices. It shows you who owes money, how much they owe, and how many days the payment is overdue. From here, you can use the action buttons to send a pre-filled email reminder or initiate a payment request."
             }
         ]
     },
@@ -59,11 +59,11 @@
         "questions": [
             {
                 "title": "How do I use the AI Lease Clause Generator?",
-                "content": "<b>Generate legally-sound tenancy agreement clauses from the 'Lease Tools' page.</b><br/><br/>Navigate to <b>Menu > Lease Tools</b>. In the AI Lease Clause Generator, simply describe the rule you need in plain English (e.g., 'a clause about no smoking inside the property'). The AI, acting as a paralegal, will draft a formal, professional clause that you can copy and paste directly into your tenancy agreement template."
+                "content": "<b>Generate legally-sound tenancy agreement clauses from the 'Lease Tools' page.</b><br/><br/>Navigate to <b>More > Lease Tools</b>. In the AI Lease Clause Generator, simply describe the rule you need in plain English (e.g., 'a clause about no smoking inside the property'). The AI, acting as a paralegal, will draft a formal, professional clause that you can copy and paste directly into your tenancy agreement template."
             },
             {
                 "title": "How do I manage maintenance and repairs?",
-                "content": "<b>Manage all maintenance tasks using the Kanban board on the 'Maintenance' page.</b><br/><br/>This tool lets you visually track jobs from 'To Do' to 'Done'. When creating a request, you can add a description, set a priority, and assign it to a property and contractor. Once a task is marked as 'Done' and a cost is entered, you can instantly create a corresponding expense record with a single click."
+                "content": "<b>Manage all maintenance tasks using the Kanban board on the 'Maintenance' page, accessible from the bottom navigation bar.</b><br/><br/>This tool lets you visually track jobs from 'To Do' to 'Done'. When creating a request, you can add a description, set a priority, and assign it to a property and contractor. Once a task is marked as 'Done' and a cost is entered, you can instantly create a corresponding expense record with a single click."
             },
             {
                 "title": "What kind of reports can I generate?",
@@ -75,7 +75,7 @@
             },
             {
                 "title": "What is the Calendar for?",
-                "content": "<b>The Calendar provides a visual timeline of all key events across your portfolio.</b><br/><br/>Found in the <b>Menu</b>, it automatically plots important dates from other sections of the app, including tenancy start/end dates, expense transaction dates, and the reported dates of maintenance requests. This helps you anticipate vacancies and track activities at a glance."
+                "content": "<b>The Calendar provides a visual timeline of all key events across your portfolio.</b><br/><br/>Found in the <b>More</b> page, it automatically plots important dates from other sections of the app, including tenancy start/end dates, expense transaction dates, and the reported dates of maintenance requests. This helps you anticipate vacancies and track activities at a glance."
             }
         ]
     },
@@ -88,7 +88,7 @@
             },
             {
                 "title": "How do I generate an API key?",
-                "content": "<b>You can generate and manage your API keys from the 'Account' page.</b><br/><br/>Follow these steps:<br/>1. Navigate to the <b>Account</b> page from the bottom navigation bar.<br/>2. Select the <b>'API Access'</b> tab.<br/>3. Click the <b>'Generate Key'</b> button.<br/>4. A new key will be created and displayed on your screen. Be sure to copy this key and store it in a secure location, as it will not be shown again.<br/><br/>The page will list all your active keys by their creation date and last-used date, though it will only show the last few characters of each key for security."
+                "content": "<b>You can generate and manage your API keys from the 'Account' page.</b><br/><br/>Follow these steps:<br/>1. Navigate to the <b>Account</b> page from the 'More' page.<br/>2. Select the <b>'API Access'</b> tab.<br/>3. Click the <b>'Generate Key'</b> button.<br/>4. A new key will be created and displayed on your screen. Be sure to copy this key and store it in a secure location, as it will not be shown again.<br/><br/>The page will list all your active keys by their creation date and last-used date, though it will only show the last few characters of each key for security."
             },
             {
                 "title": "How do I authenticate with the API?",
@@ -109,7 +109,7 @@
         "questions": [
             {
                 "title": "How do I change my settings and profile?",
-                "content": "<b>Manage all your preferences from the 'Account' page on the main navigation bar.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information, as well as your master document template URLs."
+                "content": "<b>Manage all your preferences from the 'Account' page, accessible from the 'More' page.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information, as well as your master document template URLs."
             },
             {
                 "title": "How do I manage the AI's Knowledge Base?",
@@ -117,7 +117,7 @@
             },
             {
                 "title": "What is the Activity Feed for?",
-                "content": "<b>The Activity Feed provides a complete audit trail of all actions taken in your account.</b><br/><br/>Accessible from the main navigation bar, this feed shows a timestamped, chronological list of events like new properties, updated tenancies, logged expenses, and status changes on maintenance requests, making it easy to review all recent activity."
+                "content": "<b>The Activity Feed provides a complete audit trail of all actions taken in your account.</b><br/><br/>Accessible from the 'More' page, this feed shows a timestamped, chronological list of events like new properties, updated tenancies, logged expenses, and status changes on maintenance requests, making it easy to review all recent activity."
             }
         ]
     }
