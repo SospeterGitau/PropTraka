@@ -693,7 +693,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                                     Current Plan
                                                 </Badge>
                                             )}
-                                            <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                            <h3 className="text-xl font-bold text-foreground mt-2">{plan.name}</h3>
                                             <p className="text-sm text-muted-foreground min-h-[40px] mt-1">{plan.description}</p>
                                             <div className="mt-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
                                              <Button
