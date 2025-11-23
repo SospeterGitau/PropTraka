@@ -7,7 +7,8 @@ import {generateMarketResearch} from '@/ai/flows/generate-market-research';
 import {getChatResponse as getChatResponseFlow} from '@/ai/flows/get-chat-response-flow';
 import {categorizeExpense as categorizeExpenseFlow} from '@/ai/flows/categorize-expense-flow';
 import {generateReminderEmail as generateReminderEmailFlow} from '@/ai/flows/generate-reminder-email-flow';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput, GenerateReminderEmailInput, GenerateReminderEmailOutput } from '@/lib/types';
+import {generateLeaseClause as generateLeaseClauseFlow} from '@/ai/flows/generate-lease-clause-flow';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput, GenerateReminderEmailInput, GenerateReminderEmailOutput, GenerateLeaseClauseInput, GenerateLeaseClauseOutput } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -128,6 +129,18 @@ export async function generateReminderEmail(input: GenerateReminderEmailInput): 
         return { 
             subject: 'Overdue Rent Reminder',
             body: 'An error occurred while generating this email. Please try again.'
+        };
+    }
+}
+
+export async function generateLeaseClause(input: GenerateLeaseClauseInput): Promise<GenerateLeaseClauseOutput> {
+    try {
+        const result = await generateLeaseClauseFlow(input);
+        return result;
+    } catch (e: any) {
+        console.error('Error generating lease clause:', e);
+        return { 
+            clause: 'An error occurred while generating this clause. Please check the prompt and try again. The AI may be unable to generate content for the requested topic.'
         };
     }
 }

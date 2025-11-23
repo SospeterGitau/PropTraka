@@ -1,5 +1,6 @@
 
 
+
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
  * used across the application. Centralising these types helps ensure data consistency,
@@ -395,4 +396,18 @@ export interface GenerateReminderEmailInput {
 export interface GenerateReminderEmailOutput {
     subject: string;
     body: string;
+}
+
+/**
+ * Input for the `generateLeaseClause` AI flow.
+ */
+export interface GenerateLeaseClauseInput {
+    description: string;
+}
+
+/**
+ * Output for the `generateLeaseClause` AI flow.
+ */
+export interface GenerateLeaseClauseOutput {
+    clause: string;
 }

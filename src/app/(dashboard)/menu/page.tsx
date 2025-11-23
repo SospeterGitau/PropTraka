@@ -40,6 +40,7 @@ const manageNavItems = [
 const analysisNavItems = [
   { href: '/reports', label: 'Reports', icon: LineChart },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/lease-tools', label: 'Lease Tools', icon: Landmark },
 ];
 
 const helpNavItems = [
