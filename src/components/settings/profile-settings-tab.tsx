@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useFirebase } from '@/firebase';
 import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
 import { useToast } from '@/hooks/use-toast';
