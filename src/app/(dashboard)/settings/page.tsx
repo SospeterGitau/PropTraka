@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature, Subscription, ApiKey } from '@/lib/types';
+import type { ResidencyStatus, KnowledgeArticle, ChangeLogEntry, SubscriptionPlan, AppFeature, Subscription, ApiKey, UserSettings } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
@@ -698,13 +699,13 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 return (
                                     <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
                                        <div className="flex flex-col items-center justify-start h-full">
-                                            <div className="flex flex-col items-center justify-center h-8 mb-2">
-                                                {isMostPopular ? (
+                                            <div className="flex flex-col items-center justify-center h-8">
+                                                {isMostPopular && (
                                                      <Badge variant="secondary" className="font-semibold">
                                                         <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                                         Most Popular
                                                     </Badge>
-                                                ) : <div className="h-8">&nbsp;</div>}
+                                                )}
                                             </div>
                                             <h3 className="text-2xl font-bold text-foreground mt-2">{plan.name}</h3>
                                             <p className="text-sm text-muted-foreground min-h-[40px] mt-2 mb-2 flex-grow">{plan.description}</p>

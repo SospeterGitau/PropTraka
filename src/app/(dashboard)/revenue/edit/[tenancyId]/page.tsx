@@ -70,6 +70,12 @@ const TenancyForm = memo(function TenancyForm({
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [rentDueDate, setRentDueDate] = useState<Date | undefined>();
+  const [documentUrls, setDocumentUrls] = useState({
+      contractUrl: '',
+      applicationFormUrl: '',
+      moveInChecklistUrl: '',
+      moveOutChecklistUrl: ''
+  });
 
 
   const initialDeposit = useMemo(() => {
@@ -93,11 +99,18 @@ const TenancyForm = memo(function TenancyForm({
           ? new Date(initialStartDate.getFullYear(), initialStartDate.getMonth(), tenancyToEdit.rentDueDate)
           : undefined
       );
+      setDocumentUrls({
+        contractUrl: tenancyToEdit.contractUrl || '',
+        applicationFormUrl: tenancyToEdit.applicationFormUrl || '',
+        moveInChecklistUrl: tenancyToEdit.moveInChecklistUrl || '',
+        moveOutChecklistUrl: tenancyToEdit.moveOutChecklistUrl || ''
+      });
     } else {
       setServiceCharges([]);
       setStartDate(undefined);
       setEndDate(undefined);
       setRentDueDate(undefined);
+      setDocumentUrls({ contractUrl: '', applicationFormUrl: '', moveInChecklistUrl: '', moveOutChecklistUrl: '' });
     }
   }, [tenancyToEdit]);
 
@@ -113,6 +126,14 @@ const TenancyForm = memo(function TenancyForm({
     const newCharges = [...serviceCharges];
     newCharges[index][field] = value;
     setServiceCharges(newCharges);
+  };
+
+  const handleUrlChange = (field: keyof typeof documentUrls, value: string) => {
+    setDocumentUrls(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleClearUrl = (field: keyof typeof documentUrls) => {
+    setDocumentUrls(prev => ({ ...prev, [field]: '' }));
   };
   
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
@@ -152,10 +173,6 @@ const TenancyForm = memo(function TenancyForm({
     const tenantPhone = formData.get('tenantPhone') as string;
     const rent = Number(formData.get('rent'));
     const deposit = Number(formData.get('deposit'));
-    const contractUrl = formData.get('contractUrl') as string;
-    const applicationFormUrl = formData.get('applicationFormUrl') as string;
-    const moveInChecklistUrl = formData.get('moveInChecklistUrl') as string;
-    const moveOutChecklistUrl = formData.get('moveOutChecklistUrl') as string;
     const notes = formData.get('notes') as string;
     
     if (!dayOfMonth || dayOfMonth < 1 || dayOfMonth > 31) {
@@ -277,10 +294,10 @@ const TenancyForm = memo(function TenancyForm({
             deposit: isFirstMonth ? deposit : 0,
             tenancyStartDate: tenancyStartDateStr,
             tenancyEndDate: tenancyEndDateStr,
-            contractUrl,
-            applicationFormUrl,
-            moveInChecklistUrl,
-            moveOutChecklistUrl,
+            contractUrl: documentUrls.contractUrl,
+            applicationFormUrl: documentUrls.applicationFormUrl,
+            moveInChecklistUrl: documentUrls.moveInChecklistUrl,
+            moveOutChecklistUrl: documentUrls.moveOutChecklistUrl,
             ownerId: user.uid,
         };
         
@@ -427,19 +444,39 @@ const TenancyForm = memo(function TenancyForm({
             <CardContent className="space-y-6 p-6">
                  <div className="space-y-2">
                     <Label htmlFor="contractUrl">Tenancy Agreement</Label>
-                    <Input id="contractUrl" name="contractUrl" type="url" defaultValue={tenancyToEdit?.contractUrl} placeholder="https://docs.google.com/..." />
+                     <div className="relative">
+                        <Input id="contractUrl" name="contractUrl" type="url" value={documentUrls.contractUrl} onChange={(e) => handleUrlChange('contractUrl', e.target.value)} placeholder="https://docs.google.com/..." />
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleClearUrl('contractUrl')}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="applicationFormUrl">Application Form</Label>
-                    <Input id="applicationFormUrl" name="applicationFormUrl" type="url" defaultValue={tenancyToEdit?.applicationFormUrl} placeholder="https://docs.google.com/..." />
+                    <div className="relative">
+                        <Input id="applicationFormUrl" name="applicationFormUrl" type="url" value={documentUrls.applicationFormUrl} onChange={(e) => handleUrlChange('applicationFormUrl', e.target.value)} placeholder="https://docs.google.com/..." />
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleClearUrl('applicationFormUrl')}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="moveInChecklistUrl">Move-in Checklist</Label>
-                    <Input id="moveInChecklistUrl" name="moveInChecklistUrl" type="url" defaultValue={tenancyToEdit?.moveInChecklistUrl} placeholder="https://docs.google.com/..." />
+                    <div className="relative">
+                        <Input id="moveInChecklistUrl" name="moveInChecklistUrl" type="url" value={documentUrls.moveInChecklistUrl} onChange={(e) => handleUrlChange('moveInChecklistUrl', e.target.value)} placeholder="https://docs.google.com/..." />
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleClearUrl('moveInChecklistUrl')}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
                  <div className="space-y-2">
                     <Label htmlFor="moveOutChecklistUrl">Move-out Checklist</Label>
-                    <Input id="moveOutChecklistUrl" name="moveOutChecklistUrl" type="url" defaultValue={tenancyToEdit?.moveOutChecklistUrl} placeholder="https://docs.google.com/..." />
+                    <div className="relative">
+                        <Input id="moveOutChecklistUrl" name="moveOutChecklistUrl" type="url" value={documentUrls.moveOutChecklistUrl} onChange={(e) => handleUrlChange('moveOutChecklistUrl', e.target.value)} placeholder="https://docs.google.com/..." />
+                        <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleClearUrl('moveOutChecklistUrl')}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notes (optional)</Label>
