@@ -1,6 +1,5 @@
 
 
-
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -326,7 +325,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
             <Card>
                 <CardHeader>
                     <CardTitle>Document Templates</CardTitle>
-                    <CardDescription>Manage master URLs for your document templates.</CardDescription>
+                    <CardDescription>Please provide links to your documents stored in your cloud storage provider (e.g., Google Drive, Dropbox).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
@@ -1087,5 +1086,3 @@ export default function AccountPage() {
     </>
   );
 }
-
-
