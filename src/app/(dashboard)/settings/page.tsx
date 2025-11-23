@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -318,6 +319,31 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                             <Label htmlFor="vatPin">VAT / KRA PIN (Optional)</Label>
                             <Input id="vatPin" value={tempSettings.vatPin || ''} onChange={(e) => setTempSettings({...tempSettings, vatPin: e.target.value})} />
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Document Templates</CardTitle>
+                    <CardDescription>Manage master URLs for your document templates.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="templateTenancyAgreementUrl">Tenancy Agreement Template URL</Label>
+                        <Input id="templateTenancyAgreementUrl" value={tempSettings.templateTenancyAgreementUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateTenancyAgreementUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="templateApplicationFormUrl">Application Form Template URL</Label>
+                        <Input id="templateApplicationFormUrl" value={tempSettings.templateApplicationFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateApplicationFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="templateMoveInChecklistUrl">Move-in Checklist Template URL</Label>
+                        <Input id="templateMoveInChecklistUrl" value={tempSettings.templateMoveInChecklistUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateMoveInChecklistUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="templateMoveOutChecklistUrl">Move-out Checklist Template URL</Label>
+                        <Input id="templateMoveOutChecklistUrl" value={tempSettings.templateMoveOutChecklistUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateMoveOutChecklistUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
                 </CardContent>
             </Card>

@@ -197,7 +197,11 @@
         "billingCounty": { "type": "string" },
         "billingPostalCode": { "type": "string" },
         "billingCountry": { "type": "string" },
-        "vatPin": { "type": "string" }
+        "vatPin": { "type": "string" },
+        "templateApplicationFormUrl": { "type": "string" },
+        "templateTenancyAgreementUrl": { "type": "string" },
+        "templateMoveInChecklistUrl": { "type": "string" },
+        "templateMoveOutChecklistUrl": { "type": "string" }
       },
       "required": ["ownerId"]
     },
