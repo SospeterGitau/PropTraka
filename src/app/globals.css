@@ -3,13 +3,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'PT Sans', sans-serif;
 }
 
 @layer base {
   :root {
-    --background: 240 10% 98%;
+    --background: 222 84% 98%;
     --foreground: 224 71.4% 4.1%; 
 
     --card: 0 0% 100%;
@@ -27,7 +29,7 @@ body {
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
  
-    --accent: 240 4.8% 95.9%;
+    --accent: 159 41% 64%;
     --accent-foreground: 222.2 47.4% 11.2%;
  
     --destructive: 0 84.2% 60.2%;
@@ -40,7 +42,7 @@ body {
     --radius: 0.75rem;
 
     --chart-1: 217 91% 60%; 
-    --chart-2: 120 25% 55%;
+    --chart-2: 159 41% 55%;
     --chart-3: 0 72% 51%;
     --chart-4: 38 92% 50%;
     --chart-5: 180 44% 49%;
@@ -74,7 +76,7 @@ body {
     --muted: 215 28% 17%;
     --muted-foreground: 217 10% 65%;
     
-    --accent: 215 28% 17%;
+    --accent: 159 41% 70%;
     --accent-foreground: 210 20% 98%;
 
     --destructive: 0 62.8% 50.6%;
@@ -85,7 +87,7 @@ body {
     --ring: 217 91% 60%;
 
     --chart-1: 217 91% 60%;
-    --chart-2: 120 25% 65%;
+    --chart-2: 159 41% 65%;
     --chart-3: 0 72% 51%;
     --chart-4: 48 96% 50%;
     --chart-5: 180 44% 49%;
