@@ -8,7 +8,8 @@ import {getChatResponse as getChatResponseFlow} from '@/ai/flows/get-chat-respon
 import {categorizeExpense as categorizeExpenseFlow} from '@/ai/flows/categorize-expense-flow';
 import {generateReminderEmail as generateReminderEmailFlow} from '@/ai/flows/generate-reminder-email-flow';
 import {generateLeaseClause as generateLeaseClauseFlow} from '@/ai/flows/generate-lease-clause-flow';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput, GenerateReminderEmailInput, GenerateReminderEmailOutput, GenerateLeaseClauseInput, GenerateLeaseClauseOutput } from '@/lib/types';
+import { getOnboardingPack } from '@/ai/flows/get-onboarding-pack-flow';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput, GenerateReminderEmailInput, GenerateReminderEmailOutput, GenerateLeaseClauseInput, GenerateLeaseClauseOutput, GetChatResponseInput, GetChatResponseOutput } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -100,12 +101,23 @@ export async function getMarketResearch(input: GenerateMarketResearchInput): Pro
     }
 }
 
-export async function getChatResponse(input: { question: string; knowledgeBase: string; }): Promise<{answer: string}> {
+export async function getChatResponse(input: GetChatResponseInput): Promise<GetChatResponseOutput> {
     try {
+        // Check for keywords to trigger the onboarding flow
+        const onboardingKeywords = ['onboard', 'new tenant', 'onboarding pack'];
+        const userQuery = input.question.toLowerCase();
+
+        if (onboardingKeywords.some(keyword => userQuery.includes(keyword))) {
+            const result = await getOnboardingPack({ query: input.question });
+            return { answer: result.checklist };
+        }
+        
+        // If no keywords are matched, fall back to the general chat response
         const result = await getChatResponseFlow(input);
         return { answer: result.answer };
+        
     } catch (e: any) {
-        console.error('Error getting chat response:', e);
+        console.error('Error in getChatResponse action:', e);
         return { answer: "I'm sorry, I encountered an error and couldn't process your request. Please try again." };
     }
 }
