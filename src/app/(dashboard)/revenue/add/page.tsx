@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, memo } from 'react';
@@ -354,11 +353,11 @@ const TenancyForm = memo(function TenancyForm({
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="rent">Monthly Rent</Label>
-                        <Input id="rent" name="rent" type="number" required />
+                        <Input id="rent" name="rent" type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-                        <Input id="deposit" name="deposit" type="number" />
+                        <Input id="deposit" name="deposit" type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" />
                     </div>
                 </div>
                  <div className="space-y-2">
@@ -367,7 +366,7 @@ const TenancyForm = memo(function TenancyForm({
                     {serviceCharges.map((charge, index) => (
                         <div key={index} className="flex items-center gap-2">
                         <Input placeholder="Charge Name (e.g., Security)" value={charge.name} onChange={(e) => handleServiceChargeChange(index, 'name', e.target.value)} />
-                        <Input type="number" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
+                        <Input type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" placeholder="Amount" value={charge.amount} onChange={(e) => handleServiceChargeChange(index, 'amount', e.target.value)} className="w-32" />
                         <Button type="button" variant="ghost" size="icon" onClick={() => removeServiceCharge(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                     ))}
@@ -490,3 +489,5 @@ export default function AddTenancyPage() {
     </>
   );
 }
+
+    
