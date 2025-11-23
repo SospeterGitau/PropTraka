@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
-import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput, Edit } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput, Edit, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
@@ -442,7 +442,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             {hasDocuments && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Documents</Button>
+                  <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Documents <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     {tenancy.applicationFormUrl && <DropdownMenuItem asChild><Link href={tenancy.applicationFormUrl} target="_blank"><FileInput className="mr-2 h-4 w-4"/>Application Form</Link></DropdownMenuItem>}
@@ -454,7 +454,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             )}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline">Actions</Button>
+                    <Button variant="outline"><MoreVertical className="mr-2 h-4 w-4" /> Actions <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                     <DropdownMenuItem onSelect={() => router.push(`/revenue/edit/${tenancyId}`)}>
