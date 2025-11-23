@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useTransition } from 'react';
 import { getAuth, updatePassword, updateProfile, updateEmail } from 'firebase/auth';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@ zod-form-resolvers/zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import { useUser, useFirestore } from '@/firebase';
@@ -34,7 +34,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 export default function ProfileSettingsTab() {
   const { user } = useUser();
   const { theme, setTheme } = useTheme();
-  const { firestore } = useUser();
+  const { firestore } = useFirebase();
   const { settings, updateSettings, isLoading: isDataLoading } = useDataContext();
 
   const [isEditing, setIsEditing] = useState(false);
