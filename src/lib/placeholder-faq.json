@@ -41,8 +41,8 @@
                 "content": "<b>Log all property-related costs from the 'Expenses' page, found in the main Menu.</b><br/><br/>The expense form lets you categorise each cost (e.g., Repairs, Insurance), link it to a specific property or mark it as a general business expense, and assign it to a contractor. You can also specify if it's a one-off or recurring expense and attach a link to a receipt for your records."
             },
             {
-                "title": "How does document storage work?",
-                "content": "<b>PropTraka allows you to link to documents hosted on external cloud storage services like Google Drive or Dropbox.</b><br/><br/>When adding or editing a tenancy, you can provide URLs for the tenancy agreement, application form, and move-in/move-out checklists. Similarly, when logging an expense, you can add a link to a digital receipt. These links are accessible from the relevant detail pages within the app, keeping your important documents organised and just a click away."
+                "title": "How does document management work?",
+                "content": "<b>PropTraka helps you organise your documents by storing links to your master templates and to individual, tenant-specific files.</b><br/><br/>The workflow has two parts:<br/>1. <b>Master Templates:</b> Store the URLs for your master document templates (e.g., Tenancy Agreement, Application Form) in one central place under <b>Account > Settings > Document Templates</b>. The AI Assistant uses these links to give you a personalised onboarding checklist.<br/>2. <b>Tenant-Specific Documents:</b> When you add or edit a tenancy, you can paste in the URLs for the final, signed documents that are specific to that tenant, such as their signed contract or move-in checklist. This keeps all relevant files linked directly to their tenancy record."
             },
             {
                 "title": "How do I handle a tenancy that ends early?",
@@ -58,6 +58,10 @@
         "category": "Advanced Tools & AI",
         "questions": [
             {
+                "title": "How do I use the AI Lease Clause Generator?",
+                "content": "<b>Generate legally-sound tenancy agreement clauses from the 'Lease Tools' page.</b><br/><br/>Navigate to <b>Menu > Lease Tools</b>. In the AI Lease Clause Generator, simply describe the rule you need in plain English (e.g., 'a clause about no smoking inside the property'). The AI, acting as a paralegal, will draft a formal, professional clause that you can copy and paste directly into your tenancy agreement template."
+            },
+            {
                 "title": "How do I manage maintenance and repairs?",
                 "content": "<b>Manage all maintenance tasks using the Kanban board on the 'Maintenance' page.</b><br/><br/>This tool lets you visually track jobs from 'To Do' to 'Done'. When creating a request, you can add a description, set a priority, and assign it to a property and contractor. Once a task is marked as 'Done' and a cost is entered, you can instantly create a corresponding expense record with a single click."
             },
@@ -67,7 +71,7 @@
             },
             {
                 "title": "How does the AI Assistant work?",
-                "content": "<b>The AI Assistant is a conversational helper you can ask for information about the app.</b><br/><br/>Accessed via the floating chat bubble, the AI uses the app's official Knowledge Base to answer your questions accurately. If it can't find a specific answer, it will use its general knowledge and inform you. Your chat history is saved, allowing you to continue conversations at any time."
+                "content": "<b>The AI Assistant is a conversational helper that can answer questions and perform tasks for you.</b><br/><br/>Accessed via the floating chat bubble, the AI uses the app's official Knowledge Base to answer your questions accurately. It also has special capabilities, like the Onboarding Assistant. If you ask it to 'onboard a new tenant', it will use your saved template URLs from Settings to provide a personalised checklist with clickable links to your documents."
             },
             {
                 "title": "What is the Calendar for?",
@@ -105,7 +109,7 @@
         "questions": [
             {
                 "title": "How do I change my settings and profile?",
-                "content": "<b>Manage all your preferences from the 'Account' page on the main navigation bar.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information."
+                "content": "<b>Manage all your preferences from the 'Account' page on the main navigation bar.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information, as well as your master document template URLs."
             },
             {
                 "title": "How do I manage the AI's Knowledge Base?",
