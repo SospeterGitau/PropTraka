@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { getAuth, updatePassword, updateProfile, updateEmail } from 'firebase/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop, User as UserIcon, Copy } from 'lucide-react';
+import { Loader2, CheckCircle, CreditCard, MoreHorizontal, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck, Star, Trash2, LogOut, Sun, Moon, Laptop, User as UserIcon, Copy, Check, X } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -598,15 +598,15 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
         : plan.price;
 
     return (
-        <div className="flex items-baseline justify-center gap-1 my-6">
+        <div className="flex items-baseline justify-center gap-1">
             {price !== null ? (
                 <>
-                    <span className="text-muted-foreground text-2xl">KSh</span>
-                    <span className="text-4xl font-bold tracking-tight">{(price).toLocaleString()}</span>
-                    <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+                    <span className="text-muted-foreground text-xl">KSh</span>
+                    <span className="text-3xl font-bold tracking-tight">{(price).toLocaleString()}</span>
+                    <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                 </>
             ) : (
-                <span className="text-4xl font-bold tracking-tight">Custom</span>
+                <span className="text-3xl font-bold tracking-tight">Custom</span>
             )}
         </div>
     );
@@ -620,10 +620,8 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     
     const currentPlanName = settings.subscription?.plan;
-    const [selectedPlan, setSelectedPlan] = useState<string | null>(currentPlanName || null);
   
-    const handleChoosePlan = (e: React.MouseEvent, planName: string) => {
-        e.stopPropagation(); // Prevent the card's onClick from firing
+    const handleChoosePlan = (planName: string) => {
         if(planName === currentPlanName) return;
 
         startTransition(async () => {
@@ -634,10 +632,29 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
         });
     }
 
-    const handleSelectPlan = (planName: string) => {
-        if (planName !== currentPlanName) {
-            setSelectedPlan(planName);
+    const featureGroups = [
+        {
+            name: "Core Management",
+            features: ["rent_tracking", "expense_tracking", "contractor_management", "document_linking"]
+        },
+        {
+            name: "Financial Tools",
+            features: ["arrears_management", "basic_analytics", "advanced_ai_reports"]
+        },
+        {
+            name: "Productivity & AI",
+            features: ["maintenance_logs", "maintenance_workflow", "ai_lease_clauses", "ai_chat_assistant"]
+        },
+        {
+            name: "Support & Access",
+            features: ["email_support", "chat_support", "phone_support", "dedicated_support", "api_access"]
         }
+    ];
+
+    const allGroupedFeatureIds = new Set(featureGroups.flatMap(g => g.features));
+    const ungroupedFeatures = allFeatures.filter(f => !allGroupedFeatureIds.has(f.id));
+    if (ungroupedFeatures.length > 0) {
+        featureGroups.push({ name: "Other", features: ungroupedFeatures.map(f => f.id) });
     }
   
     return (
@@ -653,82 +670,87 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                     <ToggleGroupItem value="yearly">Yearly (Save 15%)</ToggleGroupItem>
                 </ToggleGroup>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
-                {allPlans.map((plan) => {
-                    const isCurrent = plan.name === currentPlanName;
-                    const isSelected = plan.name === selectedPlan;
-                    const isMostPopular = plan.name === 'Professional';
-                    const planFeatures = plan.features.map(fid => allFeatures.find(f => f.id === fid)).filter(Boolean) as AppFeature[];
-
-                    return (
-                        <div key={plan.id} className="h-full">
-                             <div
-                                onClick={() => handleSelectPlan(plan.name)}
-                                className={cn(
-                                    "relative rounded-2xl border p-6 shadow-sm flex flex-col h-full w-full text-left transition-all duration-200 cursor-pointer",
-                                    isCurrent ? "ring-2 ring-primary bg-card" : "hover:shadow-lg",
-                                    isSelected && !isCurrent ? "ring-2 ring-primary" : "border-border",
-                                    isMostPopular && !isCurrent && "bg-muted/30"
-                                )}
-                            >
-                            {isMostPopular && (
-                                <Badge variant="secondary" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 font-semibold">
-                                    <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
-                                    Most Popular
-                                </Badge>
-                            )}
-                             {isCurrent && (
-                                <Badge variant="default" className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2">
-                                    Current Plan
-                                </Badge>
-                            )}
-
-                            <div className="flex-1 flex flex-col">
-                                <CardHeader className="text-center p-0">
-                                    <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                                    <p className="text-sm text-muted-foreground pt-1 min-h-[40px]">{plan.description}</p>
-                                </CardHeader>
-                                
-                                <PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} />
-                                
-                                <Separator />
-
-                                <CardContent className="p-0 mt-6 flex-1">
-                                    <h4 className="font-semibold text-center mb-4">Features</h4>
-                                    <ul className="space-y-3 text-sm">
-                                        {planFeatures.map((feature) => (
-                                            <li key={feature.id} className="flex items-center gap-3">
-                                                <CheckCircle className="h-5 w-5 text-green-500" />
+            
+            <div className="w-full overflow-x-auto">
+                <Table className="min-w-max">
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="w-[300px] text-lg font-semibold">Features</TableHead>
+                            {allPlans.map(plan => {
+                                const isCurrent = plan.name === currentPlanName;
+                                const isMostPopular = plan.name === 'Professional';
+                                return (
+                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
+                                        <div className="relative">
+                                            {isMostPopular && (
+                                                <Badge variant="secondary" className="absolute -top-8 left-1/2 -translate-x-1/2 font-semibold">
+                                                    <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
+                                                    Most Popular
+                                                </Badge>
+                                            )}
+                                             {isCurrent && (
+                                                <Badge variant="default" className="absolute -top-8 left-1/2 -translate-x-1/2">
+                                                    Current Plan
+                                                </Badge>
+                                            )}
+                                            <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                            <p className="text-sm text-muted-foreground min-h-[40px] mt-1">{plan.description}</p>
+                                            <div className="mt-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
+                                             <Button
+                                                className="w-full mt-2"
+                                                variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
+                                                onClick={() => handleChoosePlan(plan.name)}
+                                                disabled={isPending || isCurrent}
+                                            >
+                                                {isPending && !isCurrent ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Your Plan' : 'Choose Plan')}
+                                            </Button>
+                                        </div>
+                                    </TableHead>
+                                )
+                            })}
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {featureGroups.map(group => (
+                            <React.Fragment key={group.name}>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableCell colSpan={allPlans.length + 1} className="py-4">
+                                        <h4 className="text-lg font-semibold">{group.name}</h4>
+                                    </TableCell>
+                                </TableRow>
+                                {group.features.map(featureId => {
+                                    const feature = allFeatures.find(f => f.id === featureId);
+                                    if (!feature) return null;
+                                    return (
+                                        <TableRow key={feature.id} className="hover:bg-transparent">
+                                            <TableCell className="font-medium">
                                                 {feature.page_url ? (
                                                     <Link href={feature.page_url} className="hover:underline">{feature.name}</Link>
                                                 ) : (
                                                     <span>{feature.name}</span>
                                                 )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </CardContent>
-                            </div>
-
-                            <div className="mt-6">
-                                <Button
-                                    className="w-full"
-                                    variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
-                                    onClick={(e) => handleChoosePlan(e, plan.name)}
-                                    disabled={isPending || isCurrent}
-                                >
-                                    {isPending && isSelected ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Your Plan' : 'Choose Plan')}
-                                </Button>
-                            </div>
-                        </div>
-                        </div>
-                    );
-                })}
+                                            </TableCell>
+                                            {allPlans.map(plan => (
+                                                <TableCell key={plan.id} className={cn("text-center border-l", plan.name === currentPlanName && "bg-primary/10")}>
+                                                    {plan.features.includes(feature.id) ? (
+                                                        <Check className="h-5 w-5 text-green-500 mx-auto" />
+                                                    ) : (
+                                                        <X className="h-5 w-5 text-muted-foreground mx-auto" />
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    )
+                                })}
+                            </React.Fragment>
+                        ))}
+                    </TableBody>
+                </Table>
             </div>
         </div>
     );
 });
+
 
 const ApiAccessTab = memo(function ApiAccessTab() {
     const { user } = useUser();
