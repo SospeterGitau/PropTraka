@@ -26,6 +26,17 @@ import { getChatResponse } from '@/lib/actions';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 
 
+// Simple Markdown to HTML renderer
+const MarkdownRenderer = ({ content }: { content: string }) => {
+    const html = content
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline">$1</a>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br />');
+      
+    return <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: html }} />;
+};
+
+
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -149,7 +160,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                                 </Avatar>
                             )}
                             <div className={cn("p-3 rounded-lg max-w-[80%]", message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                <MarkdownRenderer content={message.content} />
                             </div>
                              {message.role === 'user' && (
                                 <Avatar className="h-8 w-8">
