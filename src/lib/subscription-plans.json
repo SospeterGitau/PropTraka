@@ -10,6 +10,7 @@
         "features": [
             "rent_tracking",
             "expense_tracking",
+            "maintenance_logs",
             "basic_analytics"
         ],
         "transaction_limit": 20,
@@ -25,6 +26,7 @@
         "features": [
             "rent_tracking",
             "expense_tracking",
+            "maintenance_logs",
             "basic_analytics",
             "arrears_management",
             "contractor_management",
@@ -43,13 +45,14 @@
         "features": [
             "rent_tracking",
             "expense_tracking",
+            "maintenance_logs",
             "basic_analytics",
             "arrears_management",
             "contractor_management",
+            "email_support",
             "ai_lease_clauses",
             "ai_chat_assistant",
             "document_linking",
-            "email_support",
             "chat_support"
         ],
         "transaction_limit": 200,
@@ -65,16 +68,17 @@
         "features": [
             "rent_tracking",
             "expense_tracking",
+            "maintenance_logs",
             "basic_analytics",
             "arrears_management",
             "contractor_management",
+            "email_support",
             "ai_lease_clauses",
             "ai_chat_assistant",
             "document_linking",
+            "chat_support",
             "advanced_ai_reports",
             "maintenance_workflow",
-            "email_support",
-            "chat_support",
             "phone_support"
         ],
         "transaction_limit": 500,
@@ -90,14 +94,18 @@
         "features": [
             "rent_tracking",
             "expense_tracking",
+            "maintenance_logs",
             "basic_analytics",
             "arrears_management",
             "contractor_management",
+            "email_support",
             "ai_lease_clauses",
             "ai_chat_assistant",
             "document_linking",
+            "chat_support",
             "advanced_ai_reports",
             "maintenance_workflow",
+            "phone_support",
             "api_access",
             "dedicated_support"
         ],

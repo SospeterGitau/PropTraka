@@ -635,7 +635,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     const featureGroups = [
         {
             name: "Core Management",
-            features: ["rent_tracking", "expense_tracking", "contractor_management", "document_linking"]
+            features: ["rent_tracking", "expense_tracking", "contractor_management", "document_linking", "maintenance_logs"]
         },
         {
             name: "Financial Tools",
@@ -643,7 +643,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
         },
         {
             name: "Productivity & AI",
-            features: ["maintenance_logs", "maintenance_workflow", "ai_lease_clauses", "ai_chat_assistant"]
+            features: ["maintenance_workflow", "ai_lease_clauses", "ai_chat_assistant"]
         },
         {
             name: "Support & Access",
@@ -682,7 +682,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 return (
                                     <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
                                         <div className="relative">
-                                            {isMostPopular && (
+                                            {isMostPopular && !isCurrent && (
                                                 <Badge variant="secondary" className="absolute -top-8 left-1/2 -translate-x-1/2 font-semibold">
                                                     <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                                     Most Popular
