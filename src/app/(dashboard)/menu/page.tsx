@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Building,
   Calendar,
