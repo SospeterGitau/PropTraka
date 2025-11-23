@@ -216,38 +216,46 @@ const TenancyForm = memo(function TenancyForm({
             const dailyRent = rent / daysInBillingPeriod;
             rentForPeriod = dailyRent * occupiedDays;
             proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-        } else if (isFirstMonth) {
+        } else if (isFirstMonth) { // First month of a multi-month tenancy
             const startDay = tenancyStartDate.getDate();
+            
+            // CRITICAL: Only pro-rate if tenancy start date is different from rent due date
             if (startDay !== dayOfMonth) {
+                // Calculate days from start date to the day before next due date
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
                 const oneDayBeforeNextDue = new Date(nextDueDate);
                 oneDayBeforeNextDue.setDate(oneDayBeforeNextDue.getDate() - 1);
+                
                 const periodDays = Math.round((oneDayBeforeNextDue.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                 const occupiedDays = Math.round((oneDayBeforeNextDue.getTime() - tenancyStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                if (periodDays > 0 && occupiedDays > 0) {
-                    const dailyRent = rent / periodDays;
-                    rentForPeriod = dailyRent * occupiedDays;
-                    proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
-                }
+                
+                const dailyRent = rent / periodDays;
+                rentForPeriod = dailyRent * occupiedDays;
+                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
             }
-        } else if (isLastMonth) {
+            // If startDay === dayOfMonth, rentForPeriod stays as full rent, no notes added
+        } else if (isLastMonth) { // Last month of a multi-month tenancy
             const endDay = tenancyEndDate.getDate();
+        
+            // If the end date falls before the due date in the same month, tenant pays nothing
             if (endDay < dayOfMonth) {
                 rentForPeriod = 0;
                 proRataNotes = `Tenancy ended before rent due date.`;
             } else {
+                // Calculate occupied days FROM due date TO end date
                 const occupiedDays = endDay - dayOfMonth + 1;
+                
+                // Calculate full period days (due date to day before next due)
                 const nextMonth = month + 1 > 11 ? 0 : month + 1;
                 const nextYear = month + 1 > 11 ? year + 1 : year;
                 const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
                 const periodDays = Math.round((nextDueDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-                if (periodDays > 0) {
-                    const dailyRent = rent / periodDays;
-                    rentForPeriod = dailyRent * occupiedDays;
-                    proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
-                }
+                
+                const dailyRent = rent / periodDays;
+                rentForPeriod = dailyRent * occupiedDays;
+                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
             }
         }
         
@@ -413,7 +421,7 @@ const TenancyForm = memo(function TenancyForm({
              <CardHeader>
                 <CardTitle>Additional Information & Documents</CardTitle>
                 <CardDescription>
-                    Provide links to documents stored in services like Google Drive or Dropbox.
+                    Please provide links to your documents stored in your cloud storage provider (e.g., Google Drive, Dropbox).
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
