@@ -34,7 +34,7 @@ const reminderEmailPrompt = ai.definePrompt({
   output: { schema: GenerateReminderEmailOutputSchema },
   prompt: `You are an expert property manager's assistant, skilled in writing clear, polite, and effective tenant communications.
 
-Your task is to compose a rental arrears reminder email. The tone must be professional and firm, but not aggressive. Clearly state the problem (the overdue amount) and the desired action (payment).
+Your task is to compose a rental arrears reminder email. The tone must be professional and firm, like a formal notice from a financial institution.
 
 **Tenant and Arrears Details:**
 - Tenant Name: {{{tenantName}}}
@@ -47,16 +47,16 @@ Your task is to compose a rental arrears reminder email. The tone must be profes
 {{{arrearsBreakdown}}}
 
 **Instructions:**
-1.  **Generate a Subject Line:** Create a subject line that is clear and professional. It must include the words "Overdue Rent Reminder".
+1.  **Generate a Subject Line:** Create a subject line that is formal and professional. It must include the words "Urgent: Overdue Rent Reminder".
 2.  **Generate the Email Body:**
-    - Address the tenant by name.
-    - Politely state that this is a reminder regarding an outstanding balance for their tenancy.
+    - Address the tenant formally by name.
+    - Politely state that this is a formal notice regarding an outstanding balance on their account.
     - Clearly mention the property address and the total amount owed ({{{amountOwed}}}).
     - **Crucially, include the detailed arrears breakdown provided above to give full transparency on which periods and charges are outstanding.**
-    - Request that they make the payment at their earliest convenience to bring their account up to date.
-    - Include a standard closing line: "If you believe this is an error or have already made this payment, please disregard this notice and contact us."
+    - Instead of a soft request, state clearly that payment is required. Demand that the outstanding balance be settled within 5 business days to bring their account up to date, as per the terms of their tenancy agreement.
+    - Include a standard closing line: "If you have already made this payment or believe this notice was sent in error, please contact our office immediately."
     - Offer assistance if they have questions about the balance.
-    - Sign off with "Best regards," followed by the sender's name/company ({{{companyName}}}).
+    - Sign off with "Regards," followed by the sender's name/company ({{{companyName}}}).
     - Use double newlines to create paragraphs for readability.
 `,
 });
