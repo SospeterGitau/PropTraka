@@ -376,7 +376,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                         <Label htmlFor="templateApplicationFormUrl">Application Form Template URL</Label>
                         <Input id="templateApplicationFormUrl" value={tempSettings.templateApplicationFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateApplicationFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
-                    <div className="space-y-2">
+                     <div className="space-y-2">
                         <Label htmlFor="templateLandlordAssessmentFormUrl">Landlord Assessment Form URL</Label>
                         <Input id="templateLandlordAssessmentFormUrl" value={tempSettings.templateLandlordAssessmentFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateLandlordAssessmentFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
@@ -654,7 +654,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 </ToggleGroup>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
                 {allPlans.map((plan) => {
                     const isCurrent = plan.name === currentPlanName;
                     const isSelected = plan.name === selectedPlan;
