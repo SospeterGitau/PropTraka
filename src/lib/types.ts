@@ -1,4 +1,5 @@
 
+
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
  * used across the application. Centralising these types helps ensure data consistency,
@@ -185,7 +186,7 @@ export interface AppFeature {
 export interface Subscription {
   id: string;
   ownerId?: string;
-  plan: 'Free' | 'Starter' | 'Growth' | 'Professional' | 'Enterprise';
+  plan: 'Starter' | 'Growth' | 'Professional' | 'Enterprise';
   status: 'active' | 'trial' | 'cancelled' | 'overdue' | 'past_due';
   billingCycle: 'monthly' | 'yearly';
   currentPeriodStart: string;

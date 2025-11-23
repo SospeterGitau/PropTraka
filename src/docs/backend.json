@@ -145,7 +145,7 @@
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Free", "Starter", "Growth", "Professional", "Enterprise"] },
+        "plan": { "type": "string", "enum": ["Starter", "Growth", "Professional", "Enterprise"] },
         "status": { "type": "string", "enum": ["active", "trial", "cancelled", "overdue", "past_due"] },
         "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
         "currentPeriodStart": { "type": "string", "format": "date-time" },

@@ -1,35 +1,18 @@
 
 [
     {
-        "id": "plan_free",
-        "name": "Free",
-        "price": 0,
-        "price_per_unit": 0,
-        "unit_range": "1 Unit",
-        "description": "For a single unit. Get a feel for the core features.",
-        "features": [
-            "rent_tracking",
-            "expense_tracking",
-            "maintenance_logs",
-            "basic_analytics"
-        ],
-        "transaction_limit": 20,
-        "support_level": "Community FAQ"
-    },
-    {
         "id": "plan_starter",
         "name": "Starter",
         "price": 2000,
         "price_per_unit": 400,
         "unit_range": "1-5 Units",
-        "description": "For 1-5 Units. Ideal for individual landlords getting started.",
+        "description": "For individual landlords getting started.",
         "features": [
             "rent_tracking",
             "expense_tracking",
             "maintenance_logs",
             "basic_analytics",
             "arrears_management",
-            "contractor_management",
             "email_support"
         ],
         "transaction_limit": 50,
@@ -41,7 +24,7 @@
         "price": 4500,
         "price_per_unit": 225,
         "unit_range": "6-20 Units",
-        "description": "For 6-20 Units. For small property managers scaling their portfolio.",
+        "description": "For small property managers scaling their portfolio.",
         "features": [
             "rent_tracking",
             "expense_tracking",
@@ -49,10 +32,10 @@
             "basic_analytics",
             "arrears_management",
             "contractor_management",
-            "email_support",
             "ai_lease_clauses",
             "ai_chat_assistant",
             "document_linking",
+            "email_support",
             "chat_support"
         ],
         "transaction_limit": 200,
@@ -64,7 +47,7 @@
         "price": 10000,
         "price_per_unit": 200,
         "unit_range": "21-50 Units",
-        "description": "For 21-50 Units. For established managers needing advanced tools.",
+        "description": "For established managers needing advanced tools.",
         "features": [
             "rent_tracking",
             "expense_tracking",
@@ -72,10 +55,10 @@
             "basic_analytics",
             "arrears_management",
             "contractor_management",
-            "email_support",
             "ai_lease_clauses",
             "ai_chat_assistant",
             "document_linking",
+            "email_support",
             "chat_support",
             "advanced_ai_reports",
             "maintenance_workflow",
@@ -98,10 +81,10 @@
             "basic_analytics",
             "arrears_management",
             "contractor_management",
-            "email_support",
             "ai_lease_clauses",
             "ai_chat_assistant",
             "document_linking",
+            "email_support",
             "chat_support",
             "advanced_ai_reports",
             "maintenance_workflow",
