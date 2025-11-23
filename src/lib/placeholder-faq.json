@@ -41,6 +41,10 @@
                 "content": "<b>Log all property-related costs from the 'Expenses' page, found in the main Menu.</b><br/><br/>The expense form lets you categorise each cost (e.g., Repairs, Insurance), link it to a specific property or mark it as a general business expense, and assign it to a contractor. You can also specify if it's a one-off or recurring expense and attach a link to a receipt for your records."
             },
             {
+                "title": "How does document storage work?",
+                "content": "<b>PropTraka allows you to link to documents hosted on external cloud storage services like Google Drive or Dropbox.</b><br/><br/>When adding or editing a tenancy, you can provide URLs for the tenancy agreement, application form, and move-in/move-out checklists. Similarly, when logging an expense, you can add a link to a digital receipt. These links are accessible from the relevant detail pages within the app, keeping your important documents organised and just a click away."
+            },
+            {
                 "title": "How do I handle a tenancy that ends early?",
                 "content": "<b>End a tenancy early from its detail page to automatically clean up future unpaid rent records.</b><br/><br/>Navigate to <b>Menu > Revenue</b> and click on the relevant tenancy. In the header, click the 'End Tenancy' button and select the new, earlier end date. The app will automatically find and delete any future, unpaid invoices scheduled after this date, ensuring your financial records remain accurate."
             },
@@ -72,15 +76,36 @@
         ]
     },
     {
+        "category": "API & Integrations",
+        "questions": [
+            {
+                "title": "What is the PropTraka API and who can use it?",
+                "content": "<b>The PropTraka API is a powerful tool for developers and businesses on the Enterprise plan to programmatically access their property data.</b><br/><br/>It allows you to build custom integrations, automate workflows, and sync your PropTraka data with other systems, such as accounting software or business intelligence dashboards. Access is restricted to users on the Enterprise subscription tier."
+            },
+            {
+                "title": "How do I generate an API key?",
+                "content": "<b>You can generate and manage your API keys from the 'Account' page.</b><br/><br/>Follow these steps:<br/>1. Navigate to the <b>Account</b> page from the bottom navigation bar.<br/>2. Select the <b>'API Access'</b> tab.<br/>3. Click the <b>'Generate Key'</b> button.<br/>4. A new key will be created and displayed on your screen. Be sure to copy this key and store it in a secure location, as it will not be shown again.<br/><br/>The page will list all your active keys by their creation date and last-used date, though it will only show the last few characters of each key for security."
+            },
+            {
+                "title": "How do I authenticate with the API?",
+                "content": "<b>Authentication is done using a Bearer Token in the Authorization header of your HTTP requests.</b><br/><br/>You must include your generated API key in every request you make. The format is as follows:<br/><br/><pre><code>Authorization: Bearer YOUR_API_KEY_HERE</code></pre><br/>Replace `YOUR_API_KEY_HERE` with the key you generated. Requests made without a valid key or with an incorrect key will be rejected."
+            },
+            {
+                "title": "What are the available API endpoints?",
+                "content": "<b>The API provides read-only access to your core data collections.</b><br/><br/>The base URL for all endpoints is `/api/v1`. Currently, the following GET endpoints are supported:<br/><ul><li>`/properties` - Retrieves all properties in your portfolio.</li><li>`/revenue` - Retrieves all revenue transactions.</li><li>`/expenses` - Retrieves all expense transactions.</li><li>`/maintenanceRequests` - Retrieves all maintenance requests.</li><li>`/contractors` - Retrieves all contractor details.</li></ul>Each endpoint returns a JSON array of the corresponding data objects."
+            },
+            {
+                "title": "What are common API errors and how do I handle them?",
+                "content": "<b>Understanding error codes is key to building a robust integration.</b><br/><br/>Here are the most common errors you might encounter:<br/><ul><li><b>401 Unauthorized:</b> This means your API key is either missing, invalid, or does not have permission to access the resource. Double-check your Authorization header and ensure your key is correct.</li><li><b>403 Forbidden:</b> This indicates you are trying to perform an action you don't have permission for, such as using a read-only key for a write operation (not currently applicable as the API is read-only). It may also mean your subscription plan does not include API access.</li><li><b>404 Not Found:</b> You are requesting an endpoint that does not exist. Check for typos in your request URL.</li><li><b>429 Too Many Requests:</b> You have exceeded the rate limit. Please reduce the frequency of your requests. The standard limit is 60 requests per minute.</li></ul>"
+            }
+        ]
+    },
+    {
         "category": "Account & Support",
         "questions": [
             {
                 "title": "How do I change my settings and profile?",
                 "content": "<b>Manage all your preferences from the 'Account' page on the main navigation bar.</b><br/><br/>Here, you can update your name and password, change the app's currency and date format, set your company name for reports, and switch between Light and Dark mode. This is also where you manage your subscription and billing information."
-            },
-            {
-                "title": "How do I use the PropTraka API?",
-                "content": "<b>API access is available for Enterprise plan users to programmatically interact with their data.</b><br/><br/>If you are on the Enterprise plan, you can generate a secure API key from the 'API Access' tab on the 'Account' page. This key allows you to build custom integrations, sync data with your other business systems, and automate workflows. The API is designed for developers and requires technical knowledge to use."
             },
             {
                 "title": "How do I manage the AI's Knowledge Base?",
