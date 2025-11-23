@@ -281,6 +281,46 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
 
             <Card>
                 <CardHeader>
+                    <CardTitle>User Profile</CardTitle>
+                    <CardDescription>This helps us tailor the experience to your needs.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="role">Your Role</Label>
+                            <Select name="role" value={tempSettings.role} onValueChange={(v) => setTempSettings({...tempSettings, role: v})}>
+                                <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
+                                    <SelectItem value="Property Manager">Property Manager</SelectItem>
+                                    <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
+                                    <SelectItem value="Investor">Investor</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="portfolioSize">Portfolio Size</Label>
+                            <Select name="portfolioSize" value={tempSettings.portfolioSize} onValueChange={(v) => setTempSettings({...tempSettings, portfolioSize: v})}>
+                                <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="1-5">1-5 Units</SelectItem>
+                                    <SelectItem value="6-20">6-20 Units</SelectItem>
+                                    <SelectItem value="21-50">21-50 Units</SelectItem>
+                                    <SelectItem value="50+">50+ Units</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="areasOfInterest">Areas of Interest for Investment</Label>
+                        <Input id="areasOfInterest" value={(tempSettings.areasOfInterest || []).join(', ')} onChange={(e) => setTempSettings({...tempSettings, areasOfInterest: e.target.value.split(',').map(s => s.trim())})} placeholder="e.g. Kilimani, Nyali, Nakuru Town" />
+                        <p className="text-xs text-muted-foreground">Separate multiple areas with a comma.</p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
                     <CardTitle>Billing Information</CardTitle>
                     <CardDescription>This information will be used for invoices and payment processing.</CardDescription>
                 </CardHeader>
@@ -347,46 +387,6 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     <div className="space-y-2">
                         <Label htmlFor="templateMoveOutChecklistUrl">Move-out Checklist Template URL</Label>
                         <Input id="templateMoveOutChecklistUrl" value={tempSettings.templateMoveOutChecklistUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateMoveOutChecklistUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>User Profile</CardTitle>
-                    <CardDescription>This helps us tailor the experience to your needs.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="role">Your Role</Label>
-                            <Select name="role" value={tempSettings.role} onValueChange={(v) => setTempSettings({...tempSettings, role: v})}>
-                                <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
-                                    <SelectItem value="Property Manager">Property Manager</SelectItem>
-                                    <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
-                                    <SelectItem value="Investor">Investor</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="portfolioSize">Portfolio Size</Label>
-                            <Select name="portfolioSize" value={tempSettings.portfolioSize} onValueChange={(v) => setTempSettings({...tempSettings, portfolioSize: v})}>
-                                <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="1-5">1-5 Units</SelectItem>
-                                    <SelectItem value="6-20">6-20 Units</SelectItem>
-                                    <SelectItem value="21-50">21-50 Units</SelectItem>
-                                    <SelectItem value="50+">50+ Units</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="areasOfInterest">Areas of Interest for Investment</Label>
-                        <Input id="areasOfInterest" value={(tempSettings.areasOfInterest || []).join(', ')} onChange={(e) => setTempSettings({...tempSettings, areasOfInterest: e.target.value.split(',').map(s => s.trim())})} placeholder="e.g. Kilimani, Nyali, Nakuru Town" />
-                        <p className="text-xs text-muted-foreground">Separate multiple areas with a comma.</p>
                     </div>
                 </CardContent>
             </Card>
