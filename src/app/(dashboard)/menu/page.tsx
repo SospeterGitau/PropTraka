@@ -3,24 +3,15 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
-  Building,
-  Calendar,
-  CircleAlert,
-  HelpCircle,
-  LayoutDashboard,
   LineChart,
-  LogOut,
-  Shield,
-  TrendingUp,
-  TrendingDown,
+  CircleAlert,
+  Calendar,
   Users,
-  Wrench,
-  User,
-  Sparkles,
-  Landmark,
-  Mail,
-  FileText,
   Activity,
+  Landmark,
+  HelpCircle,
+  Mail,
+  Shield,
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
@@ -31,11 +22,11 @@ export const metadata: Metadata = {
 };
 
 const mainNavItems = [
-  { href: '/activity', label: 'Activity', icon: Activity },
   { href: '/reports', label: 'Reports', icon: LineChart },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/contractors', label: 'Contractors', icon: Users },
+  { href: '/activity', label: 'Activity', icon: Activity },
 ];
 
 const secondaryNavItems = [
