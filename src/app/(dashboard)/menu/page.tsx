@@ -20,66 +20,46 @@ import {
   Landmark,
   Mail,
   FileText,
+  Activity,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-    title: 'Menu',
-    description: 'Navigate through all the features of PropTraka.',
+    title: 'More',
+    description: 'Find more pages and app features.',
 };
 
-const manageNavItems = [
-  { href: '/properties', label: 'Properties', icon: Building },
-  { href: '/revenue', label: 'Revenue', icon: TrendingUp },
-  { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+const mainNavItems = [
+  { href: '/activity', label: 'Activity', icon: Activity },
+  { href: '/reports', label: 'Reports', icon: LineChart },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
-  { href: '/maintenance', label: 'Maintenance', icon: Wrench },
   { href: '/contractors', label: 'Contractors', icon: Users },
 ];
 
-const analysisNavItems = [
-  { href: '/reports', label: 'Reports', icon: LineChart },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
-  { href: '/lease-tools', label: 'Lease Tools', icon: Landmark },
-];
-
-const helpNavItems = [
+const secondaryNavItems = [
+    { href: '/lease-tools', label: 'Lease Tools', icon: Landmark },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/contact', label: 'Contact Us', icon: Mail },
     { href: '/privacy', label: 'Privacy Policy', icon: Shield },
 ];
 
 
-export default function MenuPage() {
+export default function MorePage() {
   return (
     <>
-      <PageHeader title="Menu" />
+      <PageHeader title="More" />
       <div className="space-y-8">
         <div>
-          <h2 className="text-xl font-semibold mb-4">Manage</h2>
+          <h2 className="text-xl font-semibold mb-4">Features</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {manageNavItems.map((item) => (
-              <Link href={item.href} key={item.href}>
-                <Card className="hover:bg-muted transition-colors">
+            {mainNavItems.map((item) => (
+              <Link href={item.href} key={item.href} passHref>
+                <Card className="hover:bg-muted transition-colors h-full">
                   <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
                     <item.icon className="w-8 h-8 text-primary" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Analyze</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {analysisNavItems.map((item) => (
-              <Link href={item.href} key={item.href}>
-                <Card className="hover:bg-muted transition-colors">
-                  <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
-                    <item.icon className="w-8 h-8 text-primary" />
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-medium text-center">{item.label}</span>
                   </CardContent>
                 </Card>
               </Link>
@@ -90,18 +70,30 @@ export default function MenuPage() {
          <div>
           <h2 className="text-xl font-semibold mb-4">Help & Info</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {helpNavItems.map((item) => (
-              <Link href={item.href} key={item.href}>
-                <Card className="hover:bg-muted transition-colors">
+            {secondaryNavItems.map((item) => (
+              <Link href={item.href} key={item.href} passHref>
+                <Card className="hover:bg-muted transition-colors h-full">
                   <CardContent className="flex flex-col items-center justify-center p-6 space-y-2">
                     <item.icon className="w-8 h-8 text-primary" />
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-medium text-center">{item.label}</span>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
         </div>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Account</CardTitle>
+                <CardDescription>Manage your profile, settings, and subscription.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button asChild>
+                    <Link href="/settings">Go to Account Settings</Link>
+                </Button>
+            </CardContent>
+        </Card>
 
       </div>
     </>
