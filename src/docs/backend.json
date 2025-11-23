@@ -199,6 +199,7 @@
         "billingCountry": { "type": "string" },
         "vatPin": { "type": "string" },
         "templateApplicationFormUrl": { "type": "string" },
+        "templateLandlordAssessmentFormUrl": { "type": "string" },
         "templateTenancyAgreementUrl": { "type": "string" },
         "templateMoveInChecklistUrl": { "type": "string" },
         "templateMoveOutChecklistUrl": { "type": "string" }

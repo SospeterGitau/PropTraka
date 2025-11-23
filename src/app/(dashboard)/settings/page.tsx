@@ -337,6 +337,10 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                         <Label htmlFor="templateApplicationFormUrl">Application Form Template URL</Label>
                         <Input id="templateApplicationFormUrl" value={tempSettings.templateApplicationFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateApplicationFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="templateLandlordAssessmentFormUrl">Landlord Assessment Form URL</Label>
+                        <Input id="templateLandlordAssessmentFormUrl" value={tempSettings.templateLandlordAssessmentFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateLandlordAssessmentFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
+                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="templateMoveInChecklistUrl">Move-in Checklist Template URL</Label>
                         <Input id="templateMoveInChecklistUrl" value={tempSettings.templateMoveInChecklistUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateMoveInChecklistUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />

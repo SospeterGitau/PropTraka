@@ -1,7 +1,4 @@
 
-
-
-
 /**
  * @fileoverview This file contains all the TypeScript type definitions and interfaces
  * used across the application. Centralising these types helps ensure data consistency,
@@ -279,6 +276,7 @@ export interface UserSettings {
     billingCountry?: string;
     vatPin?: string;
     templateApplicationFormUrl?: string;
+    templateLandlordAssessmentFormUrl?: string;
     templateTenancyAgreementUrl?: string;
     templateMoveInChecklistUrl?: string;
     templateMoveOutChecklistUrl?: string;
