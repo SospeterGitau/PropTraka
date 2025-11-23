@@ -5,7 +5,8 @@ import {generateReportSummary} from '@/ai/flows/generate-report-summary';
 import {generatePnlReport as generatePnlReportFlow} from '@/ai/flows/generate-pnl-report';
 import {generateMarketResearch} from '@/ai/flows/generate-market-research';
 import {getChatResponse as getChatResponseFlow} from '@/ai/flows/get-chat-response-flow';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle } from '@/lib/types';
+import {categorizeExpense as categorizeExpenseFlow} from '@/ai/flows/categorize-expense-flow';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -104,5 +105,15 @@ export async function getChatResponse(input: { question: string; knowledgeBase: 
     } catch (e: any) {
         console.error('Error getting chat response:', e);
         return { answer: "I'm sorry, I encountered an error and couldn't process your request. Please try again." };
+    }
+}
+
+export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {
+    try {
+        const result = await categorizeExpenseFlow(input);
+        return result;
+    } catch (e: any) {
+        console.error('Error categorizing expense:', e);
+        return { category: '' };
     }
 }

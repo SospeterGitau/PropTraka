@@ -364,3 +364,17 @@ export interface GetChatResponseInput {
 export interface GetChatResponseOutput {
     answer: string;
 }
+
+/**
+ * Input for the `categorizeExpense` AI flow.
+ */
+export interface CategorizeExpenseInput {
+    description: string;
+}
+
+/**
+ * Output for the `categorizeExpense` AI flow.
+ */
+export interface CategorizeExpenseOutput {
+    category: string;
+}

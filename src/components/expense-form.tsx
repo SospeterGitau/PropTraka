@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import type { Property, Transaction, Contractor } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,10 +27,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Sparkles, Loader2 } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useDataContext } from '@/context/data-context';
 import { format } from 'date-fns';
+import { categorizeExpense } from '@/lib/actions';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 const defaultCategories = [
   'Accounting',
@@ -58,6 +61,80 @@ function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
 }
 
+function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { open: boolean, onOpenChange: (open: boolean) => void, onCategorySelect: (category: string) => void }) {
+    const [description, setDescription] = useState('');
+    const [isPending, startTransition] = useTransition();
+    const [suggestion, setSuggestion] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleGetSuggestion = () => {
+        if (!description) return;
+        startTransition(async () => {
+            setError(null);
+            setSuggestion(null);
+            const result = await categorizeExpense({ description });
+            if (result.category) {
+                setSuggestion(result.category);
+            } else {
+                setError("Could not get a suggestion. Please try again.");
+            }
+        });
+    }
+
+    const handleApply = () => {
+        if (suggestion) {
+            onCategorySelect(suggestion);
+        }
+    }
+
+    useEffect(() => {
+        if (open) {
+            setDescription('');
+            setSuggestion(null);
+            setError(null);
+        }
+    }, [open]);
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>AI Expense Categorization Assistant</DialogTitle>
+                    <DialogDescription>
+                        Describe the expense, and the AI will suggest the best category.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="expense-description">Expense Description</Label>
+                        <Textarea
+                            id="expense-description"
+                            placeholder="e.g., Paid a plumber to fix the kitchen sink at..."
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                        />
+                    </div>
+                    <Button onClick={handleGetSuggestion} disabled={!description || isPending} className="w-full">
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                        Get Suggestion
+                    </Button>
+                    {suggestion && (
+                        <Alert>
+                            <Sparkles className="h-4 w-4" />
+                            <AlertTitle>Suggested Category</AlertTitle>
+                            <AlertDescription className="flex items-center justify-between">
+                                <span className="font-bold text-lg">{suggestion}</span>
+                                <Button size="sm" onClick={handleApply}>Apply</Button>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {error && <Alert variant="destructive">{error}</Alert>}
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 export function ExpenseForm({
   isOpen,
   onClose,
@@ -80,10 +157,11 @@ export function ExpenseForm({
   const [isContractorOpen, setIsContractorOpen] = useState(false);
   const { settings } = useDataContext();
   const [date, setDate] = useState<Date | undefined>();
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   
   useEffect(() => {
     if (isOpen) {
-      setCategory(transaction?.category || 'Maintenance');
+      setCategory(transaction?.category || '');
       setExpenseType(transaction?.expenseType || 'one-off');
       setContractorId(transaction?.contractorId || '');
       setDate(transaction?.date ? new Date(transaction.date) : new Date());
@@ -118,9 +196,15 @@ export function ExpenseForm({
     onClose();
   };
 
+  const handleCategorySelected = (selectedCategory: string) => {
+    setCategory(selectedCategory);
+    setIsAssistantOpen(false);
+  }
+
   if (!isOpen) return null;
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
@@ -146,7 +230,13 @@ export function ExpenseForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Category</Label>
+            <div className="flex items-center justify-between">
+                <Label>Category</Label>
+                <Button type="button" variant="link" size="sm" className="h-auto p-0" onClick={() => setIsAssistantOpen(true)}>
+                    <Sparkles className="mr-2 h-4 w-4"/>
+                    Suggest Category
+                </Button>
+            </div>
             <Popover open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" aria-expanded={isCategoryOpen} className="w-full justify-between">
@@ -275,5 +365,11 @@ export function ExpenseForm({
         </form>
       </DialogContent>
     </Dialog>
+    <CategoryAssistantDialog 
+        open={isAssistantOpen}
+        onOpenChange={setIsAssistantOpen}
+        onCategorySelect={handleCategorySelected}
+    />
+    </>
   );
 }
