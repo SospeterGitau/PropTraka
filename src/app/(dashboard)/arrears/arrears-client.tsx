@@ -221,12 +221,12 @@ const ArrearsClient = memo(function ArrearsClient() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tenant</TableHead>
+                  <TableHead className="w-[150px]">Tenant</TableHead>
                   <TableHead>Property</TableHead>
-                  <TableHead>First Due Date</TableHead>
-                  <TableHead>Days Overdue</TableHead>
+                  <TableHead className="hidden sm:table-cell">First Due Date</TableHead>
+                  <TableHead className="hidden sm:table-cell">Days Overdue</TableHead>
                   <TableHead className="text-right">Amount Owed</TableHead>
-                  <TableHead className="text-center">Action</TableHead>
+                  <TableHead className="text-center w-[180px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -239,17 +239,29 @@ const ArrearsClient = memo(function ArrearsClient() {
                 ) : (
                   arrears.map((arrear, index) => {
                     return (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">{arrear.tenant}</TableCell>
-                        <TableCell>{arrear.propertyAddress}</TableCell>
+                      <TableRow key={index} className="[&>td]:last-child:text-center">
                         <TableCell>
+                          <div className="font-medium">{arrear.tenant}</div>
+                          <div className="text-sm text-muted-foreground sm:hidden">
+                            {arrear.daysOverdue} days overdue
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span>{arrear.propertyAddress}</span>
+                            <div className="sm:hidden text-sm text-muted-foreground">
+                              Due: <Badge variant="destructive" className="ml-1">{formattedDates[arrear.dueDate]}</Badge>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
                         </TableCell>
-                        <TableCell>{arrear.daysOverdue} days</TableCell>
+                        <TableCell className="hidden sm:table-cell">{arrear.daysOverdue} days</TableCell>
                         <TableCell className="text-right font-semibold text-destructive">
                           {formatCurrency(arrear.amountOwed, locale, currency)}
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                                <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)}>
                                     <CreditCard className="mr-2 h-4 w-4"/>
