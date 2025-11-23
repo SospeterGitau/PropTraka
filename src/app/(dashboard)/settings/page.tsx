@@ -671,7 +671,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 </ToggleGroup>
             </div>
             
-            <div className="w-full overflow-x-auto pt-8">
+            <div className="w-full overflow-x-auto">
                 <Table className="min-w-max">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
@@ -680,7 +680,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 const isCurrent = plan.name === currentPlanName;
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
-                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
+                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l pt-10", isCurrent && "bg-primary/10")}>
                                         <div className="relative">
                                             {isMostPopular && !isCurrent && (
                                                 <Badge variant="secondary" className="absolute -top-8 left-1/2 -translate-x-1/2 font-semibold">
