@@ -13,3 +13,4 @@ import '@/ai/flows/get-chat-response-flow.ts';
 import '@/ai/flows/categorize-expense-flow.ts';
 import '@/ai/flows/generate-reminder-email-flow.ts';
 import '@/ai/flows/generate-lease-clause-flow.ts';
+import '@/ai/flows/get-onboarding-pack-flow.ts';
