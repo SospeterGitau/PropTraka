@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, memo, useMemo } from 'react';
+import { useState, useEffect, memo, useMemo, useTransition } from 'react';
 import Link from 'next/link';
 import { format, startOfToday, isBefore, differenceInCalendarDays } from 'date-fns';
 import { PageHeader } from '@/components/page-header';
@@ -19,20 +19,24 @@ import { Badge } from '@/components/ui/badge';
 import { getLocale } from '@/lib/locales';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentRequestDialog } from '@/components/payment-request-dialog';
-import type { ArrearEntry, Transaction } from '@/lib/types';
-import { CreditCard } from 'lucide-react';
+import type { ArrearEntry, Transaction, GenerateReminderEmailInput } from '@/lib/types';
+import { CreditCard, Mail } from 'lucide-react';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useUser, useFirestore } from '@/firebase';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import type { Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { formatCurrency } from '@/lib/utils';
+import { ReminderEmailDialog } from '@/components/reminder-email-dialog';
+import { generateReminderEmail } from '@/lib/actions';
+
 
 const ArrearsClient = memo(function ArrearsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
   const { currency, locale, companyName } = settings;
+  const [isReminderGenerating, startReminderTransition] = useTransition();
 
   const revenueQuery = useMemo(() => 
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
@@ -115,7 +119,9 @@ const ArrearsClient = memo(function ArrearsClient() {
   
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
   const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
+  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
   const [selectedArrear, setSelectedArrear] = useState<ArrearEntry | null>(null);
+  const [generatedReminder, setGeneratedReminder] = useState<{ subject: string, body: string} | null>(null);
 
   useEffect(() => {
     const formatAllDates = async () => {
@@ -137,6 +143,24 @@ const ArrearsClient = memo(function ArrearsClient() {
   const handleRequestPayment = (arrear: ArrearEntry) => {
     setSelectedArrear(arrear);
     setIsPaymentRequestOpen(true);
+  };
+  
+  const handleSendReminder = (arrear: ArrearEntry) => {
+    setSelectedArrear(arrear);
+    setGeneratedReminder(null);
+    setIsReminderDialogOpen(true);
+
+    startReminderTransition(async () => {
+      const input: GenerateReminderEmailInput = {
+        tenantName: arrear.tenant,
+        propertyAddress: arrear.propertyAddress,
+        amountOwed: formatCurrency(arrear.amountOwed, locale, currency),
+        daysOverdue: arrear.daysOverdue,
+        companyName: companyName || "The Landlord",
+      }
+      const result = await generateReminderEmail(input);
+      setGeneratedReminder(result);
+    });
   };
 
   const handlePaymentRequestSubmit = (details: { amount: number, method: string }) => {
@@ -196,18 +220,6 @@ const ArrearsClient = memo(function ArrearsClient() {
                   </TableRow>
                 ) : (
                   arrears.map((arrear, index) => {
-                    const subject = `Overdue Rent Reminder`;
-                    const body = [
-                      `Dear ${arrear.tenant},`,
-                      `This is a friendly reminder regarding the outstanding balance for your tenancy at ${arrear.propertyAddress}.`,
-                      `Our records show that a payment of ${formatCurrency(arrear.amountOwed, locale, currency)} is outstanding and overdue.`,
-                      `Could you please arrange to make this payment at your earliest convenience? If you have already made the payment, please disregard this notice.`,
-                      `If you have any questions or wish to discuss this, please do not hesitate to reply to this email.`,
-                      `Thank you for your prompt attention to this matter.`,
-                      `Best regards,`,
-                      `${companyName}`
-                    ].join('%0D%0A%0D%0A'); // %0D%0A is a URL-encoded double line break
-
                     return (
                       <TableRow key={index}>
                         <TableCell className="font-medium">{arrear.tenant}</TableCell>
@@ -231,11 +243,10 @@ const ArrearsClient = memo(function ArrearsClient() {
                                     <CreditCard className="mr-2 h-4 w-4"/>
                                     Request Payment
                                </Button>
-                               <Button size="sm" asChild>
-                                <Link href={`mailto:${arrear.tenantEmail}?subject=${encodeURIComponent(subject)}&body=${body}`}>
+                               <Button size="sm" onClick={() => handleSendReminder(arrear)}>
+                                  <Mail className="mr-2 h-4 w-4" />
                                   Send Reminder
-                                </Link>
-                              </Button>
+                                </Button>
                             </div>
                         </TableCell>
                       </TableRow>
@@ -253,6 +264,13 @@ const ArrearsClient = memo(function ArrearsClient() {
         onSubmit={handlePaymentRequestSubmit}
         arrear={selectedArrear}
         formatCurrency={(amount) => formatCurrency(amount, locale, currency)}
+      />
+
+      <ReminderEmailDialog
+        isOpen={isReminderDialogOpen}
+        onClose={() => setIsReminderDialogOpen(false)}
+        isLoading={isReminderGenerating}
+        reminder={generatedReminder}
       />
     </>
   );

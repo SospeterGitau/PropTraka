@@ -378,3 +378,22 @@ export interface CategorizeExpenseInput {
 export interface CategorizeExpenseOutput {
     category: string;
 }
+
+/**
+ * Input for the `generateReminderEmail` AI flow.
+ */
+export interface GenerateReminderEmailInput {
+    tenantName: string;
+    propertyAddress: string;
+    amountOwed: string;
+    daysOverdue: number;
+    companyName: string;
+}
+
+/**
+ * Output for the `generateReminderEmail` AI flow.
+ */
+export interface GenerateReminderEmailOutput {
+    subject: string;
+    body: string;
+}

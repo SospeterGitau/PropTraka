@@ -6,7 +6,8 @@ import {generatePnlReport as generatePnlReportFlow} from '@/ai/flows/generate-pn
 import {generateMarketResearch} from '@/ai/flows/generate-market-research';
 import {getChatResponse as getChatResponseFlow} from '@/ai/flows/get-chat-response-flow';
 import {categorizeExpense as categorizeExpenseFlow} from '@/ai/flows/categorize-expense-flow';
-import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput } from '@/lib/types';
+import {generateReminderEmail as generateReminderEmailFlow} from '@/ai/flows/generate-reminder-email-flow';
+import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput, GenerateReminderEmailInput, GenerateReminderEmailOutput } from '@/lib/types';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
@@ -115,5 +116,18 @@ export async function categorizeExpense(input: CategorizeExpenseInput): Promise<
     } catch (e: any) {
         console.error('Error categorizing expense:', e);
         return { category: '' };
+    }
+}
+
+export async function generateReminderEmail(input: GenerateReminderEmailInput): Promise<GenerateReminderEmailOutput> {
+    try {
+        const result = await generateReminderEmailFlow(input);
+        return result;
+    } catch (e: any) {
+        console.error('Error generating reminder email:', e);
+        return { 
+            subject: 'Overdue Rent Reminder',
+            body: 'An error occurred while generating this email. Please try again.'
+        };
     }
 }
