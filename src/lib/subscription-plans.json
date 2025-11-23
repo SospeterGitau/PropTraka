@@ -1,6 +1,21 @@
 
 [
     {
+        "id": "plan_free",
+        "name": "Free",
+        "price": 0,
+        "price_per_unit": 0,
+        "unit_range": "1 Unit",
+        "description": "For a single unit. Get a feel for the core features.",
+        "features": [
+            "rent_tracking",
+            "expense_tracking",
+            "basic_analytics"
+        ],
+        "transaction_limit": 20,
+        "support_level": "Community FAQ"
+    },
+    {
         "id": "plan_starter",
         "name": "Starter",
         "price": 2000,
@@ -9,8 +24,10 @@
         "description": "For 1-5 Units. Ideal for individual landlords getting started.",
         "features": [
             "rent_tracking",
-            "maintenance_logs",
-            "tenant_records",
+            "expense_tracking",
+            "basic_analytics",
+            "arrears_management",
+            "contractor_management",
             "email_support"
         ],
         "transaction_limit": 50,
@@ -25,10 +42,13 @@
         "description": "For 6-20 Units. For small property managers scaling their portfolio.",
         "features": [
             "rent_tracking",
-            "maintenance_logs",
-            "tenant_records",
             "expense_tracking",
             "basic_analytics",
+            "arrears_management",
+            "contractor_management",
+            "ai_lease_clauses",
+            "ai_chat_assistant",
+            "document_linking",
             "email_support",
             "chat_support"
         ],
@@ -44,12 +64,15 @@
         "description": "For 21-50 Units. For established managers needing advanced tools.",
         "features": [
             "rent_tracking",
-            "maintenance_logs",
-            "tenant_records",
             "expense_tracking",
-            "advanced_reports",
+            "basic_analytics",
+            "arrears_management",
+            "contractor_management",
+            "ai_lease_clauses",
+            "ai_chat_assistant",
+            "document_linking",
+            "advanced_ai_reports",
             "maintenance_workflow",
-            "document_storage",
             "email_support",
             "chat_support",
             "phone_support"
@@ -66,12 +89,15 @@
         "description": "For 50+ Units. Custom solutions for large-scale property companies.",
         "features": [
             "rent_tracking",
-            "maintenance_logs",
-            "tenant_records",
             "expense_tracking",
-            "advanced_reports",
+            "basic_analytics",
+            "arrears_management",
+            "contractor_management",
+            "ai_lease_clauses",
+            "ai_chat_assistant",
+            "document_linking",
+            "advanced_ai_reports",
             "maintenance_workflow",
-            "document_storage",
             "api_access",
             "dedicated_support"
         ],

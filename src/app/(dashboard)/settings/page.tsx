@@ -376,7 +376,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                         <Label htmlFor="templateApplicationFormUrl">Application Form Template URL</Label>
                         <Input id="templateApplicationFormUrl" value={tempSettings.templateApplicationFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateApplicationFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
-                     <div className="space-y-2">
+                    <div className="space-y-2">
                         <Label htmlFor="templateLandlordAssessmentFormUrl">Landlord Assessment Form URL</Label>
                         <Input id="templateLandlordAssessmentFormUrl" value={tempSettings.templateLandlordAssessmentFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateLandlordAssessmentFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
@@ -690,7 +690,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                     <p className="text-sm text-muted-foreground pt-1 min-h-[40px]">{plan.description}</p>
                                 </CardHeader>
                                 
-                                <PlanPrice plan={plan} billingCycle={billingCycle} />
+                                <PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} />
                                 
                                 <Separator />
 

@@ -140,11 +140,15 @@
       "properties": {
         "id": { "type": "string" },
         "ownerId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Free", "Pro"] },
-        "status": { "type": "string", "enum": ["active", "cancelled", "past_due"] },
+        "plan": { "type": "string", "enum": ["Free", "Starter", "Growth", "Professional", "Enterprise"] },
+        "status": { "type": "string", "enum": ["active", "trial", "cancelled", "overdue", "past_due"] },
         "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
         "currentPeriodStart": { "type": "string", "format": "date-time" },
-        "currentPeriodEnd": { "type": "string", "format": "date-time" }
+        "currentPeriodEnd": { "type": "string", "format": "date-time" },
+        "units_managed": { "type": "number" },
+        "payment_customer_id": { "type": "string" },
+        "next_billing_date": { "type": "string", "format": "date-time" },
+        "last_payment_status": { "type": "string" }
       },
       "required": ["ownerId", "plan", "status", "billingCycle"]
     },
@@ -166,7 +170,7 @@
       },
       "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
     },
-    "userSettings": {
+     "userSettings": {
       "title": "User Settings",
       "description": "Stores user-specific application settings and preferences.",
       "type": "object",

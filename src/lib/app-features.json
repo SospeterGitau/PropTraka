@@ -2,21 +2,21 @@
 [
     {
         "id": "rent_tracking",
-        "name": "Rent Tracking",
+        "name": "Rent & Revenue Tracking",
         "description": "Monitor rental income and tenant payments.",
         "page_url": "/revenue"
     },
     {
         "id": "maintenance_logs",
-        "name": "Maintenance Logs",
-        "description": "Track maintenance requests from start to finish.",
+        "name": "Basic Maintenance Logs",
+        "description": "Track maintenance requests.",
         "page_url": "/maintenance"
     },
     {
-        "id": "tenant_records",
-        "name": "Tenant Records",
-        "description": "Keep a detailed record of all tenancies.",
-        "page_url": "/revenue"
+        "id": "arrears_management",
+        "name": "Arrears Management",
+        "description": "Automatically track and manage overdue payments.",
+        "page_url": "/arrears"
     },
     {
         "id": "email_support",
@@ -32,7 +32,7 @@
     },
     {
         "id": "basic_analytics",
-        "name": "Basic Analytics",
+        "name": "Dashboard & Analytics",
         "description": "Access dashboard KPIs and basic charts.",
         "page_url": "/dashboard"
     },
@@ -43,21 +43,21 @@
         "page_url": "/contact"
     },
     {
-        "id": "advanced_reports",
+        "id": "advanced_ai_reports",
         "name": "Advanced AI Reports",
         "description": "Generate AI-powered P&L and Market Research reports.",
         "page_url": "/reports"
     },
     {
         "id": "maintenance_workflow",
-        "name": "Maintenance Workflow",
+        "name": "Full Maintenance Workflow",
         "description": "Full Kanban board to manage maintenance tasks.",
         "page_url": "/maintenance"
     },
     {
-        "id": "document_storage",
-        "name": "Document Storage",
-        "description": "Link to tenancy agreements and receipts.",
+        "id": "document_linking",
+        "name": "Document Linking",
+        "description": "Link to tenancy agreements and other documents.",
         "page_url": "/revenue"
     },
     {
@@ -70,12 +70,30 @@
         "id": "api_access",
         "name": "API Access",
         "description": "Integrate PropTraka with your other business systems.",
-        "page_url": null
+        "page_url": "/settings"
     },
     {
         "id": "dedicated_support",
         "name": "Dedicated Support",
         "description": "A dedicated account manager for your business.",
         "page_url": "/contact"
+    },
+    {
+        "id": "contractor_management",
+        "name": "Contractor Management",
+        "description": "Manage a directory of your vendors and contractors.",
+        "page_url": "/contractors"
+    },
+    {
+        "id": "ai_lease_clauses",
+        "name": "AI Lease Clause Generator",
+        "description": "Draft legal clauses for your tenancy agreements.",
+        "page_url": "/lease-tools"
+    },
+    {
+        "id": "ai_chat_assistant",
+        "name": "AI Chat Assistant",
+        "description": "Get help and automate tasks with the AI assistant.",
+        "page_url": null
     }
 ]

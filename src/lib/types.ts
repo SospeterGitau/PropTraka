@@ -249,7 +249,7 @@ export interface CalendarEvent {
 export interface ChangeLogEntry {
   id: string;
   ownerId?: string; // Foreign key to the user
-  date: string;
+  date: any; // Firestore ServerTimestamp
   type: 'Property' | 'Tenancy' | 'Expense' | 'Payment' | 'Maintenance' | 'Contractor' | 'Subscription' | 'User';
   action: 'Created' | 'Updated' | 'Deleted';
   description: string;
