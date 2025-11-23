@@ -13,15 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function ContactPage() {
   const [subject, setSubject] = useState('');
+  const [customSubject, setCustomSubject] = useState('');
   const [message, setMessage] = useState('');
   const [name, setName] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const ticketId = `PPT-${Date.now()}`;
-    const mailtoSubject = encodeURIComponent(`[Ticket# ${ticketId}] - ${subject}`);
+    const finalSubject = subject === 'Other' ? customSubject : subject;
+    const mailtoSubject = encodeURIComponent(`[Ticket# ${ticketId}] - ${finalSubject}`);
     const mailtoBody = encodeURIComponent(
-        `Dear PropTraka Support,\n\nI am writing to you regarding the subject: ${subject}.\n\nMy message is:\n${message}\n\nThank you,\n${name}`
+        `Dear PropTraka Support,\n\nI am writing to you regarding the subject: ${finalSubject}.\n\nMy message is:\n${message}\n\nThank you,\n${name}`
     );
     
     // This will open the user's default email client
@@ -54,7 +56,7 @@ export default function ContactPage() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="subject">Subject</Label>
-                    <Select onValueChange={setSubject} required>
+                    <Select onValueChange={setSubject} required value={subject}>
                         <SelectTrigger id="subject">
                             <SelectValue placeholder="Select a subject..." />
                         </SelectTrigger>
@@ -70,6 +72,18 @@ export default function ContactPage() {
                         </SelectContent>
                     </Select>
                 </div>
+                {subject === 'Other' && (
+                    <div className="space-y-2">
+                        <Label htmlFor="customSubject">Please specify your subject</Label>
+                        <Input
+                            id="customSubject"
+                            placeholder="Enter your subject"
+                            value={customSubject}
+                            onChange={(e) => setCustomSubject(e.target.value)}
+                            required
+                        />
+                    </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
                   <Textarea id="message" placeholder="Your message..." className="min-h-[150px]" value={message} onChange={(e) => setMessage(e.target.value)} required />
