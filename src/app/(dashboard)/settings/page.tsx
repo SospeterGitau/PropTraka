@@ -222,6 +222,11 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         setIsClearingChat(false);
     }
   }
+  
+  const handleClearTemplateField = (fieldName: keyof UserSettings) => {
+    setTempSettings({ ...tempSettings, [fieldName]: '' });
+  };
+
 
   if (isDataLoading || !tempSettings) {
     return <p>Loading settings...</p>;
@@ -360,35 +365,47 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                     </div>
                 </CardContent>
             </Card>
-
+            
             <Card>
                 <CardHeader>
                     <CardTitle>Document Templates</CardTitle>
                     <CardDescription>Please provide links to your documents stored in your cloud storage provider (e.g., Google Drive, Dropbox).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="templateApplicationFormUrl">Application Form Template URL</Label>
-                        <Input id="templateApplicationFormUrl" value={tempSettings.templateApplicationFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateApplicationFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="templateLandlordAssessmentFormUrl">Landlord Assessment Form URL</Label>
-                        <Input id="templateLandlordAssessmentFormUrl" value={tempSettings.templateLandlordAssessmentFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateLandlordAssessmentFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="templateTenancyAgreementUrl">Tenancy Agreement Template URL</Label>
-                        <Input id="templateTenancyAgreementUrl" value={tempSettings.templateTenancyAgreementUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateTenancyAgreementUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="templateMoveInChecklistUrl">Move-in Checklist Template URL</Label>
-                        <Input id="templateMoveInChecklistUrl" value={tempSettings.templateMoveInChecklistUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateMoveInChecklistUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="templateMoveOutChecklistUrl">Move-out Checklist Template URL</Label>
-                        <Input id="templateMoveOutChecklistUrl" value={tempSettings.templateMoveOutChecklistUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateMoveOutChecklistUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
+                    {[
+                        { id: 'templateApplicationFormUrl', label: 'Application Form Template URL' },
+                        { id: 'templateLandlordAssessmentFormUrl', label: 'Landlord Assessment Form URL' },
+                        { id: 'templateTenancyAgreementUrl', label: 'Tenancy Agreement Template URL' },
+                        { id: 'templateMoveInChecklistUrl', label: 'Move-in Checklist Template URL' },
+                        { id: 'templateMoveOutChecklistUrl', label: 'Move-out Checklist Template URL' },
+                    ].map(field => (
+                        <div key={field.id} className="space-y-2">
+                            <Label htmlFor={field.id}>{field.label}</Label>
+                            <div className="relative">
+                                <Input 
+                                    id={field.id} 
+                                    value={tempSettings[field.id as keyof UserSettings] as string || ''} 
+                                    onChange={(e) => setTempSettings({...tempSettings, [field.id]: e.target.value})} 
+                                    placeholder="https://docs.google.com/document/..."
+                                    className="pr-10"
+                                />
+                                {isEditing && (
+                                    <Button 
+                                        type="button" 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                                        onClick={() => handleClearTemplateField(field.id as keyof UserSettings)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
                 </CardContent>
             </Card>
+
 
             <Card>
               <CardHeader>
@@ -670,7 +687,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 </ToggleGroup>
             </div>
             
-            <div className="w-full overflow-x-auto">
+             <div className="w-full overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
@@ -679,18 +696,17 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 const isCurrent = plan.name === currentPlanName;
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
-                                    <TableHead key={plan.id} className={cn("w-[200px] p-2 text-center border-l", isCurrent && "bg-primary/10")}>
-                                        <div className="flex flex-col items-center justify-start h-full">
+                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
+                                       <div className="flex flex-col items-center justify-start h-full">
                                             <div className="flex flex-col items-center justify-center h-8 mb-2">
-                                                {isMostPopular && (
-                                                    <Badge variant="secondary" className="font-semibold mb-2">
+                                                {isMostPopular ? (
+                                                     <Badge variant="secondary" className="font-semibold">
                                                         <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                                         Most Popular
                                                     </Badge>
-                                                )}
-                                                {!isMostPopular && <div className="h-8">&nbsp;</div>}
+                                                ) : <div className="h-8">&nbsp;</div>}
                                             </div>
-                                            <h3 className="text-2xl font-bold text-foreground">{plan.name}</h3>
+                                            <h3 className="text-2xl font-bold text-foreground mt-2">{plan.name}</h3>
                                             <p className="text-sm text-muted-foreground min-h-[40px] mt-2 mb-2 flex-grow">{plan.description}</p>
                                             <div className="my-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
                                             <Button
@@ -720,7 +736,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                     if (!feature) return null;
                                     return (
                                         <TableRow key={feature.id} className="hover:bg-muted/50 transition-colors">
-                                            <TableCell className="font-medium p-2">
+                                            <TableCell className="font-medium p-3">
                                                 {feature.page_url ? (
                                                     <Link href={feature.page_url} className="hover:underline">{feature.name}</Link>
                                                 ) : (
@@ -728,7 +744,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                                 )}
                                             </TableCell>
                                             {allPlans.map(plan => (
-                                                <TableCell key={plan.id} className={cn("text-center border-l p-2", plan.name === currentPlanName && "bg-primary/10")}>
+                                                <TableCell key={plan.id} className={cn("text-center border-l p-3", plan.name === currentPlanName && "bg-primary/10")}>
                                                     {plan.features.includes(feature.id) ? (
                                                         <Check className="h-5 w-5 text-green-500 mx-auto" />
                                                     ) : (

@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
-import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, Mail, ListChecks, FileInput, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
@@ -33,7 +33,7 @@ import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, dele
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 
 function PaymentForm({
@@ -431,48 +431,42 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const depositAmount = firstTransaction.deposit || 0;
   const isDepositReturned = firstTransaction.depositReturned || false;
   const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
+  
+  const hasDocuments = tenancy.applicationFormUrl || tenancy.contractUrl || tenancy.moveInChecklistUrl || tenancy.moveOutChecklistUrl;
 
 
   return (
     <>
       <PageHeader title="Tenancy Details">
         <div className="flex items-center gap-2">
-            {tenancy.applicationFormUrl && (
-              <Button asChild variant="outline">
-                <Link href={tenancy.applicationFormUrl} target="_blank">
-                  <FileInput className="mr-2 h-4 w-4" />
-                  Application
-                </Link>
-              </Button>
+            {hasDocuments && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Documents</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    {tenancy.applicationFormUrl && <DropdownMenuItem asChild><Link href={tenancy.applicationFormUrl} target="_blank"><FileInput className="mr-2 h-4 w-4"/>Application Form</Link></DropdownMenuItem>}
+                    {tenancy.contractUrl && <DropdownMenuItem asChild><Link href={tenancy.contractUrl} target="_blank"><FileText className="mr-2 h-4 w-4"/>Tenancy Agreement</Link></DropdownMenuItem>}
+                    {tenancy.moveInChecklistUrl && <DropdownMenuItem asChild><Link href={tenancy.moveInChecklistUrl} target="_blank"><ListChecks className="mr-2 h-4 w-4"/>Move-in Checklist</Link></DropdownMenuItem>}
+                    {tenancy.moveOutChecklistUrl && <DropdownMenuItem asChild><Link href={tenancy.moveOutChecklistUrl} target="_blank"><ListChecks className="mr-2 h-4 w-4"/>Move-out Checklist</Link></DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-            {tenancy.moveInChecklistUrl && (
-              <Button asChild variant="outline">
-                <Link href={tenancy.moveInChecklistUrl} target="_blank">
-                  <ListChecks className="mr-2 h-4 w-4" />
-                  Move-in List
-                </Link>
-              </Button>
-            )}
-            {tenancy.moveOutChecklistUrl && (
-              <Button asChild variant="outline">
-                <Link href={tenancy.moveOutChecklistUrl} target="_blank">
-                  <ListChecks className="mr-2 h-4 w-4" />
-                  Move-out List
-                </Link>
-              </Button>
-            )}
-            {tenancy.contractUrl && (
-              <Button asChild variant="outline">
-                <Link href={tenancy.contractUrl} target="_blank">
-                  <FileText className="mr-2 h-4 w-4" />
-                  View Contract
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => setIsEndTenancyOpen(true)}>
-                <CalendarX2 className="mr-2 h-4 w-4" />
-                End Tenancy
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline">Actions</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onSelect={() => router.push(`/revenue/edit/${tenancyId}`)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Tenancy
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setIsEndTenancyOpen(true)}>
+                        <CalendarX2 className="mr-2 h-4 w-4" />
+                        End Tenancy Early
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
