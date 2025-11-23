@@ -601,7 +601,7 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
             {plan.price !== null ? (
                 <>
                     <span className="text-muted-foreground text-xl sm:text-2xl">KSh</span>
-                    <span className="text-4xl">{Math.round(price!).toLocaleString()}</span>
+                    <span>{Math.round(price!).toLocaleString()}</span>
                     <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                 </>
             ) : (
@@ -681,26 +681,25 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 return (
                                     <TableHead key={plan.id} className={cn("w-[200px] p-2 text-center border-l", isCurrent && "bg-primary/10")}>
                                         <div className="flex flex-col items-center justify-start h-full">
-                                            <div className="relative w-full h-6 mb-2">
-                                                <div className="absolute inset-x-0 -top-4 flex justify-center">
-                                                    {isMostPopular && (
-                                                        <Badge variant="secondary" className="font-semibold">
-                                                            <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
-                                                            Most Popular
-                                                        </Badge>
-                                                    )}
-                                                </div>
+                                            <div className="flex flex-col items-center justify-center h-8 mb-2">
+                                                {isMostPopular && (
+                                                    <Badge variant="secondary" className="font-semibold mb-2">
+                                                        <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
+                                                        Most Popular
+                                                    </Badge>
+                                                )}
+                                                {!isMostPopular && <div className="h-8">&nbsp;</div>}
                                             </div>
-                                            <h3 className="text-2xl font-bold text-foreground mt-4">{plan.name}</h3>
+                                            <h3 className="text-2xl font-bold text-foreground">{plan.name}</h3>
                                             <p className="text-sm text-muted-foreground min-h-[40px] mt-2 mb-2 flex-grow">{plan.description}</p>
                                             <div className="my-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
-                                             <Button
-                                                className="w-full mt-4"
+                                            <Button
+                                                className="w-full mt-auto"
                                                 variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
                                                 onClick={() => handleChoosePlan(plan.name)}
-                                                disabled={isPending || isCurrent}
+                                                disabled={isCurrent}
                                             >
-                                                {isPending && !isCurrent ? <Loader2 className="h-4 w-4 animate-spin" /> : (isCurrent ? 'Your Plan' : 'Choose Plan')}
+                                                {isCurrent ? 'Your Plan' : 'Choose Plan'}
                                             </Button>
                                         </div>
                                     </TableHead>
