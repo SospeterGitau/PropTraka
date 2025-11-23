@@ -262,7 +262,7 @@ const ArrearsClient = memo(function ArrearsClient() {
                           {formatCurrency(arrear.amountOwed, locale, currency)}
                         </TableCell>
                         <TableCell>
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                            <div className="flex flex-col items-center justify-center gap-2">
                                <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)}>
                                     <CreditCard className="mr-2 h-4 w-4"/>
                                     Request Payment
