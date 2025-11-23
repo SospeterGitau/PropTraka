@@ -37,6 +37,7 @@
         "ownerId": { "type": "string" },
         "date": { "type": "string", "format": "date" },
         "rent": { "type": "number" },
+        "rentDueDate": { "type": "number" },
         "serviceCharges": {
           "type": "array",
           "items": {
@@ -64,6 +65,9 @@
         "tenancyStartDate": { "type": "string", "format": "date" },
         "tenancyEndDate": { "type": "string", "format": "date" },
         "contractUrl": { "type": "string" },
+        "applicationFormUrl": { "type": "string" },
+        "moveInChecklistUrl": { "type": "string" },
+        "moveOutChecklistUrl": { "type": "string" },
         "expenseType": { "type": "string", "enum": ["one-off", "recurring"] },
         "frequency": { "type": "string" },
         "notes": { "type": "string" },
