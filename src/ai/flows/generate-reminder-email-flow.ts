@@ -16,6 +16,7 @@ const GenerateReminderEmailInputSchema = z.object({
   amountOwed: z.string().describe('The total outstanding amount, formatted as a currency string (e.g., "KES 15,000.00").'),
   daysOverdue: z.number().describe('The number of days the earliest unpaid portion of the debt has been overdue.'),
   companyName: z.string().describe('The name of the landlord or property management company sending the reminder.'),
+  arrearsBreakdown: z.string().describe('A detailed breakdown of the outstanding charges.'),
 });
 
 const GenerateReminderEmailOutputSchema = z.object({
@@ -38,9 +39,12 @@ Your task is to compose a rental arrears reminder email. The tone should be prof
 **Tenant and Arrears Details:**
 - Tenant Name: {{{tenantName}}}
 - Property: {{{propertyAddress}}}
-- Amount Owed: {{{amountOwed}}}
+- Total Amount Owed: {{{amountOwed}}}
 - Days Overdue: {{{daysOverdue}}}
 - Sender Name/Company: {{{companyName}}}
+
+**Arrears Breakdown:**
+{{{arrearsBreakdown}}}
 
 **Instructions:**
 1.  **Generate a Subject Line:** Create a subject line that is clear and professional. It should include the words "Overdue Rent Reminder".
@@ -48,6 +52,7 @@ Your task is to compose a rental arrears reminder email. The tone should be prof
     - Address the tenant by name.
     - Politely state that this is a reminder regarding an outstanding balance for their tenancy.
     - Clearly mention the property address and the total amount owed ({{{amountOwed}}}).
+    - **Crucially, include the detailed arrears breakdown provided above to give full transparency.**
     - Request that they make the payment at their earliest convenience.
     - Include a standard closing line: "If you have already made this payment, please disregard this notice."
     - Offer assistance if they have questions.

@@ -124,6 +124,7 @@ export interface ArrearEntry {
   depositOwed: number;
   daysOverdue: number;
   serviceChargesOwed: number;
+  breakdown: string;
 }
 
 /**
@@ -388,6 +389,7 @@ export interface GenerateReminderEmailInput {
     amountOwed: string;
     daysOverdue: number;
     companyName: string;
+    arrearsBreakdown: string;
 }
 
 /**

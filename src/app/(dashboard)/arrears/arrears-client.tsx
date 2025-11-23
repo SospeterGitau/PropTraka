@@ -90,15 +90,30 @@ const ArrearsClient = memo(function ArrearsClient() {
         const dueDate = firstUnpaidTx ? new Date(firstUnpaidTx.date) : new Date(tenancy.transactions[0].date);
         const daysOverdue = differenceInCalendarDays(today, dueDate);
   
-        const totalDepositDue = tenancy.transactions.reduce((sum, tx) => sum + (tx.deposit || 0), 0);
-        const totalRentAndChargesDue = totalDueToDate - totalDepositDue;
-  
+        // Detailed breakdown
+        const totalRentDue = dueTransactions.reduce((sum, tx) => sum + tx.rent, 0);
+        const totalDepositDue = dueTransactions.reduce((sum, tx) => sum + (tx.deposit || 0), 0);
+        const totalServiceChargesDue = dueTransactions.reduce((sum, tx) => sum + (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0), 0);
+        
         const paidTowardsDeposit = Math.min(totalPaid, totalDepositDue);
         const remainingAfterDeposit = totalPaid - paidTowardsDeposit;
-        
+
+        const paidTowardsRent = Math.min(remainingAfterDeposit, totalRentDue);
+        const remainingAfterRent = remainingAfterDeposit - paidTowardsRent;
+
         const depositOwed = totalDepositDue - paidTowardsDeposit;
-        const rentAndChargesOwed = totalRentAndChargesDue - remainingAfterDeposit;
-  
+        const rentOwed = totalRentDue - paidTowardsRent;
+        const serviceChargesOwed = totalServiceChargesDue - remainingAfterRent;
+        
+        let breakdown = `- Rent: ${formatCurrency(rentOwed, locale, currency)}`;
+        if (depositOwed > 0) {
+            breakdown += `\n- Deposit: ${formatCurrency(depositOwed, locale, currency)}`;
+        }
+        if (serviceChargesOwed > 0) {
+           breakdown += `\n- Service Charges: ${formatCurrency(serviceChargesOwed, locale, currency)}`;
+        }
+
+
         return {
           tenant: tenancy.tenant!,
           tenantEmail: tenancy.tenantEmail!,
@@ -106,16 +121,17 @@ const ArrearsClient = memo(function ArrearsClient() {
           propertyAddress: tenancy.propertyName,
           amountOwed,
           dueDate: format(dueDate, 'yyyy-MM-dd'),
-          rentOwed: rentAndChargesOwed > 0 ? rentAndChargesOwed : 0,
-          depositOwed: depositOwed > 0 ? depositOwed : 0,
-          serviceChargesOwed: 0, 
+          rentOwed,
+          depositOwed,
+          serviceChargesOwed, 
           daysOverdue,
+          breakdown,
         };
       })
       .filter((a): a is NonNullable<ArrearEntry> => a !== null);
     
     return calculatedArrears.sort((a,b) => b.daysOverdue - a.daysOverdue);
-  }, [revenue]);
+  }, [revenue, currency, locale]);
   
   const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
   const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
@@ -157,6 +173,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         amountOwed: formatCurrency(arrear.amountOwed, locale, currency),
         daysOverdue: arrear.daysOverdue,
         companyName: companyName || "The Landlord",
+        arrearsBreakdown: arrear.breakdown,
       }
       const result = await generateReminderEmail(input);
       setGeneratedReminder(result);
@@ -230,7 +247,8 @@ const ArrearsClient = memo(function ArrearsClient() {
                         <TableCell>{arrear.daysOverdue} days</TableCell>
                         <TableCell>
                             <div className="flex flex-col items-start text-sm">
-                                {arrear.rentOwed > 0 && <span>Rent/Service Charges</span>}
+                                {arrear.rentOwed > 0 && <span>Rent</span>}
+                                {arrear.serviceChargesOwed > 0 && <span>Service Charges</span>}
                                 {arrear.depositOwed > 0 && <span>Deposit</span>}
                             </div>
                         </TableCell>
@@ -271,6 +289,7 @@ const ArrearsClient = memo(function ArrearsClient() {
         onClose={() => setIsReminderDialogOpen(false)}
         isLoading={isReminderGenerating}
         reminder={generatedReminder}
+        tenantEmail={selectedArrear?.tenantEmail}
       />
     </>
   );

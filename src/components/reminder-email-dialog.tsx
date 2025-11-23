@@ -23,9 +23,10 @@ interface ReminderEmailDialogProps {
   onClose: () => void;
   isLoading: boolean;
   reminder: { subject: string; body: string } | null;
+  tenantEmail?: string;
 }
 
-export function ReminderEmailDialog({ isOpen, onClose, isLoading, reminder }: ReminderEmailDialogProps) {
+export function ReminderEmailDialog({ isOpen, onClose, isLoading, reminder, tenantEmail }: ReminderEmailDialogProps) {
   const { toast } = useToast();
   const [copiedBody, setCopiedBody] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
@@ -42,6 +43,13 @@ export function ReminderEmailDialog({ isOpen, onClose, isLoading, reminder }: Re
     toast({ title: `${type === 'subject' ? 'Subject' : 'Body'} copied to clipboard!` });
   };
   
+  const handleSendEmail = () => {
+    if (reminder && tenantEmail) {
+        const mailtoLink = `mailto:${tenantEmail}?subject=${encodeURIComponent(reminder.subject)}&body=${encodeURIComponent(reminder.body)}`;
+        window.location.href = mailtoLink;
+    }
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -50,7 +58,7 @@ export function ReminderEmailDialog({ isOpen, onClose, isLoading, reminder }: Re
         <DialogHeader>
           <DialogTitle>AI-Generated Reminder</DialogTitle>
           <DialogDescription>
-            A draft email has been generated for you. Copy the content and send it to the tenant.
+            A draft email has been generated for you. You can copy the content or send it directly.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto">
@@ -96,6 +104,12 @@ export function ReminderEmailDialog({ isOpen, onClose, isLoading, reminder }: Re
             <DialogClose asChild>
                 <Button variant="outline">Close</Button>
             </DialogClose>
+             {reminder && tenantEmail && (
+                <Button onClick={handleSendEmail}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Send Email
+                </Button>
+            )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
