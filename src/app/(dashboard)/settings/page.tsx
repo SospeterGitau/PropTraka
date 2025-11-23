@@ -369,16 +369,16 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="templateTenancyAgreementUrl">Tenancy Agreement Template URL</Label>
-                        <Input id="templateTenancyAgreementUrl" value={tempSettings.templateTenancyAgreementUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateTenancyAgreementUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
-                    </div>
-                    <div className="space-y-2">
                         <Label htmlFor="templateApplicationFormUrl">Application Form Template URL</Label>
                         <Input id="templateApplicationFormUrl" value={tempSettings.templateApplicationFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateApplicationFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
-                     <div className="space-y-2">
+                    <div className="space-y-2">
                         <Label htmlFor="templateLandlordAssessmentFormUrl">Landlord Assessment Form URL</Label>
                         <Input id="templateLandlordAssessmentFormUrl" value={tempSettings.templateLandlordAssessmentFormUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateLandlordAssessmentFormUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="templateTenancyAgreementUrl">Tenancy Agreement Template URL</Label>
+                        <Input id="templateTenancyAgreementUrl" value={tempSettings.templateTenancyAgreementUrl || ''} onChange={(e) => setTempSettings({...tempSettings, templateTenancyAgreementUrl: e.target.value})} placeholder="https://docs.google.com/document/..." />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="templateMoveInChecklistUrl">Move-in Checklist Template URL</Label>
@@ -671,7 +671,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                 </ToggleGroup>
             </div>
             
-            <div className="w-full overflow-x-auto">
+            <div className="w-full overflow-x-auto pt-8">
                 <Table className="min-w-max">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
