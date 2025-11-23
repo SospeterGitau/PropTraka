@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useEffect, memo, useTransition, useMemo } from 'react';
@@ -188,7 +187,7 @@ const ProfileSettingsTab = memo(function ProfileSettingsTab() {
         toast({ title: 'Success', description: 'Your password has been updated.' });
         setIsPasswordDialogOpen(false);
         reset();
-      } catch (error: any) {
+      } catch (error: any) => {
         toast({ variant: 'destructive', title: 'Error', description: 'This is a sensitive operation. Please sign out and sign back in before changing your password.' });
       }
     });
@@ -602,7 +601,7 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
             {plan.price !== null ? (
                 <>
                     <span className="text-muted-foreground text-xl">KSh</span>
-                    <span className="text-3xl font-bold tracking-tight">{(price!).toLocaleString()}</span>
+                    <span className="text-4xl font-bold tracking-tight">{Math.round(price!).toLocaleString()}</span>
                     <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                 </>
             ) : (
@@ -619,7 +618,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
     const { toast } = useToast();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     
-    const currentPlanName = settings.subscription?.plan;
+    const currentPlanName = settings.subscription?.plan || 'Starter';
   
     const handleChoosePlan = (planName: string) => {
         if(planName === currentPlanName) return;
@@ -680,21 +679,21 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                 const isCurrent = plan.name === currentPlanName;
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
-                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
+                                    <TableHead key={plan.id} className={cn("w-[200px] p-2 text-center border-l", isCurrent && "bg-primary/10")}>
                                         <div className="flex flex-col items-center justify-start h-full">
-                                            <div className="flex h-12 flex-col items-center justify-center">
-                                                {isMostPopular ? (
-                                                    <Badge variant="secondary" className="font-semibold mb-2">
-                                                        <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
-                                                        Most Popular
-                                                    </Badge>
-                                                ) : (
-                                                   <div className="h-6 mb-2" /> // Placeholder for alignment
-                                                )}
-                                                <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                            <div className="h-12 flex flex-col items-center justify-center">
+                                                <div className="h-6 mb-2">
+                                                    {isMostPopular && (
+                                                        <Badge variant="secondary" className="font-semibold">
+                                                            <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
+                                                            Most Popular
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <h3 className="text-2xl font-bold text-foreground mt-2">{plan.name}</h3>
                                             </div>
-                                            <p className="text-sm text-muted-foreground min-h-[40px] mt-1 flex-grow">{plan.description}</p>
-                                            <div className="mt-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
+                                            <p className="text-sm text-muted-foreground min-h-[40px] mt-2 mb-2 flex-grow">{plan.description}</p>
+                                            <div className="my-4"><PlanPrice plan={plan as SubscriptionPlan} billingCycle={billingCycle} /></div>
                                              <Button
                                                 className="w-full mt-4"
                                                 variant={isCurrent ? 'secondary' : (isMostPopular ? 'default' : 'outline')}
@@ -721,7 +720,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                     const feature = allFeatures.find(f => f.id === featureId);
                                     if (!feature) return null;
                                     return (
-                                        <TableRow key={feature.id} className="hover:bg-transparent">
+                                        <TableRow key={feature.id} className="hover:bg-muted/50 transition-colors">
                                             <TableCell className="font-medium p-2">
                                                 {feature.page_url ? (
                                                     <Link href={feature.page_url} className="hover:underline">{feature.name}</Link>
@@ -1107,4 +1106,3 @@ export default function AccountPage() {
     </>
   );
 }
-
