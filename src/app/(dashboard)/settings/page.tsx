@@ -599,10 +599,10 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
 
     return (
         <div className="flex items-baseline justify-center gap-1">
-            {price !== null ? (
+            {plan.price !== null ? (
                 <>
                     <span className="text-muted-foreground text-xl">KSh</span>
-                    <span className="text-3xl font-bold tracking-tight">{(price).toLocaleString()}</span>
+                    <span className="text-3xl font-bold tracking-tight">{(price!).toLocaleString()}</span>
                     <span className="text-muted-foreground">/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
                 </>
             ) : (
@@ -672,15 +672,15 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
             </div>
             
             <div className="w-full overflow-x-auto">
-                <Table className="min-w-max">
+                <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
-                            <TableHead className="w-[300px] text-lg font-semibold">Features</TableHead>
+                            <TableHead className="w-[250px] text-lg font-semibold">Features</TableHead>
                             {allPlans.map(plan => {
                                 const isCurrent = plan.name === currentPlanName;
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
-                                    <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l pt-10", isCurrent && "bg-primary/10")}>
+                                    <TableHead key={plan.id} className={cn("w-[220px] p-2 text-center border-l pt-12", isCurrent && "bg-primary/10")}>
                                         <div className="relative">
                                             {isMostPopular && !isCurrent && (
                                                 <Badge variant="secondary" className="absolute -top-8 left-1/2 -translate-x-1/2 font-semibold">
@@ -723,7 +723,7 @@ const SubscriptionBillingTab = memo(function SubscriptionBillingTab() {
                                     if (!feature) return null;
                                     return (
                                         <TableRow key={feature.id} className="hover:bg-transparent">
-                                            <TableCell className="font-medium">
+                                            <TableCell className="font-medium p-2">
                                                 {feature.page_url ? (
                                                     <Link href={feature.page_url} className="hover:underline">{feature.name}</Link>
                                                 ) : (
