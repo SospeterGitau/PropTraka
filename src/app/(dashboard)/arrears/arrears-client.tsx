@@ -263,11 +263,11 @@ const ArrearsClient = memo(function ArrearsClient() {
                         </TableCell>
                         <TableCell>
                             <div className="flex flex-col items-center justify-center gap-2">
-                               <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)}>
+                               <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)} className="w-full">
                                     <CreditCard className="mr-2 h-4 w-4"/>
                                     Request Payment
                                </Button>
-                               <Button size="sm" onClick={() => handleSendReminder(arrear)}>
+                               <Button size="sm" onClick={() => handleSendReminder(arrear)} className="w-full">
                                   <Mail className="mr-2 h-4 w-4" />
                                   Send Reminder
                                 </Button>
