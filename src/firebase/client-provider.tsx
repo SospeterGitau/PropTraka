@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { FirebaseProvider } from './provider';
+import { initializeFirebase } from './index';
 
 interface FirebaseClientContextValue {
   user: User | null;
@@ -13,30 +14,26 @@ interface FirebaseClientContextValue {
 const FirebaseClientContext = createContext<FirebaseClientContextValue | undefined>(undefined);
 
 /**
- * This is the primary client-side provider. It wraps the core FirebaseProvider
- * and adds the authentication state listener. It is responsible for showing the
- * main loading state and providing the user's auth status to the app.
+ * This is the primary client-side provider. It handles Firebase initialization
+ * and authentication state, providing them to the rest of the application.
  */
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [authInstance, setAuthInstance] = useState<Auth | null>(null);
+
+  // Initialize Firebase services once.
+  const firebaseServices = React.useMemo(() => initializeFirebase(), []);
 
   useEffect(() => {
-    // We only need to get the auth instance once.
-    if (!authInstance) {
-      const auth = getAuth();
-      setAuthInstance(auth);
+    // onAuthStateChanged listener handles user session changes.
+    const unsubscribe = onAuthStateChanged(firebaseServices.auth, (user) => {
+      setUser(user);
+      setIsAuthLoading(false);
+    });
 
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        setIsAuthLoading(false);
-      });
-
-      // Cleanup subscription on unmount
-      return () => unsubscribe();
-    }
-  }, [authInstance]);
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [firebaseServices.auth]);
 
   if (isAuthLoading) {
     return (
@@ -55,7 +52,7 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
 
   return (
     <FirebaseClientContext.Provider value={{ user, isAuthLoading }}>
-      <FirebaseProvider>
+      <FirebaseProvider {...firebaseServices}>
         {children}
       </FirebaseProvider>
     </FirebaseClientContext.Provider>

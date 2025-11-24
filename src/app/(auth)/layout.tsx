@@ -1,8 +1,4 @@
 
-'use client';
-
-// No provider needed here anymore as it's in the root layout.
-
 export default function AuthLayout({
   children,
 }: {

@@ -2,14 +2,15 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getFunctions, type Functions } from 'firebase/functions';
-import { getAnalytics, type Analytics } from 'firebase/analytics';
-import { getPerformance, type Performance } from 'firebase/performance';
-import { initializeFirebase } from './index';
+import type { FirebaseApp } from 'firebase/app';
+import type { Auth } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
+import type { Functions } from 'firebase/functions';
+import type { Analytics } from 'firebase/analytics';
+import type { Performance } from 'firebase/performance';
 
 interface FirebaseContextValue {
+  firebaseApp: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
   functions: Functions;
@@ -20,13 +21,11 @@ interface FirebaseContextValue {
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefined);
 
 /**
- * This provider's sole responsibility is to initialize Firebase services
- * and make them available to the rest of the application via context.
- * It does NOT handle authentication state.
+ * This provider receives the initialized Firebase services as props
+ * and makes them available to its children via context.
  */
-export function FirebaseProvider({ children }: { children: ReactNode }) {
-  const services = useMemo(() => initializeFirebase(), []);
-  
+export function FirebaseProvider({ children, ...services }: { children: ReactNode } & FirebaseContextValue) {
+  // The services are passed as props, so we just provide them to the context.
   return (
     <FirebaseContext.Provider value={services}>
       {children}
