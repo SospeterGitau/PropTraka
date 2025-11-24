@@ -1,5 +1,4 @@
 
-
 /**
  * @fileoverview This file serves as the primary entry point for all Firebase-related
  * functionality in the application. It acts as a "barrel" file, re-exporting modules
@@ -9,7 +8,7 @@
  * 1. Initializing the Firebase app on the client side.
  * 2. Exporting the core Firebase services (Auth, Firestore, Analytics).
  * 3. Exporting all custom hooks related to Firebase, such as `useUser`.
- * 4. Exporting the main `FirebaseProvider` and `FirebaseClientProvider` components.
+ * 4. Exporting the main `FirebaseProvider`.
  *
  * By importing from `@/firebase`, other files can easily access any Firebase utility
  * without needing to know the specific file path of each individual function or hook.
@@ -46,7 +45,6 @@ export function initializeFirebase() {
 
 
 export * from './provider';
-export * from './client-provider';
 export * from './errors';
 export * from './error-emitter';
 export * from './analytics';
