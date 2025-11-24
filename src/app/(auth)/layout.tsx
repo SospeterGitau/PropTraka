@@ -1,7 +1,7 @@
 
 'use client';
 
-import { FirebaseClientProvider } from "@/firebase/client-provider";
+import { FirebaseProvider } from "@/firebase/provider";
 
 export default function AuthLayout({
   children,
@@ -9,10 +9,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FirebaseClientProvider>
+    <FirebaseProvider>
         <div className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
             {children}
         </div>
-    </FirebaseClientProvider>
+    </FirebaseProvider>
   );
 }

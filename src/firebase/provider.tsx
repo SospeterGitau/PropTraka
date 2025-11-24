@@ -1,13 +1,14 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getPerformance, Performance } from 'firebase/performance';
-import { app } from './index';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+import { initializeFirebase } from './index';
 
 interface FirebaseContextValue {
   auth: Auth;
@@ -24,11 +25,10 @@ const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefine
 export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const auth = getAuth(app);
-  const firestore = getFirestore(app);
-  const functions = getFunctions(app);
-  const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
-  const performance = typeof window !== 'undefined' ? getPerformance(app) : null;
+  const [isAppCheckReady, setIsAppCheckReady] = useState(false);
+
+  const services = useMemo(() => initializeFirebase(), []);
+  const { auth, firestore, functions, analytics, performance, firebaseApp } = services;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -37,8 +37,28 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     });
     return () => unsubscribe();
   }, [auth]);
+  
+  useEffect(() => {
+    if (firebaseApp) {
+      try {
+        if (process.env.NODE_ENV !== 'production') {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        }
+        initializeAppCheck(firebaseApp, {
+          provider: new ReCaptchaV3Provider('6Lce_OYpAAAAAPc-PE2P23B2x7-SA5i1u2n-B1bI'),
+          isTokenAutoRefreshEnabled: true,
+        });
+      } catch (error) {
+        console.warn('App Check initialization failed (non-critical):', error);
+      } finally {
+        setIsAppCheckReady(true);
+      }
+    }
+  }, [firebaseApp]);
 
-  if (isAuthLoading) {
+  if (isAuthLoading || !isAppCheckReady) {
     return (
       <div style={{
         display: 'flex',
@@ -46,12 +66,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         justifyContent: 'center',
         height: '100vh',
         width: '100vw',
-        backgroundColor: '#1a1a1a',
-        color: 'white',
-        fontFamily: 'sans-serif',
-        fontSize: '1.2rem'
+        backgroundColor: 'hsl(var(--background))',
+        color: 'hsl(var(--foreground))',
       }}>
-        Loading Your Application...
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -72,8 +90,11 @@ export const useFirebase = () => {
 };
 
 export const useUser = () => {
-  const { user, isAuthLoading } = useFirebase();
-  return { user, isAuthLoading };
+  const context = useContext(FirebaseContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a FirebaseProvider');
+  }
+  return { user: context.user, isAuthLoading: context.isAuthLoading };
 };
 
 export const useFirestore = () => {
