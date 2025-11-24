@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
-
 
 function AppStoreBadge() {
     return (
@@ -49,7 +47,7 @@ function GooglePlayBadge() {
 }
 
 
-function HomePageContent() {
+export default function HomePage() {
   const { user, isAuthLoading } = useUser();
   const router = useRouter();
 
@@ -86,13 +84,4 @@ function HomePageContent() {
       </main>
     </div>
   );
-}
-
-
-export default function DashboardPage() {
-  return (
-    <FirebaseClientProvider>
-      <HomePageContent />
-    </FirebaseClientProvider>
-  )
 }
