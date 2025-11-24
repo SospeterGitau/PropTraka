@@ -20,6 +20,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFunctions, Functions } from 'firebase/functions';
 import { getPerformance, Performance } from 'firebase/performance';
 
 // This function ensures a single instance of the Firebase app is created.
@@ -30,33 +31,22 @@ const getFirebaseApp = (): FirebaseApp => {
   return getApp();
 };
 
-const app = getFirebaseApp();
-const auth = getAuth(app);
-const firestore = getFirestore(app);
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
-const performance = typeof window !== 'undefined' ? getPerformance(app) : null;
-
-// Export the initialized services
-export { app, auth, firestore, analytics, performance };
-
-
 export function initializeFirebase() {
-  const appInstance = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const appInstance = getFirebaseApp();
   
-  return getSdks(appInstance);
-}
-
-export function getSdks(firebaseApp: FirebaseApp) {
   return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
-    analytics: typeof window !== 'undefined' ? getAnalytics(firebaseApp) : null,
-    performance: typeof window !== 'undefined' ? getPerformance(firebaseApp) : null,
+    firebaseApp: appInstance,
+    auth: getAuth(appInstance),
+    firestore: getFirestore(appInstance),
+    functions: getFunctions(appInstance),
+    analytics: typeof window !== 'undefined' ? getAnalytics(appInstance) : null,
+    performance: typeof window !== 'undefined' ? getPerformance(appInstance) : null,
   };
 }
 
+
 export * from './provider';
+export * from './client-provider';
 export * from './errors';
 export * from './error-emitter';
 export * from './analytics';

@@ -58,6 +58,8 @@ export default function HomePage() {
   }, [user, isAuthLoading, router]);
 
   if (isAuthLoading || user) {
+    // The main loading is now handled by the root client provider,
+    // but we can keep a simple spinner here as a fallback during the redirect.
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -65,6 +67,7 @@ export default function HomePage() {
     );
   }
 
+  // This content will only be shown when auth is loaded and there is no user.
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <main className="flex flex-col items-center justify-center p-8 text-center">
