@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -50,22 +50,23 @@ function GooglePlayBadge() {
 export default function HomePage() {
   const { user, isAuthLoading } = useUser();
   const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!isAuthLoading && user) {
+    if (!isAuthLoading && user && !redirecting) {
+      setRedirecting(true);
       router.replace('/dashboard');
     }
-  }, [user, isAuthLoading, router]);
+  }, [user, isAuthLoading, router, redirecting]);
 
-  if (isAuthLoading) {
+  if (isAuthLoading || redirecting) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
-
-  // This content will only be shown when auth is loaded and there is no user.
+  
   if (!user) {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-background">
@@ -88,7 +89,7 @@ export default function HomePage() {
     );
   }
 
-  // This state is temporary while the redirect is happening.
+  // This should not be reached if logic is correct, but acts as a fallback.
   return (
     <div className="flex h-screen w-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
