@@ -1,21 +1,20 @@
-
 'use client';
 
 import React, { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
+import { onAuthStateChanged, User, Auth } from 'firebase/auth';
 import type { FirebaseApp } from 'firebase/app';
 import type { Firestore } from 'firebase/firestore';
 import type { Functions } from 'firebase/functions';
 import type { Analytics } from 'firebase/analytics';
 import type { Performance } from 'firebase/performance';
-import { initializeFirebase } from './index';
+import { auth, firestore, functions, analytics, performance } from './index';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextValue {
-  firebaseApp: FirebaseApp;
+  firebaseApp: FirebaseApp | null; // App can be null if not initialized
   auth: Auth;
   firestore: Firestore;
-  functions: Functions;
+  functions: Functions | null;
   analytics: Analytics | null;
   performance: Performance | null;
 }
@@ -27,7 +26,14 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  const firebaseServices = useMemo(() => initializeFirebase(), []);
+  const firebaseServices = useMemo(() => ({
+      firebaseApp: auth.app,
+      auth,
+      firestore,
+      functions,
+      analytics,
+      performance
+  }), []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseServices.auth, (user) => {
@@ -39,8 +45,6 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   const authValue = { user, isAuthLoading };
   
-  const { auth, firestore, ...otherServices } = firebaseServices;
-
   return (
     <FirebaseServicesContext.Provider value={firebaseServices}>
       <AuthContext.Provider value={authValue}>

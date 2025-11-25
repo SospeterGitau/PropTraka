@@ -1,12 +1,12 @@
 'use client';
 
-import { useUser, useAuth } from '@/firebase';
+import { useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
+import { auth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const { user, isAuthLoading } = useUser();
-  const auth = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
