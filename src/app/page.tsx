@@ -1,66 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { useUser } from '@/firebase';
 import Link from 'next/link';
 
 export default function HomePage() {
   const { user, isAuthLoading } = useUser();
-  const auth = useAuth();
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (user && !redirecting) {
-      console.log('🔄 Starting redirect to dashboard');
-      setRedirecting(true);
-
-      // Add a timeout to prevent infinite redirect
-      const timeoutId = setTimeout(() => {
-        router.push('/dashboard');
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
+    // Redirect authenticated users to dashboard
+    if (user) {
+      router.replace('/dashboard');
     }
-  }, [user, router, redirecting]);
+  }, [user, router]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      console.log('✅ Logged out successfully');
-      window.location.reload();
-    } catch (error) {
-      console.error('❌ Logout error:', error);
-    }
-  };
-
-  // Show loading state
-  if (isAuthLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show redirecting state with logout option
-  if (user) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
-          <p className="text-muted-foreground mb-4">Redirecting to dashboard...</p>
-          <button onClick={handleLogout} className="text-sm text-muted-foreground hover:text-foreground underline" >
-            Or click here to logout
-          </button>
-        </div>
-      </div>
-    );
+  // Show nothing while checking auth or redirecting
+  if (isAuthLoading || user) {
+    return null;
   }
 
   // Landing page for non-authenticated users
