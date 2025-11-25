@@ -16,7 +16,7 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAnalytics, Analytics } from 'firebase/analytics';
+// import { getAnalytics, Analytics } from 'firebase/analytics'; // Temporarily disabled
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
@@ -38,7 +38,8 @@ export function initializeFirebase() {
     auth: getAuth(appInstance),
     firestore: getFirestore(appInstance),
     functions: getFunctions(appInstance),
-    analytics: typeof window !== 'undefined' ? getAnalytics(appInstance) : null,
+    // Analytics is temporarily disabled to prevent initialization loop
+    analytics: null,
     performance: typeof window !== 'undefined' ? getPerformance(appInstance) : null,
   };
 }

@@ -9,6 +9,7 @@ import type { Functions } from 'firebase/functions';
 import type { Analytics } from 'firebase/analytics';
 import type { Performance } from 'firebase/performance';
 import { initializeFirebase } from './index';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextValue {
   firebaseApp: FirebaseApp;
@@ -17,11 +18,10 @@ interface FirebaseContextValue {
   functions: Functions;
   analytics: Analytics | null;
   performance: Performance | null;
-  user: User | null;
-  isAuthLoading: boolean;
 }
 
-const FirebaseContext = createContext<FirebaseContextValue | undefined>(undefined);
+const AuthContext = createContext<{ user: User | null; isAuthLoading: boolean; } | undefined>(undefined);
+const FirebaseServicesContext = createContext<Omit<FirebaseContextValue, 'user' | 'isAuthLoading'> | undefined>(undefined);
 
 export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -37,46 +37,48 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [firebaseServices.auth]);
 
-  const value = {
-    ...firebaseServices,
-    user,
-    isAuthLoading,
-  };
+  const authValue = { user, isAuthLoading };
+  
+  const { auth, firestore, ...otherServices } = firebaseServices;
 
   return (
-    <FirebaseContext.Provider value={value}>
-      {isAuthLoading ? (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          width: '100vw',
-        }}>
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      ) : (
-        children
-      )}
-    </FirebaseContext.Provider>
+    <FirebaseServicesContext.Provider value={firebaseServices}>
+      <AuthContext.Provider value={authValue}>
+          {isAuthLoading ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100vh',
+              width: '100vw',
+            }}>
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          ) : (
+            <>
+              {children}
+              <FirebaseErrorListener />
+            </>
+          )}
+      </AuthContext.Provider>
+    </FirebaseServicesContext.Provider>
   );
 }
 
 export const useFirebase = (): Omit<FirebaseContextValue, 'user' | 'isAuthLoading'> => {
-  const context = useContext(FirebaseContext);
+  const context = useContext(FirebaseServicesContext);
   if (context === undefined) {
     throw new Error('useFirebase must be used within a FirebaseProvider');
   }
-  const { user, isAuthLoading, ...services } = context;
-  return services;
+  return context;
 };
 
 export const useUser = (): { user: User | null, isAuthLoading: boolean } => {
-    const context = useContext(FirebaseContext);
+    const context = useContext(AuthContext);
     if (context === undefined) {
         throw new Error('useUser must be used within a FirebaseProvider');
     }
-    return { user: context.user, isAuthLoading: context.isAuthLoading };
+    return context;
 }
 
 export const useAuth = (): Auth => useFirebase().auth;
