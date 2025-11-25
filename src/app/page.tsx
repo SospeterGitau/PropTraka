@@ -9,16 +9,51 @@ export default function HomePage() {
 const { user, isAuthLoading } = useUser();
 const router = useRouter();
 
+// DEBUG: Log the auth state
 useEffect(() => {
-// Redirect authenticated users to dashboard
+console.log('🔍 AUTH STATE:', {
+isAuthLoading,
+hasUser: !!user,
+userEmail: user?.email || 'none'
+});
+}, [user, isAuthLoading]);
+
+useEffect(() => {
 if (user) {
+console.log('✅ User detected, redirecting to dashboard');
 router.replace('/dashboard');
 }
 }, [user, router]);
 
-// Show nothing while checking auth or redirecting
-if (isAuthLoading || user) {
-return null;
+// DEBUG: Show what we're rendering
+console.log('🎨 RENDERING:', {
+isAuthLoading,
+hasUser: !!user,
+willShowLandingPage: !isAuthLoading && !user
+});
+
+// Show spinner with message instead of blank screen
+if (isAuthLoading) {
+return (
+<div className="flex flex-col items-center justify-center min-h-screen bg-background">
+<div className="text-center">
+<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+<p className="text-muted-foreground">Checking authentication...</p>
+</div>
+</div>
+);
+}
+
+// If user exists, show spinner while redirecting
+if (user) {
+return (
+<div className="flex flex-col items-center justify-center min-h-screen bg-background">
+<div className="text-center">
+<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+<p className="text-muted-foreground">Redirecting to dashboard...</p>
+</div>
+</div>
+);
 }
 
 // Landing page for non-authenticated users
