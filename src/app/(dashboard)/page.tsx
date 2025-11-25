@@ -1,13 +1,28 @@
 'use client';
 
-import { useUser } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { useEffect, useState } from 'react';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebase';
 import { useRouter } from 'next/navigation';
+import type { User } from 'firebase/auth';
 
 export default function DashboardPage() {
-  const { user, isAuthLoading } = useUser();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+
+      if (!currentUser) {
+        router.push('/signin');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const handleLogout = async () => {
     try {
@@ -19,7 +34,7 @@ export default function DashboardPage() {
   };
 
   // Show loading while checking auth
-  if (isAuthLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
@@ -30,9 +45,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Redirect to login if not authenticated
+  // Don't render if no user (redirecting)
   if (!user) {
-    router.push('/signin');
     return null;
   }
 

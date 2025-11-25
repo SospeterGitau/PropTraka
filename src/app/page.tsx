@@ -3,25 +3,25 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import Link from 'next/link';
 
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     console.log('Setting up auth listener...');
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       console.log('Auth state changed:', currentUser?.email || 'no user');
-      setUser(currentUser as any);
+      setUser(currentUser);
       setLoading(false);
-      
+
       if (currentUser) {
         console.log('User logged in - redirecting to dashboard');
-        router.replace('/dashboard');
+        router.replace('/');
       }
     });
 
@@ -31,13 +31,15 @@ export default function HomePage() {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#111827'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#111827',
+        }}
+      >
         <div style={{ color: '#ffffff' }}>Checking authentication...</div>
       </div>
     );
@@ -50,36 +52,44 @@ export default function HomePage() {
 
   // Landing page for non-authenticated users
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#111827',
-      padding: '32px'
-    }}>
-      <main style={{
+    <div
+      style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center',
-        maxWidth: '672px'
-      }}>
-        <h1 style={{
-          fontSize: '48px',
-          fontWeight: 'bold',
-          marginBottom: '16px',
-          color: '#ffffff'
-        }}>
+        minHeight: '100vh',
+        backgroundColor: '#111827',
+        padding: '32px',
+      }}
+    >
+      <main
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          maxWidth: '672px',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '48px',
+            fontWeight: 'bold',
+            marginBottom: '16px',
+            color: '#ffffff',
+          }}
+        >
           Welcome to PropTraka
         </h1>
-        <p style={{
-          fontSize: '20px',
-          color: '#d1d5db',
-          marginBottom: '32px'
-        }}>
+        <p
+          style={{
+            fontSize: '20px',
+            color: '#d1d5db',
+            marginBottom: '32px',
+          }}
+        >
           The smart, simple way to manage your rental properties.
         </p>
         <Link
@@ -92,7 +102,7 @@ export default function HomePage() {
             fontSize: '18px',
             fontWeight: '500',
             textDecoration: 'none',
-            display: 'inline-block'
+            display: 'inline-block',
           }}
         >
           Login
