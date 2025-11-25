@@ -30,18 +30,39 @@ const getFirebaseApp = (): FirebaseApp => {
   return getApp();
 };
 
-export function initializeFirebase() {
+let authInstance: Auth;
+let firestoreInstance: Firestore;
+let functionsInstance: Functions;
+let analyticsInstance: Analytics | null;
+let performanceInstance: Performance | null;
+
+
+function initializeFirebaseServices() {
   const appInstance = getFirebaseApp();
+  authInstance = getAuth(appInstance);
+  firestoreInstance = getFirestore(appInstance);
+  functionsInstance = getFunctions(appInstance);
+  analyticsInstance = null; // Analytics is temporarily disabled
+  performanceInstance = typeof window !== 'undefined' ? getPerformance(appInstance) : null;
   
   return {
     firebaseApp: appInstance,
-    auth: getAuth(appInstance),
-    firestore: getFirestore(appInstance),
-    functions: getFunctions(appInstance),
-    // Analytics is temporarily disabled to prevent initialization loop
-    analytics: null,
-    performance: typeof window !== 'undefined' ? getPerformance(appInstance) : null,
+    auth: authInstance,
+    firestore: firestoreInstance,
+    functions: functionsInstance,
+    analytics: analyticsInstance,
+    performance: performanceInstance,
   };
+}
+
+// Initialize services immediately so they can be exported
+const { auth, firestore } = initializeFirebaseServices();
+
+export { auth, firestore };
+
+// Re-export the initialization function if it's needed elsewhere, though direct exports are preferred.
+export function initializeFirebase() {
+    return initializeFirebaseServices();
 }
 
 

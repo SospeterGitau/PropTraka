@@ -15,7 +15,7 @@ export default function HomePage() {
     }
   }, [user, router]);
 
-  // Show nothing while checking auth or redirecting to prevent content flash
+  // Show nothing while checking auth or redirecting
   if (isAuthLoading || user) {
     return null;
   }
