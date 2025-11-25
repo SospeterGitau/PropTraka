@@ -1,35 +1,40 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
+import Link from 'next/link';
+
 export default function HomePage() {
+const { user, isAuthLoading } = useUser();
+const router = useRouter();
+
+useEffect(() => {
+// Redirect authenticated users to dashboard
+if (user) {
+router.replace('/dashboard');
+}
+}, [user, router]);
+
+// Show nothing while checking auth or redirecting
+if (isAuthLoading || user) {
+return null;
+}
+
+// Landing page for non-authenticated users
 return (
-<div style={{
-display: 'flex',
-flexDirection: 'column',
-alignItems: 'center',
-justifyContent: 'center',
-minHeight: '100vh',
-padding: '32px',
-textAlign: 'center'
-}}>
-<h1 style={{ fontSize: '3rem', fontWeight: 'bold', marginBottom: '16px' }}>
+<div className="flex flex-col items-center justify-center min-h-screen bg-background p-8">
+<main className="flex flex-col items-center justify-center text-center max-w-2xl">
+<h1 className="text-5xl font-bold mb-4 text-foreground">
 Welcome to PropTraka
 </h1>
-<p style={{ fontSize: '1.25rem', marginBottom: '32px', opacity: 0.7 }}>
+<p className="text-xl text-muted-foreground mb-8">
 The smart, simple way to manage your rental properties.
 </p>
-<a
-href="/signin"
-style={{
-display: 'inline-block',
-padding: '12px 24px',
-backgroundColor: '#000',
-color: '#fff',
-borderRadius: '8px',
-textDecoration: 'none',
-fontSize: '16px',
-fontWeight: '500'
-}}
->
+<Link href="/signin" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 text-base" >
 Login
-</a>
+</Link>
+</main>
 </div>
 );
 }
