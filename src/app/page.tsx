@@ -53,13 +53,15 @@ export default function HomePage() {
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!isAuthLoading && user && !redirecting) {
+    // Only redirect if a user exists and we are not already in the process of redirecting
+    if (user && !redirecting) {
       setRedirecting(true);
       router.replace('/dashboard');
     }
-  }, [user, isAuthLoading, router, redirecting]);
+  }, [user, router, redirecting]);
 
-  if (isAuthLoading || redirecting) {
+  // Show a spinner while auth state is loading
+  if (isAuthLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -67,32 +69,33 @@ export default function HomePage() {
     );
   }
   
-  if (!user) {
+  // If there's a user but we haven't redirected yet, show spinner to prevent content flash
+  if (user) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-          <main className="flex flex-col items-center justify-center p-8 text-center">
-            <h1 className="text-5xl font-bold mb-4">Welcome to PropTraka</h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              The smart, simple way to manage your rental properties.
-            </p>
-            <div className="flex gap-4 mb-8">
-              <Button size="lg" asChild>
-                <Link href="/signin">Login</Link>
-              </Button>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-                <AppStoreBadge />
-                <GooglePlayBadge />
-            </div>
-          </main>
-        </div>
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
     );
   }
 
-  // This should not be reached if logic is correct, but acts as a fallback.
+  // If auth is done and there's no user, show the landing page
   return (
-    <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-    </div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+        <main className="flex flex-col items-center justify-center p-8 text-center">
+          <h1 className="text-5xl font-bold mb-4">Welcome to PropTraka</h1>
+          <p className="text-xl text-muted-foreground mb-8">
+            The smart, simple way to manage your rental properties.
+          </p>
+          <div className="flex gap-4 mb-8">
+            <Button size="lg" asChild>
+              <Link href="/signin">Login</Link>
+            </Button>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+              <AppStoreBadge />
+              <GooglePlayBadge />
+          </div>
+        </main>
+      </div>
   );
 }
