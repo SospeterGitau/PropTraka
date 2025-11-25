@@ -2,43 +2,28 @@
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, User, Auth } from 'firebase/auth';
+import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
-import { firebaseConfig } from './config';
 import { getFunctions, Functions } from 'firebase/functions';
 import { getPerformance, Performance } from 'firebase/performance';
-import type { Analytics } from 'firebase/analytics';
+import { getAnalytics, Analytics } from 'firebase/analytics';
+import { firebaseConfig } from './config';
 
+// --- SERVICE INITIALIZATION ---
 
-// Initialize Firebase (only once)
 const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Export auth and firestore
 export const auth: Auth = getAuth(app);
 export const firestore: Firestore = getFirestore(app);
 export const functions: Functions = getFunctions(app);
 export const performance: Performance | null = typeof window !== 'undefined' ? getPerformance(app) : null;
-export const analytics: Analytics | null = null; // Analytics is temporarily disabled
+export const analytics: Analytics | null = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-// useUser hook for authentication state
-export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setIsAuthLoading(false);
-    });
+// --- HOOKS AND PROVIDERS ---
 
-    return () => unsubscribe();
-  }, []);
-
-  return { user, isAuthLoading };
-}
-
+// Re-export all hooks and providers from the central provider file.
+// This ensures that all components use the same context-aware instances.
 export * from './provider';
 export * from './errors';
 export * from './error-emitter';
-export * from './analytics';

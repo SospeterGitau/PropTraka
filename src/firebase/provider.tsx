@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
@@ -10,8 +11,10 @@ import type { Performance } from 'firebase/performance';
 import { auth, firestore, functions, analytics, performance } from './index';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
-interface FirebaseContextValue {
-  firebaseApp: FirebaseApp | null; // App can be null if not initialized
+// --- CONTEXT DEFINITIONS ---
+
+interface FirebaseServicesContextValue {
+  firebaseApp: FirebaseApp | null;
   auth: Auth;
   firestore: Firestore;
   functions: Functions | null;
@@ -19,8 +22,12 @@ interface FirebaseContextValue {
   performance: Performance | null;
 }
 
+const FirebaseServicesContext = createContext<FirebaseServicesContextValue | undefined>(undefined);
+
 const AuthContext = createContext<{ user: User | null; isAuthLoading: boolean; } | undefined>(undefined);
-const FirebaseServicesContext = createContext<Omit<FirebaseContextValue, 'user' | 'isAuthLoading'> | undefined>(undefined);
+
+
+// --- PROVIDER COMPONENT ---
 
 export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -69,7 +76,10 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useFirebase = (): Omit<FirebaseContextValue, 'user' | 'isAuthLoading'> => {
+
+// --- HOOKS ---
+
+export const useFirebase = (): FirebaseServicesContextValue => {
   const context = useContext(FirebaseServicesContext);
   if (context === undefined) {
     throw new Error('useFirebase must be used within a FirebaseProvider');
