@@ -1,107 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebase';
+import { useUser } from '@/firebase';
+import Link from 'next/link';
 
-export default function DashboardPage() {
-const router = useRouter();
-const [userEmail, setUserEmail] = useState<string | null>(null);
-const [checking, setChecking] = useState(true);
+export default function HomePage() {
+  const { user, isAuthLoading } = useUser();
+  const router = useRouter();
 
-useEffect(() => {
-// Set a timeout to show content after 1 second regardless of Firebase state
-const timeout = setTimeout(() => {
-setChecking(false);
-}, 1000);
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard');
+    }
+  }, [user, router]);
 
-// Try to get auth state, but don't block on it
-const unsubscribe = onAuthStateChanged(auth, (user) => {
-  if (user) {
-    setUserEmail(user.email);
-    setChecking(false);
-    clearTimeout(timeout);
-  } else {
-    // No user after checking - redirect to signin
-    router.push('/signin');
+  // Show nothing while checking auth or redirecting to prevent content flash
+  if (isAuthLoading || user) {
+    return null;
   }
-}, (error) => {
-  // If there's an error, just show content anyway
-  console.error('Auth state error:', error);
-  setChecking(false);
-  clearTimeout(timeout);
-});
 
-return () => {
-  unsubscribe();
-  clearTimeout(timeout);
-};
-}, [router]);
-
-const handleLogout = async () => {
-try {
-const { signOut } = await import('firebase/auth');
-await signOut(auth);
-router.push('/');
-} catch (error) {
-console.error('Logout error:', error);
-// Force redirect anyway
-router.push('/');
-}
-};
-
-// Show minimal loading for just 1 second max
-if (checking) {
-return (
-<div className="flex items-center justify-center min-h-screen bg-background">
-<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-</div>
-);
-}
-
-// Show dashboard immediately after 1 second
-return (
-<div className="min-h-screen bg-background">
-<header className="border-b border-gray-700 bg-gray-900">
-<div className="container mx-auto px-4 py-4 flex items-center justify-between">
-<h1 className="text-2xl font-bold text-white">PropTraka Dashboard</h1>
-<button onClick={handleLogout} className="px-4 py-2 rounded-md bg-gray-800 text-white hover:bg-gray-700 transition-colors" >
-Logout
-</button>
-</div>
-</header>
-
-  <main className="container mx-auto px-4 py-8">
-    <div className="mb-8">
-      <h2 className="text-xl font-semibold mb-2 text-white">
-        Welcome back{userEmail ? `, ${userEmail}` : ''}!
-      </h2>
-      <p className="text-gray-400">
-        This is your PropTraka dashboard.
-      </p>
+  // Landing page for non-authenticated users
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-8">
+      <main className="flex flex-col items-center justify-center text-center max-w-2xl">
+        <h1 className="text-5xl font-bold mb-4 text-foreground">
+          Welcome to PropTraka
+        </h1>
+        <p className="text-xl text-muted-foreground mb-8">
+          The smart, simple way to manage your rental properties.
+        </p>
+        <Link
+          href="/signin"
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 text-base"
+        >
+          Login
+        </Link>
+      </main>
     </div>
-
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
-        <h3 className="font-semibold mb-2 text-white">Properties</h3>
-        <p className="text-2xl font-bold text-white">0</p>
-        <p className="text-sm text-gray-400">Total properties</p>
-      </div>
-
-      <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
-        <h3 className="font-semibold mb-2 text-white">Tenants</h3>
-        <p className="text-2xl font-bold text-white">0</p>
-        <p className="text-sm text-gray-400">Active tenants</p>
-      </div>
-
-      <div className="rounded-lg border border-gray-700 bg-gray-900 p-6">
-        <h3 className="font-semibold mb-2 text-white">Revenue</h3>
-        <p className="text-2xl font-bold text-white">KES 0</p>
-        <p className="text-sm text-gray-400">This month</p>
-      </div>
-    </div>
-  </main>
-</div>
-);
+  );
 }
