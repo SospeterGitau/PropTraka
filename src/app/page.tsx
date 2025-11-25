@@ -1,13 +1,25 @@
+
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const { user, isAuthLoading } = useUser();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+
+  let user, isAuthLoading;
+
+  try {
+    const userData = useUser();
+    user = userData.user;
+    isAuthLoading = userData.isAuthLoading;
+  } catch (err) {
+    console.error('useUser error:', err);
+    setError('Auth initialization error');
+  }
 
   useEffect(() => {
     if (user) {
@@ -15,25 +27,39 @@ export default function HomePage() {
     }
   }, [user, router]);
 
+  // Show error if something broke
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-8">
+        <h1 className="text-3xl font-bold mb-4 text-red-500">Error</h1>
+        <p className="text-white">{error}</p>
+        <Link href="/signin" className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-md">
+          Try Sign In
+        </Link>
+      </div>
+    );
+  }
+
   // Show nothing while checking auth or redirecting
   if (isAuthLoading || user) {
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
   }
 
   // Landing page for non-authenticated users
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-8">
       <main className="flex flex-col items-center justify-center text-center max-w-2xl">
-        <h1 className="text-5xl font-bold mb-4 text-foreground">
+        <h1 className="text-5xl font-bold mb-4 text-white">
           Welcome to PropTraka
         </h1>
-        <p className="text-xl text-muted-foreground mb-8">
+        <p className="text-xl text-gray-300 mb-8">
           The smart, simple way to manage your rental properties.
         </p>
-        <Link
-          href="/signin"
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 text-base"
-        >
+        <Link href="/signin" className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-lg font-medium" >
           Login
         </Link>
       </main>

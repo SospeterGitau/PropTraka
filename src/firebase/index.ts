@@ -6,7 +6,6 @@ import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
 import { getPerformance, Performance } from 'firebase/performance';
-import { getAnalytics, Analytics } from 'firebase/analytics';
 import { firebaseConfig } from './config';
 
 // --- SERVICE INITIALIZATION ---
@@ -17,7 +16,6 @@ export const auth: Auth = getAuth(app);
 export const firestore: Firestore = getFirestore(app);
 export const functions: Functions = getFunctions(app);
 export const performance: Performance | null = typeof window !== 'undefined' ? getPerformance(app) : null;
-export const analytics: Analytics | null = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 
 // --- HOOKS AND PROVIDERS ---
