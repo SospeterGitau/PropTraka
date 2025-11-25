@@ -9,6 +9,7 @@ import Link from 'next/link';
 export default function HomePage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [forceShow, setForceShow] = useState(false);
 
   let user, isAuthLoading;
 
@@ -16,13 +17,31 @@ export default function HomePage() {
     const userData = useUser();
     user = userData.user;
     isAuthLoading = userData.isAuthLoading;
+
+    // Debug logging
+    console.log('HomePage - Auth state:', { 
+      user: user?.email || 'no user', 
+      isAuthLoading,
+      forceShow
+    });
   } catch (err) {
     console.error('useUser error:', err);
     setError('Auth initialization error');
   }
 
+  // Timeout to force show landing page after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Timeout reached - forcing landing page display');
+      setForceShow(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (user) {
+      console.log('User detected - redirecting to dashboard');
       router.replace('/dashboard');
     }
   }, [user, router]);
@@ -40,11 +59,17 @@ export default function HomePage() {
     );
   }
 
-  // Show nothing while checking auth or redirecting
-  if (isAuthLoading || user) {
+  // If user exists, show nothing while redirecting
+  if (user) {
+    return null;
+  }
+
+  // Show loading only if auth is loading AND timeout hasn't passed
+  if (isAuthLoading && !forceShow) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-white">Loading...</div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
+        <div className="text-white mb-4">Loading...</div>
+        <div className="text-gray-400 text-sm">Checking authentication...</div>
       </div>
     );
   }
