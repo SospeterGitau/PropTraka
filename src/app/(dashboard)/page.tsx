@@ -1,202 +1,86 @@
-
 'use client';
 
-import { Building, TrendingUp, TrendingDown, CircleAlert, Banknote } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { memo, useMemo } from 'react';
-import { KpiCard } from '@/components/dashboard/kpi-card';
-import { PageHeader } from '@/components/page-header';
-import { CurrencyIcon } from '@/components/currency-icon';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import type { Property, Transaction } from '@/lib/types';
-import { useDataContext } from '@/context/data-context';
-import { Button } from '@/components/ui/button';
-import { startOfToday, isBefore } from 'date-fns';
-import { useUser, useFirestore } from '@/firebase';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
-import { Query } from 'firebase/firestore';
-
-// Dynamically import charts to prevent server-side rendering issues
-const AreaChartComponent = dynamic(() => import('@/components/dashboard/area-chart'), { ssr: false });
-const BarChartComponent = dynamic(() => import('@/components/dashboard/bar-chart'), { ssr: false });
-
-const DashboardPageContent = memo(function DashboardPageContent() {
-  const { settings } = useDataContext();
-  const { currency, locale } = settings;
-  const { user } = useUser();
-  const firestore = useFirestore();
-
-  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
-  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
-  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
-
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
-  const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-  const [expensesSnapshot, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
-  
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [expensesSnapshot]);
-
-  const isDataLoading = isPropertiesLoading || isRevenueLoading || isExpensesLoading;
-
-  // Data might not be available on the first render, so we add a loading state.
-  if (isDataLoading) {
-    return (
-      <>
-        <PageHeader title="Dashboard" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-1/2 mb-2" />
-                <Skeleton className="h-3 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid gap-4 mt-4 grid-cols-1">
-            <Skeleton className="h-[380px]" />
-            <Skeleton className="h-[380px]" />
-        </div>
-      </>
-    )
-  }
-  
-  if (properties.length === 0) {
-    return (
-        <>
-            <PageHeader title="Dashboard" />
-             <Card className="text-center py-16">
-                <CardHeader>
-                    <div className="mx-auto bg-muted rounded-full p-4 w-fit">
-                        <Building className="w-12 h-12 text-muted-foreground" />
-                    </div>
-                    <CardTitle className="mt-4 !text-2xl">Welcome to PropTraka</CardTitle>
-                    <CardDescription className="max-w-md mx-auto">Get started by adding your first property to your portfolio. Once added, you can begin tracking revenue, expenses, and more.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button asChild>
-                        <Link href="/properties">Add Property</Link>
-                    </Button>
-                </CardContent>
-            </Card>
-        </>
-    )
-  }
-
-  const totalPropertyValue = properties.reduce((acc, p) => acc + p.currentValue, 0);
-  const totalMortgage = properties.reduce((acc, p) => acc + p.mortgage, 0);
-  const portfolioNetWorth = totalPropertyValue - totalMortgage;
-  
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const totalRevenue = revenue
-    .filter(r => {
-      const rDate = new Date(r.date);
-      return rDate.getMonth() === currentMonth && rDate.getFullYear() === currentYear;
-    })
-    .reduce((acc, r) => acc + (r.amountPaid ?? 0), 0);
-
-  const totalExpenses = expenses
-    .filter(e => {
-      const eDate = new Date(e.date);
-      return eDate.getMonth() === currentMonth && eDate.getFullYear() === currentYear;
-    })
-    .reduce((acc, e) => acc + (e.amount || 0), 0);
-  
-  const today = startOfToday();
-  const tenancies = Object.values(
-    revenue.reduce((acc, tx) => {
-      const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
-      if (!acc[tenancyId]) {
-        acc[tenancyId] = {
-          transactions: [],
-        };
-      }
-      acc[tenancyId].transactions.push(tx);
-      return acc;
-    }, {} as Record<string, { transactions: Transaction[] }>)
-  );
-
-  const totalArrears = tenancies.reduce((total, tenancy) => {
-    // Only consider payments due on or before today
-    const dueTransactions = tenancy.transactions.filter(tx => isBefore(new Date(tx.date), today));
-    // Calculate total amount that *should* have been paid by now
-    const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
-    // Calculate total amount actually paid across all transactions for the tenancy
-    const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
-    // The balance is what's owed from past due dates
-    const balance = totalDueToDate - totalPaid;
-    return total + (balance > 0 ? balance : 0);
-  }, 0);
-
-
-  const netOperatingIncome = totalRevenue - totalExpenses;
-  const noiVariant = netOperatingIncome >= 0 ? 'positive' : 'destructive';
-
-  return (
-    <>
-      <PageHeader title="Dashboard" />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <KpiCard
-          icon={Building}
-          title="Total Property Value"
-          value={totalPropertyValue}
-          description="Current market value of all assets"
-        />
-        <KpiCard
-          icon={Banknote}
-          title="Portfolio Net Worth"
-          value={portfolioNetWorth}
-          description="Total property value minus outstanding debt"
-        />
-        <KpiCard
-          icon={TrendingUp}
-          title="Revenue"
-          value={totalRevenue}
-          description="This month"
-        />
-        <KpiCard
-          icon={TrendingDown}
-          title="Expenses"
-          value={totalExpenses}
-          description="This month"
-        />
-        <KpiCard
-          icon={CurrencyIcon}
-          title="Net Operating Income"
-          value={netOperatingIncome}
-          description="This month (before tax)"
-          variant={noiVariant}
-        />
-        <KpiCard
-          icon={CircleAlert}
-          title="Arrears"
-          value={totalArrears}
-          description="Total of all past-due payments"
-          variant={totalArrears > 0 ? 'destructive' : 'default'}
-        />
-      </div>
-      <div className="grid gap-4 mt-4 grid-cols-1">
-        <AreaChartComponent revenue={revenue} expenses={expenses} />
-        <BarChartComponent properties={properties} revenue={revenue} expenses={expenses} />
-      </div>
-    </>
-  );
-});
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+  const { user, isAuthLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  // Show loading while checking auth
+  if (isAuthLoading) {
     return (
-        <DashboardPageContent />
-    )
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    router.push('/signin');
+    return null;
+  }
+
+  // Dashboard content
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">PropTraka Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-foreground hover:bg-secondary/80 h-10 px-4"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-2 text-foreground">
+            Welcome back, {user?.email || 'User'}!
+          </h2>
+          <p className="text-muted-foreground">
+            This is your PropTraka dashboard.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <h3 className="font-semibold mb-2 text-foreground">Properties</h3>
+            <p className="text-2xl font-bold text-foreground">0</p>
+            <p className="text-sm text-muted-foreground">Total properties</p>
+          </div>
+
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <h3 className="font-semibold mb-2 text-foreground">Tenants</h3>
+            <p className="text-2xl font-bold text-foreground">0</p>
+            <p className="text-sm text-muted-foreground">Active tenants</p>
+          </div>
+
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <h3 className="font-semibold mb-2 text-foreground">Revenue</h3>
+            <p className="text-2xl font-bold text-foreground">KES 0</p>
+            <p className="text-sm text-muted-foreground">This month</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
 }
