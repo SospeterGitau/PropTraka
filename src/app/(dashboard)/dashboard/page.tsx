@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useMemo } from 'react';
@@ -14,7 +15,8 @@ import Link from 'next/link';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { formatCurrency } from '@/lib/utils';
-import { startOfToday, isBefore } from 'date-fns';
+import { startOfToday, isBefore, differenceInCalendarDays } from 'date-fns';
+import type { Transaction } from '@/lib/types';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -36,10 +38,16 @@ export default function DashboardPage() {
     const tenancies = Object.values(
       revenue.reduce((acc, tx) => {
         if (tx.tenancyId) {
-          acc[tx.tenancyId] = tx;
+          if (!acc[tx.tenancyId]) {
+            acc[tx.tenancyId] = {
+              ...tx,
+              transactions: [],
+            };
+          }
+          acc[tx.tenancyId].transactions.push(tx);
         }
         return acc;
-      }, {} as Record<string, any>)
+      }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
     );
     const tenanciesCount = tenancies.length;
     const totalUnits = properties.length;
@@ -55,12 +63,23 @@ export default function DashboardPage() {
       })
       .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
 
-    const arrearsByTenancy = tenancies.filter(tenancy => {
-      const dueTransactions = (tenancy.transactions || []).filter((tx: any) => !isBefore(startOfToday(), new Date(tx.date)));
-      const totalDueToDate = dueTransactions.reduce((sum: number, tx: any) => sum + tx.rent + ((tx.serviceCharges || []).reduce((scSum: number, sc: any) => scSum + sc.amount, 0)) + (tx.deposit || 0), 0);
-      const totalPaid = (tenancy.transactions || []).reduce((sum: number, tx: any) => sum + (tx.amountPaid || 0), 0);
-      return (totalDueToDate - totalPaid) > 0.01;
-    });
+    const arrearsByTenancy = tenancies.map(tenancy => {
+        const today = startOfToday();
+        const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
+        
+        const totalDueToDate = dueTransactions.reduce((sum, tx) => {
+          const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
+          return sum + tx.rent + serviceChargesTotal + (tx.deposit || 0);
+        }, 0);
+        
+        const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid || 0), 0);
+        const amountOwed = totalDueToDate - totalPaid;
+  
+        if (amountOwed <= 0) return null;
+        
+        return { tenant: tenancy.tenant };
+    }).filter(Boolean);
+
     const arrearsCount = arrearsByTenancy.length;
 
     return {
