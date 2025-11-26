@@ -41,11 +41,11 @@ body {
  
     --radius: 0.4rem;
 
-    --chart-1: 217 91% 60%; 
-    --chart-2: 159 41% 55%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 180 44% 49%;
+    --chart-1: 217 91% 60%; /* Blue for Revenue / Net Income */
+    --chart-2: 0 72% 51%; /* Red for Expenses / Loss */
+    --chart-3: 159 41% 55%; /* Teal */
+    --chart-4: 38 92% 50%; /* Gold for Potential Income */
+    --chart-5: 281 90% 61%; /* Purple for additional data */
 
     --sidebar-background: hsl(var(--card));
     --sidebar-foreground: hsl(var(--card-foreground));
@@ -86,11 +86,11 @@ body {
     --input: 215 28% 17%;
     --ring: 217 91% 60%;
 
-    --chart-1: 217 91% 60%;
-    --chart-2: 159 41% 65%;
-    --chart-3: 0 72% 51%;
-    --chart-4: 48 96% 50%;
-    --chart-5: 180 44% 49%;
+    --chart-1: 217 91% 60%; /* Blue for Revenue / Net Income */
+    --chart-2: 0 62.8% 50.6%; /* Red for Expenses / Loss */
+    --chart-3: 159 41% 65%; /* Teal */
+    --chart-4: 48 96% 50%; /* Gold for Potential Income */
+    --chart-5: 281 90% 61%; /* Purple for additional data */
     
     --sidebar-background: hsl(var(--card));
     --sidebar-foreground: hsl(var(--card-foreground));
@@ -122,10 +122,3 @@ body {
     -moz-appearance: textfield;
   }
 }
-
-  /* Chart Colors */
-  --chart-1: 142 76 47; /* Teal for revenue/positive */
-  --chart-2: 0 84 50; /* Red for expenses/negative */
-  --chart-3: 217 91 60; /* Blue for additional data */
-  --chart-4: 281 90 61; /* Purple for additional data */
-  --chart-5: 48 95 53; /* Orange for additional data */
