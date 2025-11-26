@@ -170,46 +170,29 @@ export default function DashboardPage() {
         </p>
       </PageHeader>
 
-      {/* Hero Metrics */}
+      {/* Row 1: The "Now" View */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Properties</h3>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold text-sm text-muted-foreground">This Month</h3>
+            <Calendar className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-3xl font-bold text-foreground">{metrics.totalProperties}</p>
-          <p className="text-xs text-muted-foreground mt-1">{metrics.totalUnits} total units</p>
+          <p className="text-3xl font-bold text-foreground">KES {metrics.thisMonthRevenue.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">Current month revenue</p>
         </div>
-
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Occupancy</h3>
-            <Percent className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold text-sm text-muted-foreground">Net Income</h3>
+            <TrendingUp className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-3xl font-bold text-foreground">{metrics.occupancyRate.toFixed(0)}%</p>
-          <p className="text-xs text-muted-foreground mt-1">{metrics.tenanciesCount} active tenants</p>
-        </div>
-
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Revenue</h3>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">KES {metrics.totalRevenue.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">All-time total</p>
-        </div>
-
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Expenses</h3>
-            <TrendingDown className="h-4 w-4 text-red-500" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">KES {metrics.totalExpenses.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+          <p className={`text-3xl font-bold ${metrics.netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            KES {metrics.netIncome.toLocaleString()}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Total profit (all-time)</p>
         </div>
       </div>
 
-      {/* Financial Health */}
+      {/* Row 2: Portfolio Health */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
@@ -219,7 +202,6 @@ export default function DashboardPage() {
           <p className="text-2xl font-bold text-foreground">KES {metrics.totalAssetValue.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground mt-1">Total property value</p>
         </div>
-
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold text-sm text-muted-foreground">Net Equity</h3>
@@ -228,27 +210,45 @@ export default function DashboardPage() {
           <p className="text-2xl font-bold text-foreground">KES {metrics.netEquity.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground mt-1">After mortgages</p>
         </div>
-
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Net Income</h3>
-            <TrendingUp className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm text-muted-foreground">Properties</h3>
+            <Building className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className={`text-2xl font-bold ${metrics.netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            KES {metrics.netIncome.toLocaleString()}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">Total profit</p>
+          <p className="text-2xl font-bold text-foreground">{metrics.totalProperties}</p>
+          <p className="text-xs text-muted-foreground mt-1">{metrics.totalUnits} total units</p>
         </div>
-
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">This Month</h3>
-            <Calendar className="h-4 w-4 text-primary" />
+            <h3 className="font-semibold text-sm text-muted-foreground">Occupancy</h3>
+            <Percent className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className="text-2xl font-bold text-foreground">KES {metrics.thisMonthRevenue.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">Current month revenue</p>
+          <p className="text-2xl font-bold text-foreground">{metrics.occupancyRate.toFixed(0)}%</p>
+          <p className="text-xs text-muted-foreground mt-1">{metrics.tenanciesCount} active tenants</p>
         </div>
       </div>
+      
+      {/* Row 3: Historical Totals */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm text-muted-foreground">Total Revenue</h3>
+            <TrendingUp className="h-4 w-4 text-green-500" />
+          </div>
+          <p className="text-3xl font-bold text-foreground">KES {metrics.totalRevenue.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+        </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm text-muted-foreground">Total Expenses</h3>
+            <TrendingDown className="h-4 w-4 text-red-500" />
+          </div>
+          <p className="text-3xl font-bold text-foreground">KES {metrics.totalExpenses.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+        </div>
+      </div>
+
 
       {/* Charts Section */}
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
@@ -347,3 +347,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
