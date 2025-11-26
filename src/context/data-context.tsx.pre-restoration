@@ -53,49 +53,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      try {
-        const settingsRef = doc(firestore, 'userSettings', user.uid);
-        const settingsSnap = await getDoc(settingsRef);
-        
-        if (settingsSnap.exists()) {
-          const data = settingsSnap.data();
-          setSettings({ ...defaultSettings, ...data });
-        } else {
-          setSettings(defaultSettings);
-        }
-      } catch (error: any) {
-        console.log('Settings not found, using defaults');
-        setSettings(defaultSettings);
+      const settingsRef = doc(firestore, 'userSettings', user.uid);
+      const settingsSnap = await getDoc(settingsRef);
+      
+      if (settingsSnap.exists()) {
+        const data = settingsSnap.data();
+        setSettings({ ...defaultSettings, ...data });
       }
 
-      try {
-        const propertiesQuery = query(
-          collection(firestore, 'properties'),
-          where('ownerId', '==', user.uid)
-        );
-        const propertiesSnap = await getDocs(propertiesQuery);
-        const propertiesData = propertiesSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Property[];
-        setProperties(propertiesData);
-      } catch (error: any) {
-        console.log('No properties found');
-        setProperties([]);
-      }
+      const propertiesQuery = query(
+        collection(firestore, 'properties'),
+        where('ownerId', '==', user.uid)
+      );
+      const propertiesSnap = await getDocs(propertiesQuery);
+      const propertiesData = propertiesSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Property[];
+      setProperties(propertiesData);
 
-      try {
-        const subscriptionRef = doc(firestore, 'subscriptions', user.uid);
-        const subscriptionSnap = await getDoc(subscriptionRef);
-        
-        if (subscriptionSnap.exists()) {
-          setSubscription(subscriptionSnap.data() as Subscription);
-        } else {
-          setSubscription(null);
-        }
-      } catch (error: any) {
-        console.log('No subscription found');
-        setSubscription(null);
+      const subscriptionRef = doc(firestore, 'subscriptions', user.uid);
+      const subscriptionSnap = await getDoc(subscriptionRef);
+      
+      if (subscriptionSnap.exists()) {
+        setSubscription(subscriptionSnap.data() as Subscription);
       }
 
     } catch (error) {

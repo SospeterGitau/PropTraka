@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
@@ -5,7 +6,8 @@ import { onAuthStateChanged, User, Auth } from 'firebase/auth';
 import type { FirebaseApp } from 'firebase/app';
 import type { Firestore } from 'firebase/firestore';
 import type { Functions } from 'firebase/functions';
-import { auth, firestore, functions } from './index';
+import type { Analytics } from 'firebase/analytics';
+import type { Performance } from 'firebase/performance';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 // --- CONTEXT DEFINITIONS ---
@@ -15,6 +17,8 @@ interface FirebaseServicesContextValue {
   auth: Auth;
   firestore: Firestore;
   functions: Functions | null;
+  analytics: Analytics | null;
+  performance: Performance | null;
 }
 
 const FirebaseServicesContext = createContext<FirebaseServicesContextValue | undefined>(undefined);
@@ -32,7 +36,9 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       firebaseApp: auth.app,
       auth,
       firestore,
-      functions
+      functions,
+      analytics,
+      performance
   }), []);
 
   useEffect(() => {
@@ -41,7 +47,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setIsAuthLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [firebaseServices.auth]);
 
   const authValue = { user, isAuthLoading };
   

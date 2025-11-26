@@ -1,0 +1,107 @@
+'use client';
+
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/firebase';
+import { useFirebase } from '@/firebase';
+import { doc, getDoc, setDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import type { ResidencyStatus, Subscription, UserSettings } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { useTheme } from './theme-context';
+
+interface DataContextValue {
+  settings: UserSettings;
+  updateSettings: (newSettings: Partial<UserSettings>) => Promise<void>;
+  isLoading: boolean;
+}
+
+const defaultSettings: Omit<UserSettings, 'subscription' | 'theme'> = {
+  currency: 'KES',
+  locale: 'en-GB',
+  companyName: 'My Property Portfolio',
+  residencyStatus: 'resident',
+  isPnlReportEnabled: true,
+  isMarketResearchEnabled: true,
+};
+
+const DataContext = createContext<DataContextValue | undefined>(undefined);
+
+export function DataProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const { firestore } = useFirebase();
+  const { toast } = useToast();
+  const { setTheme } = useTheme();
+
+  const [settings, setSettings] = useState<UserSettings>({ ...defaultSettings, subscription: null, theme: 'system' });
+  const [isLoading, setIsLoading] = useState(false); // TEMP: Set to false to bypass the infinite loading
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const fetchAppData = useCallback(async () => {
+    // TEMP: Disabled to bypass hanging
+    return;
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+        fetchAppData();
+    } else if (!isAuthLoading && !user) {
+        setIsLoading(false);
+    }
+  }, [isAuthLoading, user, fetchAppData]);
+
+  const updateSettings = async (newSettings: Partial<UserSettings>) => {
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Not Authenticated",
+            description: "You must be logged in to save settings.",
+        });
+        return;
+    }
+    const settingsRef = doc(firestore, 'userSettings', user.uid);
+    try {
+      const { subscription, ...settingsToSave } = newSettings;
+      const updatedSettings = { ...settings, ...settingsToSave };
+      
+      await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true });
+      setSettings(updatedSettings);
+
+      toast({
+          title: "Settings Saved",
+          description: "Your settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to save settings. Please try again.",
+      });
+    }
+  };
+
+  const value = { settings, updateSettings, isLoading };
+
+  return (
+    <DataContext.Provider value={value}>
+      {children}
+    </DataContext.Provider>
+  );
+}
+
+export function useDataContext() {
+  const context = useContext(DataContext);
+  if (context === undefined) {
+    throw new Error('useDataContext must be used within a DataProvider');
+  }
+  return context;
+}

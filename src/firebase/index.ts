@@ -5,7 +5,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
-import { getPerformance, Performance } from 'firebase/performance';
+import { getPerformance } from 'firebase/performance';
 import { firebaseConfig } from './config';
 
 // --- SERVICE INITIALIZATION ---
@@ -15,7 +15,7 @@ const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) 
 export const auth: Auth = getAuth(app);
 export const firestore: Firestore = getFirestore(app);
 export const functions: Functions = getFunctions(app);
-export const performance: Performance | null = typeof window !== 'undefined' ? getPerformance(app) : null;
+export const performance: ReturnType<typeof getPerformance> | null = typeof window !== 'undefined' ? getPerformance(app) : null;
 
 
 // --- HOOKS AND PROVIDERS ---

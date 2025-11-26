@@ -267,7 +267,7 @@ export default function ProfileSettingsTab() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="role">Your Role</Label>
-                            <Select name="role" value={tempSettings.role} onValueChange={(v) => setTempSettings({...tempSettings, role: v})}>
+                            <Select name="role" value={tempSettings.role} onValueChange={(v) => setTempSettings({...tempSettings, role: v as 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor'})}>
                                 <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
@@ -279,7 +279,7 @@ export default function ProfileSettingsTab() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="portfolioSize">Portfolio Size</Label>
-                            <Select name="portfolioSize" value={tempSettings.portfolioSize} onValueChange={(v) => setTempSettings({...tempSettings, portfolioSize: v})}>
+                            <Select name="portfolioSize" value={tempSettings.portfolioSize} onValueChange={(v) => setTempSettings({...tempSettings, portfolioSize: v as '1-5' | '6-20' | '21-50' | '50+' as '1-5' | '6-20' | '21-50' | '50+'})}>
                                 <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="1-5">1-5 Units</SelectItem>

@@ -1,4 +1,3 @@
-
 import type {NextConfig} from 'next';
 import path from 'path';
 
@@ -27,15 +26,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: '/dashboard',
-        destination: '/',
-        permanent: true,
-      },
-    ]
-  },
+  // ✅ REMOVED the redirects() function that was causing the loop!
   webpack: (config) => {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');
     return config;

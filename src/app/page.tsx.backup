@@ -1,0 +1,114 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import Link from 'next/link';
+
+export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    console.log('Setting up auth listener...');
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log('Auth state changed:', currentUser?.email || 'no user');
+      setUser(currentUser);
+      setLoading(false);
+
+      if (currentUser) {
+        console.log('User logged in - redirecting to dashboard');
+        router.replace('/');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []); // ✅ FIXED: Empty dependency array!
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#111827',
+        }}
+      >
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  // If user is logged in, show loading (will redirect)
+  if (user) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          backgroundColor: '#111827',
+        }}
+      >
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Landing page for non-authenticated users
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#1e293b',
+        color: '#ffffff',
+        padding: '20px',
+      }}
+    >
+      <h1
+        style={{
+          fontSize: '48px',
+          fontWeight: 'bold',
+          marginBottom: '16px',
+        }}
+      >
+        Welcome to PropTraka
+      </h1>
+      <p
+        style={{
+          fontSize: '20px',
+          marginBottom: '32px',
+          color: '#cbd5e1',
+        }}
+      >
+        The smart, simple way to manage your rental properties.
+      </p>
+      <Link
+        href="/signin"
+        style={{
+          padding: '12px 32px',
+          backgroundColor: '#3b82f6',
+          color: '#ffffff',
+          borderRadius: '8px',
+          fontSize: '18px',
+          fontWeight: '500',
+          textDecoration: 'none',
+          transition: 'background-color 0.2s',
+        }}
+      >
+        Login
+      </Link>
+    </div>
+  );
+}

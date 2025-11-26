@@ -1,0 +1,21 @@
+'use client';
+
+import { DataProvider } from '@/context/data-context';
+// import { DashboardNavigation } from '@/components/dashboard-navigation'; // TEMP DISABLED
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { ChatBubble } from '@/components/chat-bubble';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <DataProvider>
+      {/* Render children directly without DashboardNavigation */}
+      {children}
+      <FirebaseErrorListener />
+      <ChatBubble />
+    </DataProvider>
+  );
+}

@@ -41,7 +41,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       setIsAuthLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [firebaseServices.auth]);
 
   const authValue = { user, isAuthLoading };
   

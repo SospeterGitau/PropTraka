@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
 import { useUser, useFirestore, errorEmitter } from '@/firebase';
-import type { FirestorePermissionError } from '@/firebase';
+import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { ChatMessage, KnowledgeArticle, SecurityRuleContext } from '@/lib/types';

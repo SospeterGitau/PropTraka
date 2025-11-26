@@ -1,0 +1,22 @@
+'use client';
+
+import { DataProvider } from '@/context/data-context';
+import { DashboardNavigation } from '@/components/dashboard-navigation';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { ChatBubble } from '@/components/chat-bubble';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <DataProvider>
+      <DashboardNavigation>
+        {children}
+      </DashboardNavigation>
+      <FirebaseErrorListener />
+      <ChatBubble />
+    </DataProvider>
+  );
+}

@@ -1,100 +1,137 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebase';
-import { useRouter } from 'next/navigation';
-import type { User } from 'firebase/auth';
+import { useDataContext } from '@/context/data-context';
+import { useUser } from '@/firebase';
+import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, DollarSign } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { user, isAuthLoading: authLoading } = useUser();
+  const { properties, revenue, expenses, isLoading: dataLoading } = useDataContext();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-
-      if (!currentUser) {
-        router.push('/signin');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
-  // Show loading while checking auth
-  if (loading) {
+  if (authLoading || dataLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  // Don't render if no user (redirecting)
-  if (!user) {
-    return null;
-  }
+  const totalProperties = properties.length;
+  const totalAssetValue = properties.reduce((sum, prop) => sum + (prop.currentValue || 0), 0);
+  
+  const totalRevenue = revenue.reduce((sum, doc) => sum + (doc.amountPaid || 0), 0);
+  const totalExpenses = expenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+  const netIncome = totalRevenue - totalExpenses;
 
-  // Dashboard content
+  const tenancies = Object.values(
+    revenue.reduce((acc, tx) => {
+      if (tx.tenancyId) {
+        acc[tx.tenancyId] = tx;
+      }
+      return acc;
+    }, {} as Record<string, any>)
+  );
+  const tenanciesCount = tenancies.length;
+  const arrearsCount = 0; // Simplified for now
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">PropTraka Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-secondary text-foreground hover:bg-secondary/80 h-10 px-4"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-2 text-foreground">
-            Welcome back, {user?.email || 'User'}!
-          </h2>
-          <p className="text-muted-foreground">
-            This is your PropTraka dashboard.
+    <>
+      {/* Header */}
+      <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Welcome back, {user?.displayName || user?.email || 'User'}!
           </p>
+      </div>
+
+      {/* Main Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Properties</h3>
+            <Building className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-3xl font-bold text-foreground">{totalProperties}</p>
+          <p className="text-sm text-muted-foreground">Total properties</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <h3 className="font-semibold mb-2 text-foreground">Properties</h3>
-            <p className="text-2xl font-bold text-foreground">0</p>
-            <p className="text-sm text-muted-foreground">Total properties</p>
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Tenants</h3>
+            <Users className="h-5 w-5 text-muted-foreground" />
           </div>
-
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <h3 className="font-semibold mb-2 text-foreground">Tenants</h3>
-            <p className="text-2xl font-bold text-foreground">0</p>
-            <p className="text-sm text-muted-foreground">Active tenants</p>
-          </div>
-
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <h3 className="font-semibold mb-2 text-foreground">Revenue</h3>
-            <p className="text-2xl font-bold text-foreground">KES 0</p>
-            <p className="text-sm text-muted-foreground">This month</p>
-          </div>
+          <p className="text-3xl font-bold text-foreground">{tenanciesCount}</p>
+          <p className="text-sm text-muted-foreground">Active tenancies</p>
         </div>
-      </main>
-    </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Revenue</h3>
+            <TrendingUp className="h-5 w-5 text-green-500" />
+          </div>
+          <p className="text-3xl font-bold text-foreground">KES {totalRevenue.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Total revenue all-time</p>
+        </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Expenses</h3>
+            <TrendingDown className="h-5 w-5 text-red-500" />
+          </div>
+           <p className="text-3xl font-bold text-foreground">KES {totalExpenses.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Total expenses all-time</p>
+        </div>
+      </div>
+
+      {/* Secondary Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Asset Value</h3>
+            <DollarSign className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">KES {totalAssetValue.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground">Total property value</p>
+        </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Net Income</h3>
+            <TrendingUp className="h-5 w-5 text-primary" />
+          </div>
+          <p className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            KES {netIncome.toLocaleString()}
+          </p>
+          <p className="text-sm text-muted-foreground">Revenue - Expenses</p>
+        </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-foreground">Arrears</h3>
+            <AlertCircle className="h-5 w-5 text-orange-500" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{arrearsCount}</p>
+          <p className="text-sm text-muted-foreground">Overdue payments</p>
+        </div>
+      </div>
+
+      {/* Empty State */}
+      {totalProperties === 0 && !dataLoading && (
+        <div className="rounded-lg border bg-card p-8 text-center">
+          <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-xl font-semibold mb-2">No properties yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Get started by adding your first property
+          </p>
+          <Button asChild>
+            <Link href="/properties">Add Property</Link>
+          </Button>
+        </div>
+      )}
+    </>
   );
 }
