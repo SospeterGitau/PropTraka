@@ -1,103 +1,59 @@
-
 'use client';
 
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { subMonths, format, startOfMonth, isSameMonth } from 'date-fns';
-import type { ChartConfig } from '@/components/ui/chart';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import type { Transaction } from '@/lib/types';
-import { useDataContext } from '@/context/data-context';
+import { AreaChart as RechartsAreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-interface AreaChartProps {
-  revenue: Transaction[];
-  expenses: Transaction[];
+interface DataPoint {
+  month: string;
+  revenue: number;
+  expenses: number;
 }
 
-const chartConfig = {
-  revenue: {
-    label: 'Revenue',
-    color: 'hsl(var(--chart-1))',
-  },
-  expenses: {
-    label: 'Expenses',
-    color: 'hsl(var(--chart-4))',
-  },
-} satisfies ChartConfig;
+interface AreaChartProps {
+  data: DataPoint[];
+}
 
-export default function AreaChartComponent({ revenue, expenses }: AreaChartProps) {
-  const { settings } = useDataContext();
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(settings.locale, { style: 'currency', currency: settings.currency }).format(amount);
-  };
-  
-  const formatCurrencyForAxis = (amount: number) => {
-    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
-    return amount.toString();
-  };
-
-  const chartData = Array.from({ length: 6 }).map((_, i) => {
-    const d = subMonths(new Date(), 5 - i);
-    const month = format(d, 'MMM');
-    const monthStart = startOfMonth(d);
-
-    const monthlyRevenue = revenue
-      .filter(t => isSameMonth(new Date(t.date), monthStart))
-      .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0);
-    
-    const monthlyExpenses = expenses
-      .filter(t => isSameMonth(new Date(t.date), monthStart))
-      .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-    return { month, revenue: monthlyRevenue, expenses: monthlyExpenses };
-  });
-
+export function AreaChart({ data }: AreaChartProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Overview</CardTitle>
-        <CardDescription>Revenue vs. Expenses for the last 6 months</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-4))" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="hsl(var(--chart-4))" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-              <YAxis tickFormatter={(value) => formatCurrencyForAxis(Number(value))} tickLine={false} axisLine={false} />
-              <Tooltip 
-                cursor={{ fill: 'hsl(var(--accent))' }}
-                content={<ChartTooltipContent 
-                    indicator="dot"
-                    formatter={(value, name) => (
-                      <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: chartConfig[name as keyof typeof chartConfig].color }} />
-                          <div className="flex flex-col">
-                            <span className="text-muted-foreground capitalize">{name}</span>
-                            <span className="font-bold">{formatCurrency(Number(value))}</span>
-                          </div>
-                      </div>
-                    )}
-                />}
-              />
-              <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-4))" fillOpacity={1} fill="url(#colorExpenses)" />
-              <Area type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" fillOpacity={1} fill="url(#colorRevenue)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+    <ResponsiveContainer width="100%" height={300}>
+      <RechartsAreaChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+        <XAxis 
+          dataKey="month" 
+          className="text-xs"
+          stroke="currentColor"
+        />
+        <YAxis 
+          className="text-xs"
+          stroke="currentColor"
+          tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: '8px',
+          }}
+          formatter={(value: number) => [`KES ${value.toLocaleString()}`, '']}
+        />
+        <Area
+          type="monotone"
+          dataKey="revenue"
+          stackId="1"
+          stroke="#10b981"
+          fill="#10b981"
+          fillOpacity={0.6}
+          name="Revenue"
+        />
+        <Area
+          type="monotone"
+          dataKey="expenses"
+          stackId="2"
+          stroke="#ef4444"
+          fill="#ef4444"
+          fillOpacity={0.6}
+          name="Expenses"
+        />
+      </RechartsAreaChart>
+    </ResponsiveContainer>
   );
 }

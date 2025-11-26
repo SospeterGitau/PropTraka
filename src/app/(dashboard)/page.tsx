@@ -4,6 +4,8 @@ import { useDataContext } from '@/context/data-context';
 import { useUser } from '@/firebase';
 import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, DollarSign } from 'lucide-react';
 import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -40,13 +42,11 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Header */}
-      <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+      <PageHeader title="Dashboard">
+        <p className="text-sm text-muted-foreground hidden sm:block">
             Welcome back, {user?.displayName || user?.email || 'User'}!
-          </p>
-      </div>
+        </p>
+      </PageHeader>
 
       {/* Main Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">

@@ -13,8 +13,6 @@ interface DataContextValue {
   updateSettings: (newSettings: Partial<UserSettings>) => Promise<void>;
   isLoading: boolean;
   properties: Property[];
-  revenue: any[];
-  expenses: any[];
   subscription: Subscription | null;
   refreshData: () => Promise<void>;
 }
@@ -40,8 +38,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [revenue, setRevenue] = useState<any[]>([]);
-  const [expenses, setExpenses] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -57,7 +53,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
-      // Load settings
       try {
         const settingsRef = doc(firestore, 'userSettings', user.uid);
         const settingsSnap = await getDoc(settingsRef);
@@ -73,7 +68,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setSettings(defaultSettings);
       }
 
-      // Load properties
       try {
         const propertiesQuery = query(
           collection(firestore, 'properties'),
@@ -90,41 +84,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setProperties([]);
       }
 
-      // Load revenue
-      try {
-        const revenueQuery = query(
-          collection(firestore, 'revenue'),
-          where('ownerId', '==', user.uid)
-        );
-        const revenueSnap = await getDocs(revenueQuery);
-        const revenueData = revenueSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setRevenue(revenueData);
-      } catch (error: any) {
-        console.log('No revenue found');
-        setRevenue([]);
-      }
-
-      // Load expenses
-      try {
-        const expensesQuery = query(
-          collection(firestore, 'expenses'),
-          where('ownerId', '==', user.uid)
-        );
-        const expensesSnap = await getDocs(expensesQuery);
-        const expensesData = expensesSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setExpenses(expensesData);
-      } catch (error: any) {
-        console.log('No expenses found');
-        setExpenses([]);
-      }
-
-      // Load subscription
       try {
         const subscriptionRef = doc(firestore, 'subscriptions', user.uid);
         const subscriptionSnap = await getDoc(subscriptionRef);
@@ -195,8 +154,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateSettings,
     isLoading,
     properties,
-    revenue,
-    expenses,
     subscription,
     refreshData,
   };
