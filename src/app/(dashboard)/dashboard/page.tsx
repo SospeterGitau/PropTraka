@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -10,10 +9,13 @@ import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { PageHeader } from '@/components/page-header';
+import { formatCurrency } from '@/lib/utils';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
-  const { properties, revenue, expenses, isLoading: dataLoading } = useDataContext();
+  const { properties, revenue, expenses, isLoading: dataLoading, settings } = useDataContext();
+  const { currency, locale } = settings;
 
   // Calculate all metrics
   const metrics = useMemo(() => {
@@ -170,83 +172,98 @@ export default function DashboardPage() {
         </p>
       </PageHeader>
 
-      {/* Row 1: The "Now" View */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">This Month</h3>
-            <Calendar className="h-4 w-4 text-primary" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">KES {metrics.thisMonthRevenue.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">Current month revenue</p>
-        </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Net Income</h3>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </div>
-          <p className={`text-3xl font-bold ${metrics.netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            KES {metrics.netIncome.toLocaleString()}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">Total profit (all-time)</p>
-        </div>
-      </div>
+      {/* Main Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.thisMonthRevenue, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">Current month revenue</p>
+          </CardContent>
+        </Card>
 
-      {/* Row 2: Portfolio Health */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Asset Value</h3>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-2xl font-bold text-foreground">KES {metrics.totalAssetValue.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total property value</p>
-        </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Net Equity</h3>
-            <DollarSign className="h-4 w-4 text-primary" />
-          </div>
-          <p className="text-2xl font-bold text-foreground">KES {metrics.netEquity.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">After mortgages</p>
-        </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Properties</h3>
-            <Building className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-2xl font-bold text-foreground">{metrics.totalProperties}</p>
-          <p className="text-xs text-muted-foreground mt-1">{metrics.totalUnits} total units</p>
-        </div>
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Occupancy</h3>
-            <Percent className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <p className="text-2xl font-bold text-foreground">{metrics.occupancyRate.toFixed(0)}%</p>
-          <p className="text-xs text-muted-foreground mt-1">{metrics.tenanciesCount} active tenants</p>
-        </div>
-      </div>
-      
-      {/* Row 3: Historical Totals */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Total Revenue</h3>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${metrics.netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(metrics.netIncome, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">Total profit (all-time)</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">KES {metrics.totalRevenue.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">All-time total</p>
-        </div>
-
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-muted-foreground">Total Expenses</h3>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalRevenue, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">All-time total</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
             <TrendingDown className="h-4 w-4 text-red-500" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">KES {metrics.totalExpenses.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground mt-1">All-time total</p>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalExpenses, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">All-time total</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Secondary Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Asset Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalAssetValue, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">Total property value</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Net Equity</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.netEquity, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">After mortgages</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Properties</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.totalProperties}</div>
+            <p className="text-xs text-muted-foreground">{metrics.totalUnits} total units</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Occupancy</CardTitle>
+            <Percent className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.occupancyRate.toFixed(0)}%</div>
+            <p className="text-xs text-muted-foreground">{metrics.tenanciesCount} active tenants</p>
+          </CardContent>
+        </Card>
       </div>
 
 
@@ -348,4 +365,5 @@ export default function DashboardPage() {
   );
 }
 
+    
     
