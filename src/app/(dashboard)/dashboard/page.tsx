@@ -77,10 +77,10 @@ export default function DashboardPage() {
   
         if (amountOwed <= 0) return null;
         
-        return { tenant: tenancy.tenant };
-    }).filter(Boolean);
+        return { tenant: tenancy.tenant, amountOwed };
+    }).filter((a): a is NonNullable<typeof a> => a !== null);
 
-    const arrearsCount = arrearsByTenancy.length;
+    const totalArrearsAmount = arrearsByTenancy.reduce((sum, arrear) => sum + arrear.amountOwed, 0);
 
     return {
       totalProperties,
@@ -93,7 +93,7 @@ export default function DashboardPage() {
       tenanciesCount,
       occupancyRate,
       thisMonthRevenue,
-      arrearsCount,
+      totalArrearsAmount,
       totalUnits
     };
   }, [properties, revenue, expenses]);
@@ -219,9 +219,9 @@ export default function DashboardPage() {
         <KpiCard
           icon={AlertCircle}
           title="Arrears"
-          value={metrics.arrearsCount}
+          value={metrics.totalArrearsAmount}
           description="Overdue payments"
-          variant={metrics.arrearsCount > 0 ? 'destructive' : 'default'}
+          variant={metrics.totalArrearsAmount > 0 ? 'destructive' : 'default'}
         />
         <KpiCard
           icon={TrendingDown}
@@ -323,12 +323,12 @@ export default function DashboardPage() {
             Requires Attention
           </h3>
           <div className="space-y-3">
-            {metrics.arrearsCount > 0 ? (
+            {metrics.totalArrearsAmount > 0 ? (
               <div className="flex items-start gap-2 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-md">
                 <AlertCircle className="h-4 w-4 text-orange-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Overdue Payments</p>
-                  <p className="text-xs text-muted-foreground">{metrics.arrearsCount} tenants with arrears</p>
+                  <p className="text-xs text-muted-foreground">{formatCurrency(metrics.totalArrearsAmount, locale, currency)} in total arrears</p>
                 </div>
               </div>
             ) : (
@@ -368,5 +368,7 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
 
     
