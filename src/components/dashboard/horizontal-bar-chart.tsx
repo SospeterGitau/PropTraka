@@ -8,8 +8,7 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer, 
-  Cell,
-  LabelList
+  Cell
 } from 'recharts';
 
 interface DataPoint {
@@ -17,7 +16,7 @@ interface DataPoint {
   profit: number;
 }
 
-interface BarChartProps {
+interface HorizontalBarChartProps {
   data: DataPoint[];
 }
 
@@ -26,7 +25,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const value = payload[0].value;
     return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+      <div className="bg-card border border-border rounded-lg p-3 shadow-lg max-w-xs">
         <p className="text-sm font-semibold mb-1">{payload[0].payload.name}</p>
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">Profit:</span>
@@ -40,45 +39,23 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export function BarChart({ data }: BarChartProps) {
+export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={Math.max(data.length * 60, 200)}>
       <RechartsBarChart 
         data={data}
-        margin={{ top: 20, right: 10, left: 0, bottom: 60 }}
+        layout="vertical"
+        margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
       >
-        <defs>
-          {/* Gradient for positive bars */}
-          <linearGradient id="positiveBar" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.9}/>
-            <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.7}/>
-          </linearGradient>
-          {/* Gradient for negative bars */}
-          <linearGradient id="negativeBar" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.9}/>
-            <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.7}/>
-          </linearGradient>
-        </defs>
-        
         <CartesianGrid 
           strokeDasharray="3 3" 
           stroke="hsl(var(--border))"
           opacity={0.3}
+          horizontal={false}
         />
         
         <XAxis 
-          dataKey="name" 
-          stroke="hsl(var(--muted-foreground))"
-          fontSize={11}
-          tickLine={false}
-          axisLine={false}
-          angle={-45}
-          textAnchor="end"
-          height={80}
-          interval={0}
-        />
-        
-        <YAxis 
+          type="number"
           stroke="hsl(var(--muted-foreground))"
           fontSize={12}
           tickLine={false}
@@ -86,17 +63,28 @@ export function BarChart({ data }: BarChartProps) {
           tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
         />
         
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--accent))' }} />
+        <YAxis 
+          dataKey="name"
+          type="category"
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={11}
+          tickLine={false}
+          axisLine={false}
+          width={150}
+          tick={{ fill: 'hsl(var(--foreground))' }}
+        />
+        
+        <Tooltip content={<CustomTooltip />} />
         
         <Bar 
           dataKey="profit" 
-          radius={[8, 8, 0, 0]}
+          radius={[0, 4, 4, 0]}
           animationDuration={1000}
         >
           {data.map((entry, index) => (
             <Cell 
               key={`cell-${index}`} 
-              fill={entry.profit >= 0 ? 'url(#positiveBar)' : 'url(#negativeBar)'}
+              fill={entry.profit >= 0 ? '#10b981' : '#ef4444'}
             />
           ))}
         </Bar>

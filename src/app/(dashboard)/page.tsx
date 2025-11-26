@@ -6,10 +6,14 @@ import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, Dollar
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
-  const { properties, revenue, expenses, isLoading: dataLoading } = useDataContext();
+  const { properties, revenue, expenses, isLoading: dataLoading, settings } = useDataContext();
+  const { locale, currency } = settings;
 
   if (authLoading || dataLoading) {
     return (
@@ -50,87 +54,103 @@ export default function DashboardPage() {
 
       {/* Main Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Properties</h3>
-            <Building className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">{totalProperties}</p>
-          <p className="text-sm text-muted-foreground">Total properties</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Properties</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalProperties}</div>
+            <p className="text-xs text-muted-foreground">Total properties</p>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Tenants</h3>
-            <Users className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">{tenanciesCount}</p>
-          <p className="text-sm text-muted-foreground">Active tenancies</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tenants</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{tenanciesCount}</div>
+            <p className="text-xs text-muted-foreground">Active tenancies</p>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Revenue</h3>
-            <TrendingUp className="h-5 w-5 text-green-500" />
-          </div>
-          <p className="text-3xl font-bold text-foreground">KES {totalRevenue.toLocaleString()}</p>
-          <p className="text-sm text-muted-foreground">Total revenue all-time</p>
-        </div>
-
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Expenses</h3>
-            <TrendingDown className="h-5 w-5 text-red-500" />
-          </div>
-           <p className="text-3xl font-bold text-foreground">KES {totalExpenses.toLocaleString()}</p>
-          <p className="text-sm text-muted-foreground">Total expenses all-time</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalRevenue, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">All-time total</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalExpenses, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">All-time total</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Secondary Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Asset Value</h3>
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <p className="text-2xl font-bold text-foreground">KES {totalAssetValue.toLocaleString()}</p>
-          <p className="text-sm text-muted-foreground">Total property value</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Asset Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalAssetValue, locale, currency)}</div>
+            <p className="text-xs text-muted-foreground">Total property value</p>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Net Income</h3>
-            <TrendingUp className="h-5 w-5 text-primary" />
-          </div>
-          <p className={`text-2xl font-bold ${netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            KES {netIncome.toLocaleString()}
-          </p>
-          <p className="text-sm text-muted-foreground">Revenue - Expenses</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className={cn("text-2xl font-bold", netIncome >= 0 ? 'text-accent-foreground' : 'text-destructive')}>
+              {formatCurrency(netIncome, locale, currency)}
+            </div>
+            <p className="text-xs text-muted-foreground">Revenue - Expenses</p>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">Arrears</h3>
-            <AlertCircle className="h-5 w-5 text-orange-500" />
-          </div>
-          <p className="text-2xl font-bold text-foreground">{arrearsCount}</p>
-          <p className="text-sm text-muted-foreground">Overdue payments</p>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Arrears</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{arrearsCount}</div>
+            <p className="text-xs text-muted-foreground">Overdue payments</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Empty State */}
       {totalProperties === 0 && !dataLoading && (
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-xl font-semibold mb-2">No properties yet</h3>
-          <p className="text-muted-foreground mb-4">
-            Get started by adding your first property
-          </p>
-          <Button asChild>
-            <Link href="/properties">Add Property</Link>
-          </Button>
-        </div>
+        <Card className="text-center p-8">
+          <CardContent>
+            <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-semibold mb-2">No properties yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Get started by adding your first property
+            </p>
+            <Button asChild>
+              <Link href="/properties">Add Property</Link>
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </>
   );

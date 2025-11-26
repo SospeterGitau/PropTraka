@@ -129,3 +129,9 @@ body {
   --chart-3: 217 91 60; /* Blue for additional data */
   --chart-4: 281 90 61; /* Purple for additional data */
   --chart-5: 48 95 53; /* Orange for additional data */
+}
+
+[data-color-scheme="dark"] {
+  --chart-1: 173 80 40; /* Lighter teal for dark mode */
+  --chart-2: 0 72 51; /* Lighter red for dark mode */
+}

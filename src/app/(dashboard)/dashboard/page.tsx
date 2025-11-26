@@ -1,13 +1,13 @@
 'use client';
 
+import { useEffect, useState, useMemo } from 'react';
 import { useDataContext } from '@/context/data-context';
 import { useUser } from '@/firebase';
 import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, DollarSign, Percent, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/dashboard/area-chart';
-import { BarChart } from '@/components/dashboard/bar-chart';
-import { useMemo } from 'react';
+import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -18,7 +18,6 @@ export default function DashboardPage() {
     const totalProperties = properties.length;
     const totalAssetValue = properties.reduce((sum, prop) => sum + (prop.currentValue || 0), 0);
     
-    // Calculate mortgage debt (if properties have mortgage data)
     const totalMortgageDebt = properties.reduce((sum, prop) => sum + (prop.outstandingMortgage || 0), 0);
     const netEquity = totalAssetValue - totalMortgageDebt;
     
@@ -26,7 +25,6 @@ export default function DashboardPage() {
     const totalExpenses = expenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
     const netIncome = totalRevenue - totalExpenses;
 
-    // Calculate tenancies and occupancy
     const tenancies = Object.values(
       revenue.reduce((acc, tx) => {
         if (tx.tenancyId) {
@@ -39,7 +37,6 @@ export default function DashboardPage() {
     const totalUnits = properties.reduce((sum, prop) => sum + (prop.numberOfUnits || 1), 0);
     const occupancyRate = totalUnits > 0 ? (tenanciesCount / totalUnits) * 100 : 0;
 
-    // This month's revenue
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -50,7 +47,7 @@ export default function DashboardPage() {
       })
       .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
 
-    const arrearsCount = 0; // TODO: Calculate actual arrears
+    const arrearsCount = 0;
 
     return {
       totalProperties,
@@ -68,11 +65,9 @@ export default function DashboardPage() {
     };
   }, [properties, revenue, expenses]);
 
-  // Prepare chart data - Last 6 months income vs expenses
   const chartData = useMemo(() => {
     const monthsData: Record<string, { month: string; revenue: number; expenses: number }> = {};
     
-    // Last 6 months
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -84,7 +79,6 @@ export default function DashboardPage() {
       };
     }
 
-    // Aggregate revenue
     revenue.forEach(r => {
       const date = r.paymentDate?.toDate ? r.paymentDate.toDate() : new Date(r.paymentDate);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -93,7 +87,6 @@ export default function DashboardPage() {
       }
     });
 
-    // Aggregate expenses
     expenses.forEach(e => {
       const date = e.date?.toDate ? e.date.toDate() : new Date(e.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -105,7 +98,7 @@ export default function DashboardPage() {
     return Object.values(monthsData);
   }, [revenue, expenses]);
 
-  // Profit per property
+  // Profit per property - USE ADDRESSES
   const propertyProfits = useMemo(() => {
     return properties.map(prop => {
       const propRevenue = revenue
@@ -116,14 +109,18 @@ export default function DashboardPage() {
         .filter(e => e.propertyId === prop.id)
         .reduce((sum, e) => sum + (e.amount || 0), 0);
 
+      // Use street address + city as display name
+      const displayName = prop.streetAddress 
+        ? `${prop.streetAddress}${prop.city ? ', ' + prop.city : ''}` 
+        : (prop.name || 'Unnamed Property');
+
       return {
-        name: prop.name || 'Unnamed Property',
+        name: displayName,
         profit: propRevenue - propExpenses
       };
     }).sort((a, b) => b.profit - a.profit);
   }, [properties, revenue, expenses]);
 
-  // Recent activity (last 5 transactions)
   const recentActivity = useMemo(() => {
     const activities: Array<{ type: string; description: string; amount: number; date: Date }> = [];
 
@@ -163,7 +160,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
@@ -171,7 +167,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Hero Metrics - Always Visible */}
+      {/* Hero Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-between mb-2">
@@ -253,24 +249,21 @@ export default function DashboardPage() {
 
       {/* Charts Section */}
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
-        {/* Income vs Expenses Trend */}
         <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4">Income vs Expenses</h3>
           <p className="text-sm text-muted-foreground mb-4">Last 6 months trend</p>
           <AreaChart data={chartData} />
         </div>
 
-        {/* Profit Per Property */}
         <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4">Profit Per Property</h3>
           <p className="text-sm text-muted-foreground mb-4">Net income by property</p>
-          <BarChart data={propertyProfits} />
+          <HorizontalBarChart data={propertyProfits} />
         </div>
       </div>
 
       {/* Insights Section */}
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
-        {/* Recent Activity */}
         <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
           <div className="space-y-3">
@@ -300,7 +293,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Requires Attention */}
         <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-orange-500" />
@@ -318,7 +310,7 @@ export default function DashboardPage() {
             ) : (
               <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-md">
                 <TrendingUp className="h-4 w-4 text-green-500" />
-                <p className="text-sm font-medium">All payments up to date! 🎉</p>
+                <p className="text-sm font-medium">All payments up to date! ��</p>
               </div>
             )}
             
@@ -337,7 +329,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Empty State */}
       {metrics.totalProperties === 0 && (
         <div className="rounded-lg border bg-card p-8 text-center">
           <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />

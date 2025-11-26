@@ -1,10 +1,21 @@
-
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Building, TrendingUp, Wrench, Plus, X, Home, FileText } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  Building, 
+  TrendingUp, 
+  Wrench, 
+  Plus, 
+  X, 
+  Home, 
+  FileText,
+  Menu as MenuIcon,
+  Building2,
+  LogOut
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import {
@@ -13,6 +24,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/firebase';
 
 interface DashboardNavigationProps {
   children: React.ReactNode;
@@ -20,6 +33,7 @@ interface DashboardNavigationProps {
 
 export function DashboardNavigation({ children }: DashboardNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
   const navItems = [
@@ -35,73 +49,120 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
     { href: '/expenses/add', label: 'New Expense', icon: TrendingUp }
   ];
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Header - Uber Style */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center px-4">
+          {/* Hamburger button - navigates to /menu */}
+          <Link
+            href="/menu"
+            className="mr-4 inline-flex items-center justify-center rounded-md p-2 hover:bg-accent hover:text-accent-foreground"
+          >
+            <MenuIcon className="h-6 w-6" />
+            <span className="sr-only">Menu</span>
+          </Link>
+          
+          <div className="flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" />
+            <span className="font-bold text-lg">PropTraka</span>
+          </div>
+
+          <div className="ml-auto">
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 px-3"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 pb-24">
         {children}
       </main>
 
-      {/* Mobile navigation bar */}
+      {/* Mobile navigation bar with FAB - Uber Style */}
       <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-border bg-background/95 backdrop-blur-sm">
         <div className="flex h-full items-center justify-center">
           <div className="flex h-full w-full max-w-md items-center justify-around">
             {navItems.slice(0, 2).map((item) => {
               const isActive = (pathname === '/' && item.href === '/dashboard') || (item.href !== '/' && pathname.startsWith(item.href));
+              const Icon = item.icon;
               return (
                 <Link
+                  key={item.href}
                   href={item.href}
-                  key={item.label}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 text-sm font-medium transition-colors h-full w-16",
-                    isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+                    'flex flex-col items-center justify-center gap-1 px-3 py-2 text-xs transition-colors',
+                    isActive
+                      ? 'text-primary font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <item.icon className="h-6 w-6" />
-                  <span className="text-xs">{item.label}</span>
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
-            
-            {/* Central Add Button */}
+
+            {/* FAB - Floating Action Button */}
             <DropdownMenu open={isAddMenuOpen} onOpenChange={setIsAddMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <Button
                   size="icon"
-                  className={cn(
-                    "rounded-full w-16 h-16 -mt-8 shadow-xl flex items-center justify-center transition-transform duration-300",
-                    isAddMenuOpen ? "scale-105 rotate-45 bg-destructive" : "scale-100"
-                  )}
+                  className="h-14 w-14 rounded-full shadow-lg -translate-y-6"
                 >
                   {isAddMenuOpen ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
-                  <span className="sr-only">Add Item</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" side="top" className="w-56 mb-4">
-                 {addMenuItems.map(item => (
+              <DropdownMenuContent align="center" side="top" className="w-48 mb-2">
+                {addMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
                     <DropdownMenuItem key={item.href} asChild>
-                        <Link href={item.href}>
-                            <item.icon className="mr-2 h-4 w-4" />
-                            {item.label}
-                        </Link>
+                      <Link
+                        href={item.href}
+                        className="flex items-center gap-2 cursor-pointer"
+                        onClick={() => setIsAddMenuOpen(false)}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
                     </DropdownMenuItem>
-                 ))}
+                  );
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {navItems.slice(2).map((item) => {
-               const isActive = (pathname === '/' && item.href === '/dashboard') || (item.href !== '/' && pathname.startsWith(item.href));
-               return (
+            {navItems.slice(2, 4).map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
                 <Link
+                  key={item.href}
                   href={item.href}
-                  key={item.label}
                   className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 text-sm font-medium transition-colors h-full w-16",
-                    isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
+                    'flex flex-col items-center justify-center gap-1 px-3 py-2 text-xs transition-colors',
+                    isActive
+                      ? 'text-primary font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <item.icon className="h-6 w-6" />
-                  <span className="text-xs">{item.label}</span>
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
                 </Link>
               );
             })}

@@ -1,0 +1,36 @@
+// In the propertyProfits useMemo, change from:
+  return properties.map(prop => {
+    const propRevenue = revenue
+      .filter(r => r.propertyId === prop.id)
+      .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
+    
+    const propExpenses = expenses
+      .filter(e => e.propertyId === prop.id)
+      .reduce((sum, e) => sum + (e.amount || 0), 0);
+
+    return {
+      name: prop.name || 'Unnamed Property',  // ❌ WRONG
+      profit: propRevenue - propExpenses
+    };
+  }).sort((a, b) => b.profit - a.profit);
+
+// To:
+  return properties.map(prop => {
+    const propRevenue = revenue
+      .filter(r => r.propertyId === prop.id)
+      .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
+    
+    const propExpenses = expenses
+      .filter(e => e.propertyId === prop.id)
+      .reduce((sum, e) => sum + (e.amount || 0), 0);
+
+    // Use address as name, fallback to property name
+    const displayName = prop.streetAddress 
+      ? `${prop.streetAddress}${prop.city ? ', ' + prop.city : ''}` 
+      : (prop.name || 'Unnamed Property');
+
+    return {
+      name: displayName,  // ✅ CORRECT
+      profit: propRevenue - propExpenses
+    };
+  }).sort((a, b) => b.profit - a.profit);
