@@ -10,6 +10,9 @@ import {
   ResponsiveContainer, 
   Cell
 } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
+import { useDataContext } from '@/context/data-context';
+
 
 interface DataPoint {
   name: string;
@@ -22,6 +25,9 @@ interface HorizontalBarChartProps {
 
 // Custom Tooltip
 const CustomTooltip = ({ active, payload }: any) => {
+  const { settings } = useDataContext();
+  const { currency, locale } = settings;
+
   if (active && payload && payload.length) {
     const value = payload[0].value;
     return (
@@ -30,7 +36,7 @@ const CustomTooltip = ({ active, payload }: any) => {
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground text-sm">Profit:</span>
           <span className={`font-bold ${value >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            KES {value.toLocaleString()}
+            {formatCurrency(value, locale, currency)}
           </span>
         </div>
       </div>
@@ -84,7 +90,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           {data.map((entry, index) => (
             <Cell 
               key={`cell-${index}`} 
-              fill={entry.profit >= 0 ? '#10b981' : '#ef4444'}
+              fill={entry.profit >= 0 ? 'hsl(var(--chart-1))' : 'hsl(var(--chart-2))'}
             />
           ))}
         </Bar>
@@ -92,3 +98,5 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
     </ResponsiveContainer>
   );
 }
+
+    

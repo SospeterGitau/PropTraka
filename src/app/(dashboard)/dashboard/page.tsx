@@ -303,7 +303,7 @@ export default function DashboardPage() {
                   <span className={`text-sm font-semibold ${
                     activity.type === 'revenue' ? 'text-green-500' : 'text-red-500'
                   }`}>
-                    {activity.type === 'revenue' ? '+' : '-'}KES {activity.amount.toLocaleString()}
+                    {activity.type === 'revenue' ? '+' : '-'}{formatCurrency(activity.amount, locale, currency)}
                   </span>
                 </div>
               ))
@@ -365,5 +365,4 @@ export default function DashboardPage() {
   );
 }
 
-    
     

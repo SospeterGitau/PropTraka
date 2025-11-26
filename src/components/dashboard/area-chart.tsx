@@ -1,4 +1,3 @@
-
 'use client';
 
 import { 
@@ -11,6 +10,8 @@ import {
   ResponsiveContainer,
   Legend 
 } from 'recharts';
+import { formatCurrency } from '@/lib/utils';
+import { useDataContext } from '@/context/data-context';
 
 interface DataPoint {
   month: string;
@@ -24,6 +25,9 @@ interface AreaChartProps {
 
 // Custom Tooltip
 const CustomTooltip = ({ active, payload, label }: any) => {
+  const { settings } = useDataContext();
+  const { currency, locale } = settings;
+
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
@@ -36,7 +40,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             />
             <span className="text-muted-foreground">{entry.name}:</span>
             <span className="font-semibold">
-              KES {entry.value.toLocaleString()}
+              {formatCurrency(entry.value, locale, currency)}
             </span>
           </div>
         ))}
@@ -48,7 +52,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 ? 'text-green-500' 
                 : 'text-red-500'
             }`}>
-              KES {((payload[0]?.value || 0) - (payload[1]?.value || 0)).toLocaleString()}
+              {formatCurrency((payload[0]?.value || 0) - (payload[1]?.value || 0), locale, currency)}
             </span>
           </div>
         </div>
@@ -59,6 +63,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function AreaChart({ data }: AreaChartProps) {
+  const { settings } = useDataContext();
+  const { currency, locale } = settings;
   return (
     <ResponsiveContainer width="100%" height={300}>
       <RechartsAreaChart 
@@ -132,3 +138,5 @@ export function AreaChart({ data }: AreaChartProps) {
     </ResponsiveContainer>
   );
 }
+
+    
