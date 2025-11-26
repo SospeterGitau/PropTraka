@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -8,6 +9,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
+import { PageHeader } from '@/components/page-header';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -18,7 +20,7 @@ export default function DashboardPage() {
     const totalProperties = properties.length;
     const totalAssetValue = properties.reduce((sum, prop) => sum + (prop.currentValue || 0), 0);
     
-    const totalMortgageDebt = properties.reduce((sum, prop) => sum + (prop.outstandingMortgage || 0), 0);
+    const totalMortgageDebt = properties.reduce((sum, prop) => sum + (prop.mortgage || 0), 0);
     const netEquity = totalAssetValue - totalMortgageDebt;
     
     const totalRevenue = revenue.reduce((sum, doc) => sum + (doc.amountPaid || 0), 0);
@@ -34,7 +36,7 @@ export default function DashboardPage() {
       }, {} as Record<string, any>)
     );
     const tenanciesCount = tenancies.length;
-    const totalUnits = properties.reduce((sum, prop) => sum + (prop.numberOfUnits || 1), 0);
+    const totalUnits = properties.reduce((sum, prop) => sum + (prop.bedrooms || 1), 0);
     const occupancyRate = totalUnits > 0 ? (tenanciesCount / totalUnits) * 100 : 0;
 
     const now = new Date();
@@ -42,7 +44,7 @@ export default function DashboardPage() {
     const currentYear = now.getFullYear();
     const thisMonthRevenue = revenue
       .filter(r => {
-        const date = r.paymentDate?.toDate ? r.paymentDate.toDate() : new Date(r.paymentDate);
+        const date = r.date ? new Date(r.date) : new Date();
         return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
       })
       .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
@@ -80,7 +82,7 @@ export default function DashboardPage() {
     }
 
     revenue.forEach(r => {
-      const date = r.paymentDate?.toDate ? r.paymentDate.toDate() : new Date(r.paymentDate);
+      const date = new Date(r.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (monthsData[monthKey]) {
         monthsData[monthKey].revenue += r.amountPaid || 0;
@@ -88,7 +90,7 @@ export default function DashboardPage() {
     });
 
     expenses.forEach(e => {
-      const date = e.date?.toDate ? e.date.toDate() : new Date(e.date);
+      const date = new Date(e.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (monthsData[monthKey]) {
         monthsData[monthKey].expenses += e.amount || 0;
@@ -109,10 +111,10 @@ export default function DashboardPage() {
         .filter(e => e.propertyId === prop.id)
         .reduce((sum, e) => sum + (e.amount || 0), 0);
 
-      // Use street address + city as display name
-      const displayName = prop.streetAddress 
-        ? `${prop.streetAddress}${prop.city ? ', ' + prop.city : ''}` 
-        : (prop.name || 'Unnamed Property');
+      // Use addressLine1 + city as display name
+      const displayName = prop.addressLine1 
+        ? `${prop.addressLine1}${prop.city ? ', ' + prop.city : ''}` 
+        : 'Unnamed Property';
 
       return {
         name: displayName,
@@ -125,12 +127,14 @@ export default function DashboardPage() {
     const activities: Array<{ type: string; description: string; amount: number; date: Date }> = [];
 
     revenue.forEach(r => {
-      activities.push({
-        type: 'revenue',
-        description: `Payment received: ${r.propertyName || 'Property'}`,
-        amount: r.amountPaid || 0,
-        date: r.paymentDate?.toDate ? r.paymentDate.toDate() : new Date(r.paymentDate)
-      });
+      if (r.amountPaid && r.amountPaid > 0) {
+        activities.push({
+          type: 'revenue',
+          description: `Payment from ${r.tenant || 'Tenant'}`,
+          amount: r.amountPaid || 0,
+          date: new Date(r.date)
+        });
+      }
     });
 
     expenses.forEach(e => {
@@ -138,7 +142,7 @@ export default function DashboardPage() {
         type: 'expense',
         description: `Expense: ${e.category || 'Uncategorized'}`,
         amount: e.amount || 0,
-        date: e.date?.toDate ? e.date.toDate() : new Date(e.date)
+        date: new Date(e.date)
       });
     });
 
@@ -160,12 +164,11 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Welcome back, {user?.displayName || user?.email || 'User'}!
+      <PageHeader title="Dashboard">
+        <p className="text-sm text-muted-foreground hidden sm:block">
+            Welcome back, {user?.displayName || user?.email || 'User'}!
         </p>
-      </div>
+      </PageHeader>
 
       {/* Hero Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -310,7 +313,7 @@ export default function DashboardPage() {
             ) : (
               <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-md">
                 <TrendingUp className="h-4 w-4 text-green-500" />
-                <p className="text-sm font-medium">All payments up to date! ��</p>
+                <p className="text-sm font-medium">All payments up to date! 🥳</p>
               </div>
             )}
             
