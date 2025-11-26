@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -12,6 +13,7 @@ import { PageHeader } from '@/components/page-header';
 import { formatCurrency } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { CurrencyIcon } from '@/components/currency-icon';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -39,7 +41,7 @@ export default function DashboardPage() {
       }, {} as Record<string, any>)
     );
     const tenanciesCount = tenancies.length;
-    const totalUnits = properties.reduce((sum, prop) => sum + (prop.bedrooms || 1), 0);
+    const totalUnits = properties.length;
     const occupancyRate = totalUnits > 0 ? (tenanciesCount / totalUnits) * 100 : 0;
 
     const now = new Date();
@@ -192,7 +194,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${metrics.netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>{formatCurrency(metrics.netIncome, locale, currency)}</div>
+            <div className={cn("text-2xl font-bold", metrics.netIncome >= 0 ? 'text-accent-foreground' : 'text-destructive')}>{formatCurrency(metrics.netIncome, locale, currency)}</div>
             <p className="text-xs text-muted-foreground">Total profit (all-time)</p>
           </CardContent>
         </Card>
@@ -365,5 +367,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
