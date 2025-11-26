@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 import { useDataContext } from '@/context/data-context';
 import { useUser } from '@/firebase';
-import { Building, TrendingUp, TrendingDown, Loader2, Calendar, Percent } from 'lucide-react';
+import { Building, TrendingUp, TrendingDown, Loader2, Calendar, Percent, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { CurrencyIcon } from '@/components/currency-icon';
@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
-import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { startOfToday, isBefore } from 'date-fns';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -55,7 +55,13 @@ export default function DashboardPage() {
       })
       .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
 
-    const arrearsCount = 0;
+    const arrearsByTenancy = tenancies.filter(tenancy => {
+      const dueTransactions = (tenancy.transactions || []).filter((tx: any) => !isBefore(startOfToday(), new Date(tx.date)));
+      const totalDueToDate = dueTransactions.reduce((sum: number, tx: any) => sum + tx.rent + ((tx.serviceCharges || []).reduce((scSum: number, sc: any) => scSum + sc.amount, 0)) + (tx.deposit || 0), 0);
+      const totalPaid = (tenancy.transactions || []).reduce((sum: number, tx: any) => sum + (tx.amountPaid || 0), 0);
+      return (totalDueToDate - totalPaid) > 0.01;
+    });
+    const arrearsCount = arrearsByTenancy.length;
 
     return {
       totalProperties,
@@ -153,7 +159,7 @@ export default function DashboardPage() {
     });
 
     return activities
-      .sort((a, b) => b.date.getTime() - b.date.getTime())
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
       .slice(0, 5);
   }, [revenue, expenses]);
 
@@ -188,14 +194,15 @@ export default function DashboardPage() {
           icon={TrendingUp}
           title="Net Income"
           value={metrics.netIncome}
-          description="Total profit (all-time)"
+          description="Revenue - Expenses"
           variant={metrics.netIncome >= 0 ? 'default' : 'destructive'}
         />
         <KpiCard
-          icon={TrendingUp}
-          title="Total Revenue"
-          value={metrics.totalRevenue}
-          description="All-time total"
+          icon={AlertCircle}
+          title="Arrears"
+          value={metrics.arrearsCount}
+          description="Overdue payments"
+          variant={metrics.arrearsCount > 0 ? 'destructive' : 'default'}
         />
         <KpiCard
           icon={TrendingDown}
@@ -342,3 +349,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
