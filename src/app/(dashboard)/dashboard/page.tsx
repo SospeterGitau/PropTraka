@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useDataContext } from '@/context/data-context';
 import { useUser } from '@/firebase';
-import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, DollarSign, Percent, Calendar } from 'lucide-react';
+import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, Percent, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AreaChart } from '@/components/dashboard/area-chart';
@@ -11,6 +11,7 @@ import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart'
 import { PageHeader } from '@/components/page-header';
 import { formatCurrency } from '@/lib/utils';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { CurrencyIcon } from '@/components/currency-icon';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -224,7 +225,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Asset Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(metrics.totalAssetValue, locale, currency)}</div>
@@ -235,7 +236,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Net Equity</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(metrics.netEquity, locale, currency)}</div>
