@@ -1,19 +1,20 @@
 
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useDataContext } from '@/context/data-context';
 import { useUser } from '@/firebase';
-import { Building, Users, TrendingUp, TrendingDown, Loader2, AlertCircle, Percent, Calendar } from 'lucide-react';
-import Link from 'next/link';
+import { Building, TrendingUp, TrendingDown, Loader2, Calendar, Percent } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
+import { KpiCard } from '@/components/dashboard/kpi-card';
+import { CurrencyIcon } from '@/components/currency-icon';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
-import { PageHeader } from '@/components/page-header';
+import { AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { CurrencyIcon } from '@/components/currency-icon';
-import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { user, isAuthLoading: authLoading } = useUser();
@@ -152,7 +153,7 @@ export default function DashboardPage() {
     });
 
     return activities
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .sort((a, b) => b.date.getTime() - b.date.getTime())
       .slice(0, 5);
   }, [revenue, expenses]);
 
@@ -177,74 +178,48 @@ export default function DashboardPage() {
 
       {/* Main Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.thisMonthRevenue, locale, currency)}</div>
-            <p className="text-xs text-muted-foreground">Current month revenue</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Income</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={cn("text-2xl font-bold", metrics.netIncome >= 0 ? 'text-accent-foreground' : 'text-destructive')}>{formatCurrency(metrics.netIncome, locale, currency)}</div>
-            <p className="text-xs text-muted-foreground">Total profit (all-time)</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.totalRevenue, locale, currency)}</div>
-            <p className="text-xs text-muted-foreground">All-time total</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.totalExpenses, locale, currency)}</div>
-            <p className="text-xs text-muted-foreground">All-time total</p>
-          </CardContent>
-        </Card>
+        <KpiCard
+          icon={Calendar}
+          title="This Month"
+          value={metrics.thisMonthRevenue}
+          description="Current month revenue"
+        />
+        <KpiCard
+          icon={TrendingUp}
+          title="Net Income"
+          value={metrics.netIncome}
+          description="Total profit (all-time)"
+          variant={metrics.netIncome >= 0 ? 'default' : 'destructive'}
+        />
+        <KpiCard
+          icon={TrendingUp}
+          title="Total Revenue"
+          value={metrics.totalRevenue}
+          description="All-time total"
+        />
+        <KpiCard
+          icon={TrendingDown}
+          title="Total Expenses"
+          value={metrics.totalExpenses}
+          description="All-time total"
+          variant="destructive"
+        />
       </div>
 
       {/* Secondary Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Asset Value</CardTitle>
-            <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.totalAssetValue, locale, currency)}</div>
-            <p className="text-xs text-muted-foreground">Total property value</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Equity</CardTitle>
-            <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.netEquity, locale, currency)}</div>
-            <p className="text-xs text-muted-foreground">After mortgages</p>
-          </CardContent>
-        </Card>
+         <KpiCard
+          icon={CurrencyIcon}
+          title="Asset Value"
+          value={metrics.totalAssetValue}
+          description="Total property value"
+        />
+        <KpiCard
+          icon={CurrencyIcon}
+          title="Net Equity"
+          value={metrics.netEquity}
+          description="After mortgages"
+        />
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
