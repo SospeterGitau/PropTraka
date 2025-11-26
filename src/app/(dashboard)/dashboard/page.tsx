@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo } from 'react';
@@ -217,18 +216,18 @@ export default function DashboardPage() {
           variant={metrics.netIncome >= 0 ? 'default' : 'destructive'}
         />
         <KpiCard
-          icon={AlertCircle}
-          title="Arrears"
-          value={metrics.totalArrearsAmount}
-          description="Overdue payments"
-          variant={metrics.totalArrearsAmount > 0 ? 'destructive' : 'default'}
-        />
-        <KpiCard
           icon={TrendingDown}
           title="Total Expenses"
           value={metrics.totalExpenses}
           description="All-time total"
           variant="destructive"
+        />
+        <KpiCard
+          icon={AlertCircle}
+          title="Arrears"
+          value={metrics.totalArrearsAmount}
+          description="Overdue payments"
+          variant={metrics.totalArrearsAmount > 0 ? 'destructive' : 'default'}
         />
       </div>
 
@@ -368,7 +367,5 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
 
     
