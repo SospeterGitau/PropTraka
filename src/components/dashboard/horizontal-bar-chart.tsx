@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
-import { ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 
 interface DataPoint {
@@ -35,7 +35,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={Math.max(data.length * 60, 200)}>
+    <ChartContainer config={chartConfig} className="w-full h-full min-h-[200px]">
       <RechartsBarChart 
         data={data}
         layout="vertical"
@@ -54,7 +54,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           fontSize={12}
           tickLine={false}
           axisLine={false}
-          tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+          tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}K`}
         />
         
         <YAxis 
@@ -98,6 +98,6 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           ))}
         </Bar>
       </RechartsBarChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }
