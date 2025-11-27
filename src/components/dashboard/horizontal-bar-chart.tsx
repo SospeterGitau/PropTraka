@@ -1,3 +1,4 @@
+
 'use client';
 
 import { 
@@ -6,12 +7,12 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
   ResponsiveContainer, 
   Cell
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
+import { ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 
 interface DataPoint {
@@ -23,29 +24,16 @@ interface HorizontalBarChartProps {
   data: DataPoint[];
 }
 
-// Custom Tooltip
-const CustomTooltip = ({ active, payload }: any) => {
+export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   const { settings } = useDataContext();
   const { currency, locale } = settings;
 
-  if (active && payload && payload.length) {
-    const value = payload[0].value;
-    return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-lg max-w-xs">
-        <p className="text-sm font-semibold mb-1">{payload[0].payload.name}</p>
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm">Profit:</span>
-          <span className={`font-bold ${value >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {formatCurrency(value, locale, currency)}
-          </span>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
+  const chartConfig = {
+    profit: {
+      label: 'Profit',
+    },
+  };
 
-export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={Math.max(data.length * 60, 200)}>
       <RechartsBarChart 
@@ -80,7 +68,22 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           tick={{ fill: 'hsl(var(--foreground))' }}
         />
         
-        <Tooltip content={<CustomTooltip />} />
+        <ChartTooltip
+          cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1 }}
+          content={
+            <ChartTooltipContent
+              labelKey="name"
+              formatter={(value) => (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Profit:</span>
+                  <span className={`font-bold ${Number(value) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {formatCurrency(Number(value), locale, currency)}
+                  </span>
+                </div>
+              )}
+            />
+          }
+        />
         
         <Bar 
           dataKey="profit" 
@@ -98,5 +101,3 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
     </ResponsiveContainer>
   );
 }
-
-    
