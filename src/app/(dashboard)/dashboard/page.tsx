@@ -271,7 +271,7 @@ export default function DashboardPage() {
 
 
       {/* Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-2 mb-6">
+      <div className="grid gap-6 lg:grid-cols-1 mb-6">
         <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4">Income vs Expenses</h3>
           <p className="text-sm text-muted-foreground mb-4">Last 6 months trend</p>
