@@ -4,11 +4,12 @@
 import { 
   BarChart as RechartsBarChart, 
   Bar, 
-  XAxis, ゼロライン,
+  XAxis, 
   YAxis, 
   CartesianGrid, 
   ResponsiveContainer, 
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
@@ -44,7 +45,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
       <RechartsBarChart 
         data={data}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
       >
         <CartesianGrid 
           strokeDasharray="3 3" 
@@ -70,7 +71,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           fontSize={11}
           tickLine={false}
           axisLine={false}
-          width={150}
+          width={200}
           tick={{ fill: 'hsl(var(--foreground))' }}
         />
         
@@ -90,6 +91,8 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
             />
           }
         />
+        
+        <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={2} />
         
         <Bar 
           dataKey="profit" 
