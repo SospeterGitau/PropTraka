@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 
 interface DataPoint {
   month: string;
@@ -35,7 +35,7 @@ export function AreaChart({ data }: AreaChartProps) {
     },
     expenses: {
       label: "Expenses",
-      color: "hsl(var(--chart-4))",
+      color: "hsl(var(--chart-2))",
     },
   }
 
@@ -84,7 +84,7 @@ export function AreaChart({ data }: AreaChartProps) {
               labelKey="month"
               formatter={(value, name) => (
                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: name === 'revenue' ? 'var(--color-revenue)' : 'var(--color-expenses)' }}/>
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: name === 'revenue' ? chartConfig.revenue.color : chartConfig.expenses.color }}/>
                     <span className="text-muted-foreground capitalize">{name}:</span>
                     <span className="font-semibold">{formatCurrency(Number(value), locale, currency)}</span>
                   </div>
@@ -93,9 +93,7 @@ export function AreaChart({ data }: AreaChartProps) {
           }
         />
         
-        <Legend
-            iconType="square"
-        />
+        <ChartLegend content={<ChartLegendContent />} />
         
         <Area
           type="monotone"

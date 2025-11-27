@@ -4,7 +4,7 @@
 import { 
   BarChart as RechartsBarChart, 
   Bar, 
-  XAxis, 
+  XAxis, ゼロライン,
   YAxis, 
   CartesianGrid, 
   ResponsiveContainer, 
@@ -31,7 +31,12 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   const chartConfig = {
     profit: {
       label: 'Profit',
+      color: 'hsl(var(--chart-1))',
     },
+    loss: {
+      label: 'Loss',
+      color: 'hsl(var(--chart-2))',
+    }
   };
 
   return (
@@ -54,6 +59,7 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           fontSize={12}
           tickLine={false}
           axisLine={false}
+          domain={['dataMin', 'dataMax']}
           tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}K`}
         />
         
