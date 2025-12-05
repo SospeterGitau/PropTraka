@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -237,14 +238,17 @@ export default function DashboardPageContent() {
             <AreaChart data={chartData} />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Profit Per Property (All Time)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HorizontalBarChart data={profitPerProperty} />
-          </CardContent>
-        </Card>
+        
+        {properties.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Profit Per Property (All Time)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <HorizontalBarChart data={profitPerProperty} />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   );
