@@ -34,11 +34,8 @@ export default function DashboardPageContent() {
     
     const totalRevenue = revenue.reduce((sum, doc) => sum + (doc.amountPaid || 0), 0);
     
-    // Corrected logic: Only count expenses if there are properties to associate them with.
-    // This prevents showing expenses for an empty portfolio. General business expenses are not shown on this dashboard.
-    const propertyIds = new Set(properties.map(p => p.id));
-    const relevantExpenses = properties.length > 0 ? expenses.filter(e => e.propertyId && propertyIds.has(e.propertyId)) : [];
-    const totalExpenses = relevantExpenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    // Reverted: Calculate all expenses, regardless of property association.
+    const totalExpenses = expenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
     const netIncome = totalRevenue - totalExpenses;
 
     const tenancies = Object.values(
@@ -182,7 +179,7 @@ export default function DashboardPageContent() {
           description={`${metrics.tenanciesCount} active tenanc(ies)`}
           formatAs="percent"
         />
-
+        
         <KpiCard
           icon={TrendingDown}
           title="Total Expenses"
