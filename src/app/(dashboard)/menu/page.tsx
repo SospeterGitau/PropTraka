@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Mail,
   Shield,
+  Receipt,
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
 const mainNavItems = [
   { href: '/reports', label: 'Reports', icon: LineChart },
   { href: '/arrears', label: 'Arrears', icon: CircleAlert },
+  { href: '/expenses', label: 'Expenses', icon: Receipt },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/contractors', label: 'Contractors', icon: Users },
   { href: '/activity', label: 'Activity', icon: Activity },
