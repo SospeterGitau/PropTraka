@@ -1,5 +1,7 @@
+
 'use client';
 
+import { useMemo } from 'react';
 import { 
   BarChart as RechartsBarChart, 
   Bar, 
