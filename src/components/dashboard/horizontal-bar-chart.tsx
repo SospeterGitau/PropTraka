@@ -1,4 +1,3 @@
-
 'use client';
 
 import { 
@@ -7,14 +6,12 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  ResponsiveContainer, 
   Cell,
   ReferenceLine
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-
 
 interface DataPoint {
   name: string;
@@ -41,11 +38,12 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
   };
 
   return (
-    <ChartContainer config={chartConfig} className="w-full h-full min-h-[200px]">
+    <ChartContainer config={chartConfig} className="w-full h-full">
       <RechartsBarChart 
         data={data}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        margin={{ top: 5, right: 30, left: 280, bottom: 5 }}
+        height={Math.max(data.length * 50, 200)}
       >
         <CartesianGrid 
           strokeDasharray="3 3" 
@@ -57,10 +55,9 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
         <XAxis 
           type="number"
           stroke="hsl(var(--muted-foreground))"
-          fontSize={12}
+          style={{ fontSize: '12px' }}
           tickLine={false}
           axisLine={false}
-          domain={['dataMin', 'dataMax']}
           tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}K`}
         />
         
@@ -68,22 +65,25 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           dataKey="name"
           type="category"
           stroke="hsl(var(--muted-foreground))"
-          fontSize={11}
+          style={{ fontSize: '11px' }}
           tickLine={false}
           axisLine={false}
-          width={200}
-          tick={{ fill: 'hsl(var(--foreground))' }}
+          width={270}
+          tick={{ 
+            fill: 'hsl(var(--foreground))',
+            fontSize: 12
+          }}
         />
         
         <ChartTooltip
-          cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1 }}
+          cursor={{ fill: 'hsl(var(--primary))', opacity: 0.08 }}
           content={
             <ChartTooltipContent
               labelKey="name"
               formatter={(value) => (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Profit:</span>
-                  <span className={`font-bold ${Number(value) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  <span className="text-on-surface-variant text-xs">Profit:</span>
+                  <span className={`font-semibold text-sm ${Number(value) >= 0 ? 'text-success' : 'text-error'}`}>
                     {formatCurrency(Number(value), locale, currency)}
                   </span>
                 </div>
@@ -92,7 +92,11 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
           }
         />
         
-        <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={2} />
+        <ReferenceLine 
+          x={0} 
+          stroke="hsl(var(--border))" 
+          strokeWidth={1.5}
+        />
         
         <Bar 
           dataKey="profit" 

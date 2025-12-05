@@ -1,4 +1,3 @@
-
 'use client';
 
 import { 
@@ -8,7 +7,8 @@ import {
   YAxis, 
   CartesianGrid, 
   ResponsiveContainer,
-  Legend 
+  Legend,
+  Tooltip
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
@@ -24,6 +24,30 @@ interface AreaChartProps {
   data: DataPoint[];
 }
 
+// Custom Tooltip Component
+const CustomChartTooltip = ({ active, payload, label, currency, locale }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+        <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center gap-2 text-sm">
+            <div 
+              className="w-3 h-3 rounded-full" 
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-muted-foreground">{entry.name}:</span>
+            <span className="font-bold" style={{ color: entry.color }}>
+              {formatCurrency(entry.value, locale, currency)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export function AreaChart({ data }: AreaChartProps) {
   const { settings } = useDataContext();
   const { currency, locale } = settings;
@@ -31,11 +55,11 @@ export function AreaChart({ data }: AreaChartProps) {
   const chartConfig = {
     revenue: {
       label: "Revenue",
-      color: "hsl(var(--chart-1))",
+      color: "#3b82f6",
     },
     expenses: {
       label: "Expenses",
-      color: "hsl(var(--chart-2))",
+      color: "#ef4444",
     },
   }
 
@@ -48,12 +72,12 @@ export function AreaChart({ data }: AreaChartProps) {
       >
         <defs>
           <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
           </linearGradient>
           <linearGradient id="expensesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-expenses)" stopOpacity={0.7}/>
-            <stop offset="95%" stopColor="var(--color-expenses)" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
           </linearGradient>
         </defs>
         
@@ -77,20 +101,9 @@ export function AreaChart({ data }: AreaChartProps) {
           tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}K`}
         />
         
-        <ChartTooltip
-          cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1 }}
-          content={
-            <ChartTooltipContent
-              labelKey="month"
-              formatter={(value, name) => (
-                 <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: name === 'revenue' ? chartConfig.revenue.color : chartConfig.expenses.color }}/>
-                    <span className="text-muted-foreground capitalize">{name}:</span>
-                    <span className="font-semibold">{formatCurrency(Number(value), locale, currency)}</span>
-                  </div>
-              )}
-            />
-          }
+        <Tooltip 
+          content={<CustomChartTooltip currency={currency} locale={locale} />}
+          cursor={false}
         />
         
         <ChartLegend content={<ChartLegendContent />} />
@@ -98,21 +111,23 @@ export function AreaChart({ data }: AreaChartProps) {
         <Area
           type="monotone"
           dataKey="revenue"
-          stroke="var(--color-revenue)"
+          stroke="#3b82f6"
           strokeWidth={2}
           fill="url(#revenueGradient)"
           name="Revenue"
           animationDuration={1000}
+          isAnimationActive={true}
         />
         
         <Area
           type="monotone"
           dataKey="expenses"
-          stroke="var(--color-expenses)"
+          stroke="#ef4444"
           strokeWidth={2}
           fill="url(#expensesGradient)"
           name="Expenses"
           animationDuration={1000}
+          isAnimationActive={true}
         />
       </RechartsAreaChart>
     </ChartContainer>

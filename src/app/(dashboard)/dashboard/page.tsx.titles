@@ -1,0 +1,18 @@
+BETTER KPI TITLES - Replace these in dashboard:
+
+Current → Better
+
+"Properties" → "Total Properties"
+"Occupancy" → "Occupancy Rate"  
+"Revenue" → "Total Revenue (All-time)"
+"Expenses" → "Total Expenses (All-time)"
+"Asset Value" → "Portfolio Asset Value"
+"Net Equity" → "Equity After Mortgages"
+"Net Income" → "Net Profit (Revenue - Expenses)"
+"This Month" → "Monthly Revenue (Current)"
+
+USAGE IN KPI CARDS:
+icon={Building}
+title="Total Properties"  ← More specific
+value={metrics.totalProperties}
+description="3 units across portfolio"  ← More descriptive
