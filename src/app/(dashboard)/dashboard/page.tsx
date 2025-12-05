@@ -192,6 +192,31 @@ export default function DashboardPage() {
     );
   }
 
+  // Empty State - show if no properties are added yet
+  if (metrics.totalProperties === 0) {
+    return (
+      <>
+        <PageHeader
+          title="Dashboard"
+          description={`Welcome back, ${user?.displayName || user?.email || 'User'}!`}
+        />
+        <Card className="border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Building className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Get Started with Your Portfolio</h3>
+            <p className="text-muted-foreground mb-6 text-center max-w-sm">
+              Add your first property to begin tracking your real estate portfolio and manage your properties efficiently
+            </p>
+            <Button asChild>
+              <Link href="/properties">Add Your First Property</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </>
+    );
+  }
+
+
   return (
     <>
       {/* Page Header */}
@@ -417,22 +442,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-
-      {/* Empty State */}
-      {metrics.totalProperties === 0 && (
-        <Card className="border-2 border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Get Started with Your Portfolio</h3>
-            <p className="text-muted-foreground mb-6 text-center max-w-sm">
-              Add your first property to begin tracking your real estate portfolio and manage your properties efficiently
-            </p>
-            <Button asChild>
-              <Link href="/properties">Add Your First Property</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
     </>
   );
 }
