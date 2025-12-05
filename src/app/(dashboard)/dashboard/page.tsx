@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -11,9 +12,9 @@ import {
   Calendar, 
   Percent, 
   AlertCircle,
-  DollarSign,
   Home,
-  BarChart3
+  BarChart3,
+  Users
 } from 'lucide-react';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { PageHeader } from '@/components/page-header';
@@ -26,7 +27,7 @@ import { PropertyROIScorecard } from '@/components/dashboard/property-roi-scorec
 import { CashFlowChart } from '@/components/dashboard/cash-flow-chart';
 import { ArrearsSummary } from '@/components/dashboard/arrears-summary';
 import { formatCurrency } from '@/lib/utils';
-import { startOfToday, isBefore, differenceInCalendarDays } from 'date-fns';
+import { startOfToday, isBefore } from 'date-fns';
 import type { Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -154,13 +155,15 @@ export default function DashboardPage() {
     const activities: Array<{ type: string; description: string; amount: number; date: Date; propertyName?: string }> = [];
 
     revenue.forEach(r => {
-      activities.push({
-        type: 'revenue',
-        description: `Payment received`,
-        amount: r.amountPaid || 0,
-        date: r.date ? new Date(r.date) : new Date(),
-        propertyName: r.propertyName || 'Property'
-      });
+      if (r.amountPaid && r.amountPaid > 0) {
+        activities.push({
+          type: 'revenue',
+          description: `Payment from ${r.tenant}`,
+          amount: r.amountPaid,
+          date: r.date ? new Date(r.date) : new Date(),
+          propertyName: r.propertyName || 'Property'
+        });
+      }
     });
 
     expenses.forEach(e => {
@@ -204,6 +207,7 @@ export default function DashboardPage() {
           title="Total Properties"
           value={metrics.totalProperties}
           description={`${metrics.totalUnits} unit${metrics.totalUnits !== 1 ? 's' : ''} across portfolio`}
+          formatAs="integer"
         />
 
         <KpiCard
@@ -211,6 +215,7 @@ export default function DashboardPage() {
           title="Occupancy Rate"
           value={metrics.occupancyRate}
           description={`${metrics.tenanciesCount} active tenant${metrics.tenanciesCount !== 1 ? 's' : ''}`}
+          formatAs="percent"
         />
 
         <KpiCard
@@ -222,10 +227,10 @@ export default function DashboardPage() {
         />
 
         <KpiCard
-          icon={TrendingDown}
-          title="Total Expenses (All-time)"
-          value={metrics.totalExpenses}
-          description="All operational costs"
+          icon={AlertCircle}
+          title="Overdue Payments"
+          value={metrics.totalArrearsAmount}
+          description={`${metrics.arrearsByTenancy.length} tenanc${metrics.arrearsByTenancy.length !== 1 ? 'ies' : 'y'} in arrears`}
           variant="destructive"
         />
       </div>
@@ -250,7 +255,7 @@ export default function DashboardPage() {
           icon={BarChart3}
           title="Net Profit (Total)"
           value={metrics.netIncome}
-          description="Revenue minus expenses"
+          description="Revenue - Expenses"
           variant={metrics.netIncome >= 0 ? 'positive' : 'destructive'}
         />
 
@@ -261,21 +266,10 @@ export default function DashboardPage() {
           description={`${new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}`}
         />
       </div>
-
+      
       {/* SECTION 3: Income vs Expenses Trend Chart */}
       <div className="mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Income vs Expenses Trend
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">Last 6 months financial performance</p>
-          </CardHeader>
-          <CardContent>
-            <AreaChart data={chartData} />
-          </CardContent>
-        </Card>
+          <AreaChart data={chartData} />
       </div>
 
       {/* SECTION 4: Cash Flow Analysis */}
@@ -363,15 +357,8 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Strong performing properties:</span>
-                <span className="font-semibold text-green-600">
-                  {properties.filter(p => {
-                    const propRevenue = revenue.filter(r => r.propertyId === p.id).reduce((sum, r) => sum + (r.amountPaid || 0), 0);
-                    const propExpenses = expenses.filter(e => e.propertyId === p.id).reduce((sum, e) => sum + (e.amount || 0), 0);
-                    const roi = p.currentValue > 0 ? ((propRevenue - propExpenses) / p.currentValue) * 100 : 0;
-                    return roi >= 10;
-                  }).length}
-                </span>
+                <span className="text-muted-foreground">Tenants:</span>
+                <span className="font-semibold">{metrics.tenanciesCount} / {metrics.totalUnits} Units</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Overdue payments:</span>
@@ -416,11 +403,11 @@ export default function DashboardPage() {
               </Button>
               <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/revenue">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Record Payment
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Tenancies
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
+               <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/expenses">
                   <TrendingDown className="h-4 w-4 mr-2" />
                   Add Expense

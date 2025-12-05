@@ -13,12 +13,25 @@ type KpiCardProps = {
   value: number;
   description: string;
   variant?: 'default' | 'positive' | 'destructive';
+  formatAs?: 'currency' | 'integer' | 'percent';
 };
 
-export function KpiCard({ icon: Icon, title, value, description, variant = 'default' }: KpiCardProps) {
+export function KpiCard({ icon: Icon, title, value, description, variant = 'default', formatAs = 'currency' }: KpiCardProps) {
   const { fontSize, ref } = useFitText();
   const { settings } = useDataContext();
   const { currency, locale } = settings;
+
+  const formattedValue = () => {
+    switch (formatAs) {
+      case 'integer':
+        return Math.round(value);
+      case 'percent':
+        return `${value.toFixed(1)}%`;
+      case 'currency':
+      default:
+        return formatCurrency(value, locale, currency);
+    }
+  };
 
   return (
     <Card>
@@ -33,10 +46,10 @@ export function KpiCard({ icon: Icon, title, value, description, variant = 'defa
           className={cn(
             "font-bold whitespace-nowrap",
             variant === 'destructive' && 'text-destructive',
-            variant === 'positive' && 'text-accent'
+            variant === 'positive' && 'text-green-600'
           )}
         >
-          {formatCurrency(value, locale, currency)}
+          {formattedValue()}
         </div>
         <p className="text-xs text-muted-foreground">{description}</p>
       </CardContent>
