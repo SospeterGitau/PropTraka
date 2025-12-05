@@ -3,10 +3,10 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, useFirebase } from '@/firebase';
+import { auth, useFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { UserSettings, Property, Subscription, Transaction } from '@/lib/types';
+import { doc, getDoc, setDoc, Query } from 'firebase/firestore';
+import type { UserSettings, Property, Subscription, Transaction, SecurityRuleContext } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 
@@ -49,13 +49,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [user, firestore]);
   const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [user, firestore]);
 
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
-  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
+  const [propertiesSnapshot, isPropertiesLoading, propertiesError] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading, revenueError] = useCollection(revenueQuery);
+  const [expensesSnapshot, isExpensesLoading, expensesError] = useCollection(expensesQuery);
   
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
   const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
+
+  // --- Watch for permission errors from hooks ---
+  useEffect(() => {
+    const handlePermissionError = (error: any, query: Query | null) => {
+        if (error && error.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: query ? (query as any)._query.path.segments.join('/') : 'unknown collection',
+                operation: 'list',
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+        }
+    };
+    
+    handlePermissionError(propertiesError, propertiesQuery);
+    handlePermissionError(revenueError, revenueQuery);
+    handlePermissionError(expensesError, expensesQuery);
+
+  }, [propertiesError, revenueError, expensesError, propertiesQuery, revenueQuery, expensesQuery]);
   
   // --- Auth State ---
   useEffect(() => {
@@ -93,8 +111,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setSubscription(null);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading static data:', error);
+      // Emit contextual error if it's a permission issue
+      if (error.code === 'permission-denied' && user) {
+          const permissionError = new FirestorePermissionError({
+            path: `userSettings/${user.uid}`,
+            operation: 'get',
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+      }
     } finally {
       setIsSettingsLoading(false);
     }
@@ -125,7 +151,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const { subscription, ...settingsToSave } = newSettings;
       const updatedSettings = { ...settings, ...settingsToSave };
 
-      await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true });
+      await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true })
+      .catch(error => {
+          const permissionError = new FirestorePermissionError({
+            path: settingsRef.path,
+            operation: 'update',
+            requestResourceData: { ...settingsToSave, ownerId: user.uid }
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+          // throw the original error to be caught by the outer catch block
+          throw error;
+      });
+      
       setSettings(updatedSettings);
 
       toast({
@@ -134,11 +171,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error('Error updating settings:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to save settings. Please try again.',
-      });
+      // The toast will only be shown if the error was not a permission error handled above.
+      if ((error as any)?.name !== 'FirebaseError') {
+         toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to save settings. Please try again.',
+        });
+      }
     }
   };
 
