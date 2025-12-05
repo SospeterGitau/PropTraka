@@ -33,6 +33,7 @@ export default function DashboardPageContent() {
     // Filter transactions to only include those linked to existing properties
     const relevantRevenue = revenue.filter(r => r.propertyId && propertyIds.has(r.propertyId));
     const relevantExpenses = expenses.filter(e => e.propertyId && propertyIds.has(e.propertyId));
+    const allExpenses = expenses; // For general business expenses
 
     const totalProperties = properties.length;
     const totalAssetValue = properties.reduce((sum, prop) => sum + (prop.currentValue || 0), 0);
@@ -42,8 +43,10 @@ export default function DashboardPageContent() {
     
     const totalRevenue = relevantRevenue.reduce((sum, doc) => sum + (doc.amountPaid || 0), 0);
     
-    const totalExpenses = relevantExpenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
-    const netIncome = totalRevenue - totalExpenses;
+    const totalExpensesWithProperty = relevantExpenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    const totalAllExpenses = allExpenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+
+    const netIncome = totalRevenue - totalAllExpenses;
 
     const tenancies = Object.values(
       relevantRevenue.reduce((acc, tx) => {
@@ -98,7 +101,7 @@ export default function DashboardPageContent() {
       totalMortgageDebt,
       netEquity,
       totalRevenue,
-      totalExpenses,
+      totalExpenses: totalAllExpenses, // Use all expenses for the KPI
       netIncome,
       tenanciesCount,
       occupancyRate,

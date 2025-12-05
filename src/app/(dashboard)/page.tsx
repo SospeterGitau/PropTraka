@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDataContext } from '@/context/data-context';
@@ -33,8 +32,9 @@ export default function DashboardPage() {
       <>
         <PageHeader 
           title="Welcome to PropTraka"
-          children={<div />} // Empty div to hide the menu button on this specific view
-        />
+        >
+           <div className="hidden sm:block" />
+        </PageHeader>
         <Card className="text-center py-16">
           <CardHeader>
               <div className="mx-auto bg-muted rounded-full p-4 w-fit">
