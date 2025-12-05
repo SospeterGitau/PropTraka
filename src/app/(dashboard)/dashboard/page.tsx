@@ -19,6 +19,7 @@ import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { startOfToday, isBefore } from 'date-fns';
 import type { Transaction } from '@/lib/types';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function DashboardPageContent() {
   const { user } = useUser();
@@ -228,8 +229,22 @@ export default function DashboardPageContent() {
       
       {/* Charts Section */}
       <div className="grid grid-cols-1 gap-8">
-        <AreaChart data={chartData} />
-        <HorizontalBarChart data={profitPerProperty} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Income vs Expenses (Last 6 Months)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AreaChart data={chartData} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Profit Per Property (All Time)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HorizontalBarChart data={profitPerProperty} />
+          </CardContent>
+        </Card>
       </div>
     </>
   );

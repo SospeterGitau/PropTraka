@@ -33,7 +33,7 @@ const CustomChartTooltip = ({ active, payload, label, currency, locale }) => {
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div 
-              className="w-3 h-3 rounded-full" 
+              className="w-2.5 h-2.5 rounded-[2px]" 
               style={{ backgroundColor: entry.color }}
             />
             <span className="text-muted-foreground">{entry.name}:</span>
@@ -55,11 +55,11 @@ export function AreaChart({ data }: AreaChartProps) {
   const chartConfig = {
     revenue: {
       label: "Revenue",
-      color: "#3b82f6",
+      color: "hsl(var(--chart-1))",
     },
     expenses: {
       label: "Expenses",
-      color: "#ef4444",
+      color: "hsl(var(--chart-2))",
     },
   }
 
@@ -72,12 +72,12 @@ export function AreaChart({ data }: AreaChartProps) {
       >
         <defs>
           <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1}/>
           </linearGradient>
           <linearGradient id="expensesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+            <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0.1}/>
           </linearGradient>
         </defs>
         
@@ -103,7 +103,7 @@ export function AreaChart({ data }: AreaChartProps) {
         
         <Tooltip 
           content={<CustomChartTooltip currency={currency} locale={locale} />}
-          cursor={false}
+          cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1 }}
         />
         
         <ChartLegend content={<ChartLegendContent />} />
@@ -111,7 +111,7 @@ export function AreaChart({ data }: AreaChartProps) {
         <Area
           type="monotone"
           dataKey="revenue"
-          stroke="#3b82f6"
+          stroke="hsl(var(--chart-1))"
           strokeWidth={2}
           fill="url(#revenueGradient)"
           name="Revenue"
@@ -122,7 +122,7 @@ export function AreaChart({ data }: AreaChartProps) {
         <Area
           type="monotone"
           dataKey="expenses"
-          stroke="#ef4444"
+          stroke="hsl(var(--chart-2))"
           strokeWidth={2}
           fill="url(#expensesGradient)"
           name="Expenses"

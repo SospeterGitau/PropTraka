@@ -7,11 +7,12 @@ import {
   YAxis, 
   CartesianGrid, 
   Cell,
-  ReferenceLine
+  ReferenceLine,
+  Tooltip
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 interface DataPoint {
   name: string;
@@ -36,13 +37,20 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
       color: 'hsl(var(--chart-2))',
     }
   };
+  
+  const domain = useMemo(() => {
+    if (!data || data.length === 0) return [0, 0];
+    const values = data.map(d => d.profit);
+    const maxAbs = Math.max(...values.map(Math.abs));
+    return [-maxAbs, maxAbs];
+  }, [data]);
 
   return (
     <ChartContainer config={chartConfig} className="w-full h-full">
       <RechartsBarChart 
         data={data}
         layout="vertical"
-        margin={{ top: 5, right: 30, left: 280, bottom: 5 }}
+        margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
         height={Math.max(data.length * 50, 200)}
       >
         <CartesianGrid 
@@ -55,35 +63,37 @@ export function HorizontalBarChart({ data }: HorizontalBarChartProps) {
         <XAxis 
           type="number"
           stroke="hsl(var(--muted-foreground))"
-          style={{ fontSize: '12px' }}
+          fontSize={12}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}K`}
+          domain={domain}
         />
         
         <YAxis 
           dataKey="name"
           type="category"
           stroke="hsl(var(--muted-foreground))"
-          style={{ fontSize: '11px' }}
+          fontSize={11}
           tickLine={false}
           axisLine={false}
-          width={270}
+          width={200}
           tick={{ 
             fill: 'hsl(var(--foreground))',
             fontSize: 12
           }}
+          interval={0}
         />
         
-        <ChartTooltip
-          cursor={{ fill: 'hsl(var(--primary))', opacity: 0.08 }}
+        <Tooltip
+          cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1 }}
           content={
             <ChartTooltipContent
               labelKey="name"
               formatter={(value) => (
                 <div className="flex items-center gap-2">
-                  <span className="text-on-surface-variant text-xs">Profit:</span>
-                  <span className={`font-semibold text-sm ${Number(value) >= 0 ? 'text-success' : 'text-error'}`}>
+                  <span className="text-muted-foreground text-xs">Profit:</span>
+                  <span className={`font-semibold text-sm ${Number(value) >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                     {formatCurrency(Number(value), locale, currency)}
                   </span>
                 </div>
