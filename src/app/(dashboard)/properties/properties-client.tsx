@@ -188,7 +188,7 @@ const PropertiesClient = memo(function PropertiesClient() {
           <CardTitle>Your Properties</CardTitle>
           <CardDescription>An overview of all properties in your portfolio.</CardDescription>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent>
           {properties && properties.length > 0 ? (
             <Table>
               <TableHeader>
@@ -280,11 +280,13 @@ const PropertiesClient = memo(function PropertiesClient() {
               </TableBody>
             </Table>
             ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Building className="w-16 h-16 text-muted-foreground mb-4" />
-                    <h3 className="text-xl font-semibold">No Properties Added Yet</h3>
-                    <p className="text-muted-foreground mb-4">Click the button below to add your first property.</p>
-                    <Button onClick={handleAdd}>Add Property</Button>
+                <div className="text-center py-16">
+                  <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
+                    <Building className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold">No Properties Added Yet</h3>
+                  <p className="text-muted-foreground mb-4">Click the button below to add your first property.</p>
+                  <Button onClick={handleAdd}>Add Property</Button>
                 </div>
             )}
         </CardContent>
