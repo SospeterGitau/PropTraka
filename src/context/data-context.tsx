@@ -1,20 +1,22 @@
+
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/firebase';
-import { useFirebase } from '@/firebase';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import type { UserSettings, Property, Subscription } from '@/lib/types';
+import { auth, useFirebase } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import type { UserSettings, Property, Subscription, Transaction } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 interface DataContextValue {
   settings: UserSettings;
   updateSettings: (newSettings: Partial<UserSettings>) => Promise<void>;
   isLoading: boolean;
   properties: Property[];
-  revenue: any[];
-  expenses: any[];
+  revenue: Transaction[];
+  expenses: Transaction[];
   subscription: Subscription | null;
   refreshData: () => Promise<void>;
 }
@@ -37,14 +39,25 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const { firestore } = useFirebase();
   const { toast } = useToast();
-
+  
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [revenue, setRevenue] = useState<any[]>([]);
-  const [expenses, setExpenses] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
 
+  // --- Real-time data fetching with useCollection ---
+  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [user, firestore]);
+  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [user, firestore]);
+  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [user, firestore]);
+
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [expensesSnapshot, isExpensesLoading] = useCollection(expensesQuery);
+  
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
+  
+  // --- Auth State ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -53,105 +66,49 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const loadUserData = useCallback(async () => {
-    if (!user) return;
-
+  // --- Initial & On-Demand Data Loading ---
+  const loadInitialSettings = useCallback(async () => {
+    if (!user) {
+        setIsSettingsLoading(false);
+        return;
+    };
+    
+    setIsSettingsLoading(true);
     try {
       // Load settings
-      try {
-        const settingsRef = doc(firestore, 'userSettings', user.uid);
-        const settingsSnap = await getDoc(settingsRef);
-        
-        if (settingsSnap.exists()) {
-          const data = settingsSnap.data();
-          setSettings({ ...defaultSettings, ...data });
-        } else {
-          setSettings(defaultSettings);
-        }
-      } catch (error: any) {
-        console.log('Settings not found, using defaults');
+      const settingsRef = doc(firestore, 'userSettings', user.uid);
+      const settingsSnap = await getDoc(settingsRef);
+      if (settingsSnap.exists()) {
+        setSettings({ ...defaultSettings, ...settingsSnap.data() });
+      } else {
         setSettings(defaultSettings);
       }
-
-      // Load properties
-      try {
-        const propertiesQuery = query(
-          collection(firestore, 'properties'),
-          where('ownerId', '==', user.uid)
-        );
-        const propertiesSnap = await getDocs(propertiesQuery);
-        const propertiesData = propertiesSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Property[];
-        setProperties(propertiesData);
-      } catch (error: any) {
-        console.log('No properties found');
-        setProperties([]);
-      }
-
-      // Load revenue
-      try {
-        const revenueQuery = query(
-          collection(firestore, 'revenue'),
-          where('ownerId', '==', user.uid)
-        );
-        const revenueSnap = await getDocs(revenueQuery);
-        const revenueData = revenueSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setRevenue(revenueData);
-      } catch (error: any) {
-        console.log('No revenue found');
-        setRevenue([]);
-      }
-
-      // Load expenses
-      try {
-        const expensesQuery = query(
-          collection(firestore, 'expenses'),
-          where('ownerId', '==', user.uid)
-        );
-        const expensesSnap = await getDocs(expensesQuery);
-        const expensesData = expensesSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setExpenses(expensesData);
-      } catch (error: any) {
-        console.log('No expenses found');
-        setExpenses([]);
-      }
-
+      
       // Load subscription
-      try {
-        const subscriptionRef = doc(firestore, 'subscriptions', user.uid);
-        const subscriptionSnap = await getDoc(subscriptionRef);
-        
-        if (subscriptionSnap.exists()) {
-          setSubscription(subscriptionSnap.data() as Subscription);
-        } else {
-          setSubscription(null);
-        }
-      } catch (error: any) {
-        console.log('No subscription found');
+      const subscriptionRef = doc(firestore, 'subscriptions', user.uid);
+      const subscriptionSnap = await getDoc(subscriptionRef);
+      if (subscriptionSnap.exists()) {
+        setSubscription(subscriptionSnap.data() as Subscription);
+      } else {
         setSubscription(null);
       }
 
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('Error loading static data:', error);
     } finally {
-      setIsLoading(false);
+      setIsSettingsLoading(false);
     }
   }, [user, firestore]);
 
   useEffect(() => {
     if (!isAuthLoading && user) {
-      setIsLoading(true);
-      loadUserData();
+      loadInitialSettings();
     }
-  }, [isAuthLoading, user, loadUserData]);
+  }, [isAuthLoading, user, loadInitialSettings]);
+  
+  const refreshData = async () => {
+      await loadInitialSettings();
+  };
 
   const updateSettings = async (newSettings: Partial<UserSettings>) => {
     if (!user) {
@@ -185,10 +142,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshData = async () => {
-    setIsLoading(true);
-    await loadUserData();
-  };
+  const isLoading = isAuthLoading || isPropertiesLoading || isRevenueLoading || isExpensesLoading || isSettingsLoading;
 
   const value = {
     settings,

@@ -28,20 +28,25 @@ export default function DashboardPageContent() {
 
   // Calculate all metrics
   const metrics = useMemo(() => {
+    const propertyIds = new Set(properties.map(p => p.id));
+    
+    // Filter transactions to only include those linked to existing properties
+    const relevantRevenue = revenue.filter(r => r.propertyId && propertyIds.has(r.propertyId));
+    const relevantExpenses = expenses.filter(e => e.propertyId && propertyIds.has(e.propertyId));
+
     const totalProperties = properties.length;
     const totalAssetValue = properties.reduce((sum, prop) => sum + (prop.currentValue || 0), 0);
     
     const totalMortgageDebt = properties.reduce((sum, prop) => sum + (prop.mortgage || 0), 0);
     const netEquity = totalAssetValue - totalMortgageDebt;
     
-    const totalRevenue = revenue.reduce((sum, doc) => sum + (doc.amountPaid || 0), 0);
+    const totalRevenue = relevantRevenue.reduce((sum, doc) => sum + (doc.amountPaid || 0), 0);
     
-    // Reverted: Calculate all expenses, regardless of property association.
-    const totalExpenses = expenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    const totalExpenses = relevantExpenses.reduce((sum, doc) => sum + (doc.amount || 0), 0);
     const netIncome = totalRevenue - totalExpenses;
 
     const tenancies = Object.values(
-      revenue.reduce((acc, tx) => {
+      relevantRevenue.reduce((acc, tx) => {
         if (tx.tenancyId) {
           if (!acc[tx.tenancyId]) {
             acc[tx.tenancyId] = {
@@ -61,7 +66,7 @@ export default function DashboardPageContent() {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    const thisMonthRevenue = revenue
+    const thisMonthRevenue = relevantRevenue
       .filter(r => {
         const date = r.date ? new Date(r.date) : new Date();
         return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
@@ -99,7 +104,9 @@ export default function DashboardPageContent() {
       occupancyRate,
       thisMonthRevenue,
       totalArrearsAmount,
-      totalUnits
+      totalUnits,
+      relevantRevenue, // Pass filtered data to charts
+      relevantExpenses, // Pass filtered data to charts
     };
   }, [properties, revenue, expenses]);
 
@@ -118,7 +125,7 @@ export default function DashboardPageContent() {
       };
     }
 
-    revenue.forEach(r => {
+    metrics.relevantRevenue.forEach(r => {
       const date = r.date ? new Date(r.date) : new Date();
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (monthsData[monthKey]) {
@@ -126,7 +133,7 @@ export default function DashboardPageContent() {
       }
     });
 
-    expenses.forEach(e => {
+    metrics.relevantExpenses.forEach(e => {
       const date = e.date ? new Date(e.date) : new Date();
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (monthsData[monthKey]) {
@@ -135,16 +142,16 @@ export default function DashboardPageContent() {
     });
 
     return Object.values(monthsData);
-  }, [revenue, expenses]);
+  }, [metrics.relevantRevenue, metrics.relevantExpenses]);
   
   // Profit per property data
   const profitPerProperty = useMemo(() => {
       return properties.map(prop => {
-          const propRevenue = revenue
+          const propRevenue = metrics.relevantRevenue
               .filter(r => r.propertyId === prop.id)
               .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
           
-          const propExpenses = expenses
+          const propExpenses = metrics.relevantExpenses
               .filter(e => e.propertyId === prop.id)
               .reduce((sum, e) => sum + (e.amount || 0), 0);
           
@@ -153,7 +160,7 @@ export default function DashboardPageContent() {
               profit: propRevenue - propExpenses,
           };
       });
-  }, [properties, revenue, expenses]);
+  }, [properties, metrics.relevantRevenue, metrics.relevantExpenses]);
 
 
   return (
