@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDataContext } from '@/context/data-context';
@@ -56,3 +57,4 @@ export default function DashboardPage() {
   // If properties exist, show the full dashboard content.
   return <DashboardPageContent />;
 }
+
