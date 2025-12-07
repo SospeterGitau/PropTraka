@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // ✅ REMOVED the webpack function that was causing the conflict!
 };
 
 export default nextConfig;
