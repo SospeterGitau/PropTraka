@@ -25,12 +25,12 @@ interface AreaChartProps {
 }
 
 // Custom Tooltip Component
-const CustomChartTooltip = ({ active, payload, label, currency, locale }) => {
+const CustomChartTooltip = ({ active, payload, label, currency, locale }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
         <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
-        {payload.map((entry, index) => (
+        {payload.map((entry: any, index: any) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div 
               className="w-2.5 h-2.5 rounded-[2px]" 

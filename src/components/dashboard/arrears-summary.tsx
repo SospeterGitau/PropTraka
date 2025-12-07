@@ -40,7 +40,7 @@ export function ArrearsSummary({ revenue, properties }: ArrearsSummaryProps) {
           const daysOverdue = Math.floor((today.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24));
           
           // Calculate what's owed
-          const serviceChargesTotal = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
+          const serviceChargesTotal = (tx.serviceCharges || []).reduce((sum: any, sc: any) => sum + sc.amount, 0);
           const amountDue = tx.rent + serviceChargesTotal + (tx.deposit || 0);
           const amountOwed = amountDue - (tx.amountPaid || 0);
 
