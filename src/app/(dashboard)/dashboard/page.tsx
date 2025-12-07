@@ -33,6 +33,12 @@ function MLPredictionsPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Debug log
+  useEffect(() => {
+    console.log('Properties loaded:', properties);
+    console.log('Properties count:', properties.length);
+  }, [properties]);
+
   useEffect(() => {
     if (properties.length > 0 && !selectedProperty) {
       setSelectedProperty(properties[0]);
@@ -122,6 +128,19 @@ function MLPredictionsPanel() {
       setRoiResult(result);
     }
   };
+
+  if (properties.length === 0) {
+    return (
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>ML Predictions & Analysis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">No properties found. Please add properties to your portfolio first.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
