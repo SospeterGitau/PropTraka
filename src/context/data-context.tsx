@@ -1,207 +1,102 @@
-
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, useFirebase, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { doc, getDoc, setDoc, Query } from 'firebase/firestore';
-import type { UserSettings, Property, Subscription, Transaction, SecurityRuleContext } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { useUser } from '@/firebase';
+import type { Property, Transaction } from '@/lib/types';
 
-interface DataContextValue {
-  settings: UserSettings;
-  updateSettings: (newSettings: Partial<UserSettings>) => Promise<void>;
-  isLoading: boolean;
+interface DataContextType {
   properties: Property[];
   revenue: Transaction[];
   expenses: Transaction[];
-  subscription: Subscription | null;
-  refreshData: () => Promise<void>;
+  settings: any;
+  loading: boolean;
+  error: string | null;
 }
 
-const defaultSettings: UserSettings = {
-  currency: 'KES',
-  locale: 'en-GB',
-  companyName: 'My Property Portfolio',
-  residencyStatus: 'resident' as const,
-  isPnlReportEnabled: true,
-  isMarketResearchEnabled: true,
-  subscription: null,
-  theme: 'system',
-};
+const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const DataContext = createContext<DataContextValue | undefined>(undefined);
-
-export function DataProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const { firestore } = useFirebase();
-  const { toast } = useToast();
-  
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
-
-  // --- Real-time data fetching with useCollection ---
-  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [user, firestore]);
-  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [user, firestore]);
-  const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [user, firestore]);
-
-  const [propertiesSnapshot, isPropertiesLoading, propertiesError] = useCollection(propertiesQuery);
-  const [revenueSnapshot, isRevenueLoading, revenueError] = useCollection(revenueQuery);
-  const [expensesSnapshot, isExpensesLoading, expensesError] = useCollection(expensesQuery);
-  
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [expensesSnapshot]);
-
-  // --- Watch for permission errors from hooks ---
-  useEffect(() => {
-    const handlePermissionError = (error: any, query: Query | null) => {
-        if (error && error.code === 'permission-denied') {
-            const permissionError = new FirestorePermissionError({
-                path: query ? (query as any)._query.path.segments.join('/') : 'unknown collection',
-                operation: 'list',
-            } satisfies SecurityRuleContext);
-            errorEmitter.emit('permission-error', permissionError);
-        }
-    };
-    
-    handlePermissionError(propertiesError, propertiesQuery);
-    handlePermissionError(revenueError, revenueQuery);
-    handlePermissionError(expensesError, expensesQuery);
-
-  }, [propertiesError, revenueError, expensesError, propertiesQuery, revenueQuery, expensesQuery]);
-  
-  // --- Auth State ---
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // --- Initial & On-Demand Data Loading ---
-  const loadInitialSettings = useCallback(async () => {
-    if (!user) {
-        setIsSettingsLoading(false);
-        return;
-    };
-    
-    setIsSettingsLoading(true);
-    try {
-      // Load settings
-      const settingsRef = doc(firestore, 'userSettings', user.uid);
-      const settingsSnap = await getDoc(settingsRef);
-      if (settingsSnap.exists()) {
-        setSettings({ ...defaultSettings, ...settingsSnap.data() });
-      } else {
-        setSettings(defaultSettings);
-      }
-      
-      // Load subscription
-      const subscriptionRef = doc(firestore, 'subscriptions', user.uid);
-      const subscriptionSnap = await getDoc(subscriptionRef);
-      if (subscriptionSnap.exists()) {
-        setSubscription(subscriptionSnap.data() as Subscription);
-      } else {
-        setSubscription(null);
-      }
-
-    } catch (error: any) {
-      console.error('Error loading static data:', error);
-      // Emit contextual error if it's a permission issue
-      if (error.code === 'permission-denied' && user) {
-          const permissionError = new FirestorePermissionError({
-            path: `userSettings/${user.uid}`,
-            operation: 'get',
-          } satisfies SecurityRuleContext);
-          errorEmitter.emit('permission-error', permissionError);
-      }
-    } finally {
-      setIsSettingsLoading(false);
-    }
-  }, [user, firestore]);
+export function DataContextProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [revenue, setRevenue] = useState<Transaction[]>([]);
+  const [expenses, setExpenses] = useState<Transaction[]>([]);
+  const [settings, setSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthLoading && user) {
-      loadInitialSettings();
-    }
-  }, [isAuthLoading, user, loadInitialSettings]);
-  
-  const refreshData = async () => {
-      await loadInitialSettings();
-  };
-
-  const updateSettings = async (newSettings: Partial<UserSettings>) => {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Not Authenticated',
-        description: 'You must be logged in to save settings.',
-      });
+    if (!user?.uid) {
+      setProperties([]);
+      setRevenue([]);
+      setExpenses([]);
+      setLoading(false);
       return;
     }
 
-    const settingsRef = doc(firestore, 'userSettings', user.uid);
+    const unsubscribers: (() => void)[] = [];
+
     try {
-      const { subscription, ...settingsToSave } = newSettings;
-      const updatedSettings = { ...settings, ...settingsToSave };
-
-      await setDoc(settingsRef, { ...settingsToSave, ownerId: user.uid }, { merge: true })
-      .catch(error => {
-          const permissionError = new FirestorePermissionError({
-            path: settingsRef.path,
-            operation: 'update',
-            requestResourceData: { ...settingsToSave, ownerId: user.uid }
-          } satisfies SecurityRuleContext);
-          errorEmitter.emit('permission-error', permissionError);
-          // throw the original error to be caught by the outer catch block
-          throw error;
-      });
-      
-      setSettings(updatedSettings);
-
-      toast({
-        title: 'Settings Saved',
-        description: 'Your settings have been updated successfully.',
-      });
-    } catch (error) {
-      console.error('Error updating settings:', error);
-      // The toast will only be shown if the error was not a permission error handled above.
-      if ((error as any)?.name !== 'FirebaseError') {
-         toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to save settings. Please try again.',
+      const propertiesQuery = query(collection(db, 'properties'), where('userId', '==', user.uid));
+      const unsubscribeProperties = onSnapshot(propertiesQuery, (snapshot) => {
+        const propsData: Property[] = [];
+        snapshot.forEach((doc) => {
+          propsData.push({ id: doc.id, ...doc.data() } as Property);
         });
-      }
+        setProperties(propsData);
+        console.log('✅ Properties loaded:', propsData.length);
+      }, (err) => {
+        console.error('❌ Properties error:', err);
+        setError('Failed to load properties');
+      });
+      unsubscribers.push(unsubscribeProperties);
+
+      const revenueQuery = query(collection(db, 'transactions'), where('userId', '==', user.uid), where('type', '==', 'income'));
+      const unsubscribeRevenue = onSnapshot(revenueQuery, (snapshot) => {
+        const revData: Transaction[] = [];
+        snapshot.forEach((doc) => {
+          revData.push({ id: doc.id, ...doc.data() } as Transaction);
+        });
+        setRevenue(revData);
+        console.log('✅ Revenue loaded:', revData.length);
+      });
+      unsubscribers.push(unsubscribeRevenue);
+
+      const expensesQuery = query(collection(db, 'transactions'), where('userId', '==', user.uid), where('type', '==', 'expense'));
+      const unsubscribeExpenses = onSnapshot(expensesQuery, (snapshot) => {
+        const expData: Transaction[] = [];
+        snapshot.forEach((doc) => {
+          expData.push({ id: doc.id, ...doc.data() } as Transaction);
+        });
+        setExpenses(expData);
+        console.log('✅ Expenses loaded:', expData.length);
+      });
+      unsubscribers.push(unsubscribeExpenses);
+
+      setLoading(false);
+    } catch (err) {
+      console.error('❌ Context error:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      setLoading(false);
     }
-  };
 
-  const isLoading = isAuthLoading || isPropertiesLoading || isRevenueLoading || isExpensesLoading || isSettingsLoading;
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [user?.uid]);
 
-  const value = {
-    settings,
-    updateSettings,
-    isLoading,
-    properties,
-    revenue,
-    expenses,
-    subscription,
-    refreshData,
-  };
-
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+  return (
+    <DataContext.Provider value={{ properties, revenue, expenses, settings, loading, error }}>
+      {children}
+    </DataContext.Provider>
+  );
 }
 
 export function useDataContext() {
   const context = useContext(DataContext);
-  if (context === undefined) {
-    throw new Error('useDataContext must be used within a DataProvider');
+  if (!context) {
+    throw new Error('useDataContext must be used within DataContextProvider');
   }
   return context;
 }

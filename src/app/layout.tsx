@@ -1,21 +1,23 @@
-
 // Build timestamp: 2024-11-18T10:45:00Z
+import { DataContextProvider } from '@/context/data-context';
 import type { ReactNode } from 'react';
 import { ThemeProvider } from '@/context/theme-context';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseProvider } from '@/firebase/provider';
 import '@/app/globals.css';
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html>
       <body>
-        <ThemeProvider>
-            <FirebaseProvider>
+        <FirebaseProvider>
+          <DataContextProvider>
+            <ThemeProvider>
               {children}
               <Toaster />
-            </FirebaseProvider>
-        </ThemeProvider>
+            </ThemeProvider>
+          </DataContextProvider>
+        </FirebaseProvider>
       </body>
     </html>
   );
