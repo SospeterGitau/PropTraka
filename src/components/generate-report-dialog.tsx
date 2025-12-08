@@ -45,7 +45,9 @@ interface GenerateReportDialogProps {
 
 export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialogProps) {
   const { settings } = useDataContext();
-  const { currency, companyName, residencyStatus } = settings;
+  const currency = settings?.currency || 'KES';
+  const companyName = settings?.companyName || '';
+  const residencyStatus = settings?.residencyStatus || '';
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [report, setReport] = useState<string | null>(null);

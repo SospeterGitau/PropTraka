@@ -49,7 +49,8 @@ function getFinancialYear(date: Date) {
 
 function RevenueAnalysisTab() {
   const { settings } = useDataContext();
-  const { currency, locale } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -274,7 +275,9 @@ function RevenueAnalysisTab() {
 
 function PnlStatementTab() {
   const { settings } = useDataContext();
-  const { currency, locale, residencyStatus } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
+  const residencyStatus = settings?.residencyStatus || '';
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -550,7 +553,8 @@ const ReportsClient = memo(function ReportsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
-  const { isPnlReportEnabled, isMarketResearchEnabled } = settings;
+  const isPnlReportEnabled = settings?.isPnlReportEnabled ?? false;
+  const isMarketResearchEnabled = settings?.isMarketResearchEnabled ?? false;
 
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);

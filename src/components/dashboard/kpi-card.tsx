@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { ElementType } from 'react';
@@ -19,7 +18,10 @@ type KpiCardProps = {
 export function KpiCard({ icon: Icon, title, value, description, variant = 'default', formatAs = 'currency' }: KpiCardProps) {
   const { fontSize, ref } = useFitText();
   const { settings } = useDataContext();
-  const { currency, locale } = settings;
+  
+  // ✅ Add null safety - provide defaults if settings is null
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
 
   const formattedValue = () => {
     switch (formatAs) {

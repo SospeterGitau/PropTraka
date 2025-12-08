@@ -12,7 +12,12 @@ import {
   Percent, 
   AlertCircle,
   BarChart3,
-  DollarSign
+  DollarSign,
+  Loader2,
+  Download,
+  BarChart,
+  BrainCircuit,
+  ChevronDown
 } from 'lucide-react';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { PageHeader } from '@/components/page-header';
@@ -20,56 +25,63 @@ import { KpiCard } from '@/components/dashboard/kpi-card';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { startOfToday, isBefore } from 'date-fns';
-import type { Transaction } from '@/lib/types';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import type { Transaction, Property } from '@/lib/types';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrency } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // ML Predictions Component
 function MLPredictionsPanel() {
-  const { properties } = useDataContext();
-  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const { properties, settings } = useDataContext();
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
   const [priceResult, setPriceResult] = useState<any>(null);
   const [demandResult, setDemandResult] = useState<any>(null);
   const [roiResult, setRoiResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('price');
 
-  // Debug log
-  useEffect(() => {
-    console.log('Properties loaded:', properties);
-    console.log('Properties count:', properties.length);
-  }, [properties]);
+  const selectedProperty = useMemo(() => properties.find(p => p.id === selectedPropertyId), [properties, selectedPropertyId]);
 
   useEffect(() => {
-    if (properties.length > 0 && !selectedProperty) {
-      setSelectedProperty(properties[0]);
+    if (properties.length > 0 && !selectedPropertyId) {
+      setSelectedPropertyId(properties[0].id);
     }
-  }, [properties, selectedProperty]);
+  }, [properties, selectedPropertyId]);
 
   const callCloudFunction = async (functionName: string, data: any) => {
     try {
       setLoading(true);
       setError('');
-      
       const response = await fetch(
         `https://us-central1-studio-6577669797-1b758.cloudfunctions.net/${functionName}`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data }), // Functions expect a 'data' wrapper
         }
       );
 
       if (!response.ok) {
-        throw new Error(`Function call failed: ${response.statusText}`);
+        const errorBody = await response.json();
+        throw new Error(errorBody.error?.message || `Function call failed: ${response.statusText}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      return result.result; // The actual result is nested
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMsg);
-      console.error(`Error calling ${functionName}:`, err);
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Error: ${msg}`);
       return null;
     } finally {
       setLoading(false);
@@ -78,236 +90,178 @@ function MLPredictionsPanel() {
 
   const handlePredictPrice = async () => {
     if (!selectedProperty) return;
-
     const payload = {
-      location: selectedProperty.city || 'Nairobi',
-      bedrooms: selectedProperty.bedrooms || 2,
-      current_price: selectedProperty.property_value || 1000000,
-      annual_appreciation_rate: 0.05,
+      location: selectedProperty.city,
+      propertyType: selectedProperty.propertyType,
+      bedrooms: selectedProperty.bedrooms,
+      sqm: selectedProperty.size,
+      currentPrice: selectedProperty.currentValue,
     };
-
     const result = await callCloudFunction('predictPrice', payload);
     if (result) {
-      setPriceResult(result);
+        setPriceResult(result.predictions);
+        setActiveTab('price');
     }
   };
 
   const handleAnalyzeDemand = async () => {
     if (!selectedProperty) return;
-
     const payload = {
-      location: selectedProperty.city || 'Nairobi',
-      property_type: selectedProperty.property_type || 'Residential',
-      current_rental_rate: selectedProperty.monthly_rent || 15000,
-      market_data: {
-        average_occupancy: 0.85,
-        median_rental_price: 12000,
-      },
+        location: selectedProperty.city,
+        propertyType: selectedProperty.propertyType,
+        bedrooms: selectedProperty.bedrooms,
+        targetRent: selectedProperty.rentalValue
     };
-
     const result = await callCloudFunction('analyzeDemand', payload);
     if (result) {
-      setDemandResult(result);
+        setDemandResult(result.analysis);
+        setActiveTab('demand');
     }
   };
 
   const handleCalculateROI = async () => {
     if (!selectedProperty) return;
-
     const payload = {
-      initial_investment: selectedProperty.property_value || 1000000,
-      annual_rental_income: (selectedProperty.monthly_rent || 15000) * 12,
-      annual_expenses: selectedProperty.annual_expenses || 2000,
-      mortgage_principal_remaining: selectedProperty.mortgage || 0,
-      property_appreciation_rate: 0.05,
-      years: 5,
+        propertyValue: selectedProperty.currentValue,
+        monthlyRent: selectedProperty.rentalValue,
+        annualExpenses: 20000, // Placeholder - this should be calculated
+        downPaymentPercent: 20,
+        loanInterestRate: 12.5,
+        investmentYears: 5
     };
-
     const result = await callCloudFunction('calculateROI', payload);
-    if (result) {
-      setRoiResult(result);
+     if (result) {
+        setRoiResult(result.roi);
+        setActiveTab('roi');
     }
   };
 
-  if (properties.length === 0) {
-    return (
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>ML Predictions & Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">No properties found. Please add properties to your portfolio first.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const exportToPDF = () => {
+    // PDF generation logic would go here
+    console.log("Exporting to PDF...");
+  };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>ML Predictions & Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Select Property</label>
-              <select
-                value={selectedProperty?.id || ''}
-                onChange={(e) => {
-                  const prop = properties.find(p => p.id === e.target.value);
-                  setSelectedProperty(prop);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {properties.map(prop => (
-                  <option key={prop.id} value={prop.id}>
-                    {prop.addressLine1}, {prop.city} - KES {prop.property_value?.toLocaleString()}
-                  </option>
-                ))}
-              </select>
+                <CardTitle className="flex items-center gap-2"><BrainCircuit className="h-6 w-6" /> AI Predictions & Analysis</CardTitle>
+                <CardDescription className="mt-1">Advanced property investment insights powered by AI.</CardDescription>
             </div>
+            <div className="flex items-center gap-2 self-start sm:self-center">
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline"><ChevronDown className="mr-2 h-4 w-4"/> Run Analysis</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuItem onClick={handlePredictPrice} disabled={loading}>Price Forecast</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleAnalyzeDemand} disabled={loading}>Demand Analysis</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleCalculateROI} disabled={loading}>ROI Calculation</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="outline" size="icon" onClick={exportToPDF}><Download className="h-4 w-4" /></Button>
+            </div>
+        </div>
+      </CardHeader>
 
-            {selectedProperty && (
-              <div className="bg-gray-50 p-4 rounded-md space-y-2">
-                <p><strong>City:</strong> {selectedProperty.city}</p>
-                <p><strong>Property Type:</strong> {selectedProperty.property_type}</p>
-                <p><strong>Monthly Rent:</strong> KES {selectedProperty.monthly_rent?.toLocaleString()}</p>
-                <p><strong>Property Value:</strong> KES {selectedProperty.property_value?.toLocaleString()}</p>
-                <p><strong>Annual Expenses:</strong> KES {selectedProperty.annual_expenses?.toLocaleString()}</p>
-              </div>
-            )}
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+            <label className="text-sm font-medium">Select Property for Analysis</label>
+             <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Select a property..." />
+                </SelectTrigger>
+                <SelectContent>
+                    {properties.map(prop => (
+                        <SelectItem key={prop.id} value={prop.id}>
+                            {prop.addressLine1}, {prop.city} - {formatCurrency(prop.currentValue, settings.locale, settings.currency)}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md">
-                {error}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        {error && ( <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive-foreground text-sm">⚠️ {error}</div> )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              Price Forecast
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <button
-              onClick={handlePredictPrice}
-              disabled={loading || !selectedProperty}
-              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Analyzing...' : 'Predict Price'}
-            </button>
-
-            {priceResult && (
-              <div className="space-y-2 text-sm">
-                <div className="bg-blue-50 p-3 rounded-md">
-                  <p className="text-gray-600">Predicted Price (5 Years)</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    KES {priceResult.predicted_price?.toLocaleString()}
-                  </p>
+        {loading ? (
+             <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                    <p className="text-muted-foreground font-medium">Analyzing your property...</p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-gray-50 p-2 rounded">
-                    <p className="text-xs text-gray-600">Current</p>
-                    <p className="font-semibold">KES {selectedProperty.property_value?.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-gray-50 p-2 rounded">
-                    <p className="text-xs text-gray-600">Appreciation</p>
-                    <p className="font-semibold text-green-600">+{priceResult.appreciation_percentage?.toFixed(1)}%</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+        ) : !priceResult && !demandResult && !roiResult ? (
+            <div className="text-center py-12 bg-muted/50 rounded-lg border border-dashed">
+                <p className="text-muted-foreground">Select a property and run an analysis to get started.</p>
+            </div>
+        ) : (
+             <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="price" disabled={!priceResult}>Price Forecast</TabsTrigger>
+                    <TabsTrigger value="demand" disabled={!demandResult}>Demand Analysis</TabsTrigger>
+                    <TabsTrigger value="roi" disabled={!roiResult}>ROI Analysis</TabsTrigger>
+                </TabsList>
+                
+                {priceResult && (
+                    <TabsContent value="price" className="pt-4">
+                        <Card>
+                            <CardHeader><CardTitle>📈 Price Forecast</CardTitle></CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <KpiCard title="3-Month" value={priceResult.threeMonth.predicted} description={`+${priceResult.threeMonth.growthRate}%`} />
+                                    <KpiCard title="6-Month" value={priceResult.sixMonth.predicted} description={`+${priceResult.sixMonth.growthRate}%`} />
+                                    <KpiCard title="12-Month" value={priceResult.twelveMonth.predicted} description={`+${priceResult.twelveMonth.growthRate}%`} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Demand Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <button
-              onClick={handleAnalyzeDemand}
-              disabled={loading || !selectedProperty}
-              className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Analyzing...' : 'Analyze Demand'}
-            </button>
+                {demandResult && (
+                    <TabsContent value="demand" className="pt-4">
+                         <Card>
+                            <CardHeader><CardTitle>📊 Demand Analysis</CardTitle></CardHeader>
+                            <CardContent>
+                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <Card>
+                                        <CardHeader><CardTitle className="text-base">Demand Level</CardTitle></CardHeader>
+                                        <CardContent><p className="text-2xl font-bold capitalize">{demandResult.demandLevel}</p></CardContent>
+                                    </Card>
+                                     <Card>
+                                        <CardHeader><CardTitle className="text-base">Occupancy</CardTitle></CardHeader>
+                                        <CardContent><p className="text-2xl font-bold">{demandResult.occupancyForecast}%</p></CardContent>
+                                    </Card>
+                                     <Card>
+                                        <CardHeader><CardTitle className="text-base">Optimal Rent</CardTitle></CardHeader>
+                                        <CardContent><p className="text-xl font-bold">{formatCurrency(demandResult.optimalPriceRange.min, settings.locale, settings.currency)} - {formatCurrency(demandResult.optimalPriceRange.max, settings.locale, settings.currency)}</p></CardContent>
+                                    </Card>
+                                </div>
+                                <p className="text-sm mt-4 text-muted-foreground">{demandResult.recommendation}</p>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
 
-            {demandResult && (
-              <div className="space-y-2 text-sm">
-                <div className="bg-green-50 p-3 rounded-md">
-                  <p className="text-gray-600">Demand Score</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {demandResult.demand_score?.toFixed(1)}/10
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span>Recommended Rental</span>
-                    <span className="font-semibold">KES {demandResult.recommended_rental_rate?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span>Market Status</span>
-                    <span className="font-semibold capitalize">{demandResult.market_status}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5" />
-              ROI Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <button
-              onClick={handleCalculateROI}
-              disabled={loading || !selectedProperty}
-              className="w-full bg-purple-600 text-white py-2 rounded-md hover:bg-purple-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Calculating...' : 'Calculate ROI'}
-            </button>
-
-            {roiResult && (
-              <div className="space-y-2 text-sm">
-                <div className="bg-purple-50 p-3 rounded-md">
-                  <p className="text-gray-600">5-Year ROI</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {roiResult.total_roi_percentage?.toFixed(1)}%
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span>Total Return</span>
-                    <span className="font-semibold text-green-600">+KES {roiResult.total_return?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span>Annual Yield</span>
-                    <span className="font-semibold">{roiResult.annual_yield_percentage?.toFixed(1)}%</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+                {roiResult && (
+                    <TabsContent value="roi" className="pt-4">
+                         <Card>
+                            <CardHeader><CardTitle>💰 ROI Analysis</CardTitle></CardHeader>
+                             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <KpiCard title="Cap Rate" value={roiResult.capRate} formatAs="percent" description="Net Operating Income / Value" />
+                                <KpiCard title="Cash on Cash" value={roiResult.cashOnCashReturn} formatAs="percent" description="Cash Flow / Down Payment" />
+                                <KpiCard title="5-Year ROI" value={roiResult.fiveYearProjection.roi} formatAs="percent" description="Projected 5-year return" />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                )}
+            </Tabs>
+        )}
+      </CardContent>
+    </Card>
   );
 }
+
 
 export default function DashboardPageContent() {
   const { user } = useUser();
@@ -519,27 +473,6 @@ export default function DashboardPageContent() {
         <MLPredictionsPanel />
       </div>
       
-      <div className="grid grid-cols-1 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Income vs Expenses (Last 6 Months)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AreaChart data={chartData} />
-          </CardContent>
-        </Card>
-        
-        {properties.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Profit Per Property (All Time)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <HorizontalBarChart data={profitPerProperty} />
-            </CardContent>
-          </Card>
-        )}
-      </div>
     </>
   );
 }

@@ -35,7 +35,9 @@ const ArrearsClient = memo(function ArrearsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
-  const { currency, locale, companyName } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
+  const companyName = settings?.companyName || '';
   const [isReminderGenerating, startReminderTransition] = useTransition();
 
   const revenueQuery = useMemo(() => 

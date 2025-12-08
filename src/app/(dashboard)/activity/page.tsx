@@ -19,7 +19,7 @@ import { Query, Timestamp } from 'firebase/firestore';
 
 const ChangelogPage = memo(function ChangelogPage() {
   const { settings } = useDataContext();
-  const { locale } = settings;
+  const locale = settings?.locale || 'en-KE';
   const { user } = useUser();
   const firestore = useFirestore();
 

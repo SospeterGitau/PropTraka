@@ -17,7 +17,8 @@ interface ArrearsSummaryProps {
 
 export function ArrearsSummary({ revenue, properties }: ArrearsSummaryProps) {
   const { settings } = useDataContext();
-  const { currency, locale } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
 
   // Calculate arrears analysis
   const { arrearsAnalysis, totalArrearsAmount, criticalArrears } = useMemo(() => {

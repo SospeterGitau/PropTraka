@@ -175,7 +175,8 @@ const ExpensesClient = memo(function ExpensesClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
-  const { locale, currency } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
 
   const expensesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'expenses', user.uid) : null, [firestore, user?.uid]);
   const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);

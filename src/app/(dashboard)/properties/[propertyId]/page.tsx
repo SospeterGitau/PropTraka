@@ -38,7 +38,8 @@ function PropertyDetailPageContent() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
-  const { currency, locale } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
 
   // Data Fetching
   const propertyRef = useMemo(() => 

@@ -27,7 +27,8 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
-  const { locale, currency } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
   const { toast } = useToast();
 
   // Data Fetching

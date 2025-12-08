@@ -29,7 +29,7 @@ interface MarketResearchDialogProps {
 
 export function MarketResearchDialog({ properties }: MarketResearchDialogProps) {
   const { settings } = useDataContext();
-  const { currency } = settings;
+  const currency = settings?.currency || 'KES';
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();

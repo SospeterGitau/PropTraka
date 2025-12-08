@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { LucideProps } from 'lucide-react';
@@ -7,7 +6,9 @@ import { useDataContext } from '@/context/data-context';
 
 export function CurrencyIcon(props: LucideProps) {
   const { settings } = useDataContext();
-  const { currency } = settings;
+  
+  // ✅ Add null safety - default to KES if settings unavailable
+  const currency = settings?.currency || 'KES';
 
   switch (currency) {
     case 'USD':

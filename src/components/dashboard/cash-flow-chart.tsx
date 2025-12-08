@@ -27,7 +27,8 @@ interface CashFlowChartProps {
 
 export function CashFlowChart({ data }: CashFlowChartProps) {
   const { settings } = useDataContext();
-  const { currency, locale } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
 
   const chartConfig = {
     netCashFlow: {

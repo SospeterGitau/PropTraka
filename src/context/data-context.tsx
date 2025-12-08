@@ -1,17 +1,16 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { firestore as db } from '@/firebase';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { firestore } from '@/firebase';
+import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { useUser } from '@/firebase';
-import type { Property, Transaction } from '@/lib/types';
+import type { Property, Transaction, UserSettings } from '@/lib/types';
 
 interface DataContextType {
   properties: Property[];
   revenue: Transaction[];
   expenses: Transaction[];
-  settings: any;
+  settings: UserSettings | null;
   loading: boolean;
   error: string | null;
 }
@@ -23,7 +22,7 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [revenue, setRevenue] = useState<Transaction[]>([]);
   const [expenses, setExpenses] = useState<Transaction[]>([]);
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,29 +33,20 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // If no user, just set loading to false
-    if (!user?.uid) {
-      console.log('⚠️ No authenticated user - skipping data load');
-      setProperties([]);
-      setRevenue([]);
-      setExpenses([]);
+    if (!user) {
+      console.log('⏳ No authenticated user, skipping data load');
       setLoading(false);
       return;
     }
 
-    console.log('🔄 Auth ready - setting up Firestore listeners for user:', user.uid);
+    console.log('🔄 Auth ready - setting up Firestore listeners (no user_id filter)');
     setLoading(true);
     const unsubscribers: (() => void)[] = [];
 
     try {
-      // Listen to properties collection
-      const propertiesQuery = query(
-        collection(db, 'properties'),
-        where('user_id', '==', user.uid)
-      );
-
+      // Listen to ALL properties (no user_id filter)
       const unsubProperties = onSnapshot(
-        propertiesQuery,
+        collection(firestore, 'properties'),
         (snapshot) => {
           const data = snapshot.docs.map((doc) => ({
             id: doc.id,
@@ -72,14 +62,9 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubProperties);
 
-      // Listen to revenue collection
-      const revenueQuery = query(
-        collection(db, 'revenue'),
-        where('user_id', '==', user.uid)
-      );
-
+      // Listen to ALL revenue (no user_id filter)
       const unsubRevenue = onSnapshot(
-        revenueQuery,
+        collection(firestore, 'revenue'),
         (snapshot) => {
           const data = snapshot.docs.map((doc) => ({
             id: doc.id,
@@ -95,14 +80,9 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubRevenue);
 
-      // Listen to expenses collection
-      const expensesQuery = query(
-        collection(db, 'expenses'),
-        where('user_id', '==', user.uid)
-      );
-
+      // Listen to ALL expenses (no user_id filter)
       const unsubExpenses = onSnapshot(
-        expensesQuery,
+        collection(firestore, 'expenses'),
         (snapshot) => {
           const data = snapshot.docs.map((doc) => ({
             id: doc.id,
@@ -118,6 +98,50 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubExpenses);
 
+      // Load user settings from userSettings collection
+      const unsubSettings = onSnapshot(
+        doc(firestore, 'userSettings', user.uid),
+        (snapshot) => {
+          if (snapshot.exists()) {
+            const settingsData = snapshot.data() as UserSettings;
+            setSettings(settingsData);
+            console.log(`✅ User settings loaded:`, settingsData);
+            console.log(`   Currency: ${settingsData.currency}`);
+            console.log(`   Locale: ${settingsData.locale}`);
+            console.log(`   Theme: ${settingsData.theme || 'system'}`);
+            console.log(`   Role: ${settingsData.role || 'Not set'}`);
+          } else {
+            console.log('⚠️  No user settings found, using defaults');
+            // Set default settings if document doesn't exist
+            setSettings({
+              currency: 'KES',
+              locale: 'en-KE',
+              companyName: 'My Company',
+              residencyStatus: 'Resident',
+              isPnlReportEnabled: true,
+              isMarketResearchEnabled: true,
+              theme: 'system',
+              role: 'Individual Landlord',
+            } as UserSettings);
+          }
+        },
+        (err) => {
+          console.error('❌ Error loading settings:', err);
+          // Set default settings on error
+          setSettings({
+            currency: 'KES',
+            locale: 'en-KE',
+            companyName: 'My Company',
+            residencyStatus: 'Resident',
+            isPnlReportEnabled: true,
+            isMarketResearchEnabled: true,
+            theme: 'system',
+            role: 'Individual Landlord',
+          } as UserSettings);
+        }
+      );
+      unsubscribers.push(unsubSettings);
+
       // Mark loading as complete after first batch
       setTimeout(() => setLoading(false), 500);
     } catch (err: any) {
@@ -131,7 +155,7 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       console.log('🧹 Cleaning up Firestore listeners');
       unsubscribers.forEach((unsub) => unsub());
     };
-  }, [user?.uid, authLoading]); // Re-run if user changes
+  }, [authLoading, user]); // Depends on both authLoading and user
 
   return (
     <DataContext.Provider

@@ -28,7 +28,8 @@ type ViewMode = 'top-performers' | 'all' | 'needs-attention';
 
 export function PropertyROIScorecard({ properties, revenue, expenses }: PropertyROIScorecardProps) {
   const { settings } = useDataContext();
-  const { currency, locale } = settings;
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
   const [viewMode, setViewMode] = useState<ViewMode>('top-performers');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
