@@ -13,11 +13,7 @@ import {
   AlertCircle,
   BarChart3,
   DollarSign,
-  Loader2,
-  Download,
-  BarChart,
-  BrainCircuit,
-  ChevronDown
+  Download
 } from 'lucide-react';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { PageHeader } from '@/components/page-header';
@@ -25,243 +21,633 @@ import { KpiCard } from '@/components/dashboard/kpi-card';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { startOfToday, isBefore } from 'date-fns';
-import type { Transaction, Property } from '@/lib/types';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
+import type { Transaction } from '@/lib/types';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 
-// ML Predictions Component
+
 function MLPredictionsPanel() {
   const { properties, settings } = useDataContext();
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [priceResult, setPriceResult] = useState<any>(null);
   const [demandResult, setDemandResult] = useState<any>(null);
   const [roiResult, setRoiResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [activeFunction, setActiveFunction] = useState<'price' | 'demand' | 'roi' | 'compare' | null>(null);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('price');
+  const [activeTab, setActiveTab] = useState<'price' | 'demand' | 'roi' | 'compare' | 'empty'>('empty');
+  const [compareProperties, setCompareProperties] = useState(false);
+  const [comparisonResults, setComparisonResults] = useState<any>([]);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const selectedProperty = useMemo(() => properties.find(p => p.id === selectedPropertyId), [properties, selectedPropertyId]);
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.locale || 'en-KE';
 
   useEffect(() => {
-    if (properties.length > 0 && !selectedPropertyId) {
-      setSelectedPropertyId(properties[0].id);
+    if (properties.length > 0 && !selectedProperty) {
+      setSelectedProperty(properties[0]);
     }
-  }, [properties, selectedPropertyId]);
+  }, [properties, selectedProperty]);
 
   const callCloudFunction = async (functionName: string, data: any) => {
     try {
-      setLoading(true);
-      setError('');
+      console.log(`Calling ${functionName}:`, data);
+
       const response = await fetch(
         `https://us-central1-studio-6577669797-1b758.cloudfunctions.net/${functionName}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data }), // Functions expect a 'data' wrapper
+          body: JSON.stringify(data),
         }
       );
 
       if (!response.ok) {
-        const errorBody = await response.json();
-        throw new Error(errorBody.error?.message || `Function call failed: ${response.statusText}`);
+        throw new Error(`Function call failed: ${response.statusText}`);
       }
 
       const result = await response.json();
-      return result.result; // The actual result is nested
+      console.log(`Result from ${functionName}:`, result);
+      return result;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setError(`Error: ${msg}`);
+      console.error(`Error in ${functionName}:`, err);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const handlePredictPrice = async () => {
     if (!selectedProperty) return;
+    setActiveFunction('price');
+    setLoading(true);
+    setError('');
+    
     const payload = {
-      location: selectedProperty.city,
-      propertyType: selectedProperty.propertyType,
-      bedrooms: selectedProperty.bedrooms,
-      sqm: selectedProperty.size,
-      currentPrice: selectedProperty.currentValue,
+      location: selectedProperty.city || 'Nairobi',
+      bedrooms: selectedProperty.bedrooms || 2,
+      current_price: selectedProperty.property_value || 1000000,
+      annual_appreciation_rate: 0.05,
+      property_age: selectedProperty.property_age || 5,
     };
     const result = await callCloudFunction('predictPrice', payload);
     if (result) {
-        setPriceResult(result.predictions);
-        setActiveTab('price');
+      setPriceResult(result);
+      setActiveTab('price');
     }
+    setLoading(false);
+    setActiveFunction(null);
   };
 
   const handleAnalyzeDemand = async () => {
     if (!selectedProperty) return;
+    setActiveFunction('demand');
+    setLoading(true);
+    setError('');
+    
     const payload = {
-        location: selectedProperty.city,
-        propertyType: selectedProperty.propertyType,
-        bedrooms: selectedProperty.bedrooms,
-        targetRent: selectedProperty.rentalValue
+      location: selectedProperty.city || 'Nairobi',
+      property_type: selectedProperty.property_type || 'Residential',
+      current_rental_rate: selectedProperty.monthly_rent || 15000,
+      market_data: { average_occupancy: 0.85, median_rental_price: 12000 },
     };
     const result = await callCloudFunction('analyzeDemand', payload);
     if (result) {
-        setDemandResult(result.analysis);
-        setActiveTab('demand');
+      setDemandResult(result);
+      setActiveTab('demand');
     }
+    setLoading(false);
+    setActiveFunction(null);
   };
 
   const handleCalculateROI = async () => {
     if (!selectedProperty) return;
+    setActiveFunction('roi');
+    setLoading(true);
+    setError('');
+    
     const payload = {
-        propertyValue: selectedProperty.currentValue,
-        monthlyRent: selectedProperty.rentalValue,
-        annualExpenses: 20000, // Placeholder - this should be calculated
-        downPaymentPercent: 20,
-        loanInterestRate: 12.5,
-        investmentYears: 5
+      initial_investment: selectedProperty.property_value || 1000000,
+      annual_rental_income: (selectedProperty.monthly_rent || 15000) * 12,
+      annual_expenses: selectedProperty.annual_expenses || 2000,
+      property_appreciation_rate: 0.05,
+      years: 5,
     };
     const result = await callCloudFunction('calculateROI', payload);
-     if (result) {
-        setRoiResult(result.roi);
-        setActiveTab('roi');
+    if (result) {
+      setRoiResult(result);
+      setActiveTab('roi');
     }
+    setLoading(false);
+    setActiveFunction(null);
   };
 
-  const exportToPDF = () => {
-    // PDF generation logic would go here
-    console.log("Exporting to PDF...");
+  const handleCompareProperties = async () => {
+    if (properties.length < 2) {
+      setError('Need at least 2 properties to compare');
+      return;
+    }
+
+    setActiveFunction('compare');
+    setLoading(true);
+    setError('');
+    const results = [];
+    
+    for (const prop of properties.slice(0, 3)) {
+      const roiData = await callCloudFunction('calculateROI', {
+        initial_investment: prop.property_value || 1000000,
+        annual_rental_income: (prop.monthly_rent || 15000) * 12,
+        annual_expenses: prop.annual_expenses || 2000,
+        property_appreciation_rate: 0.05,
+        years: 5,
+      });
+      if (roiData) {
+        results.push({
+          property_name: `${prop.property_type} in ${prop.city}`,
+          ...roiData
+        });
+      }
+    }
+    
+    setComparisonResults(results);
+    setCompareProperties(true);
+    setActiveTab('compare');
+    setLoading(false);
+    setActiveFunction(null);
+  };
+
+  const formatNumberShort = (num: number): string => {
+    if (num >= 1000000) {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 1,
+      }).format(num);
+    }
+    if (num >= 1000) {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: currency,
+        notation: 'compact',
+        compactDisplay: 'short',
+        maximumFractionDigits: 0,
+      }).format(num);
+    }
+    return formatCurrency(num, locale, currency);
+  };
+
+  const exportToPDF = async () => {
+    const content = `
+PROPERTY INVESTMENT ANALYSIS REPORT
+=====================================
+Generated: ${new Date().toLocaleDateString()}
+
+PROPERTY: ${selectedProperty?.property_type} in ${selectedProperty?.city}
+Value: ${formatCurrency(selectedProperty?.property_value || 0, locale, currency)}
+
+PRICE FORECAST
+${priceResult ? `Future Price (5 years): ${formatCurrency(priceResult.future_price || 0, locale, currency)}
+Appreciation: ${priceResult.appreciation_percentage}
+Trend: ${priceResult.trend}` : 'Not analyzed'}
+
+DEMAND ANALYSIS
+${demandResult ? `Demand Score: ${demandResult.demand_score}/10
+Occupancy Rate: ${demandResult.occupancy_rate}
+Annual Income Estimate: ${formatCurrency(demandResult.annual_income_estimate || 0, locale, currency)}` : 'Not analyzed'}
+
+ROI ANALYSIS
+${roiResult ? `Total ROI: ${roiResult.roi_percentage}
+Annual ROI: ${roiResult.annual_roi}%
+Break-even: ${roiResult.break_even_months} months` : 'Not analyzed'}
+
+Risk Level: ${roiResult?.risk_level || 'Not assessed'}
+    `;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `property-analysis-${selectedProperty?.id}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <CardTitle className="flex items-center gap-2"><BrainCircuit className="h-6 w-6" /> AI Predictions & Analysis</CardTitle>
-                <CardDescription className="mt-1">Advanced property investment insights powered by AI.</CardDescription>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <Building className="h-6 w-6 text-primary" />
+              <div>
+                <CardTitle className="text-xl">AI Predictions & Analysis</CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">Advanced property investment insights powered by AI</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2 self-start sm:self-center">
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline"><ChevronDown className="mr-2 h-4 w-4"/> Run Analysis</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onClick={handlePredictPrice} disabled={loading}>Price Forecast</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleAnalyzeDemand} disabled={loading}>Demand Analysis</DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCalculateROI} disabled={loading}>ROI Calculation</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <Button variant="outline" size="icon" onClick={exportToPDF}><Download className="h-4 w-4" /></Button>
+            <div className="flex gap-2">
+              <Button onClick={handleCompareProperties}>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Compare
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={exportToPDF}>
+                    Download Report (.txt)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <label className="block text-sm font-medium mb-3">Select Property</label>
+          <select
+            value={selectedProperty?.id || ''}
+            onChange={(e) => setSelectedProperty(properties.find(p => p.id === e.target.value))}
+            className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+          >
+            <option value="">Choose a property...</option>
+            {properties.map(prop => (
+              <option key={prop.id} value={prop.id}>
+                {prop.property_type} - {prop.city} - {formatNumberShort(prop.property_value || 0)}
+              </option>
+            ))}
+          </select>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <div className="bg-destructive/10 border border-destructive rounded-md p-3 text-destructive text-sm">
+          {error}
         </div>
-      </CardHeader>
+      )}
 
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-            <label className="text-sm font-medium">Select Property for Analysis</label>
-             <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
-                <SelectTrigger>
-                    <SelectValue placeholder="Select a property..." />
-                </SelectTrigger>
-                <SelectContent>
-                    {properties.map(prop => (
-                        <SelectItem key={prop.id} value={prop.id}>
-                            {prop.addressLine1}, {prop.city} - {formatCurrency(prop.currentValue, settings.locale, settings.currency)}
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <button
+            onClick={handlePredictPrice}
+            disabled={!selectedProperty || activeFunction !== null}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium text-sm transition ${
+              activeFunction === 'price'
+                ? 'bg-primary text-primary-foreground'
+                : activeTab === 'price'
+                ? 'bg-primary/80 text-primary-foreground border-2 border-primary'
+                : 'bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50'
+            }`}
+          >
+            <TrendingUp className="h-4 w-4" />
+            {activeFunction === 'price' ? 'Analyzing...' : 'Predict Price'}
+          </button>
+          <button
+            onClick={handleAnalyzeDemand}
+            disabled={!selectedProperty || activeFunction !== null}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium text-sm transition ${
+              activeFunction === 'demand'
+                ? 'bg-accent text-accent-foreground'
+                : activeTab === 'demand'
+                ? 'bg-accent/80 text-accent-foreground border-2 border-accent'
+                : 'bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-50'
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            {activeFunction === 'demand' ? 'Analyzing...' : 'Analyze Demand'}
+          </button>
+          <button
+            onClick={handleCalculateROI}
+            disabled={!selectedProperty || activeFunction !== null}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium text-sm transition ${
+              activeFunction === 'roi'
+                ? 'bg-primary text-primary-foreground'
+                : activeTab === 'roi'
+                ? 'bg-primary/80 text-primary-foreground border-2 border-primary'
+                : 'bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50'
+            }`}
+          >
+            <Percent className="h-4 w-4" />
+            {activeFunction === 'roi' ? 'Analyzing...' : 'Calculate ROI'}
+          </button>
         </div>
 
-        {error && ( <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-destructive-foreground text-sm">⚠️ {error}</div> )}
-
-        {loading ? (
-             <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                    <p className="text-muted-foreground font-medium">Analyzing your property...</p>
-                </div>
-            </div>
-        ) : !priceResult && !demandResult && !roiResult ? (
-            <div className="text-center py-12 bg-muted/50 rounded-lg border border-dashed">
-                <p className="text-muted-foreground">Select a property and run an analysis to get started.</p>
-            </div>
-        ) : (
-             <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="price" disabled={!priceResult}>Price Forecast</TabsTrigger>
-                    <TabsTrigger value="demand" disabled={!demandResult}>Demand Analysis</TabsTrigger>
-                    <TabsTrigger value="roi" disabled={!roiResult}>ROI Analysis</TabsTrigger>
-                </TabsList>
-                
-                {priceResult && (
-                    <TabsContent value="price" className="pt-4">
-                        <Card>
-                            <CardHeader><CardTitle>📈 Price Forecast</CardTitle></CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <KpiCard title="3-Month" value={priceResult.threeMonth.predicted} description={`+${priceResult.threeMonth.growthRate}%`} />
-                                    <KpiCard title="6-Month" value={priceResult.sixMonth.predicted} description={`+${priceResult.sixMonth.growthRate}%`} />
-                                    <KpiCard title="12-Month" value={priceResult.twelveMonth.predicted} description={`+${priceResult.twelveMonth.growthRate}%`} />
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                )}
-
-                {demandResult && (
-                    <TabsContent value="demand" className="pt-4">
-                         <Card>
-                            <CardHeader><CardTitle>📊 Demand Analysis</CardTitle></CardHeader>
-                            <CardContent>
-                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <Card>
-                                        <CardHeader><CardTitle className="text-base">Demand Level</CardTitle></CardHeader>
-                                        <CardContent><p className="text-2xl font-bold capitalize">{demandResult.demandLevel}</p></CardContent>
-                                    </Card>
-                                     <Card>
-                                        <CardHeader><CardTitle className="text-base">Occupancy</CardTitle></CardHeader>
-                                        <CardContent><p className="text-2xl font-bold">{demandResult.occupancyForecast}%</p></CardContent>
-                                    </Card>
-                                     <Card>
-                                        <CardHeader><CardTitle className="text-base">Optimal Rent</CardTitle></CardHeader>
-                                        <CardContent><p className="text-xl font-bold">{formatCurrency(demandResult.optimalPriceRange.min, settings.locale, settings.currency)} - {formatCurrency(demandResult.optimalPriceRange.max, settings.locale, settings.currency)}</p></CardContent>
-                                    </Card>
-                                </div>
-                                <p className="text-sm mt-4 text-muted-foreground">{demandResult.recommendation}</p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                )}
-
-                {roiResult && (
-                    <TabsContent value="roi" className="pt-4">
-                         <Card>
-                            <CardHeader><CardTitle>💰 ROI Analysis</CardTitle></CardHeader>
-                             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <KpiCard title="Cap Rate" value={roiResult.capRate} formatAs="percent" description="Net Operating Income / Value" />
-                                <KpiCard title="Cash on Cash" value={roiResult.cashOnCashReturn} formatAs="percent" description="Cash Flow / Down Payment" />
-                                <KpiCard title="5-Year ROI" value={roiResult.fiveYearProjection.roi} formatAs="percent" description="Projected 5-year return" />
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                )}
-            </Tabs>
+        {(priceResult || demandResult || roiResult || compareProperties) && (
+          <div className="flex gap-1 bg-secondary rounded-md p-1">
+            {priceResult && (
+              <button
+                onClick={() => setActiveTab('price')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded transition ${
+                  activeTab === 'price'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                Price Forecast
+              </button>
+            )}
+            {demandResult && (
+              <button
+                onClick={() => setActiveTab('demand')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded transition ${
+                  activeTab === 'demand'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                Demand Analysis
+              </button>
+            )}
+            {roiResult && (
+              <button
+                onClick={() => setActiveTab('roi')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded transition ${
+                  activeTab === 'roi'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Percent className="h-4 w-4" />
+                ROI Analysis
+              </button>
+            )}
+            {compareProperties && (
+              <button
+                onClick={() => setActiveTab('compare')}
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded transition ${
+                  activeTab === 'compare'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Comparison
+              </button>
+            )}
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {activeTab === 'price' && priceResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Price Forecast (5 Years)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Current Price</p>
+                <p className="text-lg font-bold">{formatNumberShort(priceResult.current_price || 0)}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Future Price</p>
+                <p className="text-lg font-bold text-green-500">{formatNumberShort(priceResult.future_price || 0)}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Total Appreciation</p>
+                <p className="text-lg font-bold">{priceResult.appreciation_percentage}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Trend</p>
+                <p className="text-lg font-bold text-primary">{priceResult.trend}</p>
+              </div>
+            </div>
+
+            {priceResult.forecast_data && (
+              <div className="bg-secondary rounded-md p-4 overflow-x-auto">
+                <h4 className="font-semibold text-sm mb-3">Year-by-Year Forecast</h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 px-2 font-medium">Year</th>
+                      <th className="text-left py-2 px-2 font-medium">Price</th>
+                      <th className="text-left py-2 px-2 font-medium">Lower</th>
+                      <th className="text-left py-2 px-2 font-medium">Upper</th>
+                      <th className="text-left py-2 px-2 font-medium">Confidence</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {priceResult.forecast_data.map((row: any, idx: number) => (
+                      <tr key={idx} className="border-b border-border hover:bg-background/50">
+                        <td className="py-2 px-2">{row.year}</td>
+                        <td className="py-2 px-2">{formatNumberShort(row.predicted_price || 0)}</td>
+                        <td className="py-2 px-2 text-muted-foreground">{formatNumberShort(row.lower_bound || 0)}</td>
+                        <td className="py-2 px-2 text-green-500">{formatNumberShort(row.upper_bound || 0)}</td>
+                        <td className="py-2 px-2">{row.confidence_level}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="bg-secondary rounded-md p-4 space-y-2">
+              <p className="text-sm"><strong>Recommendation:</strong> <span className="text-muted-foreground">{priceResult.recommendation}</span></p>
+              <p className="text-sm"><strong>Market Insight:</strong> <span className="text-muted-foreground">{priceResult.market_insights}</span></p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'demand' && demandResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-accent" />
+              Demand Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Demand Score</p>
+                <p className="text-lg font-bold">{demandResult.demand_score}/10</p>
+                <p className="text-xs text-muted-foreground mt-1">{demandResult.demand_level}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Occupancy Rate</p>
+                <p className="text-lg font-bold">{demandResult.occupancy_rate}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Monthly Income</p>
+                <p className="text-lg font-bold text-green-500">{formatNumberShort(demandResult.monthly_income_estimate || 0)}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Annual Income</p>
+                <p className="text-lg font-bold">{formatNumberShort(demandResult.annual_income_estimate || 0)}</p>
+              </div>
+            </div>
+
+            {demandResult.market_comparison && (
+              <div className="bg-secondary rounded-md p-4 space-y-3">
+                <h4 className="font-semibold text-sm">Market Comparison</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {demandResult.market_comparison.map((comp: any, idx: number) => (
+                    <div key={idx} className="bg-background rounded-md p-3 border border-border">
+                      <p className="text-sm font-medium">{comp.type}</p>
+                      <p className="text-xs text-muted-foreground mt-2">Rate: {formatNumberShort(comp.rate || 0)}</p>
+                      <p className="text-xs text-muted-foreground">Occupancy: {(comp.occupancy * 100).toFixed(0)}%</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="bg-secondary rounded-md p-4 space-y-2">
+              <p className="text-sm"><strong>Recommendation:</strong> <span className="text-muted-foreground">{demandResult.recommendation}</span></p>
+              <p className="text-sm"><strong>Risk Level:</strong> <span className="text-muted-foreground">{demandResult.risk_level}</span></p>
+              <p className="text-sm"><strong>Market Insights:</strong> <span className="text-muted-foreground">{demandResult.market_insights}</span></p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'roi' && roiResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Percent className="h-5 w-5 text-primary" />
+              ROI Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Total ROI</p>
+                <p className="text-lg font-bold">{roiResult.roi_percentage}</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Annual ROI</p>
+                <p className="text-lg font-bold text-green-500">{roiResult.annual_roi}%</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Break-even</p>
+                <p className="text-lg font-bold">{roiResult.break_even_months} months</p>
+              </div>
+              <div className="bg-secondary rounded-md p-4">
+                <p className="text-xs text-muted-foreground mb-1">Risk Level</p>
+                <p className={`text-lg font-bold ${roiResult.risk_level === 'LOW' ? 'text-green-500' : roiResult.risk_level === 'MEDIUM' ? 'text-yellow-500' : 'text-destructive'}`}>
+                  {roiResult.risk_level}
+                </p>
+              </div>
+            </div>
+
+            {roiResult.yearly_breakdown && (
+              <div className="bg-secondary rounded-md p-4 overflow-x-auto">
+                <h4 className="font-semibold text-sm mb-3">Year-by-Year Cash Flow</h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 px-2 font-medium">Year</th>
+                      <th className="text-left py-2 px-2 font-medium">Cash Flow</th>
+                      <th className="text-left py-2 px-2 font-medium">Cumulative</th>
+                      <th className="text-left py-2 px-2 font-medium">Property Value</th>
+                      <th className="text-left py-2 px-2 font-medium">Total Assets</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roiResult.yearly_breakdown.map((row: any, idx: number) => (
+                      <tr key={idx} className="border-b border-border hover:bg-background/50">
+                        <td className="py-2 px-2">{row.year}</td>
+                        <td className="py-2 px-2">{formatNumberShort(row.annual_cash_flow || 0)}</td>
+                        <td className="py-2 px-2 text-primary font-semibold">{formatNumberShort(row.cumulative_cash_flow || 0)}</td>
+                        <td className="py-2 px-2">{formatNumberShort(row.property_value || 0)}</td>
+                        <td className="py-2 px-2 text-green-500 font-semibold">{formatNumberShort(row.total_assets || 0)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <div className="bg-secondary rounded-md p-4 space-y-2">
+              <p className="text-sm"><strong>Recommendation:</strong> <span className="text-muted-foreground">{roiResult.recommendation}</span></p>
+              <p className="text-sm"><strong>Cash-on-Cash Return:</strong> <span className="text-muted-foreground">{roiResult.cash_on_cash_return}%</span></p>
+              <p className="text-sm"><strong>Investment Summary:</strong> <span className="text-muted-foreground">{roiResult.investment_summary}</span></p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'compare' && compareProperties && comparisonResults.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Property Comparison
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-secondary rounded-md p-4 overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2 font-medium">Property</th>
+                    <th className="text-left py-2 px-2 font-medium">Investment</th>
+                    <th className="text-left py-2 px-2 font-medium">Total ROI</th>
+                    <th className="text-left py-2 px-2 font-medium">Annual ROI</th>
+                    <th className="text-left py-2 px-2 font-medium">Break-even</th>
+                    <th className="text-left py-2 px-2 font-medium">Risk</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonResults.map((result: any, idx: number) => (
+                    <tr key={idx} className="border-b border-border hover:bg-background/50">
+                      <td className="py-2 px-2 font-medium text-foreground">{result.property_name}</td>
+                      <td className="py-2 px-2">{formatNumberShort(result.initial_investment || 0)}</td>
+                      <td className="py-2 px-2 text-green-500 font-bold">{result.roi_percentage}</td>
+                      <td className="py-2 px-2 text-primary">{result.annual_roi}%</td>
+                      <td className="py-2 px-2">{result.break_even_months} months</td>
+                      <td className={`py-2 px-2 font-semibold ${result.risk_level === 'LOW' ? 'text-green-500' : result.risk_level === 'MEDIUM' ? 'text-yellow-500' : 'text-destructive'}`}>
+                        {result.risk_level}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center space-y-3">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-border border-t-primary"></div>
+            <p className="text-sm text-muted-foreground">Analyzing your property...</p>
+          </div>
+        </div>
+      )}
+
+      {!priceResult && !demandResult && !roiResult && !compareProperties && !loading && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-sm text-muted-foreground">Select a property and click an analysis button to get started</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
-
 
 export default function DashboardPageContent() {
   const { user } = useUser();
@@ -472,7 +858,6 @@ export default function DashboardPageContent() {
       <div className="mb-8">
         <MLPredictionsPanel />
       </div>
-      
     </>
   );
 }
