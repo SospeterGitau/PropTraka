@@ -13,7 +13,8 @@ import {
   AlertCircle,
   BarChart3,
   DollarSign,
-  Download
+  Download,
+  Sparkles
 } from 'lucide-react';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { PageHeader } from '@/components/page-header';
@@ -247,7 +248,7 @@ Risk Level: ${roiResult?.risk_level || 'Not assessed'}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <Building className="h-6 w-6 text-primary" />
+              <Sparkles className="h-6 w-6 text-primary" />
               <div>
                 <CardTitle className="text-xl">AI Predictions & Analysis</CardTitle>
                 <p className="text-xs text-muted-foreground mt-1">Advanced property investment insights powered by AI</p>
@@ -861,3 +862,5 @@ export default function DashboardPageContent() {
     </>
   );
 }
+
+    
