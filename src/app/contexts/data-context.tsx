@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -20,6 +19,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataContextProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
+  
   const [properties, setProperties] = useState<Property[]>([]);
   const [revenue, setRevenue] = useState<Transaction[]>([]);
   const [expenses, setExpenses] = useState<Transaction[]>([]);
@@ -28,25 +28,23 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // ✅ CRITICAL: Wait for auth to finish before setting up listeners
     if (authLoading) {
       console.log('🔄 Firebase Auth initializing...');
       return;
     }
 
     if (!user) {
-      console.log('⚠️ No authenticated user, skipping data load');
+      console.log('❌ No authenticated user, skipping data load');
       setLoading(false);
       return;
     }
 
-    console.log('✅ Auth ready - setting up Firestore listeners');
+    console.log('✅ Auth ready - setting up Firestore listeners with user:', user.uid);
     setLoading(true);
 
     const unsubscribers: (() => void)[] = [];
 
     try {
-      // ✅ Listen to properties WITH ownerId filter
       const unsubProperties = onSnapshot(
         collection(firestore, 'properties'),
         (snapshot) => {
@@ -57,11 +55,11 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
                 id: doc.id,
                 ...doc.data(),
               })) as Property[];
+            
             setProperties(data);
-            console.log(`✅ Properties loaded: ${data.length} properties`);
+            console.log('✅ Properties loaded:', data.length, 'properties');
           } catch (err) {
             console.error('❌ Error processing properties snapshot:', err);
-            setError(`Error loading properties: ${err instanceof Error ? err.message : 'Unknown error'}`);
           }
         },
         (err) => {
@@ -71,7 +69,6 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubProperties);
 
-      // ✅ Listen to revenue WITH ownerId filter
       const unsubRevenue = onSnapshot(
         collection(firestore, 'revenue'),
         (snapshot) => {
@@ -82,11 +79,11 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
                 id: doc.id,
                 ...doc.data(),
               })) as Transaction[];
+            
             setRevenue(data);
-            console.log(`✅ Revenue entries loaded: ${data.length} entries`);
+            console.log('✅ Revenue entries loaded:', data.length, 'entries');
           } catch (err) {
             console.error('❌ Error processing revenue snapshot:', err);
-            setError(`Error loading revenue: ${err instanceof Error ? err.message : 'Unknown error'}`);
           }
         },
         (err) => {
@@ -96,7 +93,6 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubRevenue);
 
-      // ✅ Listen to expenses WITH ownerId filter
       const unsubExpenses = onSnapshot(
         collection(firestore, 'expenses'),
         (snapshot) => {
@@ -107,11 +103,11 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
                 id: doc.id,
                 ...doc.data(),
               })) as Transaction[];
+            
             setExpenses(data);
-            console.log(`✅ Expenses loaded: ${data.length} entries`);
+            console.log('✅ Expenses loaded:', data.length, 'entries');
           } catch (err) {
             console.error('❌ Error processing expenses snapshot:', err);
-            setError(`Error loading expenses: ${err instanceof Error ? err.message : 'Unknown error'}`);
           }
         },
         (err) => {
@@ -121,7 +117,6 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubExpenses);
 
-      // ✅ Load user settings from userSettings collection
       const unsubSettings = onSnapshot(
         doc(firestore, 'userSettings', user.uid),
         (snapshot) => {
@@ -129,10 +124,13 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
             if (snapshot.exists()) {
               const settingsData = snapshot.data() as UserSettings;
               setSettings(settingsData);
-              console.log('✅ User settings loaded', settingsData);
+              console.log('✅ User settings loaded:', {
+                currency: settingsData.currency,
+                locale: settingsData.locale,
+                theme: settingsData.theme,
+              });
             } else {
-              console.log('⚠️ No user settings found, using defaults');
-              // Set default settings if document doesn't exist
+              console.log('⚠️ No user settings found - using defaults');
               setSettings({
                 currency: 'KES',
                 locale: 'en-KE',
@@ -145,8 +143,7 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
               } as UserSettings);
             }
           } catch (err) {
-            console.error('❌ Error processing settings snapshot:', err);
-            // Set default settings on error
+            console.error('❌ Error loading settings:', err);
             setSettings({
               currency: 'KES',
               locale: 'en-KE',
@@ -160,8 +157,8 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
           }
         },
         (err) => {
-          console.error('❌ Error loading settings:', err);
-          // Set default settings on error
+          console.error('❌ Error setting up settings listener:', err);
+          setError(err.message);
           setSettings({
             currency: 'KES',
             locale: 'en-KE',
@@ -176,24 +173,33 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubSettings);
 
-      // ✅ Mark loading as complete after first batch
-      setTimeout(() => setLoading(false), 500);
-
+      setTimeout(() => {
+        setLoading(false);
+        console.log('✅ Initial data load complete');
+      }, 500);
     } catch (err: any) {
       console.error('❌ Setup error:', err.message);
       setError(err.message);
       setLoading(false);
     }
 
-    // ✅ Cleanup: unsubscribe from all listeners
     return () => {
       console.log('🧹 Cleaning up Firestore listeners');
       unsubscribers.forEach(unsub => unsub());
     };
-  }, [authLoading, user]); // Depends on both authLoading and user
+  }, [authLoading, user]);
 
   return (
-    <DataContext.Provider value={{ properties, revenue, expenses, settings, loading, error }}>
+    <DataContext.Provider
+      value={{
+        properties,
+        revenue,
+        expenses,
+        settings,
+        loading,
+        error,
+      }}
+    >
       {children}
     </DataContext.Provider>
   );
