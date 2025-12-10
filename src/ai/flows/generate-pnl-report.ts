@@ -2,7 +2,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import type { GeneratePnLReportInput, GeneratePnlReportOutput } from '@/lib/types';
+import type { GeneratePnlReportInput, GeneratePnlReportOutput } from '@/lib/types';
 
 const GeneratePnlReportInputSchema = z.object({
   startDate: z.string().describe('Start date for the P&L report (YYYY-MM-DD format)'),
@@ -18,7 +18,7 @@ const GeneratePnlReportOutputSchema = z.object({
   hint: z.string().optional().describe('Helpful hint if error occurred'),
 });
 
-export async function generatePnlReport(input: GeneratePnLReportInput): Promise<GeneratePnlReportOutput> {
+export async function generatePnlReport(input: GeneratePnlReportInput): Promise<GeneratePnlReportOutput> {
   return generatePnlReportFlow(input);
 }
 
