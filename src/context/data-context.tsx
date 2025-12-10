@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -11,6 +10,7 @@ interface DataContextType {
   properties: Property[];
   revenue: Transaction[];
   expenses: Transaction[];
+  maintenanceRequests: any[];
   settings: UserSettings | null;
   loading: boolean;
   error: string | null;
@@ -20,180 +20,124 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataContextProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
+  
   const [properties, setProperties] = useState<Property[]>([]);
   const [revenue, setRevenue] = useState<Transaction[]>([]);
   const [expenses, setExpenses] = useState<Transaction[]>([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // ✅ CRITICAL: Wait for auth to finish before setting up listeners
-    if (authLoading) {
-      console.log('🔄 Firebase Auth initializing...');
-      return;
-    }
-
+    if (authLoading) return;
     if (!user) {
-      console.log('⚠️ No authenticated user, skipping data load');
       setLoading(false);
       return;
     }
 
-    console.log('✅ Auth ready - setting up Firestore listeners');
     setLoading(true);
-
     const unsubscribers: (() => void)[] = [];
 
     try {
-      // ✅ Listen to properties WITH ownerId filter
       const unsubProperties = onSnapshot(
         collection(firestore, 'properties'),
         (snapshot) => {
           try {
             const data = snapshot.docs
               .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-              })) as Property[];
+              .map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
             setProperties(data);
-            console.log(`✅ Properties loaded: ${data.length} properties`);
           } catch (err) {
-            console.error('❌ Error processing properties snapshot:', err);
-            setError(`Error loading properties: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            console.error('Error processing properties:', err);
           }
         },
-        (err) => {
-          console.error('❌ Error loading properties:', err);
-          setError(err.message);
-        }
+        (err) => setError(err.message)
       );
       unsubscribers.push(unsubProperties);
 
-      // ✅ Listen to revenue WITH ownerId filter
       const unsubRevenue = onSnapshot(
         collection(firestore, 'revenue'),
         (snapshot) => {
           try {
             const data = snapshot.docs
               .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-              })) as Transaction[];
+              .map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
             setRevenue(data);
-            console.log(`✅ Revenue entries loaded: ${data.length} entries`);
           } catch (err) {
-            console.error('❌ Error processing revenue snapshot:', err);
-            setError(`Error loading revenue: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            console.error('Error processing revenue:', err);
           }
         },
-        (err) => {
-          console.error('❌ Error loading revenue:', err);
-          setError(err.message);
-        }
+        (err) => setError(err.message)
       );
       unsubscribers.push(unsubRevenue);
 
-      // ✅ Listen to expenses WITH ownerId filter
       const unsubExpenses = onSnapshot(
         collection(firestore, 'expenses'),
         (snapshot) => {
           try {
             const data = snapshot.docs
               .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-              })) as Transaction[];
+              .map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
             setExpenses(data);
-            console.log(`✅ Expenses loaded: ${data.length} entries`);
           } catch (err) {
-            console.error('❌ Error processing expenses snapshot:', err);
-            setError(`Error loading expenses: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            console.error('Error processing expenses:', err);
           }
         },
-        (err) => {
-          console.error('❌ Error loading expenses:', err);
-          setError(err.message);
-        }
+        (err) => setError(err.message)
       );
       unsubscribers.push(unsubExpenses);
 
-      // ✅ Load user settings from userSettings collection
+      const unsubMaintenance = onSnapshot(
+        collection(firestore, 'maintenanceRequests'),
+        (snapshot) => {
+          try {
+            const data = snapshot.docs
+              .filter(doc => doc.data().ownerId === user.uid)
+              .map(doc => ({ id: doc.id, ...doc.data() }));
+            setMaintenanceRequests(data);
+          } catch (err) {
+            console.error('Error processing maintenance:', err);
+          }
+        },
+        (err) => setError(err.message)
+      );
+      unsubscribers.push(unsubMaintenance);
+
       const unsubSettings = onSnapshot(
         doc(firestore, 'userSettings', user.uid),
         (snapshot) => {
-          try {
-            if (snapshot.exists()) {
-              const settingsData = snapshot.data() as UserSettings;
-              setSettings(settingsData);
-              console.log('✅ User settings loaded', settingsData);
-            } else {
-              console.log('⚠️ No user settings found, using defaults');
-              // Set default settings if document doesn't exist
-              setSettings({
-                currency: 'KES',
-                locale: 'en-KE',
-                companyName: 'My Company',
-                residencyStatus: 'Resident',
-                isPnlReportEnabled: true,
-                isMarketResearchEnabled: true,
-                theme: 'system',
-                role: 'Individual Landlord',
-              } as UserSettings);
-            }
-          } catch (err) {
-            console.error('❌ Error processing settings snapshot:', err);
-            // Set default settings on error
-            setSettings({
-              currency: 'KES',
-              locale: 'en-KE',
-              companyName: 'My Company',
-              residencyStatus: 'Resident',
-              isPnlReportEnabled: true,
-              isMarketResearchEnabled: true,
-              theme: 'system',
-              role: 'Individual Landlord',
-            } as UserSettings);
+          if (snapshot.exists()) {
+            setSettings(snapshot.data() as UserSettings);
           }
         },
-        (err) => {
-          console.error('❌ Error loading settings:', err);
-          // Set default settings on error
-          setSettings({
-            currency: 'KES',
-            locale: 'en-KE',
-            companyName: 'My Company',
-            residencyStatus: 'Resident',
-            isPnlReportEnabled: true,
-            isMarketResearchEnabled: true,
-            theme: 'system',
-            role: 'Individual Landlord',
-          } as UserSettings);
-        }
+        (err) => setError(err.message)
       );
       unsubscribers.push(unsubSettings);
 
-      // ✅ Mark loading as complete after first batch
       setTimeout(() => setLoading(false), 500);
-
     } catch (err: any) {
-      console.error('❌ Setup error:', err.message);
       setError(err.message);
       setLoading(false);
     }
 
-    // ✅ Cleanup: unsubscribe from all listeners
     return () => {
-      console.log('🧹 Cleaning up Firestore listeners');
       unsubscribers.forEach(unsub => unsub());
     };
-  }, [authLoading, user]); // Depends on both authLoading and user
+  }, [authLoading, user]);
 
   return (
-    <DataContext.Provider value={{ properties, revenue, expenses, settings, loading, error }}>
+    <DataContext.Provider
+      value={{
+        properties,
+        revenue,
+        expenses,
+        maintenanceRequests,
+        settings,
+        loading,
+        error,
+      }}
+    >
       {children}
     </DataContext.Provider>
   );
