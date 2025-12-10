@@ -1,4 +1,3 @@
-
 // TYPE DEFINITIONS FOR PROPERTY MANAGEMENT SYSTEM
 export enum PropertyType { DOMESTIC = 'domestic', COMMERCIAL = 'commercial' }
 export enum PaymentMethod { CASH = 'cash', CHEQUE = 'cheque', BANK_TRANSFER = 'bank_transfer', MPESA = 'mpesa', OTHER = 'other' }
@@ -26,33 +25,33 @@ export interface GenerateLeaseClauseInput {
 
 export interface GenerateLeaseClauseOutput {
   clause: string;
-  explanation: string;
+  explanation?: string;
 }
 
 export interface GenerateMarketResearchInput {
-  propertyType: string;
-  location: string;
-  radius?: number;
+  properties_data: string;
+  currency: string;
+  prompt: string;
 }
 
 export interface GenerateMarketResearchOutput {
-  analysis: string;
-  recommendations: string[];
-  marketTrends: string;
+  report: string | null;
+  error?: string | null;
+  hint?: string;
 }
 
-export interface GeneratePnLReportInput {
+export interface GeneratePnlReportInput {
   startDate: string;
   endDate: string;
   propertyIds?: string[];
+  isResident?: boolean;
+  isNonResident?: boolean;
 }
 
-export interface GeneratePnLReportOutput {
-  summary: string;
-  revenue: number;
-  expenses: number;
-  profit: number;
-  breakdown: Record<string, unknown>;
+export interface GeneratePnlReportOutput {
+  report: string | null;
+  error?: string | null;
+  hint?: string;
 }
 
 export interface AnalyzeMaintenanceIssueInput {
