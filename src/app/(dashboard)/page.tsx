@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -86,13 +85,15 @@ const MLPredictionsPanel = ({ properties }: { properties: Property[] }) => {
       // Mock data for demonstration
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      const basePrice = selectedProperty.currentValue ?? selectedProperty.purchasePrice ?? 0;
+      
       const mockReport: MLReport = {
         propertyId: selectedProperty.id,
         propertyName: `${selectedProperty.propertyType} - ${selectedProperty.city}`,
         analysisDate: new Date().toISOString().split('T')[0],
         priceForast: {
-          currentPrice: selectedProperty.currentValue || selectedProperty.purchasePrice,
-          forecastedPrice: (selectedProperty.currentValue || selectedProperty.purchasePrice) * 1.12,
+          currentPrice: basePrice,
+          forecastedPrice: basePrice * 1.12,
           percentageChange: 12,
           trend: 'up',
           confidence: 0.85,
@@ -105,7 +106,7 @@ const MLPredictionsPanel = ({ properties }: { properties: Property[] }) => {
         },
         roiAnalysis: {
           annualROI: 14.5,
-          projectedReturn: (selectedProperty.currentValue || selectedProperty.purchasePrice) * 0.145,
+          projectedReturn: basePrice * 0.145,
           paybackPeriod: 6.9,
           riskLevel: 'low',
         },
@@ -209,7 +210,7 @@ Risk Level: ${report.roiAnalysis?.riskLevel}
           <SelectContent>
             {properties.map(property => (
               <SelectItem key={property.id} value={property.id}>
-                {property.propertyType} - {property.city} - KES {abbreviateNumber(property.purchasePrice)}
+                {property.propertyType} - {property.city} - KES {abbreviateNumber(property.purchasePrice ?? 0)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -411,7 +412,7 @@ const DashboardPageContent = () => {
             />
             <KpiCard
               title="Portfolio Asset Value"
-              value={formatCurrency((properties || []).reduce((sum, p) => sum + ((p as any)?.currentValue || (p as any)?.purchasePrice), 0))}
+              value={formatCurrency((properties || []).reduce((sum, p) => sum + ((p as any)?.currentValue ?? (p as any)?.purchasePrice ?? 0), 0))}
               icon={() => <TrendingUp className="h-4 w-4" />}
               description="Current combined market value"
             />
