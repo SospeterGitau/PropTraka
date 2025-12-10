@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Property } from '@/lib/types';
+import type { Property, PropertyType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -27,17 +26,17 @@ const domesticBuildingTypes = ['Studio', 'Terraced House', 'Semi-Detached House'
 const commercialBuildingTypes = ['Office', 'Retail', 'Industrial'];
 
 export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFormProps) {
-  const [propertyType, setPropertyType] = useState<Property['propertyType']>(property?.propertyType || 'Domestic');
+  const [propertyType, setPropertyType] = useState<PropertyType>(property?.propertyType || 'domestic');
   const [buildingType, setBuildingType] = useState<Property['buildingType'] | undefined>(property?.buildingType);
 
   useEffect(() => {
     if (isOpen) {
-      setPropertyType(property?.propertyType || 'Domestic');
+      setPropertyType(property?.propertyType || 'domestic');
       setBuildingType(property?.buildingType);
     }
   }, [isOpen, property]);
 
-  const handlePropertyTypeChange = (value: Property['propertyType']) => {
+  const handlePropertyTypeChange = (value: PropertyType) => {
     setPropertyType(value);
     setBuildingType(undefined); // Reset building type when property type changes
   };
@@ -52,7 +51,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
       ...(isEditing ? { id: property.id } : {}),
       addressLine1: formData.get('addressLine1') as string,
       city: formData.get('city') as string,
-      state: formData.get('state') as string,
+      county: formData.get('county') as string,
       postalCode: formData.get('postalCode') as string,
       propertyType: propertyType,
       buildingType: buildingType || 'Other',
@@ -91,8 +90,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                     <Input id="city" name="city" defaultValue={property?.city} required />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="state">County/State</Label>
-                    <Input id="state" name="state" defaultValue={property?.state} required />
+                    <Label htmlFor="county">County/State</Label>
+                    <Input id="county" name="county" defaultValue={property?.county} required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="postalCode">Postcode</Label>
@@ -108,8 +107,8 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                         <SelectValue placeholder="Select a type" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Domestic">Domestic</SelectItem>
-                        <SelectItem value="Commercial">Commercial</SelectItem>
+                        <SelectItem value="domestic">Domestic</SelectItem>
+                        <SelectItem value="commercial">Commercial</SelectItem>
                     </SelectContent>
                     </Select>
                 </div>
@@ -120,7 +119,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                         <SelectValue placeholder="Select a type" />
                     </SelectTrigger>
                     <SelectContent>
-                        {propertyType === 'Domestic' && (
+                        {propertyType === 'domestic' && (
                             <SelectGroup>
                                 <SelectLabel>Domestic</SelectLabel>
                                 {domesticBuildingTypes.map(type => (
@@ -128,7 +127,7 @@ export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFo
                                 ))}
                             </SelectGroup>
                         )}
-                         {propertyType === 'Commercial' && (
+                         {propertyType === 'commercial' && (
                             <SelectGroup>
                                 <SelectLabel>Commercial</SelectLabel>
                                 {commercialBuildingTypes.map(type => (
