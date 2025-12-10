@@ -4,13 +4,14 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { firestore } from '@/firebase';
 import { collection, onSnapshot, doc } from 'firebase/firestore';
 import { useUser } from '@/firebase/auth';
-import type { Property, Transaction, UserSettings } from '@/lib/types';
+import type { Property, Transaction, UserSettings, Contractor, MaintenanceRequest } from '@/lib/types';
 
 interface DataContextType {
   properties: Property[];
   revenue: Transaction[];
   expenses: Transaction[];
-  maintenanceRequests: any[];
+  maintenanceRequests: MaintenanceRequest[];
+  contractors: Contractor[];
   settings: UserSettings | null;
   loading: boolean;
   error: string | null;
@@ -24,7 +25,8 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [revenue, setRevenue] = useState<Transaction[]>([]);
   const [expenses, setExpenses] = useState<Transaction[]>([]);
-  const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
+  const [contractors, setContractors] = useState<Contractor[]>([]);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +96,7 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
           try {
             const data = snapshot.docs
               .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({ id: doc.id, ...doc.data() }));
+              .map(doc => ({ id: doc.id, ...doc.data() })) as MaintenanceRequest[];
             setMaintenanceRequests(data);
           } catch (err) {
             console.error('Error processing maintenance:', err);
@@ -103,6 +105,22 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
         (err) => setError(err.message)
       );
       unsubscribers.push(unsubMaintenance);
+
+      const unsubContractors = onSnapshot(
+        collection(firestore, 'contractors'),
+        (snapshot) => {
+          try {
+            const data = snapshot.docs
+              .filter(doc => doc.data().ownerId === user.uid)
+              .map(doc => ({ id: doc.id, ...doc.data() })) as Contractor[];
+            setContractors(data);
+          } catch (err) {
+            console.error('Error processing contractors:', err);
+          }
+        },
+        (err) => setError(err.message)
+      );
+      unsubscribers.push(unsubContractors);
 
       const unsubSettings = onSnapshot(
         doc(firestore, 'userSettings', user.uid),
@@ -133,6 +151,7 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
         revenue,
         expenses,
         maintenanceRequests,
+        contractors,
         settings,
         loading,
         error,
