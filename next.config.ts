@@ -30,14 +30,6 @@ const nextConfig: NextConfig = {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src');
     return config;
   },
-  experimental: {
-    allowedDevOrigins: [
-      'localhost:9002',
-      '0.0.0.0:9002',
-      '127.0.0.1:9002',
-      '*.cloudworkstations.dev',
-    ],
-  },
 };
 
 export default nextConfig;
