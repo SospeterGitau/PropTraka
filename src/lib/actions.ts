@@ -1,4 +1,3 @@
-
 'use server';
 
 import {generateReportSummary} from '@/ai/flows/generate-report-summary';
@@ -55,9 +54,9 @@ Provide a concise analysis of this month's performance, focusing on the differen
 }
 
 
-export async function getPnlReport(input: Omit<GeneratePnlReportInput, 'isResident' | 'isNonResident'>): Promise<GeneratePnlReportOutput> {
+export async function getPnlReport(input: GeneratePnlReportInput): Promise<GeneratePnlReportOutput> {
     try {
-        const result = await generatePnlReportFlow(input as GeneratePnlReportInput);
+        const result = await generatePnlReportFlow(input);
         return { report: result.report, error: null };
     } catch (e: any) {
         const msg = String(e?.message || e);
@@ -152,7 +151,8 @@ export async function generateLeaseClause(input: GenerateLeaseClauseInput): Prom
     } catch (e: any) {
         console.error('Error generating lease clause:', e);
         return { 
-            clause: 'An error occurred while generating this clause. Please check the prompt and try again. The AI may be unable to generate content for the requested topic.'
+            clause: 'An error occurred while generating this clause. Please check the prompt and try again. The AI may be unable to generate content for the requested topic.',
+            explanation: 'Error occurred during generation'
         };
     }
 }
