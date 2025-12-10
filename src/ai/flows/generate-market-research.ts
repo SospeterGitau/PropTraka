@@ -4,8 +4,8 @@ import type { GenerateMarketResearchInput, GenerateMarketResearchOutput } from '
 
 export async function generateMarketResearch(input: GenerateMarketResearchInput): Promise<GenerateMarketResearchOutput> {
   return {
-    analysis: 'Market analysis pending',
-    recommendations: [],
-    marketTrends: 'No trends available',
+    report: 'Market analysis pending',
+    error: null,
+    hint: undefined,
   };
 }
