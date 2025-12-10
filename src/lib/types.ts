@@ -43,9 +43,12 @@ export interface GenerateMarketResearchOutput {
 export interface GeneratePnlReportInput {
   startDate: string;
   endDate: string;
-  propertyIds?: string[];
-  isResident?: boolean;
-  isNonResident?: boolean;
+  revenueTransactions: string;
+  expenseTransactions: string;
+  currency: string;
+  companyName: string;
+  residencyStatus: string;
+  prompt: string;
 }
 
 export interface GeneratePnlReportOutput {
