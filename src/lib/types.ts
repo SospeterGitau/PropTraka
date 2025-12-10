@@ -25,7 +25,7 @@ export interface GenerateLeaseClauseInput {
 
 export interface GenerateLeaseClauseOutput {
   clause: string;
-  explanation?: string;
+  explanation: string;
 }
 
 export interface GenerateMarketResearchInput {
