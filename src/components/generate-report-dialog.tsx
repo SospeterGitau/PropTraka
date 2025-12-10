@@ -69,10 +69,12 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
       const endDate = format(date.to!, 'yyyy-MM-dd');
 
       const filteredRevenue = revenue.filter(t => {
+        if (!t.date) return false;
         const tDate = new Date(t.date);
         return tDate >= date.from! && tDate <= date.to!;
       });
       const filteredExpenses = expenses.filter(e => {
+        if (!e.date) return false;
         const eDate = new Date(e.date);
         return eDate >= date.from! && eDate <= date.to!;
       });

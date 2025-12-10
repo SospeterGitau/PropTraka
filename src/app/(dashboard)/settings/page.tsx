@@ -1,6 +1,7 @@
 
-
 'use client';
+
+
 
 import React from 'react';
 import dynamic from 'next/dynamic';
@@ -8,6 +9,8 @@ import { PageHeader } from '@/components/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDataContext } from '@/context/data-context';
+
+
 
 const ProfileSettingsTab = dynamic(() => import('@/components/settings/profile-settings-tab'), {
   loading: () => <Skeleton className="h-96 w-full" />,
@@ -23,11 +26,15 @@ const KnowledgeBaseTab = dynamic(() => import('@/components/settings/knowledge-b
 });
 
 
+
+
 const SettingsTabs = () => {
-    const { settings, isLoading } = useDataContext();
+    const { settings } = useDataContext();
     const isDevelopment = process.env.NODE_ENV === 'development';
 
-    if (isLoading) {
+
+
+    if (!settings) {
         return (
             <div className="mb-6">
                 <Skeleton className="h-10 w-full max-w-lg" />
@@ -37,7 +44,9 @@ const SettingsTabs = () => {
     
     // In development: show to all users for testing
     // In production: only show to Enterprise users
-    const isEnterprise = isDevelopment || settings?.subscription?.plan === 'Enterprise';
+    const isEnterprise = isDevelopment;
+
+
 
     return (
         <Tabs defaultValue="profile">
@@ -67,6 +76,8 @@ const SettingsTabs = () => {
         </Tabs>
     );
 };
+
+
 
 
 export default function AccountPage() {

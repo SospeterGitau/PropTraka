@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, memo, useMemo } from 'react';
-import { MoreHorizontal, User, Mail, Phone, Wrench } from 'lucide-react';
+import React, { useState, useMemo, memo } from 'react';
 import type { Contractor } from '@/lib/types';
+import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,107 +14,40 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ContractorForm } from '@/components/contractor-form';
 import { Badge } from '@/components/ui/badge';
-import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Plus, Search, Mail, Phone, Edit2, Trash2, Star } from 'lucide-react';
 
 const ContractorsClient = memo(function ContractorsClient() {
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const { contractors, loading } = useDataContext();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const contractorsQuery = useMemo(() =>
-    user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null
-  , [firestore, user?.uid]);
+  const filteredContractors = useMemo(() => {
+    return contractors.filter(contractor =>
+      contractor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contractor.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contractor.businessName?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [contractors, searchTerm]);
 
-  const [contractorsSnapshot, isDataLoading, error] = useCollection(contractorsQuery);
-  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Contractor)) || [], [contractorsSnapshot]);
-
-
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null);
-
-  const handleAdd = () => {
-    setSelectedContractor(null);
-    setIsFormOpen(true);
+  const handleEditContractor = (contractor: Contractor) => {
+    console.log('Edit contractor:', contractor.id);
+    // TODO: Implement edit functionality
   };
 
-  const handleEdit = (contractor: Contractor) => {
-    setSelectedContractor(contractor);
-    setIsFormOpen(true);
-  };
-
-  const handleDelete = (contractor: Contractor) => {
-    setSelectedContractor(contractor);
-    setIsDeleteDialogOpen(true);
-  };
-  
-  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
-    if (!user) return;
-    await addDoc(collection(firestore, 'changelog'), {
-      ...log,
-      ownerId: user.uid,
-      date: serverTimestamp(),
-    });
-  };
-
-  const confirmDelete = () => {
-    if (selectedContractor) {
-      deleteDoc(doc(firestore, 'contractors', selectedContractor.id));
-      addChangeLogEntry({
-        type: 'Contractor',
-        action: 'Deleted',
-        description: `Contractor "${selectedContractor.name}" was deleted.`,
-        entityId: selectedContractor.id,
-      });
-      setIsDeleteDialogOpen(false);
-      setSelectedContractor(null);
+  const handleDeleteContractor = (contractor: Contractor) => {
+    if (confirm(`Are you sure you want to delete ${contractor.name}?`)) {
+      console.log('Delete contractor:', contractor.id);
+      // TODO: Implement delete functionality with Firebase
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Contractor, 'id' | 'ownerId'> | Contractor) => {
-    if (!user) return;
-    
-    if ('id' in data) {
-      const { id, ...contractorData } = data;
-      await updateDoc(doc(firestore, 'contractors', id), contractorData);
-      addChangeLogEntry({
-        type: 'Contractor',
-        action: 'Updated',
-        description: `Contractor "${data.name}" was updated.`,
-        entityId: data.id,
-      });
-    } else {
-      const docRef = await addDoc(collection(firestore, 'contractors'), { ...data, ownerId: user.uid });
-       addChangeLogEntry({
-        type: 'Contractor',
-        action: 'Created',
-        description: `Contractor "${data.name}" was created.`,
-        entityId: docRef.id, 
-      });
-    }
-    setIsFormOpen(false);
-  };
-  
-  if (isDataLoading) {
+  if (loading) {
     return (
       <>
-        <PageHeader title="Contractors">
-          <Button disabled>Add Contractor</Button>
-        </PageHeader>
+        <PageHeader title="Contractors" />
         <Card>
           <CardHeader>
             <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
@@ -129,93 +62,121 @@ const ContractorsClient = memo(function ContractorsClient() {
 
   return (
     <>
-      <PageHeader title="Contractors">
-        <Button onClick={handleAdd}>Add Contractor</Button>
-      </PageHeader>
+      <PageHeader title="Contractors" />
+
       <Card>
         <CardHeader>
-          <CardTitle>Your Contractors</CardTitle>
-          <CardDescription>A directory of all your vendors and service providers.</CardDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Contractors & Service Providers</CardTitle>
+              <CardDescription>Manage your list of trusted contractors</CardDescription>
+            </div>
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Contractor
+            </Button>
+          </div>
+
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, type, or business..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardHeader>
-        <CardContent className="p-6">
-          {contractors && contractors.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Specialty</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>
-                      <span className="sr-only">Actions</span>
-                    </TableHead>
+
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[150px]">Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="hidden md:table-cell">Business</TableHead>
+                <TableHead className="hidden lg:table-cell">Contact</TableHead>
+                <TableHead className="hidden sm:table-cell">Rating</TableHead>
+                <TableHead className="text-right w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredContractors.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    {searchTerm ? 'No contractors found matching your search.' : 'No contractors yet. Add your first contractor!'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredContractors.map((contractor) => (
+                  <TableRow key={contractor.id}>
+                    <TableCell>
+                      <div className="font-medium">{contractor.name}</div>
+                      <div className="text-sm text-muted-foreground sm:hidden">
+                        {contractor.type}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge variant="secondary" className="capitalize">
+                        {contractor.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {contractor.businessName || '—'}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <div className="flex flex-col gap-1 text-sm">
+                        {contractor.email && (
+                          <a href={`mailto:${contractor.email}`} className="flex items-center gap-1 hover:text-primary">
+                            <Mail className="h-3 w-3" />
+                            {contractor.email}
+                          </a>
+                        )}
+                        {contractor.phone && (
+                          <a href={`tel:${contractor.phone}`} className="flex items-center gap-1 hover:text-primary">
+                            <Phone className="h-3 w-3" />
+                            {contractor.phone}
+                          </a>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {contractor.rating ? (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-medium">{contractor.rating}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditContractor(contractor)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteContractor(contractor)}
+                          className="h-8 w-8 p-0 text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {contractors.map((contractor) => (
-                      <TableRow key={contractor.id}>
-                        <TableCell className="font-medium">{contractor.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{contractor.specialty}</Badge>
-                        </TableCell>
-                        <TableCell>
-                           <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                            {contractor.email && (
-                                <a href={`mailto:${contractor.email}`} className="flex items-center gap-2 hover:text-primary">
-                                    <Mail className="h-4 w-4" />
-                                    {contractor.email}
-                                </a>
-                            )}
-                            {contractor.phone && (
-                                <a href={`tel:${contractor.phone}`} className="flex items-center gap-2 hover:text-primary">
-                                    <Phone className="h-4 w-4" />
-                                    {contractor.phone}
-                                </a>
-                            )}
-                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button aria-haspopup="true" size="icon" variant="ghost">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Toggle menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={() => handleEdit(contractor)}>Edit</DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => handleDelete(contractor)}>Delete</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            ) : (
-             <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Wrench className="w-16 h-16 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold">No Contractors Found</h3>
-                  <p className="text-muted-foreground mb-4">Add your vendors and service providers to manage them here.</p>
-                  <Button onClick={handleAdd}>Add Contractor</Button>
-              </div>
-            )}
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
-      
-      <ContractorForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSubmit={handleFormSubmit}
-        contractor={selectedContractor}
-      />
-      
-      <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDelete}
-        itemName={`contractor: ${selectedContractor?.name}`}
-      />
     </>
   );
 });

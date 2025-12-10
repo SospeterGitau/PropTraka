@@ -1,8 +1,9 @@
 
 'use client';
 
+
 import { useState, useEffect } from 'react';
-import type { ArrearEntry } from '@/lib/types';
+import type { ArrearEntryCalculated } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,13 +19,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CreditCard } from 'lucide-react';
 
+
 interface PaymentRequestDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (details: { amount: number; method: string }) => void;
-  arrear: ArrearEntry | null;
+  arrear: ArrearEntryCalculated | null;
   formatCurrency: (amount: number) => string;
 }
+
 
 export function PaymentRequestDialog({
   isOpen,
@@ -36,17 +39,21 @@ export function PaymentRequestDialog({
   const [amount, setAmount] = useState(0);
   const [method, setMethod] = useState('Pesapal');
 
+
   useEffect(() => {
     if (arrear) {
       setAmount(arrear.amountOwed);
     }
   }, [arrear]);
 
+
   const handleSubmit = () => {
     onSubmit({ amount, method });
   };
 
+
   if (!isOpen || !arrear) return null;
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -57,6 +64,7 @@ export function PaymentRequestDialog({
             Initiate a payment request via your chosen payment gateway.
           </DialogDescription>
         </DialogHeader>
+
 
         <div className="py-4 space-y-4">
           <div className="space-y-2">

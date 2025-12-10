@@ -1,6 +1,6 @@
 
-
 'use client';
+
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
 import type { Property, Transaction, Contractor } from '@/lib/types';
@@ -34,6 +34,7 @@ import { format } from 'date-fns';
 import { categorizeExpense } from '@/lib/actions';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
+
 const defaultCategories = [
   'Accounting',
   'Insurance',
@@ -49,6 +50,7 @@ const defaultCategories = [
   'Utilities',
 ];
 
+
 const frequencies = [
   { value: 'weekly', label: 'Weekly' },
   { value: 'bi-weekly', label: 'Bi-weekly' },
@@ -57,15 +59,18 @@ const frequencies = [
   { value: 'yearly', label: 'Yearly' },
 ];
 
+
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.postalCode}`;
 }
+
 
 function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { open: boolean, onOpenChange: (open: boolean) => void, onCategorySelect: (category: string) => void }) {
     const [description, setDescription] = useState('');
     const [isPending, startTransition] = useTransition();
     const [suggestion, setSuggestion] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+
 
     const handleGetSuggestion = () => {
         if (!description) return;
@@ -81,11 +86,13 @@ function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { ope
         });
     }
 
+
     const handleApply = () => {
         if (suggestion) {
             onCategorySelect(suggestion);
         }
     }
+
 
     useEffect(() => {
         if (open) {
@@ -94,6 +101,7 @@ function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { ope
             setError(null);
         }
     }, [open]);
+
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -135,6 +143,7 @@ function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { ope
     )
 }
 
+
 export function ExpenseForm({
   isOpen,
   onClose,
@@ -163,10 +172,11 @@ export function ExpenseForm({
     if (isOpen) {
       setCategory(transaction?.category || '');
       setExpenseType(transaction?.expenseType || 'one-off');
-      setContractorId(transaction?.contractorId || '');
+      setContractorId((transaction as any)?.contractorId || '');
       setDate(transaction?.date ? new Date(transaction.date) : new Date());
     }
   }, [isOpen, transaction]);
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -176,7 +186,7 @@ export function ExpenseForm({
     const selectedContractor = contractors.find(c => c.id === contractorId);
     const isEditing = !!transaction?.id;
     
-    const data: Omit<Transaction, 'id'> | Transaction = {
+    const data = {
       ...(isEditing ? { id: transaction.id } : {}),
       date: format(date!, 'yyyy-MM-dd'),
       amount: Number(formData.get('amount')),
@@ -191,17 +201,21 @@ export function ExpenseForm({
       frequency: expenseType === 'recurring' ? formData.get('frequency') as Transaction['frequency'] : undefined,
       receiptUrl: formData.get('receiptUrl') as string,
       rent: 0,
-    };
+    } as unknown as Omit<Transaction, 'id'> | Transaction;
+    
     onSubmit(data);
     onClose();
   };
+
 
   const handleCategorySelected = (selectedCategory: string) => {
     setCategory(selectedCategory);
     setIsAssistantOpen(false);
   }
 
+
   if (!isOpen) return null;
+
 
   return (
     <>
@@ -213,7 +227,7 @@ export function ExpenseForm({
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2 py-4">
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <DatePicker date={date} setDate={setDate} locale={settings.locale} />
+            <DatePicker date={date} setDate={setDate} locale={settings?.locale || 'en-US'} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="propertyId">Property (optional)</Label>
@@ -335,7 +349,7 @@ export function ExpenseForm({
                           }}
                         >
                           <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />
-                          {c.name} ({c.specialty})
+                          {c.name}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -345,9 +359,10 @@ export function ExpenseForm({
             </Popover>
           </div>
 
+
           <div className="space-y-2">
             <Label htmlFor="amount">Amount</Label>
-            <Input id="amount" name="amount" type="number" step="0.01" defaultValue={transaction?.amount} required />
+            <Input id="amount" name="amount" type="number" step="0.01" defaultValue={(transaction as any)?.amount} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="receiptUrl">Receipt/Document Link (optional)</Label>

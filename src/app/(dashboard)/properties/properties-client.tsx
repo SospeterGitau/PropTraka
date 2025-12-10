@@ -37,7 +37,7 @@ import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
 }
 
 const PropertiesClient = memo(function PropertiesClient() {
@@ -51,8 +51,8 @@ const PropertiesClient = memo(function PropertiesClient() {
   const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
   
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
@@ -107,17 +107,17 @@ const PropertiesClient = memo(function PropertiesClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Property, 'id' | 'ownerId'> | Property) => {
+  const handleFormSubmit = async (data: Property | Omit<Property, "ownerId" | "id">) => {
     if (!user) return;
 
     if ('id' in data) {
-      const { id, ...propertyData } = data;
+      const { id, ownerId, ...propertyData } = data as Property;
       await updateDoc(doc(firestore, 'properties', id), propertyData);
       addChangeLogEntry({
         type: 'Property',
         action: 'Updated',
-        description: `Property "${formatAddress(data)}" was updated.`,
-        entityId: data.id,
+        description: `Property "${formatAddress(data as Property)}" was updated.`,
+        entityId: id,
       });
     } else {
       const docRef = await addDoc(collection(firestore, 'properties'), { ...data, ownerId: user.uid });
@@ -235,11 +235,11 @@ const PropertiesClient = memo(function PropertiesClient() {
                         <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
                            <div className="flex items-center gap-1">
                             <Bed className="h-4 w-4" />
-                            <span>{property.bedrooms}</span>
+                            <span>{property.bedrooms || 0}</span>
                            </div>
                            <div className="flex items-center gap-1">
                             <Bath className="h-4 w-4" />
-                            <span>{property.bathrooms}</span>
+                            <span>{property.bathrooms || 0}</span>
                            </div>
                            {property.size && (
                             <div className="flex items-center gap-1">
@@ -257,8 +257,8 @@ const PropertiesClient = memo(function PropertiesClient() {
                            {status}
                          </Badge>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(property.currentValue, locale, currency)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue, locale, currency)}/month</TableCell>
+                      <TableCell className="text-right">{formatCurrency(property.currentValue || 0, locale, currency)}</TableCell>
+                      <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue || 0, locale, currency)}/month</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

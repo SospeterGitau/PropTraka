@@ -1,263 +1,299 @@
 
 'use client';
 
-import { useState, useMemo, memo } from 'react';
-import type { MaintenanceRequest, Transaction, Property, Contractor } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
-
+import React, { useState, useMemo, memo } from 'react';
+import type { MaintenanceRequest, Property } from '@/lib/types';
+import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import { MaintenanceForm } from '@/components/maintenance-form';
-import { ExpenseForm } from '@/components/expense-form';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MaintenanceKanbanBoard } from '@/components/maintenance-kanban-board';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
-import { useDataContext } from '@/context/data-context';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Plus, Search, MoreHorizontal, Edit2, Trash2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
 }
 
 const MaintenanceClient = memo(function MaintenanceClient() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const { settings } = useDataContext();
-  const currency = settings?.currency || 'KES';
-  const locale = settings?.locale || 'en-KE';
-  const { toast } = useToast();
+  const { maintenanceRequests, properties, loading } = useDataContext();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<string | null>(null);
 
-  // Data Fetching
-  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
-  const maintenanceRequestsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'maintenanceRequests', user.uid) : null, [firestore, user?.uid]);
-  const contractorsQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'contractors', user.uid) : null, [firestore, user?.uid]);
-  
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [maintenanceRequestsSnapshot, isMaintenanceLoading] = useCollection(maintenanceRequestsQuery);
-  const [contractorsSnapshot, isContractorsLoading] = useCollection(contractorsQuery);
-
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
-  const maintenanceRequests = useMemo(() => maintenanceRequestsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as MaintenanceRequest)) || [], [maintenanceRequestsSnapshot]);
-  const contractors = useMemo(() => contractorsSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Contractor)) || [], [contractorsSnapshot]);
-
-
-  const isDataLoading = isPropertiesLoading || isMaintenanceLoading || isContractorsLoading;
-
-  // State
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isExpenseFormOpen, setIsExpenseFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
-  const [expenseFromMaintenance, setExpenseFromMaintenance] = useState<Partial<Transaction> | null>(null);
-  const [propertyFilter, setPropertyFilter] = useState('all');
-
-  // Formatting
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  };
-  
-  // Actions
-  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
-    if (!user) return;
-    try {
-      await addDoc(collection(firestore, 'changelog'), {
-        ...log,
-        ownerId: user.uid,
-        date: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Failed to add changelog entry:", error);
-    }
-  };
-
-  const handleAdd = () => {
-    setSelectedRequest(null);
-    setIsFormOpen(true);
-  };
-
-  const handleEdit = (request: MaintenanceRequest) => {
-    setSelectedRequest(request);
-    setIsFormOpen(true);
-  };
-
-  const handleDelete = (request: MaintenanceRequest) => {
-    setSelectedRequest(request);
-    setIsDeleteDialogOpen(true);
-  };
-  
-  const handleCreateExpense = (request: MaintenanceRequest) => {
-    setExpenseFromMaintenance({
-        propertyId: request.propertyId,
-        date: request.completedDate || request.reportedDate,
-        category: 'Maintenance',
-        notes: `Maintenance: ${request.description}`,
-        amount: request.cost,
-        contractorId: request.contractorId,
-    });
-    setIsExpenseFormOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (selectedRequest) {
-      await deleteDoc(doc(firestore, 'maintenanceRequests', selectedRequest.id));
-      addChangeLogEntry({
-        type: 'Maintenance',
-        action: 'Deleted',
-        description: `Maintenance request for "${selectedRequest.propertyName}" was deleted.`,
-        entityId: selectedRequest.id,
-      });
-      setIsDeleteDialogOpen(false);
-      setSelectedRequest(null);
-    }
-  };
-  
-  const handleStatusChange = async (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => {
-    const updatedRequest = { ...request, status: newStatus };
-    if (newStatus === 'Done' && !updatedRequest.completedDate) {
-      updatedRequest.completedDate = new Date().toISOString().split('T')[0];
-    }
-    await updateDoc(doc(firestore, 'maintenanceRequests', request.id), updatedRequest);
-    addChangeLogEntry({
-      type: 'Maintenance',
-      action: 'Updated',
-      description: `Status for "${request.description}" changed to ${newStatus}.`,
-      entityId: request.id,
-    });
-  };
-
-  const handleFormSubmit = async (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => {
-    if (!user) return;
-
-    if ('id' in data) {
-      const { id, ...requestData } = data;
-      await updateDoc(doc(firestore, 'maintenanceRequests', id), requestData);
-      addChangeLogEntry({
-        type: 'Maintenance',
-        action: 'Updated',
-        description: `Maintenance request for "${data.propertyName}" was updated.`,
-        entityId: data.id,
-      });
-    } else {
-      const docRef = await addDoc(collection(firestore, 'maintenanceRequests'), { ...data, ownerId: user.uid });
-       addChangeLogEntry({
-        type: 'Maintenance',
-        action: 'Created',
-        description: `Maintenance request for "${data.propertyName}" was created.`,
-        entityId: docRef.id,
-      });
-    }
-    setIsFormOpen(false);
-  };
-  
-  const handleExpenseFormSubmit = async (data: Transaction | Omit<Transaction, 'id' | 'ownerId'>) => {
-    if(!user) return;
-    const { id, type, ...expenseData } = data as Transaction;
-    const docRef = await addDoc(collection(firestore, 'expenses'), { ...expenseData, type: 'expense', ownerId: user.uid });
-    addChangeLogEntry({
-      type: 'Expense',
-      action: 'Created',
-      description: `Expense for ${formatCurrency(data.amount || 0)} (${data.category}) was logged from a maintenance task.`,
-      entityId: docRef.id,
-    });
-     toast({
-      title: "Expense Created",
-      description: "The expense has been logged successfully.",
-    });
-    setIsExpenseFormOpen(false);
-  };
+  const propertyMap = useMemo(() => {
+    return new Map(properties.map(p => [p.id, p]));
+  }, [properties]);
 
   const filteredRequests = useMemo(() => {
-    if (!maintenanceRequests) return [];
-    if (propertyFilter === 'all') {
-      return maintenanceRequests;
-    }
-    if (propertyFilter === 'general') {
-      return maintenanceRequests.filter(req => !req.propertyId);
-    }
-    return maintenanceRequests.filter(req => req.propertyId === propertyFilter);
-  }, [maintenanceRequests, propertyFilter]);
+    return maintenanceRequests.filter(request => {
+      const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.propertyName?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = !filterStatus || request.status === filterStatus;
+      const matchesPriority = !filterPriority || request.priority === filterPriority;
+      
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+  }, [maintenanceRequests, searchTerm, filterStatus, filterPriority]);
 
-  if (isDataLoading || !properties || !maintenanceRequests || !contractors) {
+  const statusStats = useMemo(() => {
+    return {
+      pending: maintenanceRequests.filter(r => r.status === 'pending').length,
+      assigned: maintenanceRequests.filter(r => r.status === 'assigned').length,
+      inProgress: maintenanceRequests.filter(r => r.status === 'in_progress').length,
+      completed: maintenanceRequests.filter(r => r.status === 'completed').length,
+    };
+  }, [maintenanceRequests]);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-blue-600" />;
+      case 'pending':
+      case 'assigned':
+        return <AlertCircle className="h-4 w-4 text-yellow-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'destructive';
+      case 'high':
+        return 'secondary';
+      case 'medium':
+        return 'outline';
+      case 'low':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const handleDeleteRequest = (request: MaintenanceRequest) => {
+    if (confirm(`Are you sure you want to delete this maintenance request: "${request.title}"?`)) {
+      console.log('Delete request:', request.id);
+      // TODO: Implement delete functionality with Firebase
+    }
+  };
+
+  if (loading) {
     return (
       <>
-        <PageHeader title="Maintenance">
-           <div className="flex items-center gap-2">
-            <Skeleton className="h-10 w-48" />
-            <Button disabled>Add Request</Button>
-          </div>
-        </PageHeader>
-        <div className="flex gap-6 h-[calc(100vh-200px)]">
-          {['To Do', 'In Progress', 'Done', 'Cancelled'].map(status => (
-            <div key={status} className="flex-1">
-              <Skeleton className="h-8 w-1/2 mb-4" />
-              <div className="space-y-4">
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <PageHeader title="Maintenance Requests" />
+        <Card>
+          <CardHeader>
+            <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-48 w-full" />
+          </CardContent>
+        </Card>
       </>
     );
   }
 
   return (
     <>
-      <PageHeader title="Maintenance">
-        <div className="flex items-center gap-2">
-            <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Filter by property..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
-                <SelectItem value="general">General Tasks</SelectItem>
-                {properties.map(p => (
-                  <SelectItem key={p.id} value={p.id}>{formatAddress(p)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={handleAdd}>Add Request</Button>
-        </div>
-      </PageHeader>
-      
-      <MaintenanceKanbanBoard
-        requests={filteredRequests}
-        onEditRequest={handleEdit}
-        onDeleteRequest={handleDelete}
-        onCreateExpense={handleCreateExpense}
-        onStatusChange={handleStatusChange}
-        locale={locale}
-      />
-      
-      <MaintenanceForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSubmit={handleFormSubmit}
-        request={selectedRequest}
-        properties={properties}
-        contractors={contractors}
-      />
-      
-      <ExpenseForm
-        isOpen={isExpenseFormOpen}
-        onClose={() => setIsExpenseFormOpen(false)}
-        onSubmit={handleExpenseFormSubmit}
-        transaction={expenseFromMaintenance}
-        properties={properties}
-        contractors={contractors}
-      />
-      
-      <DeleteConfirmationDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDelete}
-        itemName={`maintenance request for ${selectedRequest?.propertyName}`}
-      />
+      <PageHeader title="Maintenance Requests" />
+
+      <div className="grid gap-4 md:grid-cols-5">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{maintenanceRequests.length}</div>
+            <p className="text-xs text-muted-foreground">All requests</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{statusStats.pending}</div>
+            <p className="text-xs text-muted-foreground">Awaiting action</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{statusStats.inProgress}</div>
+            <p className="text-xs text-muted-foreground">Being worked on</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Assigned</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{statusStats.assigned}</div>
+            <p className="text-xs text-muted-foreground">To contractors</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{statusStats.completed}</div>
+            <p className="text-xs text-muted-foreground">Finished</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Maintenance Requests</CardTitle>
+              <CardDescription>Manage and track all maintenance work</CardDescription>
+            </div>
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              New Request
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-4 mt-4 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by title, description, or property..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <select
+              value={filterStatus || ''}
+              onChange={(e) => setFilterStatus(e.target.value || null)}
+              className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="assigned">Assigned</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select
+              value={filterPriority || ''}
+              onChange={(e) => setFilterPriority(e.target.value || null)}
+              className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+            >
+              <option value="">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[200px]">Title</TableHead>
+                <TableHead className="hidden md:table-cell">Property</TableHead>
+                <TableHead className="hidden lg:table-cell">Description</TableHead>
+                <TableHead className="hidden sm:table-cell">Priority</TableHead>
+                <TableHead className="hidden sm:table-cell">Status</TableHead>
+                <TableHead className="text-right w-[50px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRequests.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    {searchTerm || filterStatus || filterPriority ? 'No maintenance requests found matching your filters.' : 'No maintenance requests yet.'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <div className="font-medium">{request.title}</div>
+                      <div className="text-sm text-muted-foreground md:hidden">
+                        {request.propertyName}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {request.propertyName || '—'}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell max-w-xs">
+                      <p className="truncate text-sm">{request.description}</p>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge variant={getPriorityColor(request.priority)} className="capitalize">
+                        {request.priority || 'Medium'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(request.status)}
+                        <Badge variant="outline" className="capitalize">
+                          {request.status}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="cursor-pointer text-destructive"
+                            onClick={() => handleDeleteRequest(request)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </>
   );
 });

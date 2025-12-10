@@ -25,14 +25,13 @@ import { CurrencyIcon } from '@/components/currency-icon';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
 import { MarketResearchDialog } from '@/components/market-research-dialog';
 import { cn } from '@/lib/utils';
-import type { Property, Transaction, ResidencyStatus } from '@/lib/types';
+import type { Property, Transaction, Expense } from '@/lib/types';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useDataContext } from '@/context/data-context';
 import { useUser, useFirestore } from '@/firebase';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Query } from 'firebase/firestore';
 import { getLocale } from '@/lib/locales';
-
 
 type ViewMode = 'month' | 'year';
 
@@ -137,22 +136,22 @@ function RevenueAnalysisTab() {
   const monthsInPeriod = differenceInCalendarMonths(periodEnd, periodStart) + 1;
 
   if (viewMode === 'year') {
-    vacancyLoss = vacantProperties.reduce((total, p) => total + (p.rentalValue * monthsInPeriod), 0);
+    vacancyLoss = vacantProperties.reduce((total, p) => total + ((p.rentalValue || 0) * monthsInPeriod), 0);
     potentialRentFromVacant = vacancyLoss;
   } else { // month view
-    vacancyLoss = vacantProperties.reduce((total, p) => total + p.rentalValue, 0);
+    vacancyLoss = vacantProperties.reduce((total, p) => total + (p.rentalValue || 0), 0);
     potentialRentFromVacant = vacancyLoss;
   }
 
   const filteredTransactions = revenue.filter(t => {
-    const transactionDate = new Date(t.date);
+    const transactionDate = new Date(t.date || new Date());
     return transactionDate >= periodStart && transactionDate <= periodEnd;
   });
   
-  const creditLoss = filteredTransactions.reduce((acc, t) => acc + (t.rent - (t.amountPaid ?? 0)), 0);
+  const creditLoss = filteredTransactions.reduce((acc, t) => acc + ((t.rent || 0) - (t.amountPaid ?? 0)), 0);
   const totalLoss = creditLoss + vacancyLoss;
 
-  const grossPotentialFromTenancies = filteredTransactions.reduce((acc, t) => acc + t.rent, 0);
+  const grossPotentialFromTenancies = filteredTransactions.reduce((acc, t) => acc + (t.rent || 0), 0);
   const grossPotentialIncome = grossPotentialFromTenancies + potentialRentFromVacant;
   
   const netRentalIncome = filteredTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
@@ -165,12 +164,12 @@ function RevenueAnalysisTab() {
     const months = eachMonthOfInterval({ start: financialYearStart, end: financialYearEnd });
     
     chartData = months.map(month => {
-      const monthlyTransactions = revenue.filter(t => isSameMonth(new Date(t.date), month));
+      const monthlyTransactions = revenue.filter(t => isSameMonth(new Date(t.date || new Date()), month));
       const activeTenancyIdsThisMonth = new Set(monthlyTransactions.map(t => t.propertyId));
       const vacantPropsThisMonth = properties.filter(p => !activeTenancyIdsThisMonth.has(p.id));
-      const vacantRentThisMonth = vacantPropsThisMonth.reduce((total, p) => total + p.rentalValue, 0);
+      const vacantRentThisMonth = vacantPropsThisMonth.reduce((total, p) => total + (p.rentalValue || 0), 0);
 
-      const grossPotential = monthlyTransactions.reduce((acc, t) => acc + t.rent, 0) + vacantRentThisMonth;
+      const grossPotential = monthlyTransactions.reduce((acc, t) => acc + (t.rent || 0), 0) + vacantRentThisMonth;
       const netIncome = monthlyTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
       return {
         name: format(month, 'MMM'),
@@ -187,7 +186,6 @@ function RevenueAnalysisTab() {
   
   const isFuture = isAfter(periodStart, new Date());
   const isCurrentPeriod = viewMode === 'month' ? isSameMonth(currentDate, new Date()) : isSameYear(currentDate, new Date());
-
 
   const chartHeight = '350px';
 
@@ -272,7 +270,6 @@ function RevenueAnalysisTab() {
   )
 }
 
-
 function PnlStatementTab() {
   const { settings } = useDataContext();
   const currency = settings?.currency || 'KES';
@@ -287,12 +284,11 @@ function PnlStatementTab() {
 
   const [propertiesSnapshot, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
   const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-  const [expensesSnapshot, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+  const [expensesSnapshot, isExpensesLoading] = useCollection<Expense>(expensesQuery as Query<Expense> | null);
 
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [expensesSnapshot]);
-
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Expense)) || [], [expensesSnapshot]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('year');
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
@@ -363,11 +359,10 @@ function PnlStatementTab() {
   }
 
   const { financialYearStart, financialYearEnd } = getFinancialYear(currentDate);
-
   const periodStart = viewMode === 'month' ? startOfMonth(currentDate) : financialYearStart;
 
   const filteredRevenue = revenue.filter(t => {
-    const tDate = new Date(t.date);
+    const tDate = new Date(t.date || new Date());
     const hasBeenPaid = (t.amountPaid ?? 0) > 0;
     if (viewMode === 'month') {
       return isSameMonth(tDate, currentDate) && hasBeenPaid;
@@ -392,11 +387,11 @@ function PnlStatementTab() {
   const netOperatingIncome = totalRevenue - totalExpenses;
   
   const propertyMap = new Map(properties.map(p => [p.id, p]));
-  const grossResidentialRevenue = residencyStatus === 'resident'
+  const grossResidentialRevenue = residencyStatus === 'Resident'
     ? filteredRevenue
         .filter(t => {
           const prop = propertyMap.get(t.propertyId!);
-          return prop?.propertyType === 'Domestic';
+          return prop?.propertyType === 'domestic';
         })
         .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0)
     : 0;
@@ -502,7 +497,7 @@ function PnlStatementTab() {
               <TableBody>
                  {filteredRevenue.length > 0 ? filteredRevenue.map(item => (
                   <TableRow key={item.id}>
-                    <TableCell>{format(new Date(item.date), 'PP', { locale: localeData })}</TableCell>
+                    <TableCell>{format(new Date(item.date || new Date()), 'PP', { locale: localeData })}</TableCell>
                     <TableCell>{item.tenant}</TableCell>
                     <TableCell>{item.propertyName}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amountPaid ?? 0)}</TableCell>
@@ -548,7 +543,6 @@ function PnlStatementTab() {
   );
 }
 
-
 const ReportsClient = memo(function ReportsClient() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -561,13 +555,12 @@ const ReportsClient = memo(function ReportsClient() {
   const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
 
   const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
-  const [expensesSnapshot, isExpensesLoading] = useCollection<Transaction>(expensesQuery as Query<Transaction> | null);
+  const [expensesSnapshot, isExpensesLoading] = useCollection<Expense>(expensesQuery as Query<Expense> | null);
   const [propertiesSnapshot, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
 
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
-  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [expensesSnapshot]);
+  const expenses = useMemo(() => expensesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Expense)) || [], [expensesSnapshot]);
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
-
 
   if (isRevenueLoading || isExpensesLoading || isPropertiesLoading) {
     return (

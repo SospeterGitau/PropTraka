@@ -1,6 +1,7 @@
 
 'use client';
 
+
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
@@ -36,6 +37,7 @@ import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 
+
 const RevenueClient = memo(function RevenueClient() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -43,10 +45,12 @@ const RevenueClient = memo(function RevenueClient() {
   const currency = settings?.currency || 'KES';
   const locale = settings?.locale || 'en-KE';
 
+
   // Data Fetching
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
+
 
   // State
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -68,17 +72,21 @@ const RevenueClient = memo(function RevenueClient() {
       }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
     ).map(tenancy => {
         const today = startOfToday();
-        const sortedTransactions = tenancy.transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const sortedTransactions = tenancy.transactions.sort((a, b) => {
+          const aDate = a.date ? new Date(a.date).getTime() : 0;
+          const bDate = b.date ? new Date(b.date).getTime() : 0;
+          return aDate - bDate;
+        });
         
         const unpaidTransactions = sortedTransactions.filter(tx => {
           const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
-          const due = tx.rent + totalServiceCharges + (tx.deposit ?? 0);
+          const due = (tx.rent ?? 0) + totalServiceCharges + (tx.deposit ?? 0);
           const paid = tx.amountPaid ?? 0;
           return paid < due;
         });
   
-        const earliestOverdue = unpaidTransactions.find(tx => isBefore(new Date(tx.date), today));
-        const nextUpcoming = unpaidTransactions.find(tx => !isBefore(new Date(tx.date), today));
+        const earliestOverdue = unpaidTransactions.find(tx => tx.date && isBefore(new Date(tx.date), today));
+        const nextUpcoming = unpaidTransactions.find(tx => !tx.date || !isBefore(new Date(tx.date), today));
   
         const nextDueTransaction = earliestOverdue || nextUpcoming;
         
@@ -88,6 +96,7 @@ const RevenueClient = memo(function RevenueClient() {
         };
     });
   }, [revenue]);
+
 
 
   useEffect(() => {
@@ -114,6 +123,7 @@ const RevenueClient = memo(function RevenueClient() {
     formatAllDates();
   }, [revenue, tenancies, locale]);
 
+
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
     if (!user) return;
     await addDoc(collection(firestore, 'changelog'), {
@@ -128,6 +138,7 @@ const RevenueClient = memo(function RevenueClient() {
     setIsDeleteDialogOpen(true);
   };
 
+
   const confirmDelete = async () => {
     if (selectedTransaction?.tenancyId && user) {
       const batch = writeBatch(firestore);
@@ -137,6 +148,7 @@ const RevenueClient = memo(function RevenueClient() {
         batch.delete(doc.ref);
       });
       await batch.commit();
+
 
       addChangeLogEntry({
         type: 'Tenancy',
@@ -148,6 +160,7 @@ const RevenueClient = memo(function RevenueClient() {
       setSelectedTransaction(null);
     }
   };
+
 
   if (isDataLoading) {
     return (
@@ -197,13 +210,18 @@ const RevenueClient = memo(function RevenueClient() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                        {tenancies.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((tenancy) => {
-                            const totalDue = tenancy.transactions.reduce((sum, tx) => sum + tx.rent + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
+                        {tenancies.sort((a,b) => {
+                          const aDate = a.date ? new Date(a.date).getTime() : 0;
+                          const bDate = b.date ? new Date(b.date).getTime() : 0;
+                          return bDate - aDate;
+                        }).map((tenancy) => {
+                            const totalDue = tenancy.transactions.reduce((sum, tx) => sum + (tx.rent ?? 0) + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
                             const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                             const totalBalance = totalDue - totalPaid;
                             
                             const today = startOfToday();
                             const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
+
 
                             let statusBadge;
                             const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
@@ -219,6 +237,7 @@ const RevenueClient = memo(function RevenueClient() {
                             } else {
                                 statusBadge = <Badge variant="outline">N/A</Badge>;
                             }
+
 
                             return (
                                 <TableRow key={tenancy.tenancyId}>
@@ -287,5 +306,6 @@ const RevenueClient = memo(function RevenueClient() {
     </>
   );
 });
+
 
 export default RevenueClient;

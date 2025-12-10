@@ -1,0 +1,211 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import type { Property } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+
+interface PropertyFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: Omit<Property, 'id' | 'ownerId'> | Property) => void;
+  property?: Property | null;
+}
+
+const domesticBuildingTypes = ['Studio', 'Terraced House', 'Semi-Detached House', 'Detached House', 'Bungalow', 'Flat', 'Maisonette'];
+const commercialBuildingTypes = ['Office', 'Retail', 'Industrial'];
+
+export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFormProps) {
+  const [propertyType, setPropertyType] = useState<Property['propertyType']>(property?.propertyType || 'Domestic');
+  const [buildingType, setBuildingType] = useState<Property['buildingType'] | undefined>(property?.buildingType);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPropertyType(property?.propertyType || 'Domestic');
+      setBuildingType(property?.buildingType);
+    }
+  }, [isOpen, property]);
+
+  const handlePropertyTypeChange = (value: Property['propertyType']) => {
+    setPropertyType(value);
+    setBuildingType(undefined); // Reset building type when property type changes
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const isEditing = !!property?.id;
+    const id = property?.id || `p${Date.now()}`;
+
+    const data: Omit<Property, 'id' | 'ownerId'> | Property = {
+      ...(isEditing ? { id: property.id } : {}),
+      addressLine1: formData.get('addressLine1') as string,
+      city: formData.get('city') as string,
+      state: formData.get('state') as string,
+      postalCode: formData.get('postalCode') as string,
+      propertyType: propertyType,
+      buildingType: buildingType || 'Other',
+      bedrooms: Number(formData.get('bedrooms')),
+      bathrooms: Number(formData.get('bathrooms')),
+      size: Number(formData.get('size')) || undefined,
+      sizeUnit: formData.get('sizeUnit') as Property['sizeUnit'] || undefined,
+      purchasePrice: Number(formData.get('purchasePrice')),
+      purchaseTaxes: Number(formData.get('purchaseTaxes')) || 0,
+      mortgage: Number(formData.get('mortgage')),
+      currentValue: Number(formData.get('currentValue')),
+      rentalValue: Number(formData.get('rentalValue')),
+      imageUrl: property?.imageUrl || `https://picsum.photos/seed/${id}/600/400`,
+      imageHint: property?.imageHint || 'new property',
+    };
+    onSubmit(data);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle>{property ? 'Edit Property' : 'Add Property'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-2 py-4 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="addressLine1">Address Line 1</Label>
+              <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} required />
+            </div>
+             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" name="city" defaultValue={property?.city} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="state">County/State</Label>
+                    <Input id="state" name="state" defaultValue={property?.state} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="postalCode">Postcode</Label>
+                    <Input id="postalCode" name="postalCode" defaultValue={property?.postalCode} required />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="propertyType">Property Type</Label>
+                <Select value={propertyType} onValueChange={handlePropertyTypeChange} required>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Domestic">Domestic</SelectItem>
+                        <SelectItem value="Commercial">Commercial</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="buildingType">Building Type</Label>
+                <Select name="buildingType" value={buildingType} onValueChange={(value) => setBuildingType(value as Property['buildingType'])} required>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {propertyType === 'Domestic' && (
+                            <SelectGroup>
+                                <SelectLabel>Domestic</SelectLabel>
+                                {domesticBuildingTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                        )}
+                         {propertyType === 'Commercial' && (
+                            <SelectGroup>
+                                <SelectLabel>Commercial</SelectLabel>
+                                {commercialBuildingTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
+                            </SelectGroup>
+                         )}
+                        <SelectGroup>
+                            <SelectLabel>Other</SelectLabel>
+                            <SelectItem value="Other">Other</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="bedrooms">Bedrooms</Label>
+                    <Input id="bedrooms" name="bedrooms" type="number" defaultValue={property?.bedrooms} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="bathrooms">Bathrooms</Label>
+                    <Input id="bathrooms" name="bathrooms" type="number" defaultValue={property?.bathrooms} required />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="size">Size</Label>
+                    <Input id="size" name="size" type="number" defaultValue={property?.size}/>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="sizeUnit">Size Unit</Label>
+                     <Select name="sizeUnit" defaultValue={property?.sizeUnit || 'sqm'}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="sqft">sq ft</SelectItem>
+                            <SelectItem value="sqm">sq m</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="purchasePrice">Purchase Price</Label>
+                    <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="purchaseTaxes">Purchase Taxes & Fees</Label>
+                    <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="mortgage">Mortgage</Label>
+                <Input id="mortgage" name="mortgage" type="number" defaultValue={property?.mortgage} required />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="currentValue">Current Value</Label>
+                <Input id="currentValue" name="currentValue" type="number" defaultValue={property?.currentValue} required />
+                </div>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="rentalValue">Target/Asking Monthly Rent</Label>
+              <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} required />
+            </div>
+          
+          <DialogFooter className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-background -mx-6 -mb-6 px-6 py-4 rounded-b-lg pr-24">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button type="submit">Save</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

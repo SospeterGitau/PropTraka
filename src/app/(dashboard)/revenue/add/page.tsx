@@ -30,7 +30,7 @@ type FormServiceCharge = {
 };
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
 }
 
 // Safely creates a date for a specific day of the month, handling cases where the day doesn't exist (e.g., Feb 30th).
@@ -43,7 +43,6 @@ function createSafeMonthDate(year: number, month: number, day: number): Date {
   }
   return date;
 }
-
 
 const TenancyForm = memo(function TenancyForm({
   properties,
@@ -176,7 +175,7 @@ const TenancyForm = memo(function TenancyForm({
       .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
       .filter(sc => sc.name && sc.amount > 0);
       
-    const transactionsData = [];
+    const transactionsData: Partial<Transaction>[] = [];
     let currentDate = new Date(tenancyStartDate.getUTCFullYear(), tenancyStartDate.getUTCMonth(), 1);
     
     while (currentDate <= tenancyEndDate) {
@@ -253,7 +252,9 @@ const TenancyForm = memo(function TenancyForm({
             amountPaid: 0,
             propertyId,
             propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-            tenant, tenantEmail, tenantPhone,
+            tenant, 
+            tenantEmail, 
+            tenantPhone,
             type: 'revenue' as const,
             deposit: isFirstMonth ? deposit : 0,
             tenancyStartDate: tenancyStartDateStr,
@@ -286,7 +287,7 @@ const TenancyForm = memo(function TenancyForm({
     addChangeLogEntry({
       type: 'Tenancy',
       action: 'Created',
-      description: `Tenancy for "${transactionsData[0].tenant}" at "${transactionsData[0].propertyName}" was created.`,
+      description: `Tenancy for "${transactionsData[0]?.tenant}" at "${transactionsData[0]?.propertyName}" was created.`,
       entityId: tenancyId,
     });
     
@@ -339,15 +340,15 @@ const TenancyForm = memo(function TenancyForm({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <Label>Tenancy Start Date</Label>
-                        <DatePicker date={startDate} setDate={setStartDate} locale={settings.locale} />
+                        <DatePicker date={startDate} setDate={setStartDate} locale={settings?.locale || 'en-KE'} />
                     </div>
                     <div className="space-y-2">
                         <Label>Rent Payment Date</Label>
-                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings.locale} />
+                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings?.locale || 'en-KE'} />
                     </div>
                     <div className="space-y-2">
                         <Label>Tenancy End Date</Label>
-                        <DatePicker date={endDate} setDate={setEndDate} locale={settings.locale} />
+                        <DatePicker date={endDate} setDate={setEndDate} locale={settings?.locale || 'en-KE'} />
                     </div>
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -489,5 +490,3 @@ export default function AddTenancyPage() {
     </>
   );
 }
-
-    

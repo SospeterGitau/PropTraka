@@ -1,6 +1,7 @@
 
 'use client';
 
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -25,6 +26,7 @@ import {
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+
 type KanbanColumnProps = {
   title: MaintenanceRequest['status'];
   requests: MaintenanceRequest[];
@@ -37,19 +39,23 @@ type KanbanColumnProps = {
   onFocus: () => void;
 };
 
+
 const statusConfig = {
   'To Do': { icon: Circle, color: 'text-gray-500' },
   'In Progress': { icon: Clock, color: 'text-blue-500' },
-  Done: { icon: CheckCircle, color: 'text-green-500' },
-  Cancelled: { icon: XCircle, color: 'text-red-500' },
-};
+  'Done': { icon: CheckCircle, color: 'text-green-500' },
+  'Cancelled': { icon: XCircle, color: 'text-red-500' },
+} as const;
+
 
 const priorityColors = {
-  Low: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700',
-  Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-200 dark:border-yellow-700',
-  High: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-200 dark:border-orange-700',
-  Emergency: 'bg-red-200 text-red-900 border-red-400 font-bold dark:bg-red-900/50 dark:text-red-100 dark:border-red-700',
+  low: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-700',
+  medium: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-200 dark:border-yellow-700',
+  high: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/50 dark:text-orange-200 dark:border-orange-700',
+  urgent: 'bg-red-200 text-red-900 border-red-400 font-bold dark:bg-red-900/50 dark:text-red-100 dark:border-red-700',
 };
+
+const DONE_STATUS = 'Done' as const;
 
 function KanbanCard({ 
     request, 
@@ -108,7 +114,7 @@ function KanbanCard({
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
-                <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={request.status !== 'Done'}>
+                <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={(request.status as string) === DONE_STATUS}>
                     <FilePlus2 className="mr-2 h-4 w-4" />
                     Create Expense
                 </DropdownMenuItem>
@@ -123,7 +129,7 @@ function KanbanCard({
         <p className="text-sm text-muted-foreground mt-1">{request.description}</p>
       </CardHeader>
       <CardFooter className="p-4 flex justify-between items-center text-sm">
-        <Badge className={cn("text-xs border", priorityColors[request.priority])}>{request.priority}</Badge>
+        <Badge className={cn("text-xs border", priorityColors[request.priority as keyof typeof priorityColors] || priorityColors.medium)}>{request.priority}</Badge>
         <div className="flex items-center gap-2 text-muted-foreground">
           {request.contractorName && (
              <TooltipProvider>
@@ -144,8 +150,11 @@ function KanbanCard({
   );
 }
 
+
 function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, onStatusChange, formattedDates, isFocused, onFocus }: KanbanColumnProps) {
-  const Icon = statusConfig[title].icon;
+  const config = statusConfig[(title as unknown) as keyof typeof statusConfig];
+  const Icon = config?.icon || Circle;
+  const color = config?.color || 'text-gray-500';
   
   return (
     <div className={cn("flex flex-col gap-4 transition-all duration-300", isFocused ? "flex-[4]" : "flex-[1] min-w-[200px]")}>
@@ -153,7 +162,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
         className="flex items-center gap-2 px-1 rounded-md py-1 -mx-1 hover:bg-muted transition-colors"
         onClick={onFocus}
       >
-        <Icon className={cn("w-5 h-5", statusConfig[title].color)} />
+        <Icon className={cn("w-5 h-5", color)} />
         <h2 className="font-semibold text-lg">{title}</h2>
         <Badge variant="secondary" className="rounded-full">{requests.length}</Badge>
       </button>
@@ -180,6 +189,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
   );
 }
 
+
 interface MaintenanceKanbanBoardProps {
   requests: MaintenanceRequest[];
   onEditRequest: (request: MaintenanceRequest) => void;
@@ -188,6 +198,7 @@ interface MaintenanceKanbanBoardProps {
   onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
   locale: string;
 }
+
 
 export function MaintenanceKanbanBoard({
   requests,
@@ -198,15 +209,17 @@ export function MaintenanceKanbanBoard({
   locale
 }: MaintenanceKanbanBoardProps) {
 
+
   const [formattedDates, setFormattedDates] = useState<Record<string, string>>({});
   const [focusedColumn, setFocusedColumn] = useState<MaintenanceRequest['status'] | null>(null);
+
 
   useEffect(() => {
     const formatAllDates = async () => {
       const localeData = await getLocale(locale);
       const newFormattedDates: Record<string, string> = {};
       for (const item of requests) {
-        newFormattedDates[item.id] = format(new Date(item.reportedDate), 'MMM dd', { locale: localeData });
+        newFormattedDates[item.id] = format(new Date((item as any).reportedDate), 'MMM dd', { locale: localeData });
       }
       setFormattedDates(newFormattedDates);
     };
@@ -215,7 +228,9 @@ export function MaintenanceKanbanBoard({
     }
   }, [requests, locale]);
 
-  const columns: MaintenanceRequest['status'][] = ['To Do', 'In Progress', 'Done', 'Cancelled'];
+
+  const columns = (['To Do', 'In Progress', 'Done', 'Cancelled'] as const).map(status => status as MaintenanceRequest['status']);
+
 
   const requestsByStatus = requests.reduce((acc, request) => {
     const status = request.status;
@@ -226,6 +241,7 @@ export function MaintenanceKanbanBoard({
     return acc;
   }, {} as Record<MaintenanceRequest['status'], MaintenanceRequest[]>);
 
+
   const handleFocus = (status: MaintenanceRequest['status']) => {
     setFocusedColumn(status);
   };
@@ -233,6 +249,7 @@ export function MaintenanceKanbanBoard({
   const clearFocus = () => {
     setFocusedColumn(null);
   }
+
 
   return (
     <div className="flex flex-col h-full flex-grow">

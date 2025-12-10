@@ -1,60 +1,90 @@
 
 'use client';
 
-import { useDataContext } from '@/context/data-context';
-import { useUser } from '@/firebase';
-import { Building, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+
+
+import React from 'react';
+import dynamic from 'next/dynamic';
 import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import DashboardPageContent from '@/app/(dashboard)/dashboard/page';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDataContext } from '@/context/data-context';
 
-export default function DashboardPage() {
-  const { user, isAuthLoading: authLoading } = useUser();
-  const { properties, isLoading: dataLoading } = useDataContext();
 
-  const isLoading = authLoading || dataLoading;
 
-  if (isLoading) {
+const ProfileSettingsTab = dynamic(() => import('@/components/settings/profile-settings-tab'), {
+  loading: () => <Skeleton className="h-96 w-full" />,
+});
+const SubscriptionBillingTab = dynamic(() => import('@/components/settings/subscription-billing-tab'), {
+  loading: () => <Skeleton className="h-96 w-full" />,
+});
+const ApiAccessTab = dynamic(() => import('@/components/settings/api-access-tab'), {
+  loading: () => <Skeleton className="h-96 w-full" />,
+});
+const KnowledgeBaseTab = dynamic(() => import('@/components/settings/knowledge-base-tab'), {
+  loading: () => <Skeleton className="h-96 w-full" />,
+});
+
+
+
+
+const SettingsTabs = () => {
+    const { settings } = useDataContext();
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
+
+
+    if (!settings) {
+        return (
+            <div className="mb-6">
+                <Skeleton className="h-10 w-full max-w-lg" />
+            </div>
+        );
+    }
+    
+    // In development: show to all users for testing
+    // In production: only show to Enterprise users
+    const isEnterprise = isDevelopment;
+
+
+
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
+        <Tabs defaultValue="profile">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-lg mb-6">
+                <TabsTrigger value="profile">Profile &amp; Settings</TabsTrigger>
+                <TabsTrigger value="subscription">Subscription</TabsTrigger>
+                {isEnterprise && <TabsTrigger value="api-access">API Access</TabsTrigger>}
+                {isDevelopment && <TabsTrigger value="knowledge">Knowledge Base</TabsTrigger>}
+            </TabsList>
+            
+            <TabsContent value="profile">
+                <ProfileSettingsTab />
+            </TabsContent>
+            <TabsContent value="subscription">
+                <SubscriptionBillingTab />
+            </TabsContent>
+            {isEnterprise && (
+                <TabsContent value="api-access">
+                    <ApiAccessTab />
+                </TabsContent>
+            )}
+            {isDevelopment && (
+                <TabsContent value="knowledge">
+                    <KnowledgeBaseTab />
+                </TabsContent>
+            )}
+        </Tabs>
     );
-  }
+};
 
-  // If loading is finished and there are no properties, show the "empty state" card.
-  if (!isLoading && properties.length === 0) {
-    return (
-      <>
-        <PageHeader 
-          title="Welcome to PropTraka"
-        >
-           <div className="hidden sm:block" />
-        </PageHeader>
-        <Card className="text-center py-16">
-          <CardHeader>
-              <div className="mx-auto bg-muted rounded-full p-4 w-fit">
-                  <Building className="w-12 h-12 text-muted-foreground" />
-              </div>
-              <CardTitle className="mt-4 !text-2xl">Your Dashboard is Ready</CardTitle>
-              <CardDescription>Start by adding your first property to see your financial overview here.</CardDescription>
-          </CardHeader>
-          <CardContent>
-              <Button asChild size="lg">
-                  <Link href="/properties">Add Your First Property</Link>
-              </Button>
-          </CardContent>
-        </Card>
-      </>
-    );
-  }
 
-  // If properties exist, show the full dashboard content.
-  return <DashboardPageContent />;
+
+
+export default function AccountPage() {
+  return (
+    <>
+      <PageHeader title="Account" />
+      <SettingsTabs />
+    </>
+  );
 }
-

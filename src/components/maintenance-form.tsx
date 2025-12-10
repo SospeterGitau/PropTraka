@@ -1,7 +1,9 @@
 
 'use client';
+
 import { useState, useEffect } from 'react';
 import type { Property, MaintenanceRequest, Contractor } from '@/lib/types';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,39 +11,49 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from './ui/date-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useDataContext } from '@/context/data-context';
 import { format } from 'date-fns';
 
 interface MaintenanceFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest) => void;
-  request?: MaintenanceRequest | null;
+  onSubmit: (data: Omit<MaintenanceRequest, 'id'> | MaintenanceRequest) => void;
+  request?: Partial<MaintenanceRequest> | null;
   properties: Property[];
   contractors: Contractor[];
 }
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.postalCode}`;
 }
 
 export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties, contractors }: MaintenanceFormProps) {
+  const [contractorId, setContractorId] = useState('');
+  const [isContractorOpen, setIsContractorOpen] = useState(false);
   const { settings } = useDataContext();
-  const [reportedDate, setReportedDate] = useState<Date | undefined>();
-  const [completedDate, setCompletedDate] = useState<Date | undefined>();
+  const [date, setDate] = useState<Date | undefined>();
 
   useEffect(() => {
-      if (isOpen) {
-          setReportedDate(request?.reportedDate ? new Date(request.reportedDate) : new Date());
-          setCompletedDate(request?.completedDate ? new Date(request.completedDate) : undefined);
-      }
+    if (isOpen) {
+      setContractorId((request as any)?.contractorId || '');
+      setDate((request as any)?.dueDate ? new Date((request as any).dueDate) : new Date());
+    }
   }, [isOpen, request]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -49,22 +61,24 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
     const formData = new FormData(event.currentTarget);
     const propertyId = formData.get('propertyId') as string;
     const selectedProperty = properties.find(p => p.id === propertyId);
-    const contractorId = formData.get('contractorId') as string;
     const selectedContractor = contractors.find(c => c.id === contractorId);
-    
-    const data: Omit<MaintenanceRequest, 'id' | 'ownerId'> | MaintenanceRequest = {
-      ...(request?.id ? { id: request.id } : {}), // include id if editing
-      propertyId: propertyId !== 'none' ? propertyId : undefined,
-      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Task',
+    const isEditing = !!request?.id;
+
+    const data = {
+      ...(isEditing ? { id: request.id } : {}),
+      dueDate: format(date!, 'yyyy-MM-dd'),
+      propertyId: propertyId,
+      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General',
+      title: formData.get('title') as string,
       description: formData.get('description') as string,
-      status: formData.get('status') as MaintenanceRequest['status'],
       priority: formData.get('priority') as MaintenanceRequest['priority'],
-      reportedDate: format(reportedDate!, 'yyyy-MM-dd'),
-      completedDate: completedDate ? format(completedDate, 'yyyy-MM-dd') : undefined,
-      cost: Number(formData.get('cost')) || undefined,
-      contractorId: contractorId !== 'none' ? contractorId : undefined,
-      contractorName: selectedContractor ? selectedContractor.name : undefined,
-    };
+      status: request?.status || 'pending',
+      contractorId: contractorId || undefined,
+      contractorName: selectedContractor?.name,
+      estimatedCost: formData.get('estimatedCost') ? Number(formData.get('estimatedCost')) : undefined,
+      notes: formData.get('notes') as string,
+    } as unknown as Omit<MaintenanceRequest, 'id'> | MaintenanceRequest;
+
     onSubmit(data);
     onClose();
   };
@@ -75,95 +89,105 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{request ? 'Edit' : 'Add'} Maintenance Request</DialogTitle>
+          <DialogTitle>{request?.id ? 'Edit' : 'Add'} Maintenance Request</DialogTitle>
+          <DialogDescription>
+            Track and manage maintenance tasks for your properties.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-2 py-4 space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="propertyId">Property (Optional)</Label>
-                <Select name="propertyId" defaultValue={request?.propertyId || 'none'}>
-                    <SelectTrigger id="propertyId">
-                        <SelectValue placeholder="Select a property" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">General Business Task</SelectItem>
-                        {properties.map(property => (
-                            <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="date">Due Date</Label>
+            <DatePicker date={date} setDate={setDate} locale={settings?.locale || 'en-US'} />
+          </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" defaultValue={request?.description} required />
-            </div>
-            
-             <div className="space-y-2">
-                <Label htmlFor="contractorId">Assigned Contractor (Optional)</Label>
-                <Select name="contractorId" defaultValue={request?.contractorId || 'none'}>
-                    <SelectTrigger id="contractorId">
-                        <SelectValue placeholder="Select a contractor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {contractors.map(contractor => (
-                            <SelectItem key={contractor.id} value={contractor.id}>{contractor.name} ({contractor.specialty})</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="propertyId">Property</Label>
+            <Select name="propertyId" defaultValue={request?.propertyId || ''}>
+              <SelectTrigger id="propertyId">
+                <SelectValue placeholder="Select a property" />
+              </SelectTrigger>
+              <SelectContent>
+                {properties.map(property => (
+                  <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="priority">Priority</Label>
-                    <Select name="priority" defaultValue={request?.priority || 'Medium'} required>
-                        <SelectTrigger id="priority">
-                            <SelectValue placeholder="Select a priority" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Low">Low</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="High">High</SelectItem>
-                            <SelectItem value="Emergency">Emergency</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select name="status" defaultValue={request?.status || 'To Do'} required>
-                        <SelectTrigger id="status">
-                            <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="To Do">To Do</SelectItem>
-                            <SelectItem value="In Progress">In Progress</SelectItem>
-                            <SelectItem value="Done">Done</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" name="title" defaultValue={request?.title} required placeholder="e.g., Replace roof shingles" />
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label>Date Reported</Label>
-                    <DatePicker date={reportedDate} setDate={setReportedDate} locale={settings.locale} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Date Completed</Label>
-                    <DatePicker date={completedDate} setDate={setCompletedDate} locale={settings.locale} />
-                </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" name="description" defaultValue={request?.description} required placeholder="Describe the maintenance needed..." />
+          </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="cost">Cost (Optional)</Label>
-                <Input id="cost" name="cost" type="number" step="0.01" defaultValue={request?.cost} placeholder="Enter the final cost" />
-            </div>
-          
-          <DialogFooter className="pt-6">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
-            </DialogClose>
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select name="priority" defaultValue={request?.priority || 'medium'} required>
+              <SelectTrigger id="priority">
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Contractor (optional)</Label>
+            <Popover open={isContractorOpen} onOpenChange={setIsContractorOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={isContractorOpen} className="w-full justify-between">
+                  {contractorId
+                    ? contractors.find(c => c.id === contractorId)?.name
+                    : "Select a contractor..."}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                <Command>
+                  <CommandInput placeholder="Search contractors..." />
+                  <CommandList>
+                    <CommandEmpty>No contractor found.</CommandEmpty>
+                    <CommandGroup>
+                      {contractors.map((c) => (
+                        <CommandItem
+                          key={c.id}
+                          value={c.name}
+                          onSelect={() => {
+                            setContractorId(c.id === contractorId ? "" : c.id);
+                            setIsContractorOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />
+                          {c.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="estimatedCost">Estimated Cost (optional)</Label>
+            <Input id="estimatedCost" name="estimatedCost" type="number" step="0.01" defaultValue={(request as any)?.estimatedCost} placeholder="0.00" />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Textarea id="notes" name="notes" defaultValue={request?.notes} placeholder="Additional notes..." />
+          </div>
+
+          <DialogFooter className="pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">Save</Button>
           </DialogFooter>
         </form>

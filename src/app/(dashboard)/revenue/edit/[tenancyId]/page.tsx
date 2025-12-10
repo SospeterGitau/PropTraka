@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { PlusCircle, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs, Query } from 'firebase/firestore';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useDataContext } from '@/context/data-context';
@@ -29,7 +29,7 @@ type FormServiceCharge = {
 };
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
 }
 
 // Safely creates a date for a specific day of the month, handling cases where the day doesn't exist (e.g., Feb 30th).
@@ -47,7 +47,6 @@ function parseLocalDate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
   return new Date(year, month - 1, day);
 }
-
 
 const TenancyForm = memo(function TenancyForm({
   tenancyToEdit,
@@ -76,12 +75,11 @@ const TenancyForm = memo(function TenancyForm({
       moveOutChecklistUrl: ''
   });
 
-
   const initialDeposit = useMemo(() => {
     if (!tenancyToEdit?.tenancyId || !revenue) return 0;
     const firstTransaction = revenue
       .filter(t => t.tenancyId === tenancyToEdit.tenancyId)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+      .sort((a, b) => new Date(a.date || new Date()).getTime() - new Date(b.date || new Date()).getTime())[0];
     return firstTransaction?.deposit || 0;
   }, [tenancyToEdit, revenue]);
 
@@ -160,7 +158,6 @@ const TenancyForm = memo(function TenancyForm({
     }
     const dayOfMonth = rentDueDate.getDate();
 
-
     const tenancyStartDateStr = format(startDate, 'yyyy-MM-dd');
     const tenancyEndDateStr = format(endDate, 'yyyy-MM-dd');
 
@@ -204,7 +201,7 @@ const TenancyForm = memo(function TenancyForm({
       .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
       .filter(sc => sc.name && sc.amount > 0);
 
-    const transactionsData = [];
+    const transactionsData: (Partial<Transaction> & { id?: string })[] = [];
     let currentDate = new Date(tenancyStartDate.getUTCFullYear(), tenancyStartDate.getUTCMonth(), 1);
 
     while(currentDate <= tenancyEndDate) {
@@ -288,7 +285,9 @@ const TenancyForm = memo(function TenancyForm({
             amountPaid: existingTx?.amountPaid || 0,
             propertyId,
             propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-            tenant, tenantEmail, tenantPhone,
+            tenant, 
+            tenantEmail, 
+            tenantPhone,
             type: 'revenue' as const,
             deposit: isFirstMonth ? deposit : 0,
             tenancyStartDate: tenancyStartDateStr,
@@ -319,12 +318,14 @@ const TenancyForm = memo(function TenancyForm({
     
     const batch = writeBatch(firestore);
     
-    const newTxDates = new Set(transactionsData.map(tx => format(parseLocalDate(tx!.date!), 'yyyy-MM')));
+    const newTxDates = new Set(transactionsData.map(tx => format(parseLocalDate(tx.date!), 'yyyy-MM')));
     
     existingTransactions.forEach(tx => {
-        const txDate = format(parseLocalDate(tx.date), 'yyyy-MM');
-        if (!newTxDates.has(txDate)) {
-             batch.delete(doc(firestore, 'revenue', tx.id));
+        if (tx.date) {
+            const txDate = format(parseLocalDate(tx.date), 'yyyy-MM');
+            if (!newTxDates.has(txDate)) {
+                 batch.delete(doc(firestore, 'revenue', tx.id));
+            }
         }
     });
 
@@ -339,7 +340,7 @@ const TenancyForm = memo(function TenancyForm({
     addChangeLogEntry({
       type: 'Tenancy',
       action: 'Updated',
-      description: `Tenancy for "${transactionsData[0].tenant}" at "${transactionsData[0].propertyName}" was updated.`,
+      description: `Tenancy for "${transactionsData[0]?.tenant}" at "${transactionsData[0]?.propertyName}" was updated.`,
       entityId: tenancyId,
     });
     
@@ -379,7 +380,7 @@ const TenancyForm = memo(function TenancyForm({
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="tenantPhone">Tenant Phone</Label>
-                        <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone} />
+                        <Input id="tenantPhone" name="tenantPhone" type="tel" defaultValue={tenancyToEdit?.tenantPhone || ''} />
                     </div>
                 </div>
             </CardContent>
@@ -394,21 +395,21 @@ const TenancyForm = memo(function TenancyForm({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <Label>Tenancy Start Date</Label>
-                        <DatePicker date={startDate} setDate={setStartDate} locale={settings.locale} />
+                        <DatePicker date={startDate} setDate={setStartDate} locale={settings?.locale || 'en-KE'} />
                     </div>
                      <div className="space-y-2">
                          <Label>Rent Payment Date</Label>
-                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings.locale} />
+                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings?.locale || 'en-KE'} />
                     </div>
                     <div className="space-y-2">
                         <Label>Tenancy End Date</Label>
-                        <DatePicker date={endDate} setDate={setEndDate} locale={settings.locale} />
+                        <DatePicker date={endDate} setDate={setEndDate} locale={settings?.locale || 'en-KE'} />
                     </div>
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="rent">Monthly Rent</Label>
-                        <Input id="rent" name="rent" type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" defaultValue={tenancyToEdit?.rent} required />
+                        <Input id="rent" name="rent" type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" defaultValue={tenancyToEdit?.rent || ''} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
@@ -479,7 +480,7 @@ const TenancyForm = memo(function TenancyForm({
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notes (optional)</Label>
-                    <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes} />
+                    <Textarea id="notes" name="notes" defaultValue={tenancyToEdit?.notes || ''} />
                     <p className="text-xs text-muted-foreground">Notes will only be added to the first month's invoice.</p>
                 </div>
             </CardContent>
@@ -496,7 +497,6 @@ const TenancyForm = memo(function TenancyForm({
   );
 });
 
-
 export default function EditTenancyPage() {
   const { tenancyId } = useParams();
   const { user } = useUser();
@@ -510,11 +510,11 @@ export default function EditTenancyPage() {
     user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
   , [firestore, user?.uid]);
   
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
 
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property)) || [], [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)) || [], [revenueSnapshot]);
+  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
+  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
 
   const tenancyToEdit = useMemo(() => {
     if (!revenue) return null;
@@ -531,7 +531,7 @@ export default function EditTenancyPage() {
 
   return (
     <>
-      <PageHeader title={`Edit Tenancy: ${tenancyToEdit?.tenant}`}>
+      <PageHeader title={`Edit Tenancy: ${tenancyToEdit?.tenant || 'Tenancy'}`}>
         <Button variant="outline" asChild>
           <Link href="/revenue">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -543,5 +543,3 @@ export default function EditTenancyPage() {
     </>
   );
 }
-
-    

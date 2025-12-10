@@ -1,6 +1,7 @@
 
 'use client';
 
+
 import { useState } from 'react';
 import {
   format,
@@ -26,9 +27,11 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
+
 interface CalendarViewProps {
   events: CalendarEvent[];
 }
+
 
 const eventColors: { [key: string]: string } = {
   appointment: 'bg-blue-500 text-white hover:bg-blue-600',
@@ -37,8 +40,10 @@ const eventColors: { [key: string]: string } = {
   expense: 'bg-yellow-500 text-black hover:bg-yellow-600',
 };
 
+
 export function CalendarView({ events }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+
 
   const firstDayOfMonth = startOfMonth(currentDate);
   const lastDayOfMonth = endOfMonth(currentDate);
@@ -46,18 +51,23 @@ export function CalendarView({ events }: CalendarViewProps) {
   const lastDayOfGrid = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: firstDayOfGrid, end: lastDayOfGrid });
 
-  const eventsByDate = events.reduce((acc, event) => {
-    const date = event.date.split('T')[0];
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(event);
-    return acc;
-  }, {} as Record<string, CalendarEvent[]>);
+
+  const eventsByDate = events
+    .filter(event => event.date)
+    .reduce((acc, event) => {
+      const date = event.date!.split('T')[0];
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(event);
+      return acc;
+    }, {} as Record<string, CalendarEvent[]>);
+
 
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
+
 
   return (
     <TooltipProvider>
@@ -75,12 +85,14 @@ export function CalendarView({ events }: CalendarViewProps) {
           <Button variant="outline" onClick={goToToday}>Today</Button>
         </div>
 
+
         <div className="grid grid-cols-7 border-t border-l border-border">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
             <div key={day} className="py-2 text-center font-medium text-sm text-muted-foreground bg-card border-r border-b border-border">
               {day}
             </div>
           ))}
+
 
           {days.map((day) => {
             const dayKey = format(day, 'yyyy-MM-dd');

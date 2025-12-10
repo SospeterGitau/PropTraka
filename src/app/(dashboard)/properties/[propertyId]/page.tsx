@@ -23,13 +23,13 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import type { Property, Transaction } from '@/lib/types';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query, DocumentReference } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query, DocumentReference } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.state} ${property.postalCode}`;
+  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
 }
 
 function PropertyDetailPageContent() {
@@ -97,18 +97,20 @@ function PropertyDetailPageContent() {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Property, 'id'> | Property) => {
-    if(propertyRef) {
-        if ('id' in data) {
-            const { id, ...propertyData } = data;
-            await updateDoc(propertyRef, propertyData);
-            addChangeLogEntry({
-                type: 'Property',
-                action: 'Updated',
-                description: `Property "${formatAddress(data)}" was updated.`,
-                entityId: data.id,
-            });
-        }
+  const handleFormSubmit = async (data: Property | Omit<Property, "ownerId" | "id">) => {
+    if (propertyRef && property) {
+      const propertyData = 'id' in data ? (() => {
+        const { id, ownerId, ...rest } = data as Property;
+        return rest;
+      })() : data;
+      
+      await updateDoc(propertyRef, propertyData);
+      addChangeLogEntry({
+        type: 'Property',
+        action: 'Updated',
+        description: `Property "${formatAddress(property)}" was updated.`,
+        entityId: property.id,
+      });
     }
     setIsFormOpen(false);
   };
@@ -193,16 +195,16 @@ function PropertyDetailPageContent() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                         <div className="p-4 bg-muted rounded-lg">
                             <div className="text-sm text-muted-foreground">Bedrooms</div>
-                            <div className="text-2xl font-bold flex items-center justify-center gap-2"><Bed /> {property.bedrooms}</div>
+                            <div className="text-2xl font-bold flex items-center justify-center gap-2"><Bed className="h-5 w-5" /> {property.bedrooms || 0}</div>
                         </div>
                         <div className="p-4 bg-muted rounded-lg">
                             <div className="text-sm text-muted-foreground">Bathrooms</div>
-                            <div className="text-2xl font-bold flex items-center justify-center gap-2"><Bath /> {property.bathrooms}</div>
+                            <div className="text-2xl font-bold flex items-center justify-center gap-2"><Bath className="h-5 w-5" /> {property.bathrooms || 0}</div>
                         </div>
                          {property.size && (
                             <div className="p-4 bg-muted rounded-lg">
                                 <div className="text-sm text-muted-foreground">Size</div>
-                                <div className="text-2xl font-bold flex items-center justify-center gap-2"><Square />{property.size} {property.sizeUnit}</div>
+                                <div className="text-2xl font-bold flex items-center justify-center gap-2"><Square className="h-5 w-5" />{property.size} {property.sizeUnit}</div>
                             </div>
                          )}
                          <div className="p-4 bg-muted rounded-lg">
@@ -223,11 +225,11 @@ function PropertyDetailPageContent() {
                 <CardContent className="space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Current Value</span>
-                        <span className="font-medium">{formatCurrency(property.currentValue, locale, currency)}</span>
+                        <span className="font-medium">{formatCurrency(property.currentValue || 0, locale, currency)}</span>
                     </div>
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Purchase Price</span>
-                        <span className="font-medium">{formatCurrency(property.purchasePrice, locale, currency)}</span>
+                        <span className="font-medium">{formatCurrency(property.purchasePrice || 0, locale, currency)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Purchase Fees</span>
@@ -235,12 +237,12 @@ function PropertyDetailPageContent() {
                     </div>
                     <div className="flex justify-between">
                         <span className="text-muted-foreground">Mortgage</span>
-                        <span className="font-medium">{formatCurrency(property.mortgage, locale, currency)}</span>
+                        <span className="font-medium">{formatCurrency(property.mortgage || 0, locale, currency)}</span>
                     </div>
                      <hr className="my-2"/>
                     <div className="flex justify-between font-bold">
-                        <span >Equity</span>
-                        <span>{formatCurrency(property.currentValue - property.mortgage, locale, currency)}</span>
+                        <span>Equity</span>
+                        <span>{formatCurrency((property.currentValue || 0) - (property.mortgage || 0), locale, currency)}</span>
                     </div>
                 </CardContent>
             </Card>
@@ -251,7 +253,7 @@ function PropertyDetailPageContent() {
                 <CardContent className="space-y-2 text-sm">
                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Asking Rent</span>
-                        <span className="font-medium">{formatCurrency(property.rentalValue, locale, currency)}/month</span>
+                        <span className="font-medium">{formatCurrency(property.rentalValue || 0, locale, currency)}/month</span>
                     </div>
                 </CardContent>
             </Card>
@@ -280,5 +282,3 @@ export default function PropertyDetailPage() {
         <PropertyDetailPageContent />
     )
 }
-
-    

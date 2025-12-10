@@ -1,13 +1,14 @@
 
 'use client';
 
+
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
 import { useUser, useFirestore, errorEmitter } from '@/firebase';
 import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { ChatMessage, KnowledgeArticle, SecurityRuleContext } from '@/lib/types';
+import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import type { KnowledgeArticle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,6 +27,22 @@ import { getChatResponse } from '@/lib/actions';
 import placeholderFaq from '@/lib/placeholder-faq.json';
 
 
+// Local type definitions
+type ChatMessage = {
+  id: string;
+  role: 'user' | 'model';
+  content: string;
+  ownerId: string;
+  timestamp?: Timestamp;
+};
+
+type SecurityRuleContext = {
+  path: string;
+  operation: 'delete' | 'get' | 'list' | 'create' | 'update' | 'write';
+  requestResourceData: unknown;
+};
+
+
 // Simple Markdown to HTML renderer
 const MarkdownRenderer = ({ content }: { content: string }) => {
     const html = content
@@ -37,12 +54,14 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 };
 
 
+
 export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [input, setInput] = useState('');
   const [isPending, setIsPending] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
 
   const messagesQuery = useMemo(() => 
     user?.uid ? createUserQuery(firestore, 'chatMessages', user.uid) : null
@@ -52,17 +71,21 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null
   , [firestore, user?.uid]);
 
+
   const [messagesSnapshot, isLoading] = useCollection(messagesQuery);
   const [knowledgeBaseSnapshot, isKbLoading] = useCollection(knowledgeBaseQuery);
+
 
   const knowledgeBase = useMemo(() => 
     knowledgeBaseSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as KnowledgeArticle)) || []
   , [knowledgeBaseSnapshot]);
 
+
   const messages = useMemo(() => 
     messagesSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as ChatMessage))
-    .sort((a, b) => a.timestamp?.toMillis() - b.timestamp?.toMillis()) || []
+    .sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0)) || []
   , [messagesSnapshot]);
+
 
   useEffect(() => {
     // Scroll to the bottom when new messages are added
@@ -84,6 +107,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     e.preventDefault();
     if (!input.trim() || !user || !firestore) return;
 
+
     const userMessage: Omit<ChatMessage, 'id' | 'timestamp'> = {
       role: 'user',
       content: input,
@@ -93,8 +117,10 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setInput('');
     setIsPending(true);
 
+
     const messagesCollectionRef = collection(firestore, 'chatMessages');
     const messageWithTimestamp = { ...userMessage, timestamp: serverTimestamp() };
+
 
     try {
         await addDoc(messagesCollectionRef, messageWithTimestamp)
@@ -121,6 +147,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             timestamp: serverTimestamp() 
         });
 
+
     } catch (serverError) {
         const permissionError = new FirestorePermissionError({
           path: messagesCollectionRef.path,
@@ -134,6 +161,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     }
   };
 
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[70vh] max-h-[700px]">
@@ -143,6 +171,7 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             AI Assistant
           </DialogTitle>
         </DialogHeader>
+
 
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
             <div className="p-4 space-y-6">

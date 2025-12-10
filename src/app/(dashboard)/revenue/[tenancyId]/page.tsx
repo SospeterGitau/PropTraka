@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
@@ -55,7 +54,7 @@ function PaymentForm({
 
   useEffect(() => {
     const formatDateAsync = async () => {
-      if (transaction) {
+      if (transaction?.date) {
         const localeData = await getLocale(locale);
         setFormattedDate(format(new Date(transaction.date), 'PPP', { locale: localeData }));
       }
@@ -75,7 +74,7 @@ function PaymentForm({
   if (!isOpen || !transaction) return null;
 
   const totalServiceCharges = transaction.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
-  const totalDueForPeriod = transaction.rent + totalServiceCharges + (transaction.deposit || 0);
+  const totalDueForPeriod = (transaction.rent || 0) + totalServiceCharges + (transaction.deposit || 0);
   const alreadyPaid = transaction.amountPaid || 0;
   const balanceDue = totalDueForPeriod - alreadyPaid;
 
@@ -175,7 +174,7 @@ function InvoiceForm({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit Invoice for {format(new Date(transaction.date), 'MMMM yyyy')}</DialogTitle>
+          <DialogTitle>Edit Invoice for {transaction.date ? format(new Date(transaction.date), 'MMMM yyyy') : 'Invoice'}</DialogTitle>
         </DialogHeader>
         <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <div className="space-y-2">
@@ -227,7 +226,6 @@ function InvoiceForm({
   );
 }
 
-
 const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const params = useParams();
   const tenancyId = params.tenancyId as string;
@@ -242,12 +240,11 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
   const revenueQuery = useMemo(() => user ? createUserQuery(firestore, 'revenue', user.uid, where('tenancyId', '==', tenancyId)) : null, [firestore, user, tenancyId]);
   const propertiesQuery = useMemo(() => user ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user]);
   
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery);
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery);
+  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
+  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
 
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
   const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
-
 
   const [tenancy, setTenancy] = useState<(Transaction & { transactions: Transaction[] }) | null>(null);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
@@ -263,13 +260,12 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         const representativeTx = revenue[0];
         setTenancy({
             ...representativeTx,
-            transactions: revenue.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+            transactions: revenue.sort((a, b) => new Date(a.date || new Date()).getTime() - new Date(b.date || new Date()).getTime()),
         });
       }
       setInitialLoadComplete(true);
     }
   }, [revenue, isRevenueLoading]);
-
 
   useEffect(() => {
     if (!tenancy) return;
@@ -279,7 +275,9 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
         const newFormattedDates: { [key: string]: string } = {};
 
         for (const item of tenancy.transactions) {
-            newFormattedDates[item.id] = format(new Date(item.date), 'dd MMM yyyy', { locale: localeData });
+            if (item.date) {
+              newFormattedDates[item.id] = format(new Date(item.date), 'dd MMM yyyy', { locale: localeData });
+            }
         }
         if (tenancy.tenancyStartDate) {
            newFormattedDates['start'] = format(new Date(tenancy.tenancyStartDate), 'PP', { locale: localeData });
@@ -318,7 +316,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
      addChangeLogEntry({
         type: 'Tenancy',
         action: 'Updated',
-        description: `Invoice for ${format(new Date(transaction.date), 'MMMM yyyy')} updated for "${transaction.tenant}".`,
+        description: `Invoice for ${transaction.date ? format(new Date(transaction.date), 'MMMM yyyy') : 'transaction'} updated for "${transaction.tenant}".`,
         entityId: transaction.id,
     });
     setIsInvoiceFormOpen(false);
@@ -366,7 +364,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
 
     // Find transactions to delete (future, unpaid ones)
     tenancy.transactions.forEach(tx => {
-      const txDate = new Date(tx.date);
+      const txDate = new Date(tx.date || new Date());
       if (isAfter(txDate, newEndDate) && (tx.amountPaid ?? 0) === 0) {
         const txRef = doc(firestore, 'revenue', tx.id);
         batch.delete(txRef);
@@ -421,20 +419,18 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     return null; // Should be caught by notFound, but satisfies TS
   }
 
-
   const property = properties.find(p => p.id === tenancy.propertyId);
   const today = startOfToday();
-  const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date)));
-  const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + tx.rent + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
+  const dueTransactions = tenancy.transactions.filter(tx => !isBefore(today, new Date(tx.date || new Date())));
+  const totalDueToDate = dueTransactions.reduce((sum, tx) => sum + (tx.rent || 0) + (tx.serviceCharges?.reduce((scSum, sc) => scSum + sc.amount, 0) || 0) + (tx.deposit ?? 0), 0);
   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
   const currentBalance = totalDueToDate - totalPaid;
   const firstTransaction = tenancy.transactions[0];
-  const depositAmount = firstTransaction.deposit || 0;
-  const isDepositReturned = firstTransaction.depositReturned || false;
+  const depositAmount = firstTransaction?.deposit || 0;
+  const isDepositReturned = (firstTransaction as any)?.depositReturned === true;
   const isTenancyEnded = tenancy.tenancyEndDate ? isBefore(new Date(tenancy.tenancyEndDate), today) : false;
   
   const hasDocuments = tenancy.applicationFormUrl || tenancy.contractUrl || tenancy.moveInChecklistUrl || tenancy.moveOutChecklistUrl;
-
 
   return (
     <>
@@ -490,7 +486,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Tenancy Period</span>
-                        <span className="font-medium">{formattedDates['start']} - {formattedDates['end']}</span>
+                        <span className="font-medium">{formattedDates['start'] || 'N/A'} - {formattedDates['end'] || 'N/A'}</span>
                     </div>
                      <div className="text-sm space-y-2">
                         <div className="flex items-center gap-2">
@@ -569,10 +565,10 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </TableHeader>
             <TableBody>
               {tenancy.transactions.map((tx) => {
-                const dueDate = new Date(tx.date);
+                const dueDate = new Date(tx.date || new Date());
                 const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
                 const depositForPeriod = tx.deposit || 0;
-                const due = tx.rent + totalServiceCharges + (tx.deposit || 0);
+                const due = (tx.rent || 0) + totalServiceCharges + (tx.deposit || 0);
                 const paid = tx.amountPaid ?? 0;
                 const balance = due - paid;
                 const isOverdue = isBefore(dueDate, today) && balance > 0;
@@ -583,7 +579,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                 return (
                     <TableRow key={tx.id}>
                       <TableCell className="font-medium">
-                        {formattedDates[tx.id]}
+                        {formattedDates[tx.id] || 'N/A'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -600,7 +596,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                                       <h4 className="font-medium">Invoice Breakdown</h4>
                                       <div className="flex justify-between">
                                         <span>Rent:</span>
-                                        <span>{formatCurrency(tx.rent, locale, currency)}</span>
+                                        <span>{formatCurrency(tx.rent || 0, locale, currency)}</span>
                                       </div>
                                       {tx.serviceCharges?.map((sc, i) => (
                                           <div key={i} className="flex justify-between">
