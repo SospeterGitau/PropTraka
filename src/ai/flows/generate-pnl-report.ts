@@ -5,11 +5,14 @@ import { z } from 'zod';
 import type { GeneratePnlReportInput, GeneratePnlReportOutput } from '@/lib/types';
 
 const GeneratePnlReportInputSchema = z.object({
-  startDate: z.string().describe('Start date for the P&L report (YYYY-MM-DD format)'),
-  endDate: z.string().describe('End date for the P&L report (YYYY-MM-DD format)'),
-  propertyIds: z.array(z.string()).optional().describe('List of property IDs to include'),
-  isResident: z.boolean().optional().describe('Whether the resident status applies'),
-  isNonResident: z.boolean().optional().describe('Whether the non-resident status applies'),
+  startDate: z.string().describe('Start date for the P&L report (yyyy-MM-dd format)'),
+  endDate: z.string().describe('End date for the P&L report (yyyy-MM-dd format)'),
+  revenueTransactions: z.string().describe('JSON stringified array of revenue transactions'),
+  expenseTransactions: z.string().describe('JSON stringified array of expense transactions'),
+  currency: z.string().describe('Currency code (e.g., KES, USD)'),
+  companyName: z.string().describe('Name of the company/landlord'),
+  residencyStatus: z.string().describe('Residency status for tax purposes'),
+  prompt: z.string().describe('Custom prompt for report generation'),
 });
 
 const GeneratePnlReportOutputSchema = z.object({
@@ -26,13 +29,23 @@ const pnlReportPrompt = ai.definePrompt({
   name: 'generatePnlReportPrompt',
   input: { schema: GeneratePnlReportInputSchema },
   output: { schema: GeneratePnlReportOutputSchema },
-  prompt: `Generate a P&L report for the specified date range and properties.
+  prompt: `You are a professional accountant and financial analyst. Generate a detailed P&L (Profit & Loss) Statement.
 
-Start Date: {{{startDate}}}
-End Date: {{{endDate}}}
-Properties: {{{propertyIds}}}
+Report Period: {{{startDate}}} to {{{endDate}}}
+Company: {{{companyName}}}
+Currency: {{{currency}}}
+Residency Status: {{{residencyStatus}}}
 
-Provide a comprehensive profit and loss statement.`,
+Revenue Transactions:
+{{{revenueTransactions}}}
+
+Expense Transactions:
+{{{expenseTransactions}}}
+
+Custom Instructions:
+{{{prompt}}}
+
+Generate a professional P&L statement with detailed analysis.`,
 });
 
 const generatePnlReportFlow = ai.defineFlow(
