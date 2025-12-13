@@ -105,10 +105,10 @@ function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { ope
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent aria-describedby="assistant-description">
                 <DialogHeader>
                     <DialogTitle>AI Expense Categorization Assistant</DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="assistant-description">
                         Describe the expense, and the AI will suggest the best category.
                     </DialogDescription>
                 </DialogHeader>
@@ -220,9 +220,12 @@ export function ExpenseForm({
   return (
     <>
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl" aria-describedby="expense-description">
         <DialogHeader>
           <DialogTitle>{transaction?.id ? 'Edit' : 'Add'} Expense</DialogTitle>
+          <DialogDescription id="expense-description">
+             Record and categorize your property expenses.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2 py-4">
           <div className="space-y-2">

@@ -87,10 +87,10 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl" aria-describedby="maintenance-description">
         <DialogHeader>
           <DialogTitle>{request?.id ? 'Edit' : 'Add'} Maintenance Request</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="maintenance-description">
             Track and manage maintenance tasks for your properties.
           </DialogDescription>
         </DialogHeader>

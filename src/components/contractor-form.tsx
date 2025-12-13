@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -56,9 +57,12 @@ export function ContractorForm({ isOpen, onClose, onSubmit, contractor }: Contra
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl" aria-describedby="contractor-description">
         <DialogHeader>
           <DialogTitle>{contractor ? 'Edit' : 'Add'} Contractor</DialogTitle>
+          <DialogDescription id="contractor-description">
+            Add or edit contractor details for your maintenance network.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="py-4 space-y-4">
           <div className="space-y-2">

@@ -57,10 +57,10 @@ export function PaymentRequestDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent aria-describedby="payment-description">
         <DialogHeader>
           <DialogTitle>Request Payment from {arrear.tenant}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="payment-description">
             Initiate a payment request via your chosen payment gateway.
           </DialogDescription>
         </DialogHeader>

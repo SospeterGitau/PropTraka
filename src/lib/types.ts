@@ -1,21 +1,33 @@
-// TYPE DEFINITIONS FOR PROPERTY MANAGEMENT SYSTEM
-export enum PropertyType { DOMESTIC = 'domestic', COMMERCIAL = 'commercial' }
-export enum PaymentMethod { CASH = 'cash', CHEQUE = 'cheque', BANK_TRANSFER = 'bank_transfer', MPESA = 'mpesa', OTHER = 'other' }
-export enum TransactionStatus { PAID = 'paid', PENDING = 'pending', OVERDUE = 'overdue', PARTIAL = 'partial' }
-export enum ExpenseCategory { MAINTENANCE = 'maintenance', UTILITIES = 'utilities', INSURANCE = 'insurance', SECURITY = 'security', CLEANING = 'cleaning', REPAIRS = 'repairs', TAX = 'tax', OTHER = 'other' }
-export enum TenancyStatus { ACTIVE = 'active', TERMINATED = 'terminated', ENDED = 'ended', ON_HOLD = 'on_hold' }
-export enum ContractorType { PLUMBER = 'plumber', ELECTRICIAN = 'electrician', CARPENTER = 'carpenter', PAINTER = 'painter', CLEANER = 'cleaner', SECURITY = 'security', GARDENER = 'gardener', GENERAL = 'general' }
-export enum MaintenanceStatus { PENDING = 'pending', ASSIGNED = 'assigned', IN_PROGRESS = 'in_progress', COMPLETED = 'completed', CANCELLED = 'cancelled' }
-export enum MaintenancePriority { LOW = 'low', MEDIUM = 'medium', HIGH = 'high', URGENT = 'urgent' }
-export interface ServiceCharge { name: string; amount: number }
-export interface Property { id: string; addressLine1: string; addressLine2?: string; city: string; county: string; postalCode?: string; propertyType: PropertyType; buildingType?: string; bedrooms?: number; bathrooms?: number; size?: number; sizeUnit?: 'sqft' | 'sqm'; purchasePrice?: number; purchaseTaxes?: number; mortgage?: number; currentValue?: number; rentalValue?: number; imageUrl?: string; imageHint?: string; ownerId: string; createdDate?: string; updatedDate?: string; property_value?: number; monthly_rent?: number }
-export interface Tenant { id: string; firstName: string; lastName: string; email: string; phone: string; alternatePhone?: string; dateOfBirth?: string; gender?: string; idType?: string; idNumber?: string; currentAddress?: string; city?: string; nextOfKinName?: string; nextOfKinPhone?: string; employmentStatus?: string; employer?: string; employerContact?: string; ownerId: string; createdDate?: string; updatedDate?: string }
-export interface Tenancy { id: string; propertyId: string; tenantId: string; leaseStartDate: string; leaseEndDate?: string; rentAmount: number; securityDeposit?: number; paymentFrequency?: 'monthly' | 'quarterly' | 'biannual' | 'annual'; status: TenancyStatus; notes?: string; contractUrl?: string; applicationFormUrl?: string; moveInChecklistUrl?: string; moveOutChecklistUrl?: string; ownerId: string; createdDate?: string; updatedDate?: string }
-export interface Transaction { id: string; tenancyId?: string; propertyId?: string; tenantId?: string; rent?: number; serviceCharges?: ServiceCharge[]; deposit?: number; amountPaid?: number; paymentDate?: string; dueDate?: string; paymentMethod?: PaymentMethod; status?: TransactionStatus; receiptNumber?: string; notes?: string; type?: string; rentDueDate?: number; tenancyStartDate?: string; tenancyEndDate?: string; tenant?: string; tenantEmail?: string; tenantPhone?: string; propertyName?: string; contractUrl?: string; applicationFormUrl?: string; moveInChecklistUrl?: string; moveOutChecklistUrl?: string; ownerId: string; createdDate?: string; updatedDate?: string; date?: string; frequency?: string; receiptUrl?: string; contractorName?: string; category?: string; expenseType?: string }
-export interface Expense { id: string; propertyId: string; contractorId?: string; category: ExpenseCategory; description: string; amount: number; date: string; invoiceNumber?: string; status?: TransactionStatus; paymentMethod?: PaymentMethod; expenseType?: 'one-off' | 'recurring'; frequency?: string; notes?: string; receiptUrl?: string; ownerId: string; createdDate?: string; updatedDate?: string; propertyName?: string; contractorName?: string }
-export interface Contractor { id: string; name: string; type: ContractorType; email?: string; phone?: string; alternatePhone?: string; businessName?: string; address?: string; city?: string; taxId?: string; businessLicense?: string; specialization?: string[]; rating?: number; totalJobsDone?: number; averageResponseTime?: string; isActive?: boolean; ownerId: string; createdDate?: string; updatedDate?: string; lastUsedDate?: string }
-export interface MaintenanceRequest { id: string; propertyId: string; contractorId?: string; title: string; description: string; category?: string; priority?: MaintenancePriority; status: MaintenanceStatus; reportedDate: string; reportedBy?: string; assignedDate?: string; completionDate?: string; estimatedCost?: number; actualCost?: number; notes?: string; photos?: string[]; ownerId: string; createdDate?: string; updatedDate?: string; propertyName?: string; contractorName?: string }
-export interface UserSettings { currency: string; locale: string; companyName?: string; residencyStatus?: string; isPnlReportEnabled?: boolean; isMarketResearchEnabled?: boolean; theme?: 'light' | 'dark' | 'system'; role?: string }
+
+// General App Types
+export interface NavLink {
+  href: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+export interface SettingsTab {
+  id: string;
+  label: string;
+  component: React.ComponentType;
+}
+
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD';
+
+export interface UserSettings {
+  currency: Currency;
+  language: string;
+  dateFormat: string;
+  theme: 'light' | 'dark' | 'system';
+}
+
+export interface UserData {
+  uid: string;
+  email?: string | null;
+  displayName?: string | null;
+  photoURL?: string | null;
+  subscriptionPlan?: string;
+}
 
 // AI Flow Types
 export interface GenerateLeaseClauseInput {
@@ -64,32 +76,29 @@ export interface AnalyzeMaintenanceIssueInput {
 }
 
 export interface AnalyzeMaintenanceIssueOutput {
-  diagnosis: string;
-  recommendations: string[];
+  category: string;
   urgency: string;
-  estimatedCost?: string;
+  estimatedCost: number;
+  recommendation: string;
 }
 
-export interface GenerateMaintenanceGuideInput {
-  propertyType: string;
-  maintenanceType: string;
+export interface CategorizeExpenseInput {
+  description: string;
+  amount: number;
 }
 
-export interface GenerateMaintenanceGuideOutput {
-  title: string;
-  steps: string[];
-  tips: string[];
-  estimatedTime: string;
+export interface CategorizeExpenseOutput {
+  category: string;
+  confidenceScore: number;
 }
 
-// Reminder Email Types
 export interface GenerateReminderEmailInput {
   tenantName: string;
+  dueDate: string;
+  amountDue: number;
+  landlordName: string;
   propertyAddress: string;
-  amountOwed: string;
-  daysOverdue: number;
-  companyName: string;
-  arrearsBreakdown: string;
+  currency: string;
 }
 
 export interface GenerateReminderEmailOutput {
@@ -97,89 +106,157 @@ export interface GenerateReminderEmailOutput {
   body: string;
 }
 
-// Chat Response Types
 export interface GetChatResponseInput {
-  question: string;
-  knowledgeBase: string;
+  messages: Array<{ role: string; content: string }>;
+  context?: string;
 }
 
 export interface GetChatResponseOutput {
-  answer: string;
+  message: {
+    role: string;
+    content: string;
+  };
 }
 
-// Report Summary Types
-export interface GenerateReportSummaryInput {
-  summary: string;
+export interface GetOnboardingPackInput {
+  tenantName: string;
+  propertyName: string;
+  startDate: string;
 }
 
-export interface GenerateReportSummaryOutput {
-  summary: string;
+export interface GetOnboardingPackOutput {
+  title: string;
+  sections: Array<{
+    heading: string;
+    content: string;
+  }>;
 }
 
-// Knowledge Article Types
 export interface KnowledgeArticle {
   id: string;
   title: string;
   content: string;
   category: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Categorize Expense Types
-export interface CategorizeExpenseInput {
-  description: string;
+// Data model types
+export enum PropertyType {
+  Domestic = 'Domestic',
+  Commercial = 'Commercial',
 }
 
-export interface CategorizeExpenseOutput {
-  category: string;
+export const domesticBuildingTypes = [
+  'Apartment',
+  'House',
+  'Condo',
+  'Townhouse',
+  'Duplex',
+  'Terraced House',
+  'Bungalow',
+];
+
+export const commercialBuildingTypes = [
+  'Office',
+  'Retail',
+  'Industrial',
+  'Warehouse',
+  'Land',
+  'Shopping Centre',
+  'Hotel',
+];
+
+export interface Address {
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
 }
 
-// Change Log Entry Type
-export interface ChangeLogEntry {
+export interface Property {
   id: string;
-  type: string;
-  action: string;
-  description: string;
-  entityId: string;
-  ownerId: string;
-  date: any;
+  name: string;
+  address: Address;
+  propertyType: PropertyType;
+  buildingType: string;
+  bedrooms: number;
+  bathrooms: number;
+  size?: number;
+  sizeUnit?: 'sqft' | 'sqm';
+  purchasePrice?: number;
+  purchaseDate?: string;
+  marketValue?: number;
+  mortgageBalance?: number;
+  targetRent?: number;
+  status: 'occupied' | 'vacant' | 'under-maintenance';
+  imageUrl?: string;
 }
 
-// Arrear Entry Type
-export interface ArrearEntry {
+export interface Tenancy {
   id: string;
-  tenantId: string;
-  tenantName: string;
   propertyId: string;
-  propertyName: string;
-  amountOwed: number;
-  daysOverdue: number;
-  lastPaymentDate?: string;
-  nextDueDate?: string;
-  rentDueDate: number;
+  tenantName: string;
+  startDate: string;
+  endDate: string;
+  rentAmount: number;
+  paymentDay: number;
+  status: 'active' | 'ended' | 'pending';
 }
 
-// Arrear Entry Calculated Type
-export interface ArrearEntryCalculated {
-  tenant: string;
-  tenantEmail: string;
-  tenantPhone: string;
-  propertyAddress: string | undefined;
-  amountOwed: number;
-  dueDate: string;
-  daysOverdue: number;
-  breakdown: string;
-}
-
-// Calendar Event Type
-export interface CalendarEvent {
-  id?: string;
-  title: string;
+export interface Transaction {
+  id: string;
+  propertyId: string;
+  tenancyId?: string;
+  date: string;
+  amount: number;
+  type: 'income' | 'expense';
+  category: string;
   description?: string;
-  date: string | undefined;
-  type: 'maintenance' | 'rent_due' | 'inspection' | 'tenancy-start' | 'tenancy-end' | 'expense' | 'other';
-  propertyId?: string;
-  propertyName?: string;
-  tenantId?: string;
-  tenantName?: string;
+}
+
+export interface MaintenanceRequest {
+  id: string;
+  propertyId: string;
+  description: string;
+  status: 'reported' | 'in-progress' | 'completed' | 'on-hold';
+  reportedDate: string;
+  completedDate?: string;
+  priority: 'low' | 'medium' | 'high';
+  cost?: number;
+  contractorId?: string;
+}
+
+export interface Contractor {
+  id: string;
+  name: string;
+  specialty: string;
+  contactNumber: string;
+  email?: string;
+  rating?: number;
+}
+
+export interface ActivityLog {
+  id: string;
+  timestamp: string;
+  type: 'data-update' | 'system' | 'user-action';
+  message: string;
+  userId?: string;
   details?: Record<string, any>;
+}
+
+export interface ArrearsSummary {
+  totalArrears: number;
+  numberOfTenantsInArrears: number;
+  longestArrearsDays: number;
+}
+
+// Subscription and Billing
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  features: string[];
 }

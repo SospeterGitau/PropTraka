@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -10,9 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from './ui/button';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface DeleteConfirmationDialogProps {
   isOpen: boolean;
@@ -22,29 +21,39 @@ interface DeleteConfirmationDialogProps {
   isDestructive?: boolean;
 }
 
-export function DeleteConfirmationDialog({ isOpen, onClose, onConfirm, itemName, isDestructive = false }: DeleteConfirmationDialogProps) {
+export function DeleteConfirmationDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  itemName,
+  isDestructive = true,
+}: DeleteConfirmationDialogProps) {
   if (!isOpen) return null;
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent
+        aria-labelledby="delete-title"
+        aria-describedby="delete-description"
+      >
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete {itemName} from our servers.
+          <AlertDialogTitle id="delete-title">Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription id="delete-description">
+            This action cannot be undone. This will permanently delete {itemName}.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose} disabled={isDestructive}>Cancel</AlertDialogCancel>
-          <Button
-            variant="destructive"
-            onClick={onConfirm}
-            disabled={isDestructive}
-            className={cn(isDestructive && "w-24")}
-          >
-            {isDestructive && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isDestructive ? 'Deleting...' : 'Delete'}
-          </Button>
+          <AlertDialogCancel asChild>
+            <Button variant="outline">Cancel</Button>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button
+              variant={isDestructive ? 'destructive' : 'default'}
+              onClick={onConfirm}
+            >
+              Confirm
+            </Button>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

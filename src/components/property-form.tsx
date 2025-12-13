@@ -1,208 +1,297 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Property, PropertyType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Property,
+  PropertyType,
+  domesticBuildingTypes,
+  commercialBuildingTypes,
+  Address,
+} from '@/lib/types';
+import { useDataContext } from '@/context/data-context';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface PropertyFormProps {
+  property?: Property | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Property, 'id' | 'ownerId'> | Property) => void;
-  property?: Property | null;
+  onSubmit?: (data: Property | Omit<Property, "ownerId" | "id">) => void;
 }
 
-const domesticBuildingTypes = ['Studio', 'Terraced House', 'Semi-Detached House', 'Detached House', 'Bungalow', 'Flat', 'Maisonette'];
-const commercialBuildingTypes = ['Office', 'Retail', 'Industrial'];
+export function PropertyForm({
+  property: initialProperty,
+  isOpen,
+  onClose,
+  onSubmit,
+}: PropertyFormProps) {
+  const { addProperty, updateProperty, settings } = useDataContext();
+  
+  const getCurrencySymbol = (currencyCode: string) => {
+    try {
+      const parts = new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: currencyCode,
+        currencyDisplay: 'narrowSymbol'
+      }).formatToParts(1);
+      return parts.find((part) => part.type === 'currency')?.value || parts.find((part) => part.type === 'literal')?.value || '$';
+    } catch (e) {
+      // Fallback for invalid currency codes
+      if (currencyCode === 'KES') return 'KSh';
+      return '$';
+    }
+  };
 
-export function PropertyForm({ isOpen, onClose, onSubmit, property }: PropertyFormProps) {
-  const [propertyType, setPropertyType] = useState<PropertyType>(property?.propertyType || 'domestic');
-  const [buildingType, setBuildingType] = useState<Property['buildingType'] | undefined>(property?.buildingType);
+  const currencySymbol = getCurrencySymbol(settings?.currency || 'USD');
+
+  const [name, setName] = useState('');
+  const [propertyType, setPropertyType] = useState<PropertyType | ''>('');
+  const [buildingType, setBuildingType] = useState('');
+  const [address, setAddress] = useState<Address>({ line1: '', line2: '', city: '', state: '', zipCode: '', country: '' });
+  const [bedrooms, setBedrooms] = useState<number>(0);
+  const [bathrooms, setBathrooms] = useState<number>(0);
+  const [size, setSize] = useState<number>(0);
+  const [sizeUnit, setSizeUnit] = useState<'sqft' | 'sqm'>('sqft');
+  const [purchasePrice, setPurchasePrice] = useState<number>(0);
+  const [purchaseDate, setPurchaseDate] = useState<string>('');
+  const [marketValue, setMarketValue] = useState<number>(0);
+  const [mortgageBalance, setMortgageBalance] = useState<number>(0);
+  const [targetRent, setTargetRent] = useState<number>(0);
 
   useEffect(() => {
-    if (isOpen) {
-      setPropertyType(property?.propertyType || 'domestic');
-      setBuildingType(property?.buildingType);
+    if (initialProperty) {
+      setName(initialProperty.name);
+      setPropertyType(initialProperty.propertyType);
+      setBuildingType(initialProperty.buildingType);
+      setAddress(initialProperty.address);
+      setBedrooms(initialProperty.bedrooms);
+      setBathrooms(initialProperty.bathrooms);
+      setSize(initialProperty.size || 0);
+      setSizeUnit(initialProperty.sizeUnit || 'sqft');
+      setPurchasePrice(initialProperty.purchasePrice || 0);
+      setPurchaseDate(initialProperty.purchaseDate || '');
+      setMarketValue(initialProperty.marketValue || 0);
+      setMortgageBalance(initialProperty.mortgageBalance || 0);
+      setTargetRent(initialProperty.targetRent || 0);
+    } else {
+      resetForm();
     }
-  }, [isOpen, property]);
+  }, [initialProperty, isOpen]);
 
-  const handlePropertyTypeChange = (value: PropertyType) => {
-    setPropertyType(value);
-    setBuildingType(undefined); // Reset building type when property type changes
+  const resetForm = () => {
+    setName(''); setPropertyType(''); setBuildingType('');
+    setAddress({ line1: '', line2: '', city: '', state: '', zipCode: '', country: '' });
+    setBedrooms(0); setBathrooms(0); setSize(0); setSizeUnit('sqft');
+    setPurchasePrice(0); setPurchaseDate(''); setMarketValue(0); setMortgageBalance(0); setTargetRent(0);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const isEditing = !!property?.id;
-    const id = property?.id || `p${Date.now()}`;
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAddress((prev) => ({ ...prev, [name]: value }));
+  };
 
-    const data: Omit<Property, 'id' | 'ownerId'> | Property = {
-      ...(isEditing ? { id: property.id } : {}),
-      addressLine1: formData.get('addressLine1') as string,
-      city: formData.get('city') as string,
-      county: formData.get('county') as string,
-      postalCode: formData.get('postalCode') as string,
-      propertyType: propertyType,
-      buildingType: buildingType || 'Other',
-      bedrooms: Number(formData.get('bedrooms')),
-      bathrooms: Number(formData.get('bathrooms')),
-      size: Number(formData.get('size')) || undefined,
-      sizeUnit: formData.get('sizeUnit') as Property['sizeUnit'] || undefined,
-      purchasePrice: Number(formData.get('purchasePrice')),
-      purchaseTaxes: Number(formData.get('purchaseTaxes')) || 0,
-      mortgage: Number(formData.get('mortgage')),
-      currentValue: Number(formData.get('currentValue')),
-      rentalValue: Number(formData.get('rentalValue')),
-      imageUrl: property?.imageUrl || `https://picsum.photos/seed/${id}/600/400`,
-      imageHint: property?.imageHint || 'new property',
+  const handlePropertyTypeChange = (value: string) => {
+    const newPropertyType = value as PropertyType;
+    setPropertyType(newPropertyType);
+    setBuildingType('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!propertyType) return;
+    const propertyData: Omit<Property, 'id'> = {
+      name, address, propertyType, buildingType, bedrooms, bathrooms, size, sizeUnit,
+      purchasePrice, purchaseDate, marketValue, mortgageBalance, targetRent,
+      status: initialProperty?.status || 'vacant',
     };
-    onSubmit(data);
-    onClose();
+    try {
+      if (onSubmit) {
+         if (initialProperty?.id) onSubmit({ ...propertyData, id: initialProperty.id });
+         else onSubmit(propertyData);
+      } else {
+        if (initialProperty?.id) await updateProperty(initialProperty.id, { ...propertyData, id: initialProperty.id });
+        else await addProperty(propertyData);
+      }
+      onClose();
+    } catch (error) {
+      console.error('Failed to save property:', error);
+    }
   };
-
-  if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{property ? 'Edit Property' : 'Add Property'}</DialogTitle>
+          <DialogTitle>
+            {initialProperty ? 'Edit Property' : 'Add New Property'}
+          </DialogTitle>
+          <DialogDescription>
+            {initialProperty 
+              ? 'Update the details of your property below.' 
+              : 'Fill in the details to add a new property to your portfolio.'}
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-2 py-4 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="addressLine1">Address Line 1</Label>
-              <Input id="addressLine1" name="addressLine1" defaultValue={property?.addressLine1} required />
-            </div>
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                 <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" name="city" defaultValue={property?.city} required />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="county">County/State</Label>
-                    <Input id="county" name="county" defaultValue={property?.county} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="postalCode">Postcode</Label>
-                    <Input id="postalCode" name="postalCode" defaultValue={property?.postalCode} required />
-                </div>
-            </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          <Tabs defaultValue="details" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Property Details</TabsTrigger>
+              <TabsTrigger value="address">Address</TabsTrigger>
+              <TabsTrigger value="financials">Financials</TabsTrigger>
+            </TabsList>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <TabsContent value="details" className="space-y-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                <Label htmlFor="propertyType">Property Type</Label>
-                <Select value={propertyType} onValueChange={handlePropertyTypeChange} required>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="domestic">Domestic</SelectItem>
-                        <SelectItem value="commercial">Commercial</SelectItem>
-                    </SelectContent>
-                    </Select>
+                  <Label htmlFor="name">Property Name *</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Sunset Apartments" />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="buildingType">Building Type</Label>
-                <Select name="buildingType" value={buildingType} onValueChange={(value) => setBuildingType(value as Property['buildingType'])} required>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a type" />
-                    </SelectTrigger>
+                  <Label htmlFor="propertyType">Property Type *</Label>
+                  <Select value={propertyType} onValueChange={handlePropertyTypeChange} required>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
-                        {propertyType === 'domestic' && (
-                            <SelectGroup>
-                                <SelectLabel>Domestic</SelectLabel>
-                                {domesticBuildingTypes.map(type => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                ))}
-                            </SelectGroup>
-                        )}
-                         {propertyType === 'commercial' && (
-                            <SelectGroup>
-                                <SelectLabel>Commercial</SelectLabel>
-                                {commercialBuildingTypes.map(type => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                ))}
-                            </SelectGroup>
-                         )}
+                      <SelectItem value={PropertyType.Domestic}>Residential</SelectItem>
+                      <SelectItem value={PropertyType.Commercial}>Commercial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {propertyType && (
+                <div className="space-y-2">
+                  <Label htmlFor="buildingType">Building Type *</Label>
+                  <Select value={buildingType} onValueChange={setBuildingType} required>
+                    <SelectTrigger><SelectValue placeholder="Select building type" /></SelectTrigger>
+                    <SelectContent>
+                      {propertyType === PropertyType.Domestic && (
                         <SelectGroup>
-                            <SelectLabel>Other</SelectLabel>
-                            <SelectItem value="Other">Other</SelectItem>
+                          <SelectLabel>Residential</SelectLabel>
+                          {domesticBuildingTypes.map((type, i) => (<SelectItem key={`${type}-${i}`} value={type}>{type}</SelectItem>))}
                         </SelectGroup>
+                      )}
+                      {propertyType === PropertyType.Commercial && (
+                        <SelectGroup>
+                          <SelectLabel>Commercial</SelectLabel>
+                          {commercialBuildingTypes.map((type, i) => (<SelectItem key={`${type}-${i}`} value={type}>{type}</SelectItem>))}
+                        </SelectGroup>
+                      )}
                     </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Bedrooms</Label>
+                  <Input id="bedrooms" type="number" min="0" value={bedrooms} onChange={(e) => setBedrooms(Number(e.target.value))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bathrooms">Bathrooms</Label>
+                  <Input id="bathrooms" type="number" min="0" step="0.5" value={bathrooms} onChange={(e) => setBathrooms(Number(e.target.value))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="size">Size</Label>
+                  <div className="flex gap-2">
+                    <Input id="size" type="number" min="0" value={size} onChange={(e) => setSize(Number(e.target.value))} className="flex-1" />
+                    <Select value={sizeUnit} onValueChange={(val: 'sqft' | 'sqm') => setSizeUnit(val)}>
+                      <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sqft">sq ft</SelectItem>
+                        <SelectItem value="sqm">m²</SelectItem>
+                      </SelectContent>
                     </Select>
+                  </div>
                 </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              </div>
+            </TabsContent>
+            <TabsContent value="address" className="space-y-4 py-4">
                 <div className="space-y-2">
-                    <Label htmlFor="bedrooms">Bedrooms</Label>
-                    <Input id="bedrooms" name="bedrooms" type="number" defaultValue={property?.bedrooms} required />
+                  <Label>Street Address *</Label>
+                  <Input name="line1" placeholder="Line 1" value={address.line1} onChange={handleAddressChange} required />
+                  <Input name="line2" placeholder="Line 2 (Optional)" value={address.line2 || ''} onChange={handleAddressChange} />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>City *</Label>
+                    <Input name="city" value={address.city} onChange={handleAddressChange} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>State/Province *</Label>
+                    <Input name="state" value={address.state} onChange={handleAddressChange} required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Zip/Postal Code *</Label>
+                    <Input name="zipCode" value={address.zipCode} onChange={handleAddressChange} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Country *</Label>
+                    <Input name="country" value={address.country} onChange={handleAddressChange} required />
+                  </div>
+                </div>
+            </TabsContent>
+            <TabsContent value="financials" className="space-y-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="bathrooms">Bathrooms</Label>
-                    <Input id="bathrooms" name="bathrooms" type="number" defaultValue={property?.bathrooms} required />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="size">Size</Label>
-                    <Input id="size" name="size" type="number" defaultValue={property?.size}/>
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="sizeUnit">Size Unit</Label>
-                     <Select name="sizeUnit" defaultValue={property?.sizeUnit || 'sqm'}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Unit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="sqft">sq ft</SelectItem>
-                            <SelectItem value="sqm">sq m</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="purchasePrice">Purchase Price</Label>
-                    <Input id="purchasePrice" name="purchasePrice" type="number" defaultValue={property?.purchasePrice} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="purchaseTaxes">Purchase Taxes & Fees</Label>
-                    <Input id="purchaseTaxes" name="purchaseTaxes" type="number" defaultValue={property?.purchaseTaxes} />
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                <Label htmlFor="mortgage">Mortgage</Label>
-                <Input id="mortgage" name="mortgage" type="number" defaultValue={property?.mortgage} required />
+                  <Label htmlFor="purchasePrice">Purchase Price</Label>
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
+                    <input id="purchasePrice" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={purchasePrice} onChange={(e) => setPurchasePrice(Number(e.target.value))} />
+                  </div>
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="currentValue">Current Value</Label>
-                <Input id="currentValue" name="currentValue" type="number" defaultValue={property?.currentValue} required />
+                  <Label htmlFor="purchaseDate">Purchase Date</Label>
+                  <Input id="purchaseDate" type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
                 </div>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="rentalValue">Target/Asking Monthly Rent</Label>
-              <Input id="rentalValue" name="rentalValue" type="number" defaultValue={property?.rentalValue} required />
-            </div>
-          
-          <DialogFooter className="sticky bottom-0 z-10 flex justify-end gap-2 border-t bg-background -mx-6 -mb-6 px-6 py-4 rounded-b-lg pr-24">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button type="submit">Save</Button>
-          </DialogFooter>
+                <div className="space-y-2">
+                  <Label htmlFor="marketValue">Current Market Value</Label>
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
+                    <input id="marketValue" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={marketValue} onChange={(e) => setMarketValue(Number(e.target.value))} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mortgageBalance">Mortgage Balance</Label>
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
+                    <input id="mortgageBalance" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={mortgageBalance} onChange={(e) => setMortgageBalance(Number(e.target.value))} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetRent">Target Monthly Rent</Label>
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
+                    <input id="targetRent" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={targetRent} onChange={(e) => setTargetRent(Number(e.target.value))} />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit">
+              {initialProperty ? 'Save Changes' : 'Add Property'}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

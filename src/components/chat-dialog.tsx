@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -164,12 +165,15 @@ export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[70vh] max-h-[700px]">
+      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[70vh] max-h-[700px]" aria-describedby="chat-description">
         <DialogHeader className="p-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5" />
             AI Assistant
           </DialogTitle>
+          <DialogDescription id="chat-description" className="sr-only">
+            Chat with your AI assistant to manage properties and get help.
+          </DialogDescription>
         </DialogHeader>
 
 

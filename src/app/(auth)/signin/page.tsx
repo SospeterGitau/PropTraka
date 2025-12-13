@@ -226,10 +226,10 @@ export default function SignInPage() {
     </Card>
 
     <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
-        <DialogContent>
+        <DialogContent aria-describedby="reset-description">
           <DialogHeader>
             <DialogTitle>Forgot Password</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="reset-description">
               Enter your email address and we'll send you a link to reset your password.
             </DialogDescription>
           </DialogHeader>

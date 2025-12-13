@@ -51,10 +51,10 @@ export function EndTenancyDialog({ isOpen, onClose, onConfirm, tenancy }: EndTen
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent aria-describedby="tenancy-description">
         <DialogHeader>
           <DialogTitle>End Tenancy Early</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="tenancy-description">
             Select a new, earlier end date for the tenancy of {tenancy.tenant}. This will delete any future unpaid rent records.
           </DialogDescription>
         </DialogHeader>

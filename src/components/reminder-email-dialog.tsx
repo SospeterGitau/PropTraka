@@ -54,10 +54,10 @@ export function ReminderEmailDialog({ isOpen, onClose, isLoading, reminder, tena
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby="reminder-description">
         <DialogHeader>
           <DialogTitle>AI-Generated Reminder</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="reminder-description">
             A draft email has been generated for you. You can copy the content or send it directly.
           </DialogDescription>
         </DialogHeader>

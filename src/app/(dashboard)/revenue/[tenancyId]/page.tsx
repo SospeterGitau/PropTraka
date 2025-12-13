@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
@@ -80,9 +80,12 @@ function PaymentForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent aria-describedby="payment-description">
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
+          <DialogDescription id="payment-description">
+            Record a payment received for this tenancy.
+          </DialogDescription>
         </DialogHeader>
         <div className="text-sm text-muted-foreground">
           For {transaction.tenant} at {transaction.propertyName} (Due: {formattedDate})
@@ -172,9 +175,12 @@ function InvoiceForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="invoice-description">
         <DialogHeader>
           <DialogTitle>Edit Invoice for {transaction.date ? format(new Date(transaction.date), 'MMMM yyyy') : 'Invoice'}</DialogTitle>
+          <DialogDescription id="invoice-description">
+            Edit the rent and service charges for this invoice.
+          </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <div className="space-y-2">

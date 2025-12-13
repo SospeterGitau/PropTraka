@@ -58,8 +58,8 @@ echo ""
 
 echo "7️⃣  NETWORK/PORT INFO"
 echo "---"
-echo "Is port 3000 in use?"
-lsof -i :3000 2>/dev/null || echo "Port 3000 is free"
+echo "Is port 9002 in use?"
+lsof -i :9002 2>/dev/null || echo "Port 9002 is free"
 echo ""
 
 echo "8️⃣  RECENT ERRORS (from npm output)"

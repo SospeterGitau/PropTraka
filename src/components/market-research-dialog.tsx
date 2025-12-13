@@ -114,10 +114,10 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
         <Lightbulb className="mr-2 h-4 w-4" />
         Market Research
       </Button>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl" aria-describedby="market-description">
         <DialogHeader>
           <DialogTitle>AI-Powered Market Analysis</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="market-description">
             Generate a detailed analysis of your portfolio's competitiveness against current market rates.
           </DialogDescription>
         </DialogHeader>

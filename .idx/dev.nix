@@ -1,3 +1,4 @@
+
 # To learn more about how to use Nix to configure your environment
 # see: https://firebase.google.com/docs/studio/customize-workspace
 {pkgs}: {
@@ -37,6 +38,10 @@
         web = {
           command = ["npm" "run" "dev" "--" "--port" "$PORT"];
           manager = "web";
+          # FIX: Align with the system default to prevent "Lock" errors
+          env = {
+            PORT = "9002";
+          };
         };
       };
     };

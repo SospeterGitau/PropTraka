@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -69,9 +70,12 @@ export function KnowledgeArticleForm({ isOpen, onClose, onSubmit, article }: Kno
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl" aria-describedby="article-description">
         <DialogHeader>
           <DialogTitle>{article ? 'Edit' : 'Add'} Knowledge Article</DialogTitle>
+          <DialogDescription id="article-description">
+            Create or edit a knowledge base article for your team or tenants.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="py-4 space-y-4">
           <div className="space-y-2">

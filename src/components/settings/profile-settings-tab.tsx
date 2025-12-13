@@ -540,10 +540,10 @@ export default function ProfileSettingsTab() {
       </div>
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-        <DialogContent>
+        <DialogContent aria-describedby="password-description">
           <DialogHeader>
             <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="password-description">
               Enter a new password for your account.
             </DialogDescription>
           </DialogHeader>

@@ -1,9 +1,10 @@
 
 'use client';
 
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { MoreHorizontal, Bed, Bath, Square, Building } from 'lucide-react';
 import type { Property, Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
@@ -37,13 +38,22 @@ import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
+  // Safe access to address properties in case they are missing
+  const line1 = property.address?.line1 || property.addressLine1 || '';
+  const city = property.address?.city || property.city || '';
+  const state = property.address?.state || property.county || '';
+  const zip = property.address?.zipCode || property.postalCode || '';
+  
+  return [line1, city, state, zip].filter(Boolean).join(', ');
 }
 
 const PropertiesClient = memo(function PropertiesClient() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const currency = settings?.currency || 'KES';
   const locale = settings?.locale || 'en-KE';
 
@@ -63,6 +73,22 @@ const PropertiesClient = memo(function PropertiesClient() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+
+  // Check for URL action param
+  useEffect(() => {
+    if (searchParams?.get('action') === 'add') {
+      setIsFormOpen(true);
+      setSelectedProperty(null);
+    }
+  }, [searchParams]);
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    // Remove the action param from URL without refreshing
+    const newParams = new URLSearchParams(searchParams?.toString());
+    newParams.delete('action');
+    router.replace(`/properties${newParams.toString() ? `?${newParams.toString()}` : ''}`, { scroll: false });
+  };
   
   // Actions
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
@@ -128,7 +154,7 @@ const PropertiesClient = memo(function PropertiesClient() {
         entityId: docRef.id, 
       });
     }
-    setIsFormOpen(false);
+    handleFormClose();
   };
   
   const occupiedPropertyIds = useMemo(() => {
@@ -295,7 +321,7 @@ const PropertiesClient = memo(function PropertiesClient() {
       
       <PropertyForm 
         isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
+        onClose={handleFormClose}
         onSubmit={handleFormSubmit}
         property={selectedProperty}
       />
