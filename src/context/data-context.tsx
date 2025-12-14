@@ -1,17 +1,33 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { firestore } from '@/firebase';
-import { collection, onSnapshot, doc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, query, where } from 'firebase/firestore'; // Added query and where
 import { useUser } from '@/firebase/auth';
-import type { Property, Transaction, UserSettings, Contractor, MaintenanceRequest } from '@/lib/types';
+import type {
+  Property,
+  RevenueTransaction,
+  Expense,
+  Contractor,
+  MaintenanceRequest,
+  Tenant,
+  Tenancy,
+  AppDocument,
+  AppUser,
+  UserSettings,
+} from '@/lib/db-types'; // Updated import path and types
 
 interface DataContextType {
   properties: Property[];
-  revenue: Transaction[];
-  expenses: Transaction[];
+  revenue: RevenueTransaction[]; // Updated type
+  expenses: Expense[];
   maintenanceRequests: MaintenanceRequest[];
   contractors: Contractor[];
+  tenants: Tenant[]; // New collection
+  tenancies: Tenancy[]; // New collection
+  appDocuments: AppDocument[]; // New collection
+  // appUsers: AppUser[]; // AppUser data can be derived from auth or fetched separately if needed
   settings: UserSettings | null;
   loading: boolean;
   error: string | null;
@@ -23,10 +39,14 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
   
   const [properties, setProperties] = useState<Property[]>([]);
-  const [revenue, setRevenue] = useState<Transaction[]>([]);
-  const [expenses, setExpenses] = useState<Transaction[]>([]);
+  const [revenue, setRevenue] = useState<RevenueTransaction[]>([]); // Updated type
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]); // New state
+  const [tenancies, setTenancies] = useState<Tenancy[]>([]); // New state
+  const [appDocuments, setAppDocuments] = useState<AppDocument[]>([]); // New state
+  // const [appUsers, setAppUsers] = useState<AppUser[]>([]); // New state for app-specific users
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +55,16 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
     if (authLoading) return;
     if (!user) {
       setLoading(false);
+      // Clear all data when user logs out
+      setProperties([]);
+      setRevenue([]);
+      setExpenses([]);
+      setMaintenanceRequests([]);
+      setContractors([]);
+      setTenants([]);
+      setTenancies([]);
+      setAppDocuments([]);
+      setSettings(null);
       return;
     }
 
@@ -42,13 +72,13 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
     const unsubscribers: (() => void)[] = [];
 
     try {
+      // Properties
+      const qProperties = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
       const unsubProperties = onSnapshot(
-        collection(firestore, 'properties'),
+        qProperties,
         (snapshot) => {
           try {
-            const data = snapshot.docs
-              .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
             setProperties(data);
           } catch (err) {
             console.error('Error processing properties:', err);
@@ -58,13 +88,13 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubProperties);
 
+      // Revenue
+      const qRevenue = query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid));
       const unsubRevenue = onSnapshot(
-        collection(firestore, 'revenue'),
+        qRevenue,
         (snapshot) => {
           try {
-            const data = snapshot.docs
-              .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RevenueTransaction[]; // Updated type
             setRevenue(data);
           } catch (err) {
             console.error('Error processing revenue:', err);
@@ -74,13 +104,13 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubRevenue);
 
+      // Expenses
+      const qExpenses = query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid));
       const unsubExpenses = onSnapshot(
-        collection(firestore, 'expenses'),
+        qExpenses,
         (snapshot) => {
           try {
-            const data = snapshot.docs
-              .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({ id: doc.id, ...doc.data() })) as Transaction[];
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[];
             setExpenses(data);
           } catch (err) {
             console.error('Error processing expenses:', err);
@@ -90,13 +120,13 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubExpenses);
 
+      // Maintenance Requests
+      const qMaintenance = query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid));
       const unsubMaintenance = onSnapshot(
-        collection(firestore, 'maintenanceRequests'),
+        qMaintenance,
         (snapshot) => {
           try {
-            const data = snapshot.docs
-              .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({ id: doc.id, ...doc.data() })) as MaintenanceRequest[];
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MaintenanceRequest[];
             setMaintenanceRequests(data);
           } catch (err) {
             console.error('Error processing maintenance:', err);
@@ -106,13 +136,13 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubMaintenance);
 
+      // Contractors
+      const qContractors = query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid));
       const unsubContractors = onSnapshot(
-        collection(firestore, 'contractors'),
+        qContractors,
         (snapshot) => {
           try {
-            const data = snapshot.docs
-              .filter(doc => doc.data().ownerId === user.uid)
-              .map(doc => ({ id: doc.id, ...doc.data() })) as Contractor[];
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Contractor[];
             setContractors(data);
           } catch (err) {
             console.error('Error processing contractors:', err);
@@ -122,18 +152,75 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       );
       unsubscribers.push(unsubContractors);
 
+      // Tenants (NEW)
+      const qTenants = query(collection(firestore, 'tenants'), where('ownerId', '==', user.uid));
+      const unsubTenants = onSnapshot(
+        qTenants,
+        (snapshot) => {
+          try {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tenant[];
+            setTenants(data);
+          } catch (err) {
+            console.error('Error processing tenants:', err);
+          }
+        },
+        (err) => setError(err.message)
+      );
+      unsubscribers.push(unsubTenants);
+
+      // Tenancies (NEW)
+      const qTenancies = query(collection(firestore, 'tenancies'), where('ownerId', '==', user.uid));
+      const unsubTenancies = onSnapshot(
+        qTenancies,
+        (snapshot) => {
+          try {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tenancy[];
+            setTenancies(data);
+          } catch (err) {
+            console.error('Error processing tenancies:', err);
+          }
+        },
+        (err) => setError(err.message)
+      );
+      unsubscribers.push(unsubTenancies);
+
+      // AppDocuments (NEW)
+      const qAppDocuments = query(collection(firestore, 'appDocuments'), where('ownerId', '==', user.uid));
+      const unsubAppDocuments = onSnapshot(
+        qAppDocuments,
+        (snapshot) => {
+          try {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AppDocument[];
+            setAppDocuments(data);
+          } catch (err) {
+            console.error('Error processing appDocuments:', err);
+          }
+        },
+        (err) => setError(err.message)
+      );
+      unsubscribers.push(unsubAppDocuments);
+
+      // UserSettings (collection name changed to 'userSettings')
       const unsubSettings = onSnapshot(
         doc(firestore, 'userSettings', user.uid),
         (snapshot) => {
           if (snapshot.exists()) {
             setSettings(snapshot.data() as UserSettings);
+          } else {
+            // Handle case where settings document might not exist yet
+            setSettings(null);
           }
         },
         (err) => setError(err.message)
       );
       unsubscribers.push(unsubSettings);
 
-      setTimeout(() => setLoading(false), 500);
+      // AppUser - We can get basic AppUser data from Firebase Auth 'user' object directly,
+      // or fetch additional custom claims/profile data from an 'appUsers' collection if needed.
+      // For now, we'll rely on the existing 'user' object from useUser() for basic user info.
+
+      setLoading(false); // Set loading to false after all initial subscriptions are set up
+
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
@@ -152,6 +239,9 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
         expenses,
         maintenanceRequests,
         contractors,
+        tenants,
+        tenancies,
+        appDocuments,
         settings,
         loading,
         error,

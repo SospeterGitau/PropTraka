@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Contractor } from '@/lib/types';
+import type { Contractor, Address } from '@/lib/db-types'; // Updated imports
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,96 +14,105 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Timestamp } from 'firebase/firestore';
+import { useDataContext } from '@/context/data-context'; // Import useDataContext
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 
 interface ContractorFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: Omit<Contractor, 'id' | 'ownerId'> | Contractor) => void;
+  isOpen?: boolean; // Optional for page mode
+  onClose?: () => void; // Optional for page mode
+  onSubmit?: (data: Omit<Contractor, 'ownerId' | 'id' | 'createdAt' | 'updatedAt'> | Contractor) => void;
   contractor?: Contractor | null;
   mode?: 'dialog' | 'page';
 }
 
-const contractorTypes = [
-  'Plumbing',
-  'Electrical',
-  'General',
-  'HVAC',
-  'Roofing',
-  'Painting',
-  'Landscaping',
-  'Cleaning',
-  'Other',
-];
+export function ContractorForm({
+  isOpen = false,
+  onClose,
+  onSubmit,
+  contractor: initialContractor,
+  mode = 'dialog'
+}: ContractorFormProps) {
+  const { addContractor, updateContractor } = useDataContext(); // Use context for data operations
+  const router = useRouter();
 
-export function ContractorForm({ isOpen, onClose, onSubmit, contractor, mode = 'dialog' }: ContractorFormProps) {
-  const [name, setName] = useState('');
-  const [type, setType] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [contactPersonName, setContactPersonName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  
-  // Structured Address State
-  const [addressLine1, setAddressLine1] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [country, setCountry] = useState('');
-  
-  const [taxId, setTaxId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [serviceCategories, setServiceCategories] = useState(''); // As comma-separated string for input
+  const [address, setAddress] = useState<Address>({
+    street: '', city: '', state: '', zipCode: '', country: ''
+  });
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
-    if (contractor) {
-      setName(contractor.name || '');
-      setType(contractor.type || '');
-      setEmail(contractor.email || '');
-      setPhone(contractor.phone || '');
-      setBusinessName(contractor.businessName || '');
-      
-      setAddressLine1(contractor.addressLine1 || '');
-      setCity(contractor.city || '');
-      setState(contractor.state || '');
-      setZipCode(contractor.zipCode || '');
-      setCountry(contractor.country || '');
-      
-      setTaxId(contractor.taxId || '');
-      setNotes(contractor.notes || '');
+    if (initialContractor) {
+      setCompanyName(initialContractor.companyName);
+      setContactPersonName(initialContractor.contactPersonName);
+      setEmail(initialContractor.email);
+      setPhoneNumber(initialContractor.phoneNumber);
+      setServiceCategories(initialContractor.serviceCategories?.join(', ') || '');
+      setAddress(initialContractor.address || { street: '', city: '', state: '', zipCode: '', country: '' });
+      setNotes(initialContractor.notes || '');
+    } else {
+      resetForm();
     }
-  }, [contractor, isOpen]);
+  }, [initialContractor, isOpen]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const resetForm = () => {
+    setCompanyName(''); setContactPersonName(''); setEmail(''); setPhoneNumber('');
+    setServiceCategories(''); setAddress({ street: '', city: '', state: '', zipCode: '', country: '' }); setNotes('');
+  };
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setAddress((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const isEditing = !!contractor;
 
-    const data: Omit<Contractor, 'id' | 'ownerId'> | Contractor = {
-      ...(isEditing ? { id: contractor.id } : {}),
-      name,
-      type,
-      email: email || undefined,
-      phone: phone || undefined,
-      businessName: businessName || undefined,
-      addressLine1: addressLine1 || undefined,
-      city: city || undefined,
-      state: state || undefined,
-      zipCode: zipCode || undefined,
-      country: country || undefined,
-      taxId: taxId || undefined,
+    if (!companyName || !contactPersonName || !email || !phoneNumber || !serviceCategories) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    const contractorData: Omit<Contractor, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'> = {
+      companyName,
+      contactPersonName,
+      email,
+      phoneNumber,
+      serviceCategories: serviceCategories.split(',').map(s => s.trim()).filter(s => s),
+      address: address.street ? address : undefined, // Only include address if street is provided
       notes: notes || undefined,
     };
     
-    onSubmit(data);
-    if (mode === 'dialog') {
-        onClose();
+    try {
+      if (onSubmit) {
+        if (initialContractor?.id) {
+          onSubmit({ ...contractorData, id: initialContractor.id, ownerId: initialContractor.ownerId, createdAt: initialContractor.createdAt, updatedAt: Timestamp.now() });
+        } else {
+          onSubmit(contractorData);
+        }
+      } else {
+        if (initialContractor?.id) {
+          await updateContractor(initialContractor.id, { ...contractorData, id: initialContractor.id, ownerId: initialContractor.ownerId, createdAt: initialContractor.createdAt, updatedAt: Timestamp.now() });
+        } else {
+          await addContractor(contractorData);
+        }
+      }
+      if (mode === 'dialog' && onClose) onClose();
+      if (mode === 'page') router.push('/contractors');
+    } catch (error) {
+      console.error('Failed to save contractor:', error);
+      alert('Failed to save contractor. Please try again.');
     }
   };
 
@@ -111,113 +120,112 @@ export function ContractorForm({ isOpen, onClose, onSubmit, contractor, mode = '
       <form onSubmit={handleSubmit} className="space-y-6">
         <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="basic">Contact Info</TabsTrigger>
                 <TabsTrigger value="business">Business Details</TabsTrigger>
             </TabsList>
             
             <div className={cn("py-4", mode === 'dialog' ? "max-h-[60vh] overflow-y-auto px-1" : "")}>
                 <TabsContent value="basic" className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Contact Name *</Label>
-                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. John Doe" />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="type">Specialty / Type *</Label>
-                            <Select value={type} onValueChange={setType} required>
-                                <SelectTrigger id="type">
-                                    <SelectValue placeholder="Select contractor type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {contractorTypes.map((t) => (
-                                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="companyName">Company Name *</Label>
+                        <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required placeholder="e.g. Acme Services LLC" />
                     </div>
-
+                    <div className="space-y-2">
+                        <Label htmlFor="contactPersonName">Contact Person Name *</Label>
+                        <Input id="contactPersonName" value={contactPersonName} onChange={(e) => setContactPersonName(e.target.value)} required placeholder="e.g. John Doe" />
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" />
+                            <Label htmlFor="email">Email *</Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="email@example.com" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" />
+                            <Label htmlFor="phoneNumber">Phone Number *</Label>
+                            <Input id="phoneNumber" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required placeholder="+1 (555) 000-0000" />
                         </div>
                     </div>
                 </TabsContent>
 
                 <TabsContent value="business" className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="businessName">Company / Business Name</Label>
-                        <Input id="businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g. Acme Services LLC" />
+                        <Label htmlFor="serviceCategories">Service Categories (comma-separated) *</Label>
+                        <Input id="serviceCategories" value={serviceCategories} onChange={(e) => setServiceCategories(e.target.value)} required placeholder="e.g., Plumbing, Electrical, HVAC" />
                     </div>
 
                     <div className="space-y-4 pt-2">
-                        <Label>Business Address</Label>
-                        
+                        <Label>Business Address (optional)</Label>
                         <div className="space-y-2">
-                            <Label htmlFor="addressLine1" className="text-xs text-muted-foreground">Street Address</Label>
-                            <Input id="addressLine1" value={addressLine1} onChange={(e) => setAddressLine1(e.target.value)} placeholder="123 Main St" />
+                            <Label htmlFor="street" className="text-xs text-muted-foreground">Street Address</Label>
+                            <Input id="street" name="street" value={address.street} onChange={handleAddressChange} placeholder="123 Main St" />
                         </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="city" className="text-xs text-muted-foreground">City</Label>
-                                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" />
+                                <Input id="city" name="city" value={address.city} onChange={handleAddressChange} placeholder="City" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="state" className="text-xs text-muted-foreground">State/Province</Label>
-                                <Input id="state" value={state} onChange={(e) => setState(e.target.value)} placeholder="State" />
+                                <Input id="state" name="state" value={address.state} onChange={handleAddressChange} placeholder="State" />
                             </div>
                         </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="zipCode" className="text-xs text-muted-foreground">Zip/Postal Code</Label>
-                                <Input id="zipCode" value={zipCode} onChange={(e) => setZipCode(e.target.value)} placeholder="Zip Code" />
+                                <Input id="zipCode" name="zipCode" value={address.zipCode} onChange={handleAddressChange} placeholder="Zip Code" />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="country" className="text-xs text-muted-foreground">Country</Label>
-                                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" />
+                                <Input id="country" name="country" value={address.country} onChange={handleAddressChange} placeholder="Country" />
                             </div>
                         </div>
                     </div>
-
                     <div className="space-y-2 pt-2">
-                        <Label htmlFor="taxId">Tax ID / VAT Number</Label>
-                        <Input id="taxId" value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="e.g. 123-456-789" />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="notes">Notes</Label>
+                        <Label htmlFor="notes">Notes (optional)</Label>
                         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes, payment instructions, etc." />
                     </div>
                 </TabsContent>
             </div>
         </Tabs>
 
-        <div className={cn("pt-4 flex items-center gap-4", mode === 'dialog' ? "justify-end" : "justify-end border-t")}>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Save Contractor</Button>
-        </div>
+        <DialogFooter className="pt-4">
+            {mode === 'page' ? (
+                <div className="flex justify-end gap-3 w-full">
+                    <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
+                    <Button type="submit">Save Contractor</Button>
+                </div>
+            ) : (
+                <div className="flex justify-end gap-3 w-full">
+                    <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                    <Button type="submit">Save Contractor</Button>
+                </div>
+            )}
+        </DialogFooter>
       </form>
   );
 
   if (mode === 'page') {
-      return FormContent;
+      return (
+          <div className="container mx-auto px-4 py-8">
+              <PageHeader title={initialContractor ? 'Edit Contractor' : 'Add New Contractor'}>
+                  <Button variant="outline" asChild>
+                      <Link href="/contractors">
+                          <ArrowLeft className="mr-2 h-4 w-4" />
+                          Back to Contractors
+                      </Link>
+                  </Button>
+              </PageHeader>
+              {FormContent}
+          </div>
+      );
   }
 
   if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl" aria-describedby="contractor-description">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="contractor-description">
         <DialogHeader>
-          <DialogTitle>{contractor ? 'Edit' : 'Add'} Contractor</DialogTitle>
+          <DialogTitle>{initialContractor ? 'Edit' : 'Add'} Contractor</DialogTitle>
           <DialogDescription id="contractor-description">
             Manage the details of your trusted contractors and vendors.
           </DialogDescription>

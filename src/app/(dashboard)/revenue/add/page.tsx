@@ -5,7 +5,7 @@ import { useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format, getDaysInMonth, isSameMonth } from 'date-fns';
-import type { Property, Transaction, ServiceCharge as ApiServiceCharge } from '@/lib/types';
+import type { Property, RevenueTransaction, Tenancy, Tenant, UserSettings } from '@/lib/db-types'; // Updated imports
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -17,27 +17,26 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Trash2, ArrowLeft, Building, Loader2 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs } from 'firebase/firestore';
+import { collection, query, where, addDoc, doc, serverTimestamp, writeBatch, getDocs, Timestamp } from 'firebase/firestore'; // Added Timestamp
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useDataContext } from '@/context/data-context';
 
-// Local type for form state management to handle string inputs
+// Local type for form state management to handle string inputs for service charges
 type FormServiceCharge = {
   name: string;
   amount: string;
 };
 
 function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
+  const address = property.address; // Use the new Address interface
+  return `${address.street}, ${address.city}, ${address.state}${address.zipCode ? ` ${address.zipCode}` : ''}`;
 }
 
 // Safely creates a date for a specific day of the month, handling cases where the day doesn't exist (e.g., Feb 30th).
 function createSafeMonthDate(year: number, month: number, day: number): Date {
   const date = new Date(year, month, day);
-  // If the created date's day doesn't match, it means the day was invalid for that month (e.g. day 31 in a 30 day month).
-  // In that case, we roll back to the last day of the correct month.
   if (date.getDate() !== day) {
     return new Date(year, month + 1, 0);
   }
@@ -56,9 +55,27 @@ const TenancyForm = memo(function TenancyForm({
   const { settings } = useDataContext();
   const [serviceCharges, setServiceCharges] = useState<FormServiceCharge[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tenancy State
+  const [propertyId, setPropertyId] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  const [rentDueDate, setRentDueDate] = useState<Date | undefined>();
+  const [rentAmount, setRentAmount] = useState<string>('');
+  const [depositAmount, setDepositAmount] = useState<string>('');
+  const [paymentFrequency, setPaymentFrequency] = useState<Tenancy['paymentFrequency']>('Monthly'); // New field
+  const [leaseAgreementUrl, setLeaseAgreementUrl] = useState('');
+  const [moveInChecklistUrl, setMoveInChecklistUrl] = useState('');
+
+  // Tenant State (New Fields)
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [idType, setIdType] = useState<Tenant['idType']>('National ID');
+  const [idNumber, setIdNumber] = useState('');
+  const [tenantNotes, setTenantNotes] = useState(''); // Differentiating from tenancy notes
+  const [consent, setConsent] = useState(false);
+  const [rentDueDateDay, setRentDueDateDay] = useState<string>('1'); // Day of month for rent due
 
   const addServiceCharge = () => {
     setServiceCharges([...serviceCharges, { name: '', amount: '0' }]);
@@ -73,7 +90,7 @@ const TenancyForm = memo(function TenancyForm({
     newCharges[index][field] = value;
     setServiceCharges(newCharges);
   };
-  
+
   const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
     if (!user) return;
     await addDoc(collection(firestore, 'changelog'), {
@@ -88,78 +105,31 @@ const TenancyForm = memo(function TenancyForm({
     if (!user) return;
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    
-    if (!startDate || !endDate || !rentDueDate) {
+    if (!startDate || !endDate || !rentAmount || !depositAmount || !propertyId || !firstName || !lastName || !email || !phoneNumber || !idNumber || !consent) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Tenancy start date, end date, and rent payment date are required.",
+        description: "Please fill in all required tenancy and tenant details.",
       });
       setIsSubmitting(false);
       return;
     }
-    const dayOfMonth = rentDueDate.getDate();
 
-    const tenancyStartDateStr = format(startDate, 'yyyy-MM-dd');
-    const tenancyEndDateStr = format(endDate, 'yyyy-MM-dd');
+    const rent = Number(rentAmount);
+    const deposit = Number(depositAmount);
+    const rentDueDay = Number(rentDueDateDay);
 
-    const propertyId = formData.get('propertyId') as string;
-    const selectedProperty = properties.find(p => p.id === propertyId);
-    const tenant = formData.get('tenantName') as string;
-    const tenantEmail = formData.get('tenantEmail') as string;
-    const tenantPhone = formData.get('tenantPhone') as string;
-    const rent = Number(formData.get('rent'));
-    const deposit = Number(formData.get('deposit'));
-    const contractUrl = formData.get('contractUrl') as string;
-    const applicationFormUrl = formData.get('applicationFormUrl') as string;
-    const moveInChecklistUrl = formData.get('moveInChecklistUrl') as string;
-    const moveOutChecklistUrl = formData.get('moveOutChecklistUrl') as string;
-    const notes = formData.get('notes') as string;
-    const consent = formData.get('consent') as string;
-
-    if (!consent) {
-      toast({
-        variant: "destructive",
-        title: "Consent Required",
-        description: "You must confirm the tenant has consented to their data being stored.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-    
-    if (!dayOfMonth || dayOfMonth < 1 || dayOfMonth > 31) {
+    if (isNaN(rent) || rent <= 0 || isNaN(deposit) || deposit < 0) {
         toast({
             variant: "destructive",
-            title: "Invalid Due Date",
-            description: "Please enter a valid rent due day (1-31).",
+            title: "Validation Error",
+            description: "Rent and Deposit must be valid positive numbers.",
         });
         setIsSubmitting(false);
         return;
     }
 
-    // On-demand check for duplicates
-    const q = query(
-      collection(firestore, 'revenue'),
-      where('ownerId', '==', user.uid),
-      where('propertyId', '==', propertyId),
-      where('tenant', '==', tenant)
-    );
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-       toast({
-        variant: "destructive",
-        title: "Duplicate Tenancy",
-        description: `A tenancy for "${tenant}" already exists at this property.`,
-      });
-      setIsSubmitting(false);
-      return;
-    }
-    
-    const tenancyStartDate = startDate;
-    const tenancyEndDate = endDate;
-
-    if (tenancyEndDate < tenancyStartDate) {
+    if (endDate < startDate) {
       toast({
         variant: "destructive",
         title: "Invalid Date Range",
@@ -169,163 +139,197 @@ const TenancyForm = memo(function TenancyForm({
       return;
     }
 
-    const tenancyId = `t${Date.now()}`;
+    if (rentDueDay < 1 || rentDueDay > 31) {
+        toast({
+            variant: "destructive",
+            title: "Invalid Rent Due Day",
+            description: "Rent due day must be between 1 and 31.",
+        });
+        setIsSubmitting(false);
+        return;
+    }
 
-    const finalServiceCharges: ApiServiceCharge[] = serviceCharges
+    const batch = writeBatch(firestore);
+    const now = Timestamp.now();
+
+    // 1. Create Tenant Document
+    const tenantRef = doc(collection(firestore, 'tenants'));
+    const newTenant: Tenant = {
+      id: tenantRef.id,
+      ownerId: user.uid,
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      idType,
+      idNumber,
+      notes: tenantNotes || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+    batch.set(tenantRef, newTenant);
+
+    // 2. Create Tenancy Document
+    const tenancyRef = doc(collection(firestore, 'tenancies'));
+    const newTenancy: Tenancy = {
+      id: tenancyRef.id,
+      ownerId: user.uid,
+      propertyId,
+      tenantId: tenantRef.id,
+      startDate: Timestamp.fromDate(startDate),
+      endDate: Timestamp.fromDate(endDate),
+      rentAmount: rent,
+      depositAmount: deposit,
+      serviceChargeAmount: finalServiceCharges.reduce((sum, sc) => sum + sc.amount, 0) || undefined,
+      paymentFrequency,
+      status: 'Active',
+      leaseAgreementUrl: leaseAgreementUrl || undefined,
+      moveInChecklistUrl: moveInChecklistUrl || undefined,
+      createdAt: now,
+      updatedAt: now,
+    };
+    batch.set(tenancyRef, newTenancy);
+
+    // 3. Generate initial Revenue Transactions
+    const finalServiceCharges = serviceCharges
       .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
       .filter(sc => sc.name && sc.amount > 0);
-      
-    const transactionsData: Partial<Transaction>[] = [];
-    let currentDate = new Date(tenancyStartDate.getUTCFullYear(), tenancyStartDate.getUTCMonth(), 1);
+
+    let currentDate = new Date(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1);
     
-    while (currentDate <= tenancyEndDate) {
+    while (currentDate <= endDate) {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
-        const isFirstMonth = isSameMonth(currentDate, tenancyStartDate);
-        const isLastMonth = isSameMonth(currentDate, tenancyEndDate);
-        
-        const dueDate = createSafeMonthDate(year, month, dayOfMonth);
-        let proRataNotes: string | undefined = undefined;
-        let rentForPeriod = rent; // Default to full rent
 
-        if (isFirstMonth && isLastMonth) {
-            const startDay = tenancyStartDate.getDate();
-            const endDay = tenancyEndDate.getDate();
-            const occupiedDays = endDay - startDay + 1;
-            const daysInBillingPeriod = getDaysInMonth(currentDate);
-            const dailyRent = rent / daysInBillingPeriod;
-            rentForPeriod = dailyRent * occupiedDays;
-            proRataNotes = `Pro-rated rent for ${occupiedDays} days.`;
-        } else if (isFirstMonth) { // First month of a multi-month tenancy
-            const startDay = tenancyStartDate.getDate();
-            
-            // CRITICAL: Only pro-rate if tenancy start date is different from rent due date
-            if (startDay !== dayOfMonth) {
-                // Calculate days from start date to the day before next due date
-                const nextMonth = month + 1 > 11 ? 0 : month + 1;
-                const nextYear = month + 1 > 11 ? year + 1 : year;
-                const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
-                const oneDayBeforeNextDue = new Date(nextDueDate);
-                oneDayBeforeNextDue.setDate(oneDayBeforeNextDue.getDate() - 1);
-                
-                const periodDays = Math.round((oneDayBeforeNextDue.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                const occupiedDays = Math.round((oneDayBeforeNextDue.getTime() - tenancyStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-                
-                const dailyRent = rent / periodDays;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the first month.`;
-            }
-            // If startDay === dayOfMonth, rentForPeriod stays as full rent, no notes added
-        } else if (isLastMonth) { // Last month of a multi-month tenancy
-            const endDay = tenancyEndDate.getDate();
+        const transactionDate = createSafeMonthDate(year, month, rentDueDay);
         
-            // If the end date falls before the due date in the same month, tenant pays nothing
-            if (endDay < dayOfMonth) {
-                rentForPeriod = 0;
-                proRataNotes = `Tenancy ended before rent due date.`;
-            } else {
-                // Calculate occupied days FROM due date TO end date
-                const occupiedDays = endDay - dayOfMonth + 1;
-                
-                // Calculate full period days (due date to day before next due)
-                const nextMonth = month + 1 > 11 ? 0 : month + 1;
-                const nextYear = month + 1 > 11 ? year + 1 : year;
-                const nextDueDate = createSafeMonthDate(nextYear, nextMonth, dayOfMonth);
-                const periodDays = Math.round((nextDueDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-                
-                const dailyRent = rent / periodDays;
-                rentForPeriod = dailyRent * occupiedDays;
-                proRataNotes = `Pro-rated rent for ${occupiedDays} days in the final month.`;
+        // Only generate transactions within the tenancy period
+        if (transactionDate >= startDate && transactionDate <= endDate) {
+            const newRevenueTx: RevenueTransaction = {
+                ownerId: user.uid,
+                tenancyId: tenancyRef.id,
+                propertyId,
+                tenantId: tenantRef.id,
+                amount: rent, // This will be the base rent for the month
+                date: Timestamp.fromDate(transactionDate),
+                type: 'Rent',
+                paymentMethod: 'N/A', // Default, to be updated upon payment
+                status: 'Overdue', // Initial status
+                invoiceNumber: `INV-${tenancyRef.id}-${format(transactionDate, 'yyyyMMdd')}`,
+                notes: '',
+                createdAt: now,
+                updatedAt: now,
+            };
+            batch.set(doc(collection(firestore, 'revenue')), newRevenueTx);
+
+            // Add service charge transactions for this month if applicable
+            if (newTenancy.serviceChargeAmount && newTenancy.serviceChargeAmount > 0) {
+                const newServiceChargeTx: RevenueTransaction = {
+                    ownerId: user.uid,
+                    tenancyId: tenancyRef.id,
+                    propertyId,
+                    tenantId: tenantRef.id,
+                    amount: newTenancy.serviceChargeAmount,
+                    date: Timestamp.fromDate(transactionDate),
+                    type: 'Service Charge',
+                    paymentMethod: 'N/A',
+                    status: 'Overdue',
+                    invoiceNumber: `SC-${tenancyRef.id}-${format(transactionDate, 'yyyyMMdd')}`,
+                    notes: 'Monthly Service Charge',
+                    createdAt: now,
+                    updatedAt: now,
+                };
+                batch.set(doc(collection(firestore, 'revenue')), newServiceChargeTx);
             }
         }
-        
-        rentForPeriod = Math.round(rentForPeriod * 100) / 100;
-        
-        const txNotes = proRataNotes || (isFirstMonth ? notes : undefined);
-
-        const newTxData: Partial<Transaction> = {
-            tenancyId,
-            date: format(dueDate, 'yyyy-MM-dd'),
-            rent: rentForPeriod,
-            rentDueDate: dayOfMonth,
-            serviceCharges: finalServiceCharges,
-            amountPaid: 0,
-            propertyId,
-            propertyName: selectedProperty ? formatAddress(selectedProperty) : 'N/A',
-            tenant, 
-            tenantEmail, 
-            tenantPhone,
-            type: 'revenue' as const,
-            deposit: isFirstMonth ? deposit : 0,
-            tenancyStartDate: tenancyStartDateStr,
-            tenancyEndDate: tenancyEndDateStr,
-            contractUrl,
-            applicationFormUrl,
-            moveInChecklistUrl,
-            moveOutChecklistUrl,
-            ownerId: user.uid,
-        };
-
-        if (txNotes) {
-            newTxData.notes = txNotes;
-        }
-      
-        transactionsData.push(newTxData);
 
         currentDate = new Date(year, month + 1, 1);
     }
 
-    const batch = writeBatch(firestore);
-    
-    transactionsData.forEach(tx => {
-      const docRef = doc(collection(firestore, 'revenue'));
-      batch.set(docRef, { ...tx, ownerId: user.uid });
-    });
-    
-    await batch.commit();
-    
-    addChangeLogEntry({
-      type: 'Tenancy',
-      action: 'Created',
-      description: `Tenancy for "${transactionsData[0]?.tenant}" at "${transactionsData[0]?.propertyName}" was created.`,
-      entityId: tenancyId,
-    });
-    
-    setIsSubmitting(false);
-    router.push('/revenue');
+    try {
+      await batch.commit();
+      addChangeLogEntry({
+        type: 'Tenancy',
+        action: 'Created',
+        description: `Tenancy for "${firstName} ${lastName}" at "${properties.find(p => p.id === propertyId)?.name}" was created.`,
+        entityId: tenancyRef.id,
+      });
+      toast({
+        title: 'Tenancy Created',
+        description: 'New tenancy and associated transactions added successfully.',
+      });
+      router.push('/revenue');
+    } catch (error: any) {
+      console.error('Failed to save tenancy:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to save tenancy: ${error.message}`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
             <CardHeader>
-                <CardTitle>Tenancy Details</CardTitle>
-                <CardDescription>Select the property and enter the tenant's information.</CardDescription>
+                <CardTitle>Tenant Details</CardTitle>
+                <CardDescription>Enter the tenant's personal and contact information.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-                <div className="space-y-2">
-                    <Label htmlFor="propertyId">Property</Label>
-                    <Select name="propertyId" required>
-                    <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
-                    <SelectContent>
-                        {properties.map(property => (
-                        <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                        ))}
-                    </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="tenantName">Tenant Name</Label>
-                    <Input id="tenantName" name="tenantName" required />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name *</Label>
+                        <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="tenantEmail">Tenant Email</Label>
-                        <Input id="tenantEmail" name="tenantEmail" type="email" required />
+                        <Label htmlFor="email">Email *</Label>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="tenantPhone">Tenant Phone</Label>
-                        <Input id="tenantPhone" name="tenantPhone" type="tel" />
+                        <Label htmlFor="phoneNumber">Phone Number *</Label>
+                        <Input id="phoneNumber" type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} required />
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="idType">ID Type *</Label>
+                        <Select value={idType} onValueChange={(value) => setIdType(value as Tenant['idType'])} required>
+                            <SelectTrigger id="idType"><SelectValue placeholder="Select ID Type" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="National ID">National ID</SelectItem>
+                                <SelectItem value="Passport">Passport</SelectItem>
+                                <SelectItem value="Driving License">Driving License</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="idNumber">ID Number *</Label>
+                        <Input id="idNumber" value={idNumber} onChange={(e) => setIdNumber(e.target.value)} required />
+                    </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="tenantNotes">Tenant Notes (optional)</Label>
+                    <Textarea id="tenantNotes" value={tenantNotes} onChange={(e) => setTenantNotes(e.target.value)} placeholder="Any relevant notes about the tenant..." />
+                </div>
+                <div className="items-top flex space-x-2 pt-2">
+                    <Checkbox id="consent" checked={consent} onCheckedChange={(checked) => setConsent(!!checked)} />
+                    <div className="grid gap-1.5 leading-none">
+                        <label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        I confirm I have the tenant's consent to store and process their personal information.
+                        </label>
+                        <p className="text-sm text-muted-foreground">
+                        You can view the <Link href="/privacy-policy" className="text-primary underline">Privacy Policy</Link> for details.
+                        </p>
                     </div>
                 </div>
             </CardContent>
@@ -333,33 +337,55 @@ const TenancyForm = memo(function TenancyForm({
 
         <Card>
             <CardHeader>
-                <CardTitle>Lease & Financials</CardTitle>
-                <CardDescription>Set the lease duration, rent, and any service charges.</CardDescription>
+                <CardTitle>Tenancy Details</CardTitle>
+                <CardDescription>Select the property and enter the lease specifics.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
+                <div className="space-y-2">
+                    <Label htmlFor="propertyId">Property *</Label>
+                    <Select value={propertyId} onValueChange={setPropertyId} required>
+                        <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
+                        <SelectContent>
+                            {properties.map(property => (
+                            <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                        <Label>Tenancy Start Date</Label>
-                        <DatePicker date={startDate} setDate={setStartDate} locale={settings?.locale || 'en-KE'} />
+                        <Label>Tenancy Start Date *</Label>
+                        <DatePicker date={startDate} setDate={setStartDate} locale={settings?.dateFormat || 'en-KE'} />
                     </div>
                     <div className="space-y-2">
-                        <Label>Rent Payment Date</Label>
-                        <DatePicker date={rentDueDate} setDate={setRentDueDate} locale={settings?.locale || 'en-KE'} />
+                        <Label>Tenancy End Date *</Label>
+                        <DatePicker date={endDate} setDate={setEndDate} locale={settings?.dateFormat || 'en-KE'} />
                     </div>
                     <div className="space-y-2">
-                        <Label>Tenancy End Date</Label>
-                        <DatePicker date={endDate} setDate={setEndDate} locale={settings?.locale || 'en-KE'} />
+                        <Label htmlFor="rentDueDateDay">Rent Due Day of Month *</Label>
+                        <Input id="rentDueDateDay" type="number" min="1" max="31" value={rentDueDateDay} onChange={(e) => setRentDueDateDay(e.target.value)} required />
                     </div>
                 </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <Label htmlFor="rent">Monthly Rent</Label>
-                        <Input id="rent" name="rent" type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" required />
+                        <Label htmlFor="rentAmount">Monthly Rent *</Label>
+                        <Input id="rentAmount" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" required />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="deposit">Deposit (due with first month's rent)</Label>
-                        <Input id="deposit" name="deposit" type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" />
+                        <Label htmlFor="depositAmount">Deposit Amount *</Label>
+                        <Input id="depositAmount" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" required />
                     </div>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="paymentFrequency">Payment Frequency *</Label>
+                    <Select value={paymentFrequency} onValueChange={(value) => setPaymentFrequency(value as Tenancy['paymentFrequency'])} required>
+                        <SelectTrigger id="paymentFrequency"><SelectValue placeholder="Select frequency" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Monthly">Monthly</SelectItem>
+                            <SelectItem value="Quarterly">Quarterly</SelectItem>
+                            <SelectItem value="Annually">Annually</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                  <div className="space-y-2">
                     <Label>Fixed Monthly Service Charges (optional)</Label>
@@ -381,43 +407,19 @@ const TenancyForm = memo(function TenancyForm({
 
         <Card>
              <CardHeader>
-                <CardTitle>Additional Information & Documents</CardTitle>
+                <CardTitle>Document Links</CardTitle>
                 <CardDescription>
-                    Please provide links to your documents stored in your cloud storage provider (e.g., Google Drive, Dropbox).
+                    Please provide links to tenancy-related documents.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
                  <div className="space-y-2">
-                    <Label htmlFor="contractUrl">Tenancy Agreement</Label>
-                    <Input id="contractUrl" name="contractUrl" type="url" placeholder="https://docs.google.com/..." />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="applicationFormUrl">Application Form</Label>
-                    <Input id="applicationFormUrl" name="applicationFormUrl" type="url" placeholder="https://docs.google.com/..." />
+                    <Label htmlFor="leaseAgreementUrl">Lease Agreement URL (optional)</Label>
+                    <Input id="leaseAgreementUrl" value={leaseAgreementUrl} onChange={(e) => setLeaseAgreementUrl(e.target.value)} type="url" placeholder="https://docs.google.com/..." />
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="moveInChecklistUrl">Move-in Checklist</Label>
-                    <Input id="moveInChecklistUrl" name="moveInChecklistUrl" type="url" placeholder="https://docs.google.com/..." />
-                </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="moveOutChecklistUrl">Move-out Checklist</Label>
-                    <Input id="moveOutChecklistUrl" name="moveOutChecklistUrl" type="url" placeholder="https://docs.google.com/..." />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="notes">Notes (optional)</Label>
-                    <Textarea id="notes" name="notes" placeholder="Any initial notes about this tenancy..." />
-                    <p className="text-xs text-muted-foreground">Notes will only be added to the first month's invoice.</p>
-                </div>
-                <div className="items-top flex space-x-2 pt-2">
-                    <Checkbox id="consent" name="consent" />
-                    <div className="grid gap-1.5 leading-none">
-                        <label htmlFor="consent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        I confirm I have the tenant's consent to store and process their personal information.
-                        </label>
-                        <p className="text-sm text-muted-foreground">
-                        You can view the <Link href="/privacy" className="text-primary underline">Privacy Policy</Link> for details.
-                        </p>
-                    </div>
+                    <Label htmlFor="moveInChecklistUrl">Move-in Checklist URL (optional)</Label>
+                    <Input id="moveInChecklistUrl" value={moveInChecklistUrl} onChange={(e) => setMoveInChecklistUrl(e.target.value)} type="url" placeholder="https://docs.google.com/..." />
                 </div>
             </CardContent>
         </Card>

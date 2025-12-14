@@ -6,59 +6,56 @@ import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/currency-formatter'; // Corrected import path
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import type { Expense } from '@/lib/types';
+import type { Property, RevenueTransaction, Expense, Tenancy } from '@/lib/db-types'; // Updated imports
 
 const DashboardPage = memo(function DashboardPage() {
-  const { properties, revenue, expenses: expensesData, settings, loading } = useDataContext();
-  const locale = settings?.locale || 'en-KE';
+  const { properties, revenue, expenses, tenancies, settings, loading } = useDataContext();
+  const locale = settings?.dateFormat || 'en-KE'; // Using dateFormat as a proxy for locale
   const currency = settings?.currency || 'KES';
   const companyName = settings?.companyName || 'My Company';
-  const expenses = expensesData as Expense[];
 
   const metrics = useMemo(() => {
     if (loading) return null;
 
-    // Calculate total revenue
-    const totalRevenue = revenue.reduce((sum, tx) => {
-      const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
-      return sum + (tx.rent || 0) + serviceChargesTotal + (tx.deposit || 0);
-    }, 0);
+    // Calculate total revenue from paid transactions
+    const totalRevenue = revenue
+      .filter(tx => tx.status === 'Paid')
+      .reduce((sum, tx) => sum + tx.amount, 0);
 
     // Calculate total expenses
-    const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
     // Calculate profit
     const profit = totalRevenue - totalExpenses;
 
-    // Calculate occupancy rate (number of active tenancies / number of properties)
-    const occupancyRate = properties.length > 0 
-      ? ((revenue.filter(tx => tx.tenancyId).length) / (properties.length * 12)) * 100 
-      : 0;
+    // Calculate occupancy rate
+    const occupiedProperties = new Set(tenancies.filter(t => t.status === 'Active').map(t => t.propertyId));
+    const occupancyRate = properties.length > 0 ? (occupiedProperties.size / properties.length) * 100 : 0;
 
-    // Calculate average rent per property
-    const avgRentPerProperty = properties.length > 0 
-      ? revenue.reduce((sum, tx) => sum + (tx.rent || 0), 0) / properties.length 
-      : 0;
+    // Calculate average rent per active tenancy
+    const activeTenancies = tenancies.filter(t => t.status === 'Active');
+    const totalRentOfActiveTenancies = activeTenancies.reduce((sum, t) => sum + t.rentAmount, 0);
+    const avgRentPerTenancy = activeTenancies.length > 0 ? totalRentOfActiveTenancies / activeTenancies.length : 0;
 
     return {
       totalRevenue,
       totalExpenses,
       profit,
-      occupancyRate: Math.min(100, occupancyRate),
-      avgRentPerProperty,
+      occupancyRate,
+      avgRentPerTenancy,
       totalProperties: properties.length,
     };
-  }, [revenue, expenses, properties, loading]);
+  }, [revenue, expenses, properties, tenancies, loading]);
 
   if (loading) {
     return (
       <>
         <PageHeader title={`Welcome back, ${companyName}!`} />
-        <div className="grid gap-4 md:grid-cols-3">
-          {[1, 2, 3].map((i) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}>
               <CardHeader>
                 <Skeleton className="h-4 w-1/2" />
@@ -88,7 +85,7 @@ const DashboardPage = memo(function DashboardPage() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(metrics.totalRevenue, locale, currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">All time</p>
+                <p className="text-xs text-muted-foreground">All time (paid)</p>
               </CardContent>
             </Card>
 
@@ -118,28 +115,28 @@ const DashboardPage = memo(function DashboardPage() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Properties</CardTitle>
+                <CardTitle className="text-sm font-medium">Occupancy Rate</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.totalProperties}</div>
-                <p className="text-xs text-muted-foreground">Total managed</p>
+                <div className="text-2xl font-bold">{metrics.occupancyRate.toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground">Based on active tenancies</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Rent/Property</CardTitle>
+                <CardTitle className="text-sm font-medium">Avg Rent</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(metrics.avgRentPerProperty, locale, currency)}
+                  {formatCurrency(metrics.avgRentPerTenancy, locale, currency)}
                 </div>
-                <p className="text-xs text-muted-foreground">Per property</p>
+                <p className="text-xs text-muted-foreground">Per active tenancy</p>
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 mt-4">
             <Card>
               <CardHeader>
                 <CardTitle>Financial Summary</CardTitle>
@@ -181,15 +178,15 @@ const DashboardPage = memo(function DashboardPage() {
                     <span className="font-semibold">{metrics.totalProperties}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Avg Rent/Property</span>
-                    <span className="font-semibold">{formatCurrency(metrics.avgRentPerProperty, locale, currency)}</span>
+                    <span className="text-sm text-muted-foreground">Avg Rent/Tenancy</span>
+                    <span className="font-semibold">{formatCurrency(metrics.avgRentPerTenancy, locale, currency)}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Card>
+          <Card className="mt-4">
             <CardHeader>
               <CardTitle>Your Properties</CardTitle>
               <CardDescription>Manage and view your properties</CardDescription>
@@ -210,10 +207,10 @@ const DashboardPage = memo(function DashboardPage() {
                       href={`/properties/${property.id}`}
                       className="p-4 border rounded-lg hover:bg-accent transition-colors"
                     >
-                      <h3 className="font-semibold">{property.addressLine1}</h3>
-                      <p className="text-sm text-muted-foreground">{property.city}, {property.county}</p>
+                      <h3 className="font-semibold">{property.name}</h3>
+                      <p className="text-sm text-muted-foreground">{property.address.street}, {property.address.city}</p>
                       <p className="text-sm font-medium mt-2">
-                        {formatCurrency(property.monthly_rent || 0, locale, currency)}/month
+                        {formatCurrency(property.targetRent || 0, locale, currency)}/month
                       </p>
                     </Link>
                   ))}

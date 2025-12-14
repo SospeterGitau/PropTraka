@@ -21,15 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Property,
-  PropertyType,
-  domesticBuildingTypes,
-  commercialBuildingTypes,
-  Address,
-} from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Property, Address } from '@/lib/db-types'; // Updated import
 import { useDataContext } from '@/context/data-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
 interface PropertyFormProps {
   property?: Property | null;
@@ -55,7 +51,6 @@ export function PropertyForm({
       }).formatToParts(1);
       return parts.find((part) => part.type === 'currency')?.value || parts.find((part) => part.type === 'literal')?.value || '$';
     } catch (e) {
-      // Fallback for invalid currency codes
       if (currencyCode === 'KES') return 'KSh';
       return '$';
     }
@@ -64,32 +59,36 @@ export function PropertyForm({
   const currencySymbol = getCurrencySymbol(settings?.currency || 'USD');
 
   const [name, setName] = useState('');
-  const [propertyType, setPropertyType] = useState<PropertyType | ''>('');
-  const [buildingType, setBuildingType] = useState('');
-  const [address, setAddress] = useState<Address>({ line1: '', line2: '', city: '', state: '', zipCode: '', country: '' });
+  const [type, setType] = useState<'Residential' | 'Commercial' | 'Mixed-Use' | ''>(''); // New 'type' state
+  const [address, setAddress] = useState<Address>({
+    street: '', city: '', state: '', zipCode: '', country: ''
+  });
   const [bedrooms, setBedrooms] = useState<number>(0);
   const [bathrooms, setBathrooms] = useState<number>(0);
-  const [size, setSize] = useState<number>(0);
-  const [sizeUnit, setSizeUnit] = useState<'sqft' | 'sqm'>('sqft');
+  const [squareFootage, setSquareFootage] = useState<number>(0); // New 'squareFootage' state
+  const [yearBuilt, setYearBuilt] = useState<number>(0); // New 'yearBuilt' state
+  const [amenities, setAmenities] = useState<string>(''); // Stored as comma-separated string for input
+  const [description, setDescription] = useState<string>(''); // New 'description' state
   const [purchasePrice, setPurchasePrice] = useState<number>(0);
-  const [purchaseDate, setPurchaseDate] = useState<string>('');
-  const [marketValue, setMarketValue] = useState<number>(0);
+  const [purchaseDate, setPurchaseDate] = useState<string>(''); // Stored as string for input
+  const [currentValue, setCurrentValue] = useState<number>(0);
   const [mortgageBalance, setMortgageBalance] = useState<number>(0);
   const [targetRent, setTargetRent] = useState<number>(0);
 
   useEffect(() => {
     if (initialProperty) {
       setName(initialProperty.name);
-      setPropertyType(initialProperty.propertyType);
-      setBuildingType(initialProperty.buildingType);
+      setType(initialProperty.type);
       setAddress(initialProperty.address);
-      setBedrooms(initialProperty.bedrooms);
-      setBathrooms(initialProperty.bathrooms);
-      setSize(initialProperty.size || 0);
-      setSizeUnit(initialProperty.sizeUnit || 'sqft');
+      setBedrooms(initialProperty.bedrooms || 0);
+      setBathrooms(initialProperty.bathrooms || 0);
+      setSquareFootage(initialProperty.squareFootage || 0);
+      setYearBuilt(initialProperty.yearBuilt || 0);
+      setAmenities(initialProperty.amenities?.join(', ') || '');
+      setDescription(initialProperty.description || '');
       setPurchasePrice(initialProperty.purchasePrice || 0);
-      setPurchaseDate(initialProperty.purchaseDate || '');
-      setMarketValue(initialProperty.marketValue || 0);
+      setPurchaseDate(initialProperty.purchaseDate ? initialProperty.purchaseDate.toDate().toISOString().split('T')[0] : '');
+      setCurrentValue(initialProperty.currentValue || 0);
       setMortgageBalance(initialProperty.mortgageBalance || 0);
       setTargetRent(initialProperty.targetRent || 0);
     } else {
@@ -98,10 +97,10 @@ export function PropertyForm({
   }, [initialProperty, isOpen]);
 
   const resetForm = () => {
-    setName(''); setPropertyType(''); setBuildingType('');
-    setAddress({ line1: '', line2: '', city: '', state: '', zipCode: '', country: '' });
-    setBedrooms(0); setBathrooms(0); setSize(0); setSizeUnit('sqft');
-    setPurchasePrice(0); setPurchaseDate(''); setMarketValue(0); setMortgageBalance(0); setTargetRent(0);
+    setName(''); setType('');
+    setAddress({ street: '', city: '', state: '', zipCode: '', country: '' });
+    setBedrooms(0); setBathrooms(0); setSquareFootage(0); setYearBuilt(0); setAmenities(''); setDescription('');
+    setPurchasePrice(0); setPurchaseDate(''); setCurrentValue(0); setMortgageBalance(0); setTargetRent(0);
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,26 +108,36 @@ export function PropertyForm({
     setAddress((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePropertyTypeChange = (value: string) => {
-    const newPropertyType = value as PropertyType;
-    setPropertyType(newPropertyType);
-    setBuildingType('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!propertyType) return;
-    const propertyData: Omit<Property, 'id'> = {
-      name, address, propertyType, buildingType, bedrooms, bathrooms, size, sizeUnit,
-      purchasePrice, purchaseDate, marketValue, mortgageBalance, targetRent,
-      status: initialProperty?.status || 'vacant',
+    if (!type || !name || !address.street || !address.city || !address.state || !address.zipCode || !address.country) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+
+    const propertyData: Omit<Property, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'> = {
+      name,
+      type: type as 'Residential' | 'Commercial' | 'Mixed-Use',
+      address,
+      bedrooms: bedrooms || undefined,
+      bathrooms: bathrooms || undefined,
+      squareFootage: squareFootage || undefined,
+      yearBuilt: yearBuilt || undefined,
+      amenities: amenities.split(',').map(s => s.trim()).filter(s => s) || undefined,
+      description: description || undefined,
+      purchasePrice: purchasePrice || undefined,
+      purchaseDate: purchaseDate ? Timestamp.fromDate(new Date(purchaseDate)) : (undefined as any), // Cast to any to satisfy type if undefined
+      currentValue: currentValue || undefined,
+      mortgageBalance: mortgageBalance || undefined,
+      targetRent,
     };
+
     try {
       if (onSubmit) {
-         if (initialProperty?.id) onSubmit({ ...propertyData, id: initialProperty.id });
+         if (initialProperty?.id) onSubmit({ ...propertyData, id: initialProperty.id, ownerId: initialProperty.ownerId, createdAt: initialProperty.createdAt, updatedAt: Timestamp.now() });
          else onSubmit(propertyData);
       } else {
-        if (initialProperty?.id) await updateProperty(initialProperty.id, { ...propertyData, id: initialProperty.id });
+        if (initialProperty?.id) await updateProperty(initialProperty.id, { ...propertyData, id: initialProperty.id, ownerId: initialProperty.ownerId, createdAt: initialProperty.createdAt, updatedAt: Timestamp.now() });
         else await addProperty(propertyData);
       }
       onClose();
@@ -166,38 +175,18 @@ export function PropertyForm({
                   <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Sunset Apartments" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="propertyType">Property Type *</Label>
-                  <Select value={propertyType} onValueChange={handlePropertyTypeChange} required>
+                  <Label htmlFor="type">Property Type *</Label>
+                  <Select value={type} onValueChange={(value) => setType(value as 'Residential' | 'Commercial' | 'Mixed-Use')} required>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={PropertyType.Domestic}>Residential</SelectItem>
-                      <SelectItem value={PropertyType.Commercial}>Commercial</SelectItem>
+                      <SelectItem value="Residential">Residential</SelectItem>
+                      <SelectItem value="Commercial">Commercial</SelectItem>
+                      <SelectItem value="Mixed-Use">Mixed-Use</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              {propertyType && (
-                <div className="space-y-2">
-                  <Label htmlFor="buildingType">Building Type *</Label>
-                  <Select value={buildingType} onValueChange={setBuildingType} required>
-                    <SelectTrigger><SelectValue placeholder="Select building type" /></SelectTrigger>
-                    <SelectContent>
-                      {propertyType === PropertyType.Domestic && (
-                        <SelectGroup>
-                          <SelectLabel>Residential</SelectLabel>
-                          {domesticBuildingTypes.map((type, i) => (<SelectItem key={`${type}-${i}`} value={type}>{type}</SelectItem>))}
-                        </SelectGroup>
-                      )}
-                      {propertyType === PropertyType.Commercial && (
-                        <SelectGroup>
-                          <SelectLabel>Commercial</SelectLabel>
-                          {commercialBuildingTypes.map((type, i) => (<SelectItem key={`${type}-${i}`} value={type}>{type}</SelectItem>))}
-                        </SelectGroup>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="bedrooms">Bedrooms</Label>
@@ -208,44 +197,46 @@ export function PropertyForm({
                   <Input id="bathrooms" type="number" min="0" step="0.5" value={bathrooms} onChange={(e) => setBathrooms(Number(e.target.value))} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="size">Size</Label>
-                  <div className="flex gap-2">
-                    <Input id="size" type="number" min="0" value={size} onChange={(e) => setSize(Number(e.target.value))} className="flex-1" />
-                    <Select value={sizeUnit} onValueChange={(val: 'sqft' | 'sqm') => setSizeUnit(val)}>
-                      <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sqft">sq ft</SelectItem>
-                        <SelectItem value="sqm">m²</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Label htmlFor="squareFootage">Square Footage</Label>
+                  <Input id="squareFootage" type="number" min="0" value={squareFootage} onChange={(e) => setSquareFootage(Number(e.target.value))} placeholder="e.g., 1200" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="yearBuilt">Year Built</Label>
+                <Input id="yearBuilt" type="number" min="1000" max={new Date().getFullYear()} value={yearBuilt} onChange={(e) => setYearBuilt(Number(e.target.value))} placeholder="e.g., 2005" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amenities">Amenities (comma-separated)</Label>
+                <Input id="amenities" value={amenities} onChange={(e) => setAmenities(e.target.value)} placeholder="e.g., Pool, Gym, Parking" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description of the property" />
               </div>
             </TabsContent>
             <TabsContent value="address" className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Street Address *</Label>
-                  <Input name="line1" placeholder="Line 1" value={address.line1} onChange={handleAddressChange} required />
-                  <Input name="line2" placeholder="Line 2 (Optional)" value={address.line2 || ''} onChange={handleAddressChange} />
+                  <Label htmlFor="street">Street Address *</Label>
+                  <Input id="street" name="street" placeholder="e.g., 123 Main St" value={address.street} onChange={handleAddressChange} required />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>City *</Label>
-                    <Input name="city" value={address.city} onChange={handleAddressChange} required />
+                    <Label htmlFor="city">City *</Label>
+                    <Input id="city" name="city" value={address.city} onChange={handleAddressChange} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>State/Province *</Label>
-                    <Input name="state" value={address.state} onChange={handleAddressChange} required />
+                    <Label htmlFor="state">State/Province *</Label>
+                    <Input id="state" name="state" value={address.state} onChange={handleAddressChange} required />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Zip/Postal Code *</Label>
-                    <Input name="zipCode" value={address.zipCode} onChange={handleAddressChange} required />
+                    <Label htmlFor="zipCode">Zip/Postal Code *</Label>
+                    <Input id="zipCode" name="zipCode" value={address.zipCode} onChange={handleAddressChange} required />
                   </div>
                   <div className="space-y-2">
-                    <Label>Country *</Label>
-                    <Input name="country" value={address.country} onChange={handleAddressChange} required />
+                    <Label htmlFor="country">Country *</Label>
+                    <Input id="country" name="country" value={address.country} onChange={handleAddressChange} required />
                   </div>
                 </div>
             </TabsContent>
@@ -260,16 +251,16 @@ export function PropertyForm({
                   <Input id="purchaseDate" type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="marketValue">Current Market Value</Label>
-                  <Input id="marketValue" type="number" min="0" prefixText={currencySymbol} value={marketValue} onChange={(e) => setMarketValue(Number(e.target.value))} />
+                  <Label htmlFor="currentValue">Current Market Value</Label>
+                  <Input id="currentValue" type="number" min="0" prefixText={currencySymbol} value={currentValue} onChange={(e) => setCurrentValue(Number(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mortgageBalance">Mortgage Balance</Label>
                   <Input id="mortgageBalance" type="number" min="0" prefixText={currencySymbol} value={mortgageBalance} onChange={(e) => setMortgageBalance(Number(e.target.value))} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="targetRent">Target Monthly Rent</Label>
-                  <Input id="targetRent" type="number" min="0" prefixText={currencySymbol} value={targetRent} onChange={(e) => setTargetRent(Number(e.target.value))} />
+                  <Label htmlFor="targetRent">Target Monthly Rent *</Label>
+                  <Input id="targetRent" type="number" min="0" prefixText={currencySymbol} value={targetRent} onChange={(e) => setTargetRent(Number(e.target.value))} required />
                 </div>
               </div>
             </TabsContent>

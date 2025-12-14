@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import type { Property, Transaction, Contractor } from '@/lib/types';
+import type { Property, Expense, Contractor, UserSettings } from '@/lib/db-types'; // Updated imports
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox'; // Using Checkbox for isRecurring
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Check, ChevronsUpDown, Sparkles, Loader2, CalendarIcon, ArrowLeft } from 'lucide-react';
@@ -32,11 +32,10 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
+import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
-
-const defaultCategories = [
-  'Accounting', 'Insurance', 'Legal Fees', 'Maintenance', 'Management Fees',
-  'Marketing', 'Office Supplies', 'Repairs', 'Salaries', 'Subscriptions', 'Travel', 'Utilities',
+const defaultCategories: Expense['category'][] = [
+  'Repairs', 'Utilities', 'Insurance', 'Taxes', 'Management Fees', 'Cleaning', 'Other',
 ];
 
 const frequencies = [
@@ -45,8 +44,8 @@ const frequencies = [
 ];
 
 function formatAddress(property: Property) {
-  const address = property.address || {};
-  return [address.line1, address.city, address.zipCode].filter(Boolean).join(', ');
+  const address = property.address; // Use the new Address interface
+  return [address.street, address.city, address.zipCode].filter(Boolean).join(', ');
 }
 
 function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { open: boolean, onOpenChange: (open: boolean) => void, onCategorySelect: (category: string) => void }) {
@@ -60,7 +59,9 @@ function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { ope
         startTransition(async () => {
             setError(null); setSuggestion(null);
             const result = await categorizeExpense({ description });
-            if (result.category) setSuggestion(result.category);
+            // Ensure the suggested category is one of the valid ones, or default to 'Other'
+            const validCategory = defaultCategories.includes(result.category as Expense['category']) ? result.category : 'Other';
+            if (validCategory) setSuggestion(validCategory);
             else setError("Could not get a suggestion. Please try again.");
         });
     }
@@ -105,9 +106,9 @@ function CategoryAssistantDialog({ open, onOpenChange, onCategorySelect }: { ope
     )
 }
 
-export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties, contractors, mode = 'dialog' }: {
-  isOpen: boolean; onClose: () => void; onSubmit: (data: Omit<Transaction, 'id'> | Transaction) => void;
-  transaction?: Partial<Transaction> | null; properties: Property[]; contractors: Contractor[]; mode?: 'dialog' | 'page';
+export function ExpenseForm({ isOpen, onClose, onSubmit, transaction: initialExpense, properties, contractors, mode = 'dialog' }: {
+  isOpen: boolean; onClose: () => void; onSubmit: (data: Omit<Expense, 'ownerId' | 'createdAt' | 'updatedAt'> | Expense) => void;
+  transaction?: Partial<Expense> | null; properties: Property[]; contractors: Contractor[]; mode?: 'dialog' | 'page';
 }) {
   const { settings } = useDataContext();
   const router = useRouter();
@@ -121,11 +122,13 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
 
   const [date, setDate] = useState<Date | undefined>();
   const [propertyId, setPropertyId] = useState('');
-  const [category, setCategory] = useState('');
-  const [expenseType, setExpenseType] = useState<Transaction['expenseType']>('one-off');
-  const [frequency, setFrequency] = useState('monthly');
+  const [category, setCategory] = useState<Expense['category']>('Other'); // Default to 'Other'
+  const [isRecurring, setIsRecurring] = useState(false); // New state for isRecurring
+  const [frequency, setFrequency] = useState('monthly'); // Still used for display if recurring
   const [contractorId, setContractorId] = useState('');
   const [amount, setAmount] = useState<number | ''>('');
+  const [vendorName, setVendorName] = useState(''); // New state for vendorName
+  const [invoiceNumber, setInvoiceNumber] = useState(''); // New state for invoiceNumber
   const [receiptUrl, setReceiptUrl] = useState('');
   const [notes, setNotes] = useState('');
   
@@ -135,55 +138,54 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   useEffect(() => {
-    // Only set defaults if it's a new transaction or explicitly provided
-    if (transaction) {
-        setDate(transaction.date ? new Date(transaction.date) : new Date());
-        setPropertyId(transaction.propertyId || 'none');
-        setCategory(transaction.category || '');
-        setExpenseType(transaction.expenseType || 'one-off');
-        setFrequency(transaction.frequency || 'monthly');
-        setContractorId(transaction.contractorId || '');
-        setAmount(transaction.amount || '');
-        setReceiptUrl(transaction.receiptUrl || '');
-        setNotes(transaction.notes || '');
+    if (initialExpense) {
+        setDate(initialExpense.date ? initialExpense.date.toDate() : new Date());
+        setPropertyId(initialExpense.propertyId || 'none');
+        setCategory(initialExpense.category || 'Other');
+        setIsRecurring(initialExpense.isRecurring || false);
+        // frequency is not directly in new schema, but if we assume monthly if recurring, or add it back if needed for display
+        // For now, if initialExpense.isRecurring, we default frequency to monthly.
+        setFrequency(initialExpense.isRecurring ? (initialExpense as any).frequency || 'monthly' : 'monthly');
+        setContractorId(initialExpense.contractorId || '');
+        setAmount(initialExpense.amount || '');
+        setVendorName(initialExpense.vendorName || ''); // New field
+        setInvoiceNumber(initialExpense.invoiceNumber || ''); // New field
+        setReceiptUrl(initialExpense.receiptUrl || '');
+        setNotes(initialExpense.notes || '');
     } else {
-        // Defaults for new expense
         if (!date) setDate(new Date());
+        setCategory('Other'); // Default for new expense
+        setPropertyId('none');
     }
-  }, [transaction]);
+  }, [initialExpense, isOpen]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const selectedProperty = properties.find(p => p.id === propertyId);
-    const selectedContractor = contractors.find(c => c.id === contractorId);
     
-    const data: Omit<Transaction, 'id'> | Transaction = {
-      ...(transaction?.id ? { id: transaction.id } : {}),
-      date: format(date || new Date(), 'yyyy-MM-dd'),
+    if (!date || !amount || !category) {
+        alert('Please fill in all required fields: Date, Amount, and Category.');
+        return;
+    }
+
+    const expenseData: Omit<Expense, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'> = {
+      date: Timestamp.fromDate(date),
       amount: Number(amount),
-      propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General Expense',
       propertyId: propertyId !== 'none' ? propertyId : undefined,
       category,
       contractorId: contractorId || undefined,
-      contractorName: selectedContractor?.name,
-      notes,
-      type: 'expense',
-      expenseType,
-      frequency: expenseType === 'recurring' ? (frequency as any) : undefined,
+      vendorName: vendorName || undefined,
+      invoiceNumber: invoiceNumber || undefined,
       receiptUrl: receiptUrl || undefined,
+      isRecurring,
+      notes: notes || undefined,
     };
     
-    onSubmit(data);
+    onSubmit(expenseData);
     if (mode === 'dialog') {
         onClose();
     }
   };
 
-  const handleCategorySelected = (selectedCategory: string) => {
-    setCategory(selectedCategory);
-    setIsAssistantOpen(false);
-  }
-  
   const FormContent = (
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -258,11 +260,11 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
                   <Command>
                     <CommandInput placeholder="Search category..." onValueChange={setCategory} />
                     <CommandList>
-                      <CommandEmpty>{category ? <span className="cursor-pointer" onClick={() => { setIsCategoryOpen(false); }}>Use "{category}"</span> : "No category found."}</CommandEmpty>
+                      <CommandEmpty>{category ? <span className="cursor-pointer" onClick={() => { setCategory(category); setIsCategoryOpen(false); }}>Use "{category}"</span> : "No category found."}</CommandEmpty>
                       <CommandGroup>
                         {defaultCategories.map((cat) => (
-                          <CommandItem key={cat} value={cat} onSelect={(val) => { setCategory(val === category ? "" : val); setIsCategoryOpen(false); }}>
-                            <Check className={cn("mr-2 h-4 w-4", category.toLowerCase() === cat.toLowerCase() ? "opacity-100" : "opacity-0")} />{cat}
+                          <CommandItem key={cat} value={cat} onSelect={(val) => { setCategory(val as Expense['category']); setIsCategoryOpen(false); }}>
+                            <Check className={cn("mr-2 h-4 w-4", category === cat ? "opacity-100" : "opacity-0")} />{cat}
                           </CommandItem>
                         ))}
                       </CommandGroup>
@@ -272,18 +274,24 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
               </Popover>
             </div>
             
-            <div className="space-y-2">
-                <Label>Expense Type</Label>
-                <RadioGroup value={expenseType} onValueChange={(v) => setExpenseType(v as any)} className="flex gap-4 pt-2">
-                  <div className="flex items-center space-x-2"><RadioGroupItem value="one-off" id="r1" /><Label htmlFor="r1">One-off</Label></div>
-                  <div className="flex items-center space-x-2"><RadioGroupItem value="recurring" id="r2" /><Label htmlFor="r2">Recurring</Label></div>
-                </RadioGroup>
+            <div className="space-y-2 col-span-1 md:col-span-2">
+                <div className="items-top flex space-x-2">
+                    <Checkbox id="isRecurring" checked={isRecurring} onCheckedChange={(checked) => setIsRecurring(!!checked)} />
+                    <div className="grid gap-1.5 leading-none">
+                        <Label htmlFor="isRecurring" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            Is this a recurring expense?
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                            If checked, this expense may be automatically generated in the future.
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            {expenseType === 'recurring' && (
+            {isRecurring && (
               <div className="space-y-2">
                 <Label htmlFor="frequency">Frequency</Label>
-                <Select value={frequency} onValueChange={setFrequency} required>
+                <Select value={frequency} onValueChange={setFrequency} required={isRecurring}>
                   <SelectTrigger id="frequency"><SelectValue placeholder="Select a frequency" /></SelectTrigger>
                   <SelectContent>
                     {frequencies.map(f => (<SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>))}
@@ -293,11 +301,20 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
             )}
 
             <div className="space-y-2">
-              <Label>Vendor / Contractor (optional)</Label>
+              <Label htmlFor="vendorName">Vendor Name (optional)</Label>
+              <Input id="vendorName" value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="e.g., John's Plumbing" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invoiceNumber">Invoice Number (optional)</Label>
+              <Input id="invoiceNumber" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="e.g., INV-2023-001" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Contractor (optional)</Label>
                <Popover open={isContractorOpen} onOpenChange={setIsContractorOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" role="combobox" className="w-full justify-between font-normal">
-                      {contractorId ? contractors.find(c => c.id === contractorId)?.name : "Select a contractor..."}
+                      {contractorId ? contractors.find(c => c.id === contractorId)?.companyName : "Select a contractor..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -308,8 +325,8 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
                       <CommandEmpty>No contractor found.</CommandEmpty>
                       <CommandGroup>
                         {contractors.map((c) => (
-                          <CommandItem key={c.id} value={c.name} onSelect={() => { setContractorId(c.id === contractorId ? "" : c.id); setIsContractorOpen(false); }}>
-                            <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />{c.name}
+                          <CommandItem key={c.id} value={c.companyName} onSelect={() => { setContractorId(c.id === contractorId ? "" : c.id); setIsContractorOpen(false); }}>
+                            <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />{c.companyName}
                           </CommandItem>
                         ))}
                       </CommandGroup>
@@ -340,6 +357,14 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
   if (mode === 'page') {
       return (
           <>
+            <PageHeader title={initialExpense?.id ? 'Edit Expense' : 'Add New Expense'}>
+              <Button variant="outline" asChild>
+                <Link href="/expenses">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Expenses
+                </Link>
+              </Button>
+            </PageHeader>
             {FormContent}
             <CategoryAssistantDialog open={isAssistantOpen} onOpenChange={setIsAssistantOpen} onCategorySelect={handleCategorySelected} />
           </>
@@ -351,7 +376,7 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction, properties
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-3xl" aria-describedby="expense-description">
             <DialogHeader>
-                <DialogTitle>{transaction?.id ? 'Edit' : 'Add'} Expense</DialogTitle>
+                <DialogTitle>{initialExpense?.id ? 'Edit' : 'Add'} Expense</DialogTitle>
                 <DialogDescription id="expense-description">Record and categorize your property expenses.</DialogDescription>
             </DialogHeader>
             <div className="max-h-[80vh] overflow-y-auto px-1">
