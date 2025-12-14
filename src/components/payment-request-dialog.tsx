@@ -1,7 +1,6 @@
 
 'use client';
 
-
 import { useState, useEffect } from 'react';
 import type { ArrearEntryCalculated } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -13,32 +12,37 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CreditCard } from 'lucide-react';
-
+import { useDataContext } from '@/context/data-context';
 
 interface PaymentRequestDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (details: { amount: number; method: string }) => void;
   arrear: ArrearEntryCalculated | null;
-  formatCurrency: (amount: number) => string;
 }
-
 
 export function PaymentRequestDialog({
   isOpen,
   onClose,
   onSubmit,
   arrear,
-  formatCurrency,
 }: PaymentRequestDialogProps) {
-  const [amount, setAmount] = useState(0);
-  const [method, setMethod] = useState('Pesapal');
+  const { settings } = useDataContext();
+  const getCurrencySymbol = (currencyCode: string) => {
+    try {
+      const parts = new Intl.NumberFormat(undefined, { style: 'currency', currency: currencyCode, currencyDisplay: 'narrowSymbol' }).formatToParts(1);
+      return parts.find((part) => part.type === 'currency')?.value || '$';
+    } catch (e) { return '$'; }
+  };
+  const currencySymbol = getCurrencySymbol(settings?.currency || 'USD');
 
+  const [amount, setAmount] = useState<number | ''>('');
+  const [method, setMethod] = useState('Pesapal');
 
   useEffect(() => {
     if (arrear) {
@@ -46,14 +50,13 @@ export function PaymentRequestDialog({
     }
   }, [arrear]);
 
-
   const handleSubmit = () => {
-    onSubmit({ amount, method });
+    if (typeof amount === 'number') {
+      onSubmit({ amount, method });
+    }
   };
 
-
   if (!isOpen || !arrear) return null;
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -65,23 +68,21 @@ export function PaymentRequestDialog({
           </DialogDescription>
         </DialogHeader>
 
-
         <div className="py-4 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount to Request</Label>
+            <Label htmlFor="amount">Amount to Request *</Label>
             <Input
               id="amount"
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
               max={arrear.amountOwed}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : '')}
+              required
+              prefixText={currencySymbol}
             />
-            <p className="text-sm text-muted-foreground">
-              Maximum amount owed: {formatCurrency(arrear.amountOwed)}
-            </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="gateway">Payment Gateway</Label>
+            <Label htmlFor="gateway">Payment Gateway *</Label>
             <Select value={method} onValueChange={setMethod}>
               <SelectTrigger id="gateway">
                 <SelectValue placeholder="Select a payment method" />
@@ -104,7 +105,7 @@ export function PaymentRequestDialog({
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={!amount}>
             Send Request
           </Button>
         </DialogFooter>

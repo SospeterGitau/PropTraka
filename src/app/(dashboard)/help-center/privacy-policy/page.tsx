@@ -1,10 +1,12 @@
 
 'use client';
 
-import { PageHeader } from '@/components/page-header';
-import { ShieldCheck, Database, BarChart, Server, Lock, UserCog, Handshake, Trash2, Repeat, Info } from 'lucide-react';
+import { ShieldCheck, Database, BarChart, Server, Lock, UserCog, Handshake, Trash2, Repeat, Info, ChevronDown, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 type Section = {
   id: string;
@@ -155,72 +157,48 @@ const sections: Section[] = [
 
 
 export default function PrivacyPolicyPage() {
-    const [activeSection, setActiveSection] = useState('introduction');
-    const observer = useRef<IntersectionObserver | null>(null);
-
-    useEffect(() => {
-        observer.current = new IntersectionObserver((entries) => {
-            const visibleSection = entries.find((entry) => entry.isIntersecting)?.target;
-            if (visibleSection) {
-                setActiveSection(visibleSection.id);
-            }
-        }, { rootMargin: '-20% 0px -80% 0px' });
-
-        const elements = sections.map(section => document.getElementById(section.id)).filter(el => el);
-        elements.forEach(el => observer.current?.observe(el!));
-
-        return () => {
-            elements.forEach(el => observer.current?.unobserve(el!));
-        };
-    }, []);
-
+  const router = useRouter();
   return (
-    <>
-      <PageHeader title="Privacy Policy" />
-      <div className="flex flex-col md:flex-row gap-12">
-        {/* Sticky Sidebar */}
-        <aside className="md:w-1/4 lg:w-1/5 md:sticky top-24 self-start">
-            <nav>
-                <ul className="space-y-3">
-                    {sections.map(section => (
-                         <li key={section.id}>
-                            <a 
-                                href={`#${section.id}`}
-                                className={cn(
-                                    "flex items-center gap-3 text-sm font-medium transition-colors",
-                                    activeSection === section.id 
-                                        ? 'text-primary' 
-                                        : 'text-muted-foreground hover:text-foreground'
-                                )}
-                            >
-                                <section.icon className="h-5 w-5" />
-                                <span>{section.title}</span>
-                            </a>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-        </aside>
-
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-4">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ArrowLeft className="h-5 w-5 mr-2" />
+          Back to Help Center
+        </Button>
+      </div>
+      <div className="flex flex-col gap-8 lg:gap-12">
         {/* Main Content */}
-        <main className="flex-1 space-y-12">
+        <main className="flex-1 space-y-8">
             <div className="text-center pb-8 border-b">
                  <ShieldCheck className="h-16 w-16 text-primary mx-auto mb-4" />
                  <h1 className="text-3xl font-bold">PropTraka Privacy Policy</h1>
                  <p className="text-muted-foreground mt-2">Last updated on {lastUpdated}</p>
                  <p className="mt-4 max-w-2xl mx-auto">We value your trust. This policy explains what data we process, why we need it, and how we keep it secure. As a user of PropTraka, you are in control of your data.</p>
             </div>
-            {sections.map(section => (
-                <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
-                    <h2 className="text-2xl font-bold">{section.title}</h2>
-                    <p className="text-lg text-muted-foreground font-semibold">{section.summary}</p>
-                    <div className="text-base text-foreground/80 space-y-4">
-                        {section.content}
-                    </div>
-                </section>
-            ))}
+            {/* Collapsible sections for mobile-first, always collapsible */}
+            <div className="space-y-4">
+                {sections.map(section => (
+                    <Collapsible key={section.id} className="rounded-md border p-4 bg-card text-card-foreground shadow-sm" defaultOpen={false}> {/* defaultOpen={false} for mobile first */}
+                        <CollapsibleTrigger asChild>
+                            <div className="flex items-center justify-between font-semibold text-lg cursor-pointer py-2">
+                                <div className="flex items-center gap-3">
+                                    <section.icon className="h-5 w-5 text-primary" />
+                                    <span>{section.title}</span>
+                                </div>
+                                <ChevronDown className="h-5 w-5 transition-transform duration-200 data-[state=open]:rotate-180" />
+                            </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-4 data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+                            <p className="text-muted-foreground mb-4">{section.summary}</p>
+                            <div className="text-base text-foreground/80 space-y-4">
+                                {section.content}
+                            </div>
+                        </CollapsibleContent>
+                    </Collapsible>
+                ))}
+            </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }

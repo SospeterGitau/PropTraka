@@ -19,10 +19,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Search, Mail, Phone, Edit2, Trash2, Star } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const ContractorsClient = memo(function ContractorsClient() {
   const { contractors, loading } = useDataContext();
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
 
   const filteredContractors = useMemo(() => {
     return contractors.filter(contractor =>
@@ -44,9 +46,13 @@ const ContractorsClient = memo(function ContractorsClient() {
     }
   };
 
+  const handleAddContractor = () => {
+    router.push('/contractors/add');
+  };
+
   if (loading) {
     return (
-      <>
+      <div className="space-y-6">
         <PageHeader title="Contractors" />
         <Card>
           <CardHeader>
@@ -56,12 +62,12 @@ const ContractorsClient = memo(function ContractorsClient() {
             <Skeleton className="h-48 w-full" />
           </CardContent>
         </Card>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="space-y-6">
       <PageHeader title="Contractors" />
 
       <Card>
@@ -71,7 +77,7 @@ const ContractorsClient = memo(function ContractorsClient() {
               <CardTitle>Contractors & Service Providers</CardTitle>
               <CardDescription>Manage your list of trusted contractors</CardDescription>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={handleAddContractor}>
               <Plus className="mr-2 h-4 w-4" />
               Add Contractor
             </Button>
@@ -177,7 +183,7 @@ const ContractorsClient = memo(function ContractorsClient() {
           </Table>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 });
 

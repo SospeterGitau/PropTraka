@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { KnowledgeArticle } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -24,7 +23,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-
 interface KnowledgeArticleFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,41 +30,39 @@ interface KnowledgeArticleFormProps {
   article?: KnowledgeArticle | null;
 }
 
-
 const categories = [
-  'Getting Started',
-  'Properties',
-  'Expenses',
-  'Revenue',
-  'Reports',
-  'Settings',
-  'Contractors',
-  'Troubleshooting',
-  'Other',
+  'Getting Started', 'Properties', 'Expenses', 'Revenue',
+  'Reports', 'Settings', 'Contractors', 'Troubleshooting', 'Other',
 ];
 
-
 export function KnowledgeArticleForm({ isOpen, onClose, onSubmit, article }: KnowledgeArticleFormProps) {
-  const [category, setCategory] = useState(article?.category || '');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [category, setCategory] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(article?.title || '');
+      setContent(article?.content || '');
+      setCategory(article?.category || '');
+    }
+  }, [isOpen, article]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
     
-    const data = {
+    const data: Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle = {
       ...(article ? { id: article.id } : {}),
-      title: formData.get('title') as string,
-      content: formData.get('content') as string,
-      category: category,
-    } as unknown as Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle;
+      title,
+      content,
+      category,
+    };
     
     onSubmit(data);
     onClose();
   };
 
-
   if (!isOpen) return null;
-
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -74,12 +70,17 @@ export function KnowledgeArticleForm({ isOpen, onClose, onSubmit, article }: Kno
         <DialogHeader>
           <DialogTitle>{article ? 'Edit' : 'Add'} Knowledge Article</DialogTitle>
           <DialogDescription id="article-description">
-            Create or edit a knowledge base article for your team or tenants.
+            Create or edit a knowledge base article for your AI assistant.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="py-4 space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="title">Title / Keywords / Question *</Label>
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g., How do I add a new property?"/>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Category *</Label>
             <Select value={category} onValueChange={setCategory} required>
               <SelectTrigger id="category">
                 <SelectValue placeholder="Select a category" />
@@ -93,21 +94,12 @@ export function KnowledgeArticleForm({ isOpen, onClose, onSubmit, article }: Kno
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">Title / Keywords / Question</Label>
-            <Input id="title" name="title" defaultValue={article?.title} required placeholder="e.g., How do I add a new property?"/>
+            <Label htmlFor="content">Content / Answer *</Label>
+            <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} required className="min-h-[200px]" placeholder="Provide a detailed step-by-step answer or explanation."/>
           </div>
-
-
-          <div className="space-y-2">
-            <Label htmlFor="content">Content / Answer</Label>
-            <Textarea id="content" name="content" defaultValue={article?.content} required className="min-h-[200px]" placeholder="Provide a detailed step-by-step answer or explanation."/>
-          </div>
-
 
           <DialogFooter className="pt-6">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
-            </DialogClose>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit">Save Article</Button>
           </DialogFooter>
         </form>

@@ -106,18 +106,6 @@ export interface GenerateReminderEmailOutput {
   body: string;
 }
 
-export interface GetChatResponseInput {
-  messages: Array<{ role: string; content: string }>;
-  context?: string;
-}
-
-export interface GetChatResponseOutput {
-  message: {
-    role: string;
-    content: string;
-  };
-}
-
 export interface GetOnboardingPackInput {
   tenantName: string;
   propertyName: string;

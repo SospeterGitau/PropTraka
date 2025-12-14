@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Plus, Search, MoreHorizontal, Edit2, Trash2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
@@ -35,6 +36,7 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const router = useRouter();
 
   const propertyMap = useMemo(() => {
     return new Map(properties.map(p => [p.id, p]));
@@ -98,9 +100,13 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     }
   };
 
+  const handleAddRequest = () => {
+    router.push('/maintenance/add');
+  };
+
   if (loading) {
     return (
-      <>
+      <div className="space-y-6">
         <PageHeader title="Maintenance Requests" />
         <Card>
           <CardHeader>
@@ -110,15 +116,15 @@ const MaintenanceClient = memo(function MaintenanceClient() {
             <Skeleton className="h-48 w-full" />
           </CardContent>
         </Card>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="space-y-6">
       <PageHeader title="Maintenance Requests" />
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-6 md:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
@@ -177,7 +183,7 @@ const MaintenanceClient = memo(function MaintenanceClient() {
               <CardTitle>Maintenance Requests</CardTitle>
               <CardDescription>Manage and track all maintenance work</CardDescription>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={handleAddRequest}>
               <Plus className="mr-2 h-4 w-4" />
               New Request
             </Button>
@@ -196,7 +202,7 @@ const MaintenanceClient = memo(function MaintenanceClient() {
             <select
               value={filterStatus || ''}
               onChange={(e) => setFilterStatus(e.target.value || null)}
-              className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+              className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
@@ -207,7 +213,7 @@ const MaintenanceClient = memo(function MaintenanceClient() {
             <select
               value={filterPriority || ''}
               onChange={(e) => setFilterPriority(e.target.value || null)}
-              className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+              className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="">All Priority</option>
               <option value="low">Low</option>
@@ -294,7 +300,7 @@ const MaintenanceClient = memo(function MaintenanceClient() {
           </Table>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 });
 

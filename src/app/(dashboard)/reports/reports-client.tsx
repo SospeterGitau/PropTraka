@@ -187,7 +187,7 @@ function RevenueAnalysisTab() {
   const isFuture = isAfter(periodStart, new Date());
   const isCurrentPeriod = viewMode === 'month' ? isSameMonth(currentDate, new Date()) : isSameYear(currentDate, new Date());
 
-  const chartHeight = '350px';
+  const chartHeight = 350; // Keep as number for ChartContainer
 
   return (
     <Card>
@@ -235,8 +235,8 @@ function RevenueAnalysisTab() {
             description={`Effective Gross Income collected`}
           />
         </div>
-         <ChartContainer config={{}} style={{ height: chartHeight }} className="w-full">
-          <ResponsiveContainer width="100%" height="100%">
+         <ChartContainer config={{}} className="h-[350px] w-full">
+          <ResponsiveContainer>
             <BarChart
               data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -411,6 +411,8 @@ function PnlStatementTab() {
 
   const isFuture = isAfter(periodStart, new Date());
   const isCurrentPeriod = viewMode === 'month' ? isSameMonth(currentDate, new Date()) : isSameYear(currentDate, new Date());
+
+  const chartHeight = 350; // Keeping this as a fixed number for now, not a string
 
   return (
     <div className="space-y-6">

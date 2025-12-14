@@ -253,10 +253,7 @@ export function PropertyForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="purchasePrice">Purchase Price</Label>
-                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
-                    <input id="purchasePrice" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={purchasePrice} onChange={(e) => setPurchasePrice(Number(e.target.value))} />
-                  </div>
+                  <Input id="purchasePrice" type="number" min="0" prefixText={currencySymbol} value={purchasePrice} onChange={(e) => setPurchasePrice(Number(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="purchaseDate">Purchase Date</Label>
@@ -264,24 +261,15 @@ export function PropertyForm({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="marketValue">Current Market Value</Label>
-                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
-                    <input id="marketValue" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={marketValue} onChange={(e) => setMarketValue(Number(e.target.value))} />
-                  </div>
+                  <Input id="marketValue" type="number" min="0" prefixText={currencySymbol} value={marketValue} onChange={(e) => setMarketValue(Number(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="mortgageBalance">Mortgage Balance</Label>
-                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
-                    <input id="mortgageBalance" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={mortgageBalance} onChange={(e) => setMortgageBalance(Number(e.target.value))} />
-                  </div>
+                  <Input id="mortgageBalance" type="number" min="0" prefixText={currencySymbol} value={mortgageBalance} onChange={(e) => setMortgageBalance(Number(e.target.value))} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="targetRent">Target Monthly Rent</Label>
-                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-background pl-3 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                    <span className="text-muted-foreground whitespace-nowrap">{currencySymbol}</span>
-                    <input id="targetRent" type="number" min="0" className="flex-1 bg-transparent px-3 py-2 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50" value={targetRent} onChange={(e) => setTargetRent(Number(e.target.value))} />
-                  </div>
+                  <Input id="targetRent" type="number" min="0" prefixText={currencySymbol} value={targetRent} onChange={(e) => setTargetRent(Number(e.target.value))} />
                 </div>
               </div>
             </TabsContent>

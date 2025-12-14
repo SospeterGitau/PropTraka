@@ -139,6 +139,13 @@ export interface Contractor {
   email?: string;
   phone?: string;
   notes?: string;
+  businessName?: string;
+  addressLine1?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  taxId?: string;
 }
 
 /**

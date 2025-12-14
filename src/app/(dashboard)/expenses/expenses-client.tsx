@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Plus, Search, MoreHorizontal, Edit2, Trash2, Calendar, Tag } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const ExpensesClient = memo(function ExpensesClient() {
   const { expenses: expensesData, settings, loading } = useDataContext();
@@ -34,6 +35,7 @@ const ExpensesClient = memo(function ExpensesClient() {
   const currency = settings?.currency || 'KES';
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const router = useRouter();
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(expense => {
@@ -63,9 +65,13 @@ const ExpensesClient = memo(function ExpensesClient() {
     }
   };
 
+  const handleAddExpense = () => {
+    router.push('/expenses/add');
+  };
+
   if (loading) {
     return (
-      <>
+      <div className="space-y-6">
         <PageHeader title="Expenses" />
         <Card>
           <CardHeader>
@@ -75,15 +81,15 @@ const ExpensesClient = memo(function ExpensesClient() {
             <Skeleton className="h-48 w-full" />
           </CardContent>
         </Card>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="space-y-6">
       <PageHeader title="Expenses" />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
@@ -128,7 +134,7 @@ const ExpensesClient = memo(function ExpensesClient() {
               <CardTitle>Expense Records</CardTitle>
               <CardDescription>Track and manage all property expenses</CardDescription>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={handleAddExpense}>
               <Plus className="mr-2 h-4 w-4" />
               Add Expense
             </Button>
@@ -148,7 +154,7 @@ const ExpensesClient = memo(function ExpensesClient() {
               <select
                 value={filterCategory || ''}
                 onChange={(e) => setFilterCategory(e.target.value || null)}
-                className="px-3 py-2 rounded-md border border-input bg-background text-sm"
+                className="h-10 px-3 py-2 rounded-md border border-input bg-background text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <option value="">All Categories</option>
                 {categories.map(cat => (
@@ -237,7 +243,7 @@ const ExpensesClient = memo(function ExpensesClient() {
           </Table>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 });
 

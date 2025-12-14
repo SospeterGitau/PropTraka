@@ -9,9 +9,7 @@ import {
   Users,
   Activity,
   Landmark,
-  HelpCircle,
-  Mail,
-  Shield,
+  LifeBuoy, // Changed from HelpCircle to LifeBuoy for Help Center
   Receipt,
 } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -33,9 +31,7 @@ const mainNavItems = [
 
 const secondaryNavItems = [
     { href: '/lease-tools', label: 'Lease Tools', icon: Landmark },
-    { href: '/faq', label: 'FAQ', icon: HelpCircle },
-    { href: '/contact', label: 'Contact Us', icon: Mail },
-    { href: '/privacy', label: 'Privacy Policy', icon: Shield },
+    { href: '/help-center', label: 'Help Center', icon: LifeBuoy }, // New Help Center link
 ];
 
 
