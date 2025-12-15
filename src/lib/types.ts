@@ -94,11 +94,16 @@ export interface CategorizeExpenseOutput {
 
 export interface GenerateReminderEmailInput {
   tenantName: string;
-  dueDate: string;
-  amountDue: number;
-  landlordName: string;
   propertyAddress: string;
-  currency: string;
+  amountOwed: string;
+  daysOverdue: number;
+  companyName: string;
+  arrearsBreakdown: string;
+  // Backwards-compatible optional fields (some callers used these previously)
+  dueDate?: string;
+  amountDue?: number;
+  landlordName?: string;
+  currency?: string;
 }
 
 export interface GenerateReminderEmailOutput {
