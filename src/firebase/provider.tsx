@@ -1,92 +1,38 @@
+
 'use client';
 
-import React, { createContext, useContext, useMemo, useEffect, useState, type ReactNode } from 'react';
-import { onAuthStateChanged, User, Auth } from 'firebase/auth';
-import type { FirebaseApp } from 'firebase/app';
-import type { Firestore } from 'firebase/firestore';
-import type { Functions } from 'firebase/functions';
-import { auth, firestore, functions } from './index';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { useEffect, ReactNode } from 'react';
+import { auth } from '@/firebase';
+import { createSession } from '@/app/actions';
 
-// --- CONTEXT DEFINITIONS ---
+/**
+ * This provider is responsible for keeping the server-side session in sync 
+ * with the client-side Firebase auth state. When a user signs in, signs out,
+ * or their token is refreshed, it notifies the server to update the session cookie.
+ */
+export function FirebaseProvider({
+    children,
+}: {
+    children: ReactNode;
+}) {
+    useEffect(() => {
+        // onIdTokenChanged is the recommended listener for session management.
+        // It triggers on sign-in, sign-out, and token refresh.
+        const unsubscribe = auth.onIdTokenChanged(async (user) => {
+            if (user) {
+                // If a user is signed in (or their token has been refreshed),
+                // call the server action to create or update the session cookie.
+                await createSession();
+            } 
+            // Note: We don't need an 'else' block to handle sign-out.
+            // The /actions.ts file, which handles the session, will clear the cookie
+            // when it can no longer verify the user's token.
+        });
 
-interface FirebaseServicesContextValue {
-  firebaseApp: FirebaseApp | null;
-  auth: Auth;
-  firestore: Firestore;
-  functions: Functions | null;
+        // Cleanup the subscription when the component unmounts.
+        return () => unsubscribe();
+    }, []);
+
+    // The provider simply renders its children. Its work is done in the useEffect hook.
+    return <>{children}</>;
 }
-
-const FirebaseServicesContext = createContext<FirebaseServicesContextValue | undefined>(undefined);
-
-const AuthContext = createContext<{ user: User | null; isAuthLoading: boolean; } | undefined>(undefined);
-
-
-// --- PROVIDER COMPONENT ---
-
-export function FirebaseProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-
-  const firebaseServices = useMemo(() => ({
-      firebaseApp: auth.app,
-      auth,
-      firestore,
-      functions
-  }), []);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(firebaseServices.auth, (user) => {
-      setUser(user);
-      setIsAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const authValue = { user, isAuthLoading };
-  
-  return (
-    <FirebaseServicesContext.Provider value={firebaseServices}>
-      <AuthContext.Provider value={authValue}>
-          {isAuthLoading ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100vh',
-              width: '100vw',
-            }}>
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-          ) : (
-            <>
-              {children}
-              <FirebaseErrorListener />
-            </>
-          )}
-      </AuthContext.Provider>
-    </FirebaseServicesContext.Provider>
-  );
-}
-
-
-// --- HOOKS ---
-
-export const useFirebase = (): FirebaseServicesContextValue => {
-  const context = useContext(FirebaseServicesContext);
-  if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider');
-  }
-  return context;
-};
-
-export const useUser = (): { user: User | null, isAuthLoading: boolean } => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useUser must be used within a FirebaseProvider');
-    }
-    return context;
-}
-
-export const useAuth = (): Auth => useFirebase().auth;
-export const useFirestore = (): Firestore => useFirebase().firestore;

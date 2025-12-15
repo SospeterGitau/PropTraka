@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { firestore } from '@/firebase';
-import { collection, onSnapshot, doc, query, where } from 'firebase/firestore'; // Added query and where
+import { collection, onSnapshot, doc, query, where } from 'firebase/firestore';
 import { useUser } from '@/firebase/auth';
 import type {
   Property,
@@ -14,20 +14,18 @@ import type {
   Tenant,
   Tenancy,
   AppDocument,
-  AppUser,
   UserSettings,
-} from '@/lib/db-types'; // Updated import path and types
+} from '@/lib/db-types';
 
 interface DataContextType {
   properties: Property[];
-  revenue: RevenueTransaction[]; // Updated type
+  revenue: RevenueTransaction[];
   expenses: Expense[];
   maintenanceRequests: MaintenanceRequest[];
   contractors: Contractor[];
-  tenants: Tenant[]; // New collection
-  tenancies: Tenancy[]; // New collection
-  appDocuments: AppDocument[]; // New collection
-  // appUsers: AppUser[]; // AppUser data can be derived from auth or fetched separately if needed
+  tenants: Tenant[];
+  tenancies: Tenancy[];
+  appDocuments: AppDocument[];
   settings: UserSettings | null;
   loading: boolean;
   error: string | null;
@@ -39,23 +37,24 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useUser();
   
   const [properties, setProperties] = useState<Property[]>([]);
-  const [revenue, setRevenue] = useState<RevenueTransaction[]>([]); // Updated type
+  const [revenue, setRevenue] = useState<RevenueTransaction[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]); // New state
-  const [tenancies, setTenancies] = useState<Tenancy[]>([]); // New state
-  const [appDocuments, setAppDocuments] = useState<AppDocument[]>([]); // New state
-  // const [appUsers, setAppUsers] = useState<AppUser[]>([]); // New state for app-specific users
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenancies, setTenancies] = useState<Tenancy[]>([]);
+  const [appDocuments, setAppDocuments] = useState<AppDocument[]>([]);
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('[DataContext] Auth loading state:', authLoading);
     if (authLoading) return;
+
     if (!user) {
+      console.log('[DataContext] No user found. Clearing data and stopping listeners.');
       setLoading(false);
-      // Clear all data when user logs out
       setProperties([]);
       setRevenue([]);
       setExpenses([]);
@@ -68,165 +67,73 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    console.log(`[DataContext] User authenticated with UID: ${user.uid}. Setting up Firestore listeners.`);
     setLoading(true);
     const unsubscribers: (() => void)[] = [];
 
+    const collectionsToSubscribe: { name: string; setter: (data: any) => void; type: any }[] = [
+        { name: 'properties', setter: setProperties, type: {} as Property },
+        { name: 'revenue', setter: setRevenue, type: {} as RevenueTransaction },
+        { name: 'expenses', setter: setExpenses, type: {} as Expense },
+        { name: 'maintenanceRequests', setter: setMaintenanceRequests, type: {} as MaintenanceRequest },
+        { name: 'contractors', setter: setContractors, type: {} as Contractor },
+        { name: 'tenants', setter: setTenants, type: {} as Tenant },
+        { name: 'tenancies', setter: setTenancies, type: {} as Tenancy },
+        { name: 'appDocuments', setter: setAppDocuments, type: {} as AppDocument },
+    ];
+
     try {
-      // Properties
-      const qProperties = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
-      const unsubProperties = onSnapshot(
-        qProperties,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
-            setProperties(data);
-          } catch (err) {
-            console.error('Error processing properties:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubProperties);
+        collectionsToSubscribe.forEach(({ name, setter }) => {
+            const q = query(collection(firestore, name), where('ownerId', '==', user.uid));
+            const unsubscribe = onSnapshot(
+              q,
+              (snapshot) => {
+                try {
+                  const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                  console.log(`[DataContext] Fetched ${snapshot.size} documents from '${name}'.`);
+                  setter(data);
+                } catch (err) {
+                  console.error(`[DataContext] Error processing snapshot for '${name}':`, err);
+                }
+              },
+              (err) => {
+                console.error(`[DataContext] Firestore snapshot error for '${name}':`, err);
+                setError(err.message);
+              }
+            );
+            unsubscribers.push(unsubscribe);
+        });
 
-      // Revenue
-      const qRevenue = query(collection(firestore, 'revenue'), where('ownerId', '==', user.uid));
-      const unsubRevenue = onSnapshot(
-        qRevenue,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RevenueTransaction[]; // Updated type
-            setRevenue(data);
-          } catch (err) {
-            console.error('Error processing revenue:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubRevenue);
-
-      // Expenses
-      const qExpenses = query(collection(firestore, 'expenses'), where('ownerId', '==', user.uid));
-      const unsubExpenses = onSnapshot(
-        qExpenses,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Expense[];
-            setExpenses(data);
-          } catch (err) {
-            console.error('Error processing expenses:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubExpenses);
-
-      // Maintenance Requests
-      const qMaintenance = query(collection(firestore, 'maintenanceRequests'), where('ownerId', '==', user.uid));
-      const unsubMaintenance = onSnapshot(
-        qMaintenance,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MaintenanceRequest[];
-            setMaintenanceRequests(data);
-          } catch (err) {
-            console.error('Error processing maintenance:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubMaintenance);
-
-      // Contractors
-      const qContractors = query(collection(firestore, 'contractors'), where('ownerId', '==', user.uid));
-      const unsubContractors = onSnapshot(
-        qContractors,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Contractor[];
-            setContractors(data);
-          } catch (err) {
-            console.error('Error processing contractors:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubContractors);
-
-      // Tenants (NEW)
-      const qTenants = query(collection(firestore, 'tenants'), where('ownerId', '==', user.uid));
-      const unsubTenants = onSnapshot(
-        qTenants,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tenant[];
-            setTenants(data);
-          } catch (err) {
-            console.error('Error processing tenants:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubTenants);
-
-      // Tenancies (NEW)
-      const qTenancies = query(collection(firestore, 'tenancies'), where('ownerId', '==', user.uid));
-      const unsubTenancies = onSnapshot(
-        qTenancies,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Tenancy[];
-            setTenancies(data);
-          } catch (err) {
-            console.error('Error processing tenancies:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubTenancies);
-
-      // AppDocuments (NEW)
-      const qAppDocuments = query(collection(firestore, 'appDocuments'), where('ownerId', '==', user.uid));
-      const unsubAppDocuments = onSnapshot(
-        qAppDocuments,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as AppDocument[];
-            setAppDocuments(data);
-          } catch (err) {
-            console.error('Error processing appDocuments:', err);
-          }
-        },
-        (err) => setError(err.message)
-      );
-      unsubscribers.push(unsubAppDocuments);
-
-      // UserSettings (collection name changed to 'userSettings')
+      // UserSettings
       const unsubSettings = onSnapshot(
         doc(firestore, 'userSettings', user.uid),
         (snapshot) => {
           if (snapshot.exists()) {
+            console.log('[DataContext] Fetched user settings.');
             setSettings(snapshot.data() as UserSettings);
           } else {
-            // Handle case where settings document might not exist yet
+            console.log('[DataContext] User settings document does not exist.');
             setSettings(null);
           }
         },
-        (err) => setError(err.message)
+        (err) => {
+            console.error(`[DataContext] Firestore snapshot error for 'userSettings':`, err);
+            setError(err.message);
+        }
       );
       unsubscribers.push(unsubSettings);
 
-      // AppUser - We can get basic AppUser data from Firebase Auth 'user' object directly,
-      // or fetch additional custom claims/profile data from an 'appUsers' collection if needed.
-      // For now, we'll rely on the existing 'user' object from useUser() for basic user info.
-
-      setLoading(false); // Set loading to false after all initial subscriptions are set up
+      console.log('[DataContext] All listeners attached.');
+      setLoading(false);
 
     } catch (err: any) {
+      console.error('[DataContext] Error setting up listeners:', err);
       setError(err.message);
       setLoading(false);
     }
 
     return () => {
+      console.log('[DataContext] Cleaning up listeners.');
       unsubscribers.forEach(unsub => unsub());
     };
   }, [authLoading, user]);

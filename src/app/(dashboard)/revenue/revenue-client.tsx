@@ -30,7 +30,8 @@ import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialo
 import { cn, formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase/auth'; // Corrected import path for useUser
+import { firestore } from '@/firebase'; // Import firestore directly
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, doc, serverTimestamp, writeBatch, getDocs, query, where, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
@@ -40,13 +41,14 @@ import { createUserQuery } from '@/firebase/firestore/query-builder';
 
 const RevenueClient = memo(function RevenueClient() {
   const { user } = useUser();
-  const firestore = useFirestore();
+  // No longer calling useFirestore(), firestore is imported directly
   const { settings } = useDataContext();
   const currency = settings?.currency || 'KES';
   const locale = settings?.locale || 'en-KE';
 
 
   // Data Fetching
+  // Use the imported `firestore` object directly
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery);
   const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
@@ -79,7 +81,7 @@ const RevenueClient = memo(function RevenueClient() {
         });
         
         const unpaidTransactions = sortedTransactions.filter(tx => {
-          const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
+          const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => scSum + sc.amount, 0);
           const due = (tx.rent ?? 0) + totalServiceCharges + (tx.deposit ?? 0);
           const paid = tx.amountPaid ?? 0;
           return paid < due;

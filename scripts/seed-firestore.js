@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
 
 const db = admin.initializeApp({
-  projectId: 'studio-6577669797-1b758',
+  projectId: 'studio-4661291525-66fea',
 }).firestore();
 
 const TEST_UID = 'test-user-001';

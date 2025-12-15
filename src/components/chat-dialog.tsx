@@ -1,243 +1,186 @@
 
 'use client';
 
-
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
-import { useUser, useFirestore, errorEmitter } from '@/firebase';
-import { FirestorePermissionError } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import type { KnowledgeArticle } from '@/lib/types';
-import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
+import { useUser } from '@/firebase/auth'; // CORRECTED IMPORT PATH for useUser
+import { firestore, errorEmitter } from '@/firebase'; // firestore and errorEmitter are still from @/firebase
+import { FirestorePermissionError } from '@/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { getChatResponse } from '@/lib/actions';
-import placeholderFaq from '@/lib/placeholder-faq.json';
+import { getChatResponse } from '@/ai/flows/get-chat-response-flow';
 
+interface ChatMessage {
+    id: string;
+    text: string;
+    sender: 'user' | 'bot';
+    timestamp: Timestamp;
+}
 
-// Local type definitions
-type ChatMessage = {
-  id: string;
-  role: 'user' | 'model';
-  content: string;
-  ownerId: string;
-  timestamp?: Timestamp;
-};
+export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+    const { user } = useUser();
+    const [newMessage, setNewMessage] = useState('');
+    const [isThinking, setIsThinking] = useState(false);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-type SecurityRuleContext = {
-  path: string;
-  operation: 'delete' | 'get' | 'list' | 'create' | 'update' | 'write';
-  requestResourceData: unknown;
-};
+    const messagesQuery = useMemo(() => {
+        if (!user) return null;
+        return query(
+            collection(firestore, 'chatMessages'),
+            orderBy('timestamp', 'asc'),
+            limit(100)
+        );
+    }, [user]);
 
+    const [messagesSnapshot, loading, error] = useCollection(messagesQuery);
 
-// Simple Markdown to HTML renderer
-const MarkdownRenderer = ({ content }: { content: string }) => {
-    const html = content
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline">$1</a>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br />');
-      
-    return <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: html }} />;
-};
+    const messages: ChatMessage[] = useMemo(() => {
+        if (!messagesSnapshot) return [];
+        return messagesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as ChatMessage[];
+    }, [messagesSnapshot]);
 
-
-
-export function ChatDialog({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const [input, setInput] = useState('');
-  const [isPending, setIsPending] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-
-  const messagesQuery = useMemo(() => 
-    user?.uid ? createUserQuery(firestore, 'chatMessages', user.uid) : null
-  , [firestore, user?.uid]);
-  
-  const knowledgeBaseQuery = useMemo(() =>
-    user?.uid ? createUserQuery(firestore, 'knowledgeBase', user.uid) : null
-  , [firestore, user?.uid]);
-
-
-  const [messagesSnapshot, isLoading] = useCollection(messagesQuery);
-  const [knowledgeBaseSnapshot, isKbLoading] = useCollection(knowledgeBaseQuery);
-
-
-  const knowledgeBase = useMemo(() => 
-    knowledgeBaseSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as KnowledgeArticle)) || []
-  , [knowledgeBaseSnapshot]);
-
-
-  const messages = useMemo(() => 
-    messagesSnapshot?.docs.map(doc => ({...doc.data(), id: doc.id } as ChatMessage))
-    .sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0)) || []
-  , [messagesSnapshot]);
-
-
-  useEffect(() => {
-    // Scroll to the bottom when new messages are added
-    if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-        if (viewport) {
-            viewport.scrollTop = viewport.scrollHeight;
+    useEffect(() => {
+        if (error) {
+            console.error("Chat Error:", error);
+            if (error.code === 'permission-denied') {
+                errorEmitter.emit(new FirestorePermissionError(
+                    "You don't have permission to access chat messages.",
+                    "Missing 'read' permission on 'chatMessages' collection."
+                ));
+            }
         }
-    }
-  }, [messages, isOpen]);
-  
-  useEffect(() => {
-    if (!isOpen) {
-        setInput('');
-    }
-  }, [isOpen]);
-  
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !user || !firestore) return;
+    }, [error]);
+
+    useEffect(() => {
+        if (scrollAreaRef.current) {
+            scrollAreaRef.current.scrollTo({
+                top: scrollAreaRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }, [messages]);
 
 
-    const userMessage: Omit<ChatMessage, 'id' | 'timestamp'> = {
-      role: 'user',
-      content: input,
-      ownerId: user.uid,
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !user) return;
+
+        const userMessage = newMessage;
+        setNewMessage('');
+        setIsThinking(true);
+
+        try {
+            await addDoc(collection(firestore, 'chatMessages'), {
+                text: userMessage,
+                sender: 'user',
+                timestamp: serverTimestamp(),
+                ownerId: user.uid,
+            });
+
+            const botResponseText = await getChatResponse(userMessage);
+
+            await addDoc(collection(firestore, 'chatMessages'), {
+                text: botResponseText,
+                sender: 'bot',
+                timestamp: serverTimestamp(),
+                ownerId: user.uid,
+            });
+        } catch (err) {
+            console.error("Failed to send message:", err);
+        } finally {
+            setIsThinking(false);
+        }
     };
-    
-    setInput('');
-    setIsPending(true);
 
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl h-[70vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        AI Assistant
+                    </DialogTitle>
+                    <DialogDescription>
+                        Ask me anything about your property portfolio, market trends, or maintenance queries.
+                    </DialogDescription>
+                </DialogHeader>
 
-    const messagesCollectionRef = collection(firestore, 'chatMessages');
-    const messageWithTimestamp = { ...userMessage, timestamp: serverTimestamp() };
-
-
-    try {
-        await addDoc(messagesCollectionRef, messageWithTimestamp)
-        .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-              path: messagesCollectionRef.path,
-              operation: 'create',
-              requestResourceData: messageWithTimestamp,
-            } satisfies SecurityRuleContext);
-            
-            errorEmitter.emit('permission-error', permissionError);
-        });
-        
-        const kbToUse = (knowledgeBase && knowledgeBase.length > 0) ? knowledgeBase : placeholderFaq;
-        const response = await getChatResponse({
-            question: input,
-            knowledgeBase: JSON.stringify(kbToUse),
-        });
-        
-        await addDoc(collection(firestore, 'chatMessages'), { 
-            ownerId: user.uid, 
-            role: 'model', 
-            content: response.answer, 
-            timestamp: serverTimestamp() 
-        });
-
-
-    } catch (serverError) {
-        const permissionError = new FirestorePermissionError({
-          path: messagesCollectionRef.path,
-          operation: 'create',
-          requestResourceData: messageWithTimestamp,
-        } satisfies SecurityRuleContext);
-        
-        errorEmitter.emit('permission-error', permissionError);
-    } finally {
-        setIsPending(false);
-    }
-  };
-
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[70vh] max-h-[700px]" aria-describedby="chat-description">
-        <DialogHeader className="p-4 border-b">
-          <DialogTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            AI Assistant
-          </DialogTitle>
-          <DialogDescription id="chat-description" className="sr-only">
-            Chat with your AI assistant to manage properties and get help.
-          </DialogDescription>
-        </DialogHeader>
-
-
-        <ScrollArea className="flex-1" ref={scrollAreaRef}>
-            <div className="p-4 space-y-6">
-                {isLoading ? (
+                <ScrollArea className="flex-grow pr-4" ref={scrollAreaRef}>
                     <div className="space-y-4">
-                        <Skeleton className="h-16 w-3/4" />
-                        <Skeleton className="h-16 w-3/4 ml-auto" />
-                    </div>
-                ) : messages.length > 0 ? (
-                    messages.map((message) => (
-                         <div key={message.id} className={cn("flex items-end gap-2", message.role === 'user' ? 'justify-end' : 'justify-start')}>
-                            {message.role === 'model' && (
-                                <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="bg-primary text-primary-foreground"><Bot size={20} /></AvatarFallback>
-                                </Avatar>
-                            )}
-                            <div className={cn("p-3 rounded-lg max-w-[80%]", message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                                <MarkdownRenderer content={message.content} />
+                        {loading && <div className="text-center p-4">Loading messages...</div>}
+                        {messages.map((msg) => (
+                            <div
+                                key={msg.id}
+                                className={cn(
+                                    'flex items-start gap-3',
+                                    msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                                )}
+                            >
+                                {msg.sender === 'bot' && (
+                                    <div className="bg-primary/10 p-2 rounded-full">
+                                        <Bot className="w-6 h-6 text-primary" />
+                                    </div>
+                                )}
+                                <div
+                                    className={cn(
+                                        'p-3 rounded-lg max-w-[80%]',
+                                        msg.sender === 'user'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-muted'
+                                    )}
+                                >
+                                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                                </div>
+                                {msg.sender === 'user' && (
+                                    <div className="bg-muted p-2 rounded-full">
+                                        <User className="w-6 h-6" />
+                                    </div>
+                                )}
                             </div>
-                             {message.role === 'user' && (
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={user?.photoURL || undefined} />
-                                    <AvatarFallback><User size={20} /></AvatarFallback>
-                                </Avatar>
-                            )}
-                        </div>
-                    ))
-                ) : (
-                     <div className="text-center text-muted-foreground py-8 px-4">
-                        <Sparkles className="mx-auto h-10 w-10 mb-4" />
-                        <h3 className="font-semibold">Welcome to your AI Assistant!</h3>
-                        <p className="text-sm">Ask me anything about managing your properties, and I'll do my best to help.</p>
+                        ))}
+                        {isThinking && (
+                            <div className="flex items-start gap-3 justify-start">
+                                 <div className="bg-primary/10 p-2 rounded-full">
+                                    <Bot className="w-6 h-6 text-primary" />
+                                </div>
+                                <div className="p-3 rounded-lg bg-muted flex items-center gap-2">
+                                     <Loader2 className="w-4 h-4 animate-spin" />
+                                     <span className="text-sm text-muted-foreground">Thinking...</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-                 {isPending && (
-                    <div className="flex items-end gap-2 justify-start">
-                         <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-primary text-primary-foreground"><Bot size={20} /></AvatarFallback>
-                        </Avatar>
-                        <div className="p-3 rounded-lg bg-muted">
-                           <Loader2 className="h-5 w-5 animate-spin"/>
-                        </div>
-                    </div>
-                 )}
-            </div>
-        </ScrollArea>
-        <DialogFooter className="p-4 border-t">
-            <form onSubmit={handleSendMessage} className="w-full flex items-center gap-2">
-                <Input 
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask a question..."
-                    className="flex-1"
-                    disabled={isPending}
-                />
-                <Button type="submit" size="icon" disabled={!input.trim() || isPending}>
-                    <Send className="h-4 w-4"/>
-                    <span className="sr-only">Send</span>
-                </Button>
-            </form>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+                </ScrollArea>
+
+                <DialogFooter>
+                    <form onSubmit={handleSendMessage} className="flex items-center w-full gap-2">
+                        <Input
+                            placeholder="Type your message..."
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            disabled={isThinking}
+                        />
+                        <Button type="submit" disabled={!newMessage.trim() || isThinking}>
+                            {isThinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </Button>
+                    </form>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 }

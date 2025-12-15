@@ -14,7 +14,7 @@ const serviceAccount = require('../serviceAccountKey.json'); // This path assume
 
 // --- CONFIGURATION ---
 const FIREBASE_PROJECT_ID = 'studio-4661291525-66fea'; // CORRECTED: Reverted to the project ID from your service account key
-const OWNER_UID = 'Pr92v8LZJlf7WOHvmQbpZDQZDZ43'; // Use a consistent UID for all seeded data
+const OWNER_UID = '5kalINQOGmY5KvabpGfTD2Kxfu03'; // Use a consistent UID for all seeded data
 
 // Initialize Firebase Admin
 if (!admin.apps.length) {

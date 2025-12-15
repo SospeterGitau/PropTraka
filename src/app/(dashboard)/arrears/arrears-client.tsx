@@ -1,321 +1,284 @@
 
 'use client';
 
-import type { ArrearEntryCalculated, Transaction, GenerateReminderEmailInput } from '@/lib/types';
-import { useState, useEffect, memo, useMemo, useTransition } from 'react';
-import Link from 'next/link';
-import { format, startOfToday, isBefore, differenceInCalendarDays } from 'date-fns';
-import { PageHeader } from '@/components/page-header';
-import { Button } from '@/components/ui/button';
+import { useMemo, useState, useEffect } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { getLocale } from '@/lib/locales';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PaymentRequestDialog } from '@/components/payment-request-dialog';
-import { CreditCard, Mail } from 'lucide-react';
+import { PlusCircle, Loader2, BarChart, FileText } from 'lucide-react';
+import { useUser } from '@/firebase/auth'; // Corrected import
+import { firestore } from '@/firebase'; // Corrected import
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { useUser, useFirestore } from '@/firebase';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
-import type { Query } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
-import { formatCurrency } from '@/lib/utils';
-import { ReminderEmailDialog } from '@/components/reminder-email-dialog';
-import { generateReminderEmail } from '@/lib/actions';
+import { formatCurrency, cn } from '@/lib/utils';
+import type { RevenueTransaction, Tenancy, Property, Tenant } from '@/lib/db-types';
+import { startOfToday, isBefore, format } from 'date-fns';
+import { ArrearsSummary } from '@/components/dashboard/arrears-summary';
+import { GenerateReportDialog } from '@/components/generate-report-dialog';
 
+interface ArrearDetail {
+  tenancyId: string;
+  tenantName: string;
+  propertyName: string;
+  amountOwed: number;
+  lastPaymentDate: Date | null;
+  dueDate: Date;
+  daysOverdue: number;
+}
 
-
-const ArrearsClient = memo(function ArrearsClient() {
+export function ArrearsClient() {
   const { user } = useUser();
-  const firestore = useFirestore();
-  const { settings } = useDataContext();
-  const currency = settings?.currency || 'KES';
-  const locale = settings?.locale || 'en-KE';
-  const companyName = settings?.companyName || '';
-  const [isReminderGenerating, startReminderTransition] = useTransition();
-
-
-  const revenueQuery = useMemo(() => 
-    user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null
-  , [firestore, user?.uid]);
+  const { revenue, tenancies, properties, tenants, loading: dataContextLoading, error: dataContextError } = useDataContext();
   
-  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery as Query<Transaction> | null);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [reportData, setReportData] = useState<{ title: string; content: string } | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [arrearToDelete, setArrearToDelete] = useState<ArrearDetail | null>(null);
 
+  const isLoading = dataContextLoading;
+  const error = dataContextError;
 
-  const arrears = useMemo(() => {
-    if (!revenue) return [];
-    
-    const today = startOfToday();
-  
-    const tenancies = Object.values(
-      revenue.reduce((acc, tx) => {
-        if (!tx.tenancyId) return acc;
-        if (!acc[tx.tenancyId]) {
-          acc[tx.tenancyId] = {
-            ...tx,
-            transactions: [],
-          };
-        }
-        acc[tx.tenancyId].transactions.push(tx);
-        return acc;
-      }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
-    );
-  
-    const calculatedArrears = tenancies
-      .map(tenancy => {
-        
-        const dueTransactions = tenancy.transactions
-          .filter(tx => tx.date && !isBefore(today, new Date(tx.date)))
-          .sort((a, b) => new Date(a.date || new Date()).getTime() - new Date(b.date || new Date()).getTime());
+  const tenantMap = useMemo(() => {
+    return new Map(tenants.map(t => [t.id, t]));
+  }, [tenants]);
 
+  const propertyMap = useMemo(() => {
+    return new Map(properties.map(p => [p.id, p]));
+  }, [properties]);
 
-        const totalDueToDate = dueTransactions.reduce((sum, tx) => {
-          const serviceChargesTotal = (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0);
-          return sum + (tx.rent || 0) + serviceChargesTotal + (tx.deposit || 0);
-        }, 0);
-        
-        const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid || 0), 0);
-        const amountOwed = totalDueToDate - totalPaid;
-  
-        if (amountOwed <= 0) return null;
-  
-        const firstUnpaidTx = tenancy.transactions
-          .sort((a, b) => new Date(a.date || new Date()).getTime() - new Date(b.date || new Date()).getTime())
-          .find(tx => {
-            const txDue = (tx.rent || 0) + (tx.serviceCharges || []).reduce((scSum, sc) => scSum + sc.amount, 0) + (tx.deposit || 0);
-            return (tx.amountPaid || 0) < txDue && tx.date && isBefore(new Date(tx.date), today);
+  const arrearsDetails = useMemo(() => {
+    if (!user || isLoading) return [];
+
+    const allArrears: ArrearDetail[] = [];
+
+    tenancies.forEach(tenancy => {
+      const relatedRevenue = revenue.filter(tx => tx.tenancyId === tenancy.id && tx.status === 'Overdue');
+      
+      if (relatedRevenue.length > 0) {
+        const amountOwed = relatedRevenue.reduce((sum, tx) => sum + tx.amount, 0);
+        const latestOverdueTx = relatedRevenue.sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime())[0];
+        const dueDate = latestOverdueTx ? latestOverdueTx.date.toDate() : new Date();
+        const daysOverdue = latestOverdueTx ? Math.floor((startOfToday().getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+        const tenant = tenantMap.get(tenancy.tenantId);
+        const property = propertyMap.get(tenancy.propertyId);
+
+        if (tenant && property) {
+          allArrears.push({
+            tenancyId: tenancy.id!,
+            tenantName: `${tenant.firstName} ${tenant.lastName}`,
+            propertyName: property.name,
+            amountOwed,
+            lastPaymentDate: null, // This would require looking up 'Paid' transactions, more complex.
+            dueDate,
+            daysOverdue: Math.max(0, daysOverdue),
           });
-          
-        const dueDate = firstUnpaidTx && firstUnpaidTx.date ? new Date(firstUnpaidTx.date) : tenancy.transactions[0]?.date ? new Date(tenancy.transactions[0].date) : new Date();
-        const daysOverdue = differenceInCalendarDays(today, dueDate);
-  
-        // Detailed breakdown with periods
-        let breakdown = '';
-        let paidTracker = totalPaid;
-
-
-        for (const tx of dueTransactions) {
-          const periodDue = (tx.rent || 0) + (tx.serviceCharges || []).reduce((sc, charge) => sc + charge.amount, 0) + (tx.deposit || 0);
-          const paidForPeriod = Math.min(paidTracker, periodDue);
-          const balanceForPeriod = periodDue - paidForPeriod;
-          paidTracker -= paidForPeriod;
-
-
-          if (balanceForPeriod > 0.01) { // Use a small epsilon for float comparison
-            breakdown += `\nFor the period of ${tx.date ? format(new Date(tx.date), 'MMMM yyyy') : 'Unknown'}:\n`;
-            
-            const rentDue = tx.rent || 0;
-            const paidTowardsRent = Math.min(paidTracker, rentDue);
-            const rentOwed = rentDue - paidTowardsRent;
-            if (rentOwed > 0) breakdown += `- Rent: ${formatCurrency(rentOwed, locale, currency)}\n`;
-            
-            (tx.serviceCharges || []).forEach(sc => {
-              const paidTowardsSc = Math.min(paidTracker, sc.amount);
-              const scOwed = sc.amount - paidTowardsSc;
-              if (scOwed > 0) breakdown += `- ${sc.name}: ${formatCurrency(scOwed, locale, currency)}\n`;
-            });
-          }
-        }
-        breakdown = breakdown.trim();
-
-
-
-        return {
-          tenant: tenancy.tenant!,
-          tenantEmail: tenancy.tenantEmail!,
-          tenantPhone: tenancy.tenantPhone || 'N/A',
-          propertyAddress: tenancy.propertyName,
-          amountOwed,
-          dueDate: format(dueDate, 'yyyy-MM-dd'),
-          daysOverdue,
-          breakdown,
-        };
-      })
-      .filter((a): a is ArrearEntryCalculated => a !== null && a.amountOwed > 0.01);
-    
-    return calculatedArrears.sort((a, b) => b.daysOverdue - a.daysOverdue);
-  }, [revenue, currency, locale]);
-  
-  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
-  const [isPaymentRequestOpen, setIsPaymentRequestOpen] = useState(false);
-  const [isReminderDialogOpen, setIsReminderDialogOpen] = useState(false);
-  const [selectedArrear, setSelectedArrear] = useState<ArrearEntryCalculated | null>(null);
-  const [generatedReminder, setGeneratedReminder] = useState<{ subject: string, body: string} | null>(null);
-
-
-  useEffect(() => {
-    const formatAllDates = async () => {
-      const localeData = await getLocale(locale);
-      const newFormattedDates: {[key: string]: string} = {};
-      for (const arrear of arrears) {
-        if (arrear.dueDate && !newFormattedDates[arrear.dueDate]) {
-          newFormattedDates[arrear.dueDate] = format(new Date(arrear.dueDate), 'PP', { locale: localeData });
         }
       }
-      setFormattedDates(newFormattedDates);
-    };
-    
-    if (arrears.length > 0) {
-      formatAllDates();
+    });
+
+    return allArrears.sort((a, b) => b.daysOverdue - a.daysOverdue);
+  }, [user, revenue, tenancies, properties, tenants, isLoading, tenantMap, propertyMap]);
+
+  const totalPortfolioArrears = useMemo(() => {
+    return arrearsDetails.reduce((sum, arrear) => sum + arrear.amountOwed, 0);
+  }, [arrearsDetails]);
+
+  const handleGenerateReport = async () => {
+    if (!user) return;
+    setIsGeneratingReport(true);
+    try {
+        const reportSummary = arrearsDetails.map(a => 
+            `- Tenancy ID: ${a.tenancyId}, Tenant: ${a.tenantName}, Property: ${a.propertyName}, Amount Owed: ${formatCurrency(a.amountOwed, 'en-KE', 'KES')}, Due Date: ${format(a.dueDate, 'P')}, Days Overdue: ${a.daysOverdue}`
+        ).join('\n');
+
+        const prompt = `Generate a detailed arrears report based on the following overdue tenancies:\n${reportSummary}\n\nHighlight key figures, oldest overdue accounts, and suggest actions.`;
+        
+        const response = await fetch('/api/generate-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt, reportType: 'Arrears' }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to generate report');
+        }
+
+        const data = await response.json();
+        setReportData({ title: "Arrears Report", content: data.report });
+        setIsReportDialogOpen(true);
+
+    } catch (err) {
+        console.error("Error generating report:", err);
+        // Display error to user
+    } finally {
+        setIsGeneratingReport(false);
     }
-  }, [arrears, locale]);
-  
-  const handleRequestPayment = (arrear: ArrearEntryCalculated) => {
-    setSelectedArrear(arrear);
-    setIsPaymentRequestOpen(true);
   };
-  
-  const handleSendReminder = (arrear: ArrearEntryCalculated) => {
-    setSelectedArrear(arrear);
-    setGeneratedReminder(null);
-    setIsReminderDialogOpen(true);
 
+  const handleDismissArrear = (arrear: ArrearDetail) => {
+    setArrearToDelete(arrear);
+    setDeleteConfirmationOpen(true);
+  };
 
-    startReminderTransition(async () => {
-      const input: GenerateReminderEmailInput = {
-        tenantName: arrear.tenant,
-        propertyAddress: arrear.propertyAddress || 'Unknown Property',
-        amountOwed: formatCurrency(arrear.amountOwed, locale, currency),
-        daysOverdue: arrear.daysOverdue,
-        companyName: companyName || "The Landlord",
-        arrearsBreakdown: arrear.breakdown,
+  const confirmDismiss = async () => {
+    if (!arrearToDelete || !user) return;
+    setIsSubmitting(true);
+    try {
+      const batch = writeBatch(firestore);
+
+      // Find all overdue revenue transactions for this tenancy and mark them as waived or update their status
+      const overdueTransactions = revenue.filter(
+        (tx) => tx.tenancyId === arrearToDelete.tenancyId && tx.status === 'Overdue'
+      );
+
+      for (const tx of overdueTransactions) {
+        const txRef = doc(firestore, 'revenue', tx.id!);
+        batch.update(txRef, { status: 'Waived', updatedAt: new Date() }); // Or 'Paid' if being settled externally
       }
-      const result = await generateReminderEmail(input);
-      setGeneratedReminder(result);
-    });
+
+      await batch.commit();
+      setArrearToDelete(null);
+      setDeleteConfirmationOpen(false);
+    } catch (e) {
+      console.error("Error dismissing arrear: ", e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
 
-  const handlePaymentRequestSubmit = (details: { amount: number, method: string }) => {
-    console.log("Requesting payment:", {
-        ...details,
-        tenant: selectedArrear?.tenant,
-    });
-    // Here you would later integrate with Pesapal/InstaSend API
-    setIsPaymentRequestOpen(false);
-  };
-
-
-
-  if (isDataLoading) {
+  if (isLoading) {
     return (
-      <>
-        <PageHeader title="Arrears" />
-        <Card>
-          <CardHeader>
-            <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
-      </>
-    )
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+            <CardContent><Skeleton className="h-10 w-1/2" /></CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
-
+  if (error) {
+    return <div className="text-destructive">Error loading arrears: {error.message}</div>;
+  }
 
   return (
-    <>
-      <PageHeader title="Arrears" />
-      <Card>
-        <CardHeader>
-          <CardTitle>Outstanding Payments</CardTitle>
-          <CardDescription>A list of all tenants with overdue payments.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">Tenant</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead className="hidden sm:table-cell">First Due Date</TableHead>
-                <TableHead className="hidden sm:table-cell">Days Overdue</TableHead>
-                <TableHead className="text-right">Amount Owed</TableHead>
-                <TableHead className="text-center w-[180px]">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {arrears.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    No tenants are currently in arrears.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                arrears.map((arrear, index) => {
-                  return (
-                    <TableRow key={index} className="[&>td]:last-child:text-center">
-                      <TableCell>
-                        <div className="font-medium">{arrear.tenant}</div>
-                        <div className="text-sm text-muted-foreground sm:hidden">
-                          {arrear.daysOverdue} days overdue
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{arrear.propertyAddress}</span>
-                          <div className="sm:hidden text-sm text-muted-foreground">
-                            Due: <Badge variant="destructive" className="ml-1">{formattedDates[arrear.dueDate]}</Badge>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant="destructive">{formattedDates[arrear.dueDate]}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">{arrear.daysOverdue} days</TableCell>
-                      <TableCell className="text-right font-semibold text-destructive">
-                        {formatCurrency(arrear.amountOwed, locale, currency)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => handleRequestPayment(arrear)} className="w-full">
-                            <CreditCard className="mr-2 h-4 w-4"/>
-                            Request Payment
-                          </Button>
-                          <Button size="sm" onClick={() => handleSendReminder(arrear)} className="w-full">
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Reminder
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      
-      <PaymentRequestDialog
-        isOpen={isPaymentRequestOpen}
-        onClose={() => setIsPaymentRequestOpen(false)}
-        onSubmit={handlePaymentRequestSubmit}
-        arrear={selectedArrear}
-        formatCurrency={(amount) => formatCurrency(amount, locale, currency)}
-      />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Arrears Management</h1>
+        <Button onClick={handleGenerateReport} disabled={isGeneratingReport || arrearsDetails.length === 0}>
+          {isGeneratingReport ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FileText className="mr-2 h-5 w-5" />}
+          Generate Arrears Report
+        </Button>
+      </div>
 
+      {arrearsDetails.length === 0 && !isLoading ? (
+        <Card className="text-center py-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold">No Overdue Payments</CardTitle>
+            <CardDescription>All tenancies are currently up-to-date. Great job!</CardDescription>
+          </CardHeader>
+          <CardContent className="mt-4">
+            <Button asChild>
+              <Link href="/revenue"><BarChart className="mr-2 h-5 w-5" /> View All Revenue</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          <ArrearsSummary totalArrears={totalPortfolioArrears} numberOfTenantsInArrears={arrearsDetails.length} longestArrearsDays={Math.max(...arrearsDetails.map(a => a.daysOverdue), 0)} />
 
-      <ReminderEmailDialog
-        isOpen={isReminderDialogOpen}
-        onClose={() => setIsReminderDialogOpen(false)}
-        isLoading={isReminderGenerating}
-        reminder={generatedReminder}
-        tenantEmail={selectedArrear?.tenantEmail}
-      />
-    </>
+          <Card>
+            <CardHeader>
+              <CardTitle>Overdue Tenancies</CardTitle>
+              <CardDescription>Details of all outstanding rental payments.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Property</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Tenant</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Amount Owed</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Due Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Days Overdue</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border bg-background">
+                    {arrearsDetails.map((arrear) => (
+                      <tr key={arrear.tenancyId}>
+                        <td className="px-4 py-3 font-medium">{arrear.propertyName}</td>
+                        <td className="px-4 py-3">{arrear.tenantName}</td>
+                        <td className="px-4 py-3 text-destructive font-semibold">
+                          {formatCurrency(arrear.amountOwed, 'en-KE', 'KES')}
+                        </td>
+                        <td className="px-4 py-3">{format(arrear.dueDate, 'PPP')}</td>
+                        <td className="px-4 py-3">
+                          <span className={cn("font-medium", arrear.daysOverdue > 30 ? "text-red-500" : "text-yellow-500")}>
+                            {arrear.daysOverdue} days
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Button variant="outline" size="sm" onClick={() => handleDismissArrear(arrear)} disabled={isSubmitting}>
+                            Dismiss
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <AlertDialog open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Dismiss Arrear</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to dismiss the overdue payment for 
+              <span className="font-bold">{arrearToDelete?.tenantName}</span> (Property: 
+              <span className="font-bold">{arrearToDelete?.propertyName}</span>)?
+              This will mark all associated overdue transactions as 'Waived'.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDismiss} disabled={isSubmitting} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Dismiss Arrear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {reportData && (
+        <GenerateReportDialog
+          open={isReportDialogOpen}
+          onOpenChange={setIsReportDialogOpen}
+          title={reportData.title}
+          content={reportData.content}
+        />
+      )}
+    </div>
   );
-});
-
-
-export default ArrearsClient;
-
+}

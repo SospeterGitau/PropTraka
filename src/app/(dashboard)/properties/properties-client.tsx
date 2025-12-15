@@ -1,339 +1,304 @@
 
 'use client';
 
-import { useState, useMemo, memo, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { MoreHorizontal, Bed, Bath, Square, Building } from 'lucide-react';
-import type { Property, Transaction } from '@/lib/types';
-import { PageHeader } from '@/components/page-header';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { PropertyForm } from '@/components/property-form';
-import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Loader2, Home, BarChart2, TrendingUp, AlertCircle, Percent } from 'lucide-react';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase/auth'; // Corrected import
+import { firestore } from '@/firebase'; // Corrected import
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
+import type { Property } from '@/lib/db-types';
+import { KpiCard } from '@/components/dashboard/kpi-card';
 
-function formatAddress(property: Property) {
-  // Safe access to address properties in case they are missing
-  const line1 = property.address?.line1 || property.addressLine1 || '';
-  const city = property.address?.city || property.city || '';
-  const state = property.address?.state || property.county || '';
-  const zip = property.address?.zipCode || property.postalCode || '';
-  
-  return [line1, city, state, zip].filter(Boolean).join(', ');
-}
+export function PropertiesClient() {
+    const { user } = useUser();
+    const { properties: dataContextProperties, loading: dataContextLoading, error: dataContextError } = useDataContext();
+    const router = useRouter();
 
-const PropertiesClient = memo(function PropertiesClient() {
-  const { user } = useUser();
-  const firestore = useFirestore();
-  const { settings } = useDataContext();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  const currency = settings?.currency || 'KES';
-  const locale = settings?.locale || 'en-KE';
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+    const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
 
-  // Data Fetching
-  const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
-  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
-  
-  const [propertiesSnapshot, isPropertiesLoading] = useCollection(propertiesQuery as Query<Property> | null);
-  const [revenueSnapshot, isRevenueLoading] = useCollection(revenueQuery as Query<Transaction> | null);
-  
-  const properties = useMemo(() => propertiesSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Property)) || [], [propertiesSnapshot]);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
-  
-  const isDataLoading = isPropertiesLoading || isRevenueLoading;
+    const propertiesCollectionRef = useMemo(() => {
+        if (!user) return null; // Ensure user is available
+        return collection(firestore, 'properties');
+    }, [user]);
 
-  // State
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+    const propertiesQuery = useMemo(() => {
+        if (!propertiesCollectionRef || !user) return null;
+        return createUserQuery<Property>(propertiesCollectionRef, user.uid);
+    }, [propertiesCollectionRef, user]);
 
-  // Check for URL action param
-  useEffect(() => {
-    if (searchParams?.get('action') === 'add') {
-      setIsFormOpen(true);
-      setSelectedProperty(null);
-    }
-  }, [searchParams]);
+    const [propertiesSnapshot, loading, error] = useCollection(propertiesQuery);
 
-  const handleFormClose = () => {
-    setIsFormOpen(false);
-    // Remove the action param from URL without refreshing
-    const newParams = new URLSearchParams(searchParams?.toString());
-    newParams.delete('action');
-    router.replace(`/properties${newParams.toString() ? `?${newParams.toString()}` : ''}`, { scroll: false });
-  };
-  
-  // Actions
-  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
-    if (!user) return;
-    try {
-        await addDoc(collection(firestore, 'changelog'), {
-          ...log,
-          ownerId: user.uid,
-          date: serverTimestamp(),
-        });
-    } catch(error) {
-        console.error("Failed to add changelog entry:", error);
-    }
-  };
+    // Use properties from DataContext which is already filtered by ownerId and live-synced
+    const properties = dataContextProperties;
+    const propertiesLoading = dataContextLoading;
+    const propertiesError = dataContextError || error;
 
-  const handleAdd = () => {
-    setSelectedProperty(null);
-    setIsFormOpen(true);
-  };
 
-  const handleEdit = (property: Property) => {
-    setSelectedProperty(property);
-    setIsFormOpen(true);
-  };
+    const handleAddProperty = () => {
+        setEditingProperty(null);
+        setIsFormOpen(true);
+    };
 
-  const handleDelete = (property: Property) => {
-    setSelectedProperty(property);
-    setIsDeleteDialogOpen(true);
-  };
+    const handleEditProperty = (property: Property) => {
+        setEditingProperty(property);
+        setIsFormOpen(true);
+    };
 
-  const confirmDelete = async () => {
-    if (selectedProperty) {
-      await deleteDoc(doc(firestore, 'properties', selectedProperty.id));
-      addChangeLogEntry({
-        type: 'Property',
-        action: 'Deleted',
-        description: `Property "${formatAddress(selectedProperty)}" was deleted.`,
-        entityId: selectedProperty.id,
-      });
-      setIsDeleteDialogOpen(false);
-      setSelectedProperty(null);
-    }
-  };
+    const handleSubmitForm = async (formData: Property) => {
+        if (!user) return;
+        setIsSubmitting(true);
+        try {
+            if (editingProperty) {
+                // Update existing property
+                const propertyRef = doc(firestore, 'properties', editingProperty.id!); // Use firestore directly
+                await updateDoc(propertyRef, {
+                    ...formData,
+                    updatedAt: serverTimestamp(),
+                });
+            } else {
+                // Add new property
+                await addDoc(collection(firestore, 'properties'), {
+                    ...formData,
+                    ownerId: user.uid,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                });
+            }
+            setIsFormOpen(false);
+        } catch (e) {
+            console.error("Error adding/updating property: ", e);
+            // Handle error, maybe show a toast
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-  const handleFormSubmit = async (data: Property | Omit<Property, "ownerId" | "id">) => {
-    if (!user) return;
+    const handleDeleteProperty = (property: Property) => {
+        setPropertyToDelete(property);
+        setDeleteConfirmationOpen(true);
+    };
 
-    if ('id' in data) {
-      const { id, ownerId, ...propertyData } = data as Property;
-      await updateDoc(doc(firestore, 'properties', id), propertyData);
-      addChangeLogEntry({
-        type: 'Property',
-        action: 'Updated',
-        description: `Property "${formatAddress(data as Property)}" was updated.`,
-        entityId: id,
-      });
-    } else {
-      const docRef = await addDoc(collection(firestore, 'properties'), { ...data, ownerId: user.uid });
-      addChangeLogEntry({
-        type: 'Property',
-        action: 'Created',
-        description: `Property "${formatAddress(data as Property)}" was created.`,
-        entityId: docRef.id, 
-      });
-    }
-    handleFormClose();
-  };
-  
-  const occupiedPropertyIds = useMemo(() => {
-    if (!revenue) return new Set<string>();
-    const today = new Date();
-    const occupiedIds = new Set<string>();
-    revenue.forEach(t => {
-      if (
-        t.propertyId &&
-        t.tenancyStartDate &&
-        t.tenancyEndDate &&
-        new Date(t.tenancyStartDate) <= today &&
-        new Date(t.tenancyEndDate) >= today
-      ) {
-        occupiedIds.add(t.propertyId);
-      }
-    });
-    return occupiedIds;
-  }, [revenue]);
-  
-  if (isDataLoading) {
-    return (
-       <>
-        <PageHeader title="Properties">
-          <Button disabled>Add Property</Button>
-        </PageHeader>
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Portfolio</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-16 w-16 rounded-md" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                  <Skeleton className="h-8 w-24" />
-                  <Skeleton className="h-8 w-8" />
-                </div>
-              ))}
+    const confirmDelete = async () => {
+        if (!propertyToDelete || !user) return;
+        setIsSubmitting(true);
+        try {
+            // Delete related documents first (tenancies, revenue, expenses, maintenance requests, app documents)
+            // This is a simplified example; in a real app, you'd use Firebase Functions
+            // to recursively delete subcollections and related data securely on the backend.
+            
+            // Fetch and delete tenancies
+            const tenanciesSnapshot = await getDocs(query(collection(firestore, 'tenancies'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
+            const batch = writeBatch(firestore); // Use firestore directly
+            tenanciesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+            // Fetch and delete revenue transactions
+            const revenueSnapshot = await getDocs(query(collection(firestore, 'revenue'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
+            revenueSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+            // Fetch and delete expenses
+            const expensesSnapshot = await getDocs(query(collection(firestore, 'expenses'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
+            expensesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+            // Fetch and delete maintenance requests
+            const maintenanceSnapshot = await getDocs(query(collection(firestore, 'maintenanceRequests'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
+            maintenanceSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+            // Fetch and delete app documents related to the property
+            const appDocsSnapshot = await getDocs(query(collection(firestore, 'appDocuments'), where('associatedEntityId', '==', propertyToDelete.id), where('associatedEntityType', '==', 'property'), where('ownerId', '==', user.uid)));
+            appDocsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+
+            // Delete the property itself
+            batch.delete(doc(firestore, 'properties', propertyToDelete.id!)); // Use firestore directly
+            await batch.commit();
+            
+            setPropertyToDelete(null);
+            setDeleteConfirmationOpen(false);
+        } catch (e) {
+            console.error("Error deleting property and related data: ", e);
+            // Handle error
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const totalPropertyValue = useMemo(() => {
+        return properties.reduce((sum, p) => sum + (p.currentValue || 0), 0);
+    }, [properties]);
+
+    const totalProperties = properties.length;
+    const averageOccupancyRate = useMemo(() => {
+        if (properties.length === 0) return 0;
+        const occupiedCount = properties.filter(p => p.status === 'occupied').length;
+        return (occupiedCount / properties.length) * 100;
+    }, [properties]);
+
+
+    if (propertiesLoading) {
+        return (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                    <Card key={i}>
+                        <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+                        <CardContent><Skeleton className="h-10 w-1/2" /></CardContent>
+                    </Card>
+                ))}
             </div>
-          </CardContent>
-        </Card>
-      </>
-    )
-  }
+        );
+    }
 
-  return (
-    <>
-      <PageHeader title="Properties">
-        <Button onClick={handleAdd}>Add Property</Button>
-      </PageHeader>
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Properties</CardTitle>
-          <CardDescription>An overview of all properties in your portfolio.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {properties && properties.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="hidden w-[100px] sm:table-cell">
-                    <span className="sr-only">Image</span>
-                  </TableHead>
-                  <TableHead>Property Details</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                  <TableHead className="hidden md:table-cell text-right">Rental Value</TableHead>
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {properties.map((property) => {
-                  const isPlaceholder = property.imageUrl?.includes('picsum.photos');
-                  const status = occupiedPropertyIds.has(property.id) ? 'Occupied' : 'Vacant';
-                  return (
-                    <TableRow key={property.id}>
-                      <TableCell className="hidden sm:table-cell">
-                        {property.imageUrl && !isPlaceholder ? (
-                           <Image
-                            alt="Property image"
-                            className="aspect-square rounded-md object-cover"
-                            height="64"
-                            src={property.imageUrl}
-                            width="64"
-                            data-ai-hint={property.imageHint}
-                          />
-                        ) : (
-                          <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted">
-                            <PropertyIcon type={property.buildingType} className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Link href={`/properties/${property.id}`} className="font-medium hover:underline">{formatAddress(property)}</Link>
-                        <div className="text-sm text-muted-foreground">{property.buildingType}</div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
-                           <div className="flex items-center gap-1">
-                            <Bed className="h-4 w-4" />
-                            <span>{property.bedrooms || 0}</span>
-                           </div>
-                           <div className="flex items-center gap-1">
-                            <Bath className="h-4 w-4" />
-                            <span>{property.bathrooms || 0}</span>
-                           </div>
-                           {property.size && (
-                            <div className="flex items-center gap-1">
-                              <Square className="h-4 w-4" />
-                              <span>{property.size} {property.sizeUnit}</span>
-                            </div>
-                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                         <Badge variant="secondary">{property.propertyType}</Badge>
-                      </TableCell>
-                      <TableCell>
-                         <Badge variant={status === 'Occupied' ? 'secondary' : 'outline'}>
-                           {status}
-                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{formatCurrency(property.currentValue || 0, locale, currency)}</TableCell>
-                      <TableCell className="hidden md:table-cell text-right">{formatCurrency(property.rentalValue || 0, locale, currency)}/month</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => handleEdit(property)}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleDelete(property)}>Delete</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-                }
-              </TableBody>
-            </Table>
+    if (propertiesError) {
+        return <div className="text-destructive">Error loading properties: {propertiesError.message}</div>;
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold">My Properties</h1>
+                <Button onClick={handleAddProperty}>
+                    <PlusCircle className="mr-2 h-5 w-5" /> Add New Property
+                </Button>
+            </div>
+
+            {properties.length === 0 && !propertiesLoading ? (
+                <Card className="text-center py-8">
+                    <CardHeader>
+                        <CardTitle className="text-2xl font-semibold">No Properties Added Yet</CardTitle>
+                        <CardDescription>It looks like you haven't added any properties to your portfolio.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="mt-4">
+                        <Button onClick={handleAddProperty}>
+                            <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Property
+                        </Button>
+                    </CardContent>
+                </Card>
             ) : (
-                <div className="text-center py-16">
-                  <div className="mx-auto bg-muted rounded-full p-4 w-fit mb-4">
-                    <Building className="w-12 h-12 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-semibold">No Properties Added Yet</h3>
-                  <p className="text-muted-foreground mb-4">Click the button below to add your first property.</p>
-                  <Button onClick={handleAdd}>Add Property</Button>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                     <KpiCard
+                        icon={Home}
+                        title="Total Properties"
+                        value={totalProperties}
+                        description="Currently managed"
+                        formatAs="integer"
+                    />
+                    <KpiCard
+                        icon={TrendingUp}
+                        title="Total Portfolio Value"
+                        value={totalPropertyValue}
+                        description="Estimated current market value"
+                        formatAs="currency"
+                    />
+                     <KpiCard
+                        icon={Percent}
+                        title="Average Occupancy"
+                        value={averageOccupancyRate}
+                        description="Across all properties"
+                        formatAs="percent"
+                    />
+
+                    {properties.map((property) => (
+                        <Card key={property.id} className="relative group">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                                <div className="flex items-center space-x-2">
+                                    <PropertyIcon type={property.type} className="h-5 w-5 text-muted-foreground" />
+                                    <CardTitle className="text-lg font-semibold">{property.name}</CardTitle>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    {property.address.city}
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">
+                                    {formatCurrency(property.currentValue || 0, 'en-KE', 'KES')}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Target Rent: {formatCurrency(property.targetRent || 0, 'en-KE', 'KES')}/month
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Status: <span className="capitalize">{property.status}</span>
+                                </p>
+                                <div className="flex justify-end gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button variant="outline" size="sm" onClick={() => handleEditProperty(property)}>Edit</Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteProperty(property)}>Delete</Button>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/properties/${property.id}`}>View</Link>
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
             )}
-        </CardContent>
-      </Card>
-      
-      <PropertyForm 
-        isOpen={isFormOpen}
-        onClose={handleFormClose}
-        onSubmit={handleFormSubmit}
-        property={selectedProperty}
-      />
 
-      <DeleteConfirmationDialog 
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDelete}
-        itemName={`property at ${selectedProperty ? formatAddress(selectedProperty) : ''}`}
-      />
-    </>
-  );
-});
+            <AlertDialog open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the property 
+                            <span className="font-bold">{propertyToDelete?.name}</span> and all its associated data 
+                            (tenancies, revenue, expenses, maintenance requests, and documents).
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} disabled={isSubmitting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Delete Property
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
-export default PropertiesClient;
+            {isFormOpen && (
+                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                    <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
+                        <DialogHeader>
+                            <DialogTitle>{editingProperty ? 'Edit Property' : 'Add New Property'}</DialogTitle>
+                            <DialogDescription>
+                                {editingProperty ? 'Update the details of your property.' : 'Fill in the details to add a new property to your portfolio.'}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <PropertyForm
+                            initialData={editingProperty}
+                            onSubmit={handleSubmitForm}
+                            onCancel={() => setIsFormOpen(false)}
+                            isSubmitting={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
+        </div>
+    );
+}

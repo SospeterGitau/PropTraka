@@ -21,7 +21,8 @@ import {
 import { PropertyForm } from '@/components/property-form';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import type { Property, Transaction } from '@/lib/types';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase/auth'; // Corrected import path for useUser
+import { firestore } from '@/firebase'; // Import firestore directly
 import { useCollection, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, doc, updateDoc, deleteDoc, serverTimestamp, addDoc, Query, DocumentReference } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
@@ -36,12 +37,13 @@ function PropertyDetailPageContent() {
   const { propertyId } = useParams();
   const router = useRouter();
   const { user } = useUser();
-  const firestore = useFirestore();
+  // No longer calling useFirestore(), firestore is imported directly
   const { settings } = useDataContext();
   const currency = settings?.currency || 'KES';
   const locale = settings?.locale || 'en-KE';
 
   // Data Fetching
+  // Use the imported `firestore` object directly
   const propertyRef = useMemo(() => 
       doc(firestore, 'properties', propertyId as string) as DocumentReference<Property>
   , [firestore, propertyId]);

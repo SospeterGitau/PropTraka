@@ -21,7 +21,6 @@ export function useUser(): UseUserReturn {
       (currentUser) => {
         setUser(currentUser);
         setLoading(false);
-        console.log('✅ Auth state changed:', currentUser?.email || 'No user');
       },
       (err) => {
         console.error('❌ Auth error:', err);
@@ -34,12 +33,6 @@ export function useUser(): UseUserReturn {
   }, []);
 
   return { user, loading, error };
-}
-
-import { firestore } from './index';
-
-export function useFirestore() {
-  return firestore;
 }
 
 export { auth };

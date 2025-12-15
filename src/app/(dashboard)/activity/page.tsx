@@ -1,138 +1,132 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, memo } from 'react';
-import { PageHeader } from '@/components/page-header';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CreditCard, Building2, FileText, HandCoins, Receipt, Wrench, BadgeCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useUser } from '@/firebase/auth'; // Corrected import
+import { firestore } from '@/firebase'; // Corrected import
 import { useCollection } from 'react-firebase-hooks/firestore';
-import type { ChangeLogEntry } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Timeline, TimelineItem, TimelineConnector, TimelineHeader, TimelineTitle, TimelineIcon, TimelineDescription } from '@/components/ui/timeline';
-import { format } from 'date-fns';
-import { getLocale } from '@/lib/locales';
+import { collection, query, orderBy, limit, Timestamp } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
-import { useUser, useFirestore } from '@/firebase';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
-import { Query, Timestamp } from 'firebase/firestore';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Clock, CheckCircle, AlertTriangle, XCircle, Home, DollarSign, Wrench } from 'lucide-react';
 
-
-const ChangelogPage = memo(function ChangelogPage() {
-  const { settings } = useDataContext();
-  const locale = settings?.locale || 'en-KE';
-  const { user } = useUser();
-  const firestore = useFirestore();
-
-  const changelogQuery = useMemo(() => 
-    user?.uid ? createUserQuery(firestore, 'changelog', user.uid) : null
-  , [firestore, user?.uid]);
-
-  const [changelogSnapshot, isDataLoading, error] = useCollection(changelogQuery);
-
-  const [formattedDates, setFormattedDates] = useState<{[key: string]: string}>({});
-
-  const iconMap: { [key: string]: React.ReactNode } = {
-      Property: <Building2 className="h-4 w-4" />,
-      Tenancy: <FileText className="h-4 w-4" />,
-      Expense: <Receipt className="h-4 w-4" />,
-      Payment: <HandCoins className="h-4 w-4" />,
-      Maintenance: <Wrench className="h-4 w-4" />,
-      Contractor: <Wrench className="h-4 w-4" />,
-      Subscription: <BadgeCheck className="h-4 w-4" />,
-  };
-  
-  const sortedChangelog = useMemo(() => {
-    if (!changelogSnapshot) return [];
-    const data = changelogSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ChangeLogEntry));
-    return [...data].sort((a, b) => {
-        const dateA = a.date instanceof Timestamp ? a.date.toDate() : new Date(a.date);
-        const dateB = b.date instanceof Timestamp ? b.date.toDate() : new Date(b.date);
-        return dateB.getTime() - dateA.getTime();
-    });
-  }, [changelogSnapshot]);
-
-  useEffect(() => {
-    const formatAllDates = async () => {
-        if (!sortedChangelog) return;
-        const localeData = await getLocale(locale);
-        const newFormattedDates: {[key: string]: string} = {};
-        for (const item of sortedChangelog) {
-            if (item.date) {
-                // Safely convert Firestore Timestamp or string to a JS Date object
-                const dateObject = item.date instanceof Timestamp ? item.date.toDate() : new Date(item.date);
-                if (!isNaN(dateObject.getTime())) { // Check if the date is valid
-                  newFormattedDates[item.id] = format(dateObject, 'PP, hh:mm a', { locale: localeData });
-                }
-            }
-        }
-        setFormattedDates(newFormattedDates);
-    };
-    formatAllDates();
-  }, [sortedChangelog, locale]);
-  
-  if (isDataLoading) {
-    return (
-        <>
-            <PageHeader title="Activity Feed" />
-            <Card>
-                <CardHeader>
-                    <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-                    <div className="text-sm text-muted-foreground pt-1">
-                        <Skeleton className="h-4 w-3/4" />
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="flex gap-4">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                            <Skeleton className="h-5 w-1/3" />
-                            <Skeleton className="h-4 w-2/3" />
-                        </div>
-                        </div>
-                    ))}
-                </CardContent>
-            </Card>
-        </>
-    );
-  }
-
-  return (
-     <>
-        <PageHeader title="Activity Feed" />
-        <Card>
-        <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>A log of all significant events and changes within your portfolio.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            {sortedChangelog && sortedChangelog.length > 0 ? (
-            <Timeline>
-                {sortedChangelog.map((item, index) => (
-                    <TimelineItem key={item.id}>
-                        {index < sortedChangelog.length - 1 && <TimelineConnector />}
-                        <TimelineHeader>
-                            <TimelineIcon>{iconMap[item.type]}</TimelineIcon>
-                            <TimelineTitle>{item.type} {item.action}</TimelineTitle>
-                            <div className="text-sm text-muted-foreground ml-auto">{formattedDates[item.id]}</div>
-                        </TimelineHeader>
-                        <TimelineDescription>
-                            {item.description}
-                        </TimelineDescription>
-                    </TimelineItem>
-                ))}
-            </Timeline>
-            ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                No activity recorded yet.
-                </div>
-            )}
-        </CardContent>
-        </Card>
-     </>
-  );
-});
+interface ActivityLogItem {
+    id: string;
+    type: 'system' | 'user-action' | 'data-update' | 'revenue' | 'expense' | 'maintenance';
+    message: string;
+    timestamp: Timestamp;
+    details?: Record<string, any>;
+}
 
 export default function ActivityPage() {
-    return <ChangelogPage />;
+    const { user } = useUser();
+    const { loading: dataContextLoading, error: dataContextError } = useDataContext();
+
+    const activityQuery = useMemo(() => {
+        if (!user) return null;
+        return query(
+            collection(firestore, 'activityLog'),
+            orderBy('timestamp', 'desc'),
+            limit(100)
+        );
+    }, [user]);
+
+    const [activitySnapshot, loading, error] = useCollection(activityQuery);
+
+    const activityLogs: ActivityLogItem[] = useMemo(() => {
+        if (!activitySnapshot) return [];
+        return activitySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp, // Ensure timestamp is a Firestore Timestamp object
+        })) as ActivityLogItem[];
+    }, [activitySnapshot]);
+
+    const isLoading = dataContextLoading || loading;
+    const displayError = dataContextError || error;
+
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                <h1 className="text-3xl font-bold">Activity Feed</h1>
+                <Card>
+                    <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    if (displayError) {
+        return <div className="text-destructive">Error loading activity: {displayError.message}</div>;
+    }
+
+    const getActivityIcon = (type: ActivityLogItem['type']) => {
+        switch (type) {
+            case 'system':
+                return <Clock className="w-4 h-4 text-blue-500" />;
+            case 'user-action':
+                return <CheckCircle className="w-4 h-4 text-green-500" />;
+            case 'data-update':
+                return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+            case 'revenue':
+                return <DollarSign className="w-4 h-4 text-green-500" />;
+            case 'expense':
+                return <Wrench className="w-4 h-4 text-red-500" />;
+            case 'maintenance':
+                return <Home className="w-4 h-4 text-orange-500" />;
+            default:
+                return <Clock className="w-4 h-4 text-gray-500" />;
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold">Activity Feed</h1>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Recent Activities</CardTitle>
+                    <CardDescription>A chronological log of all important events in your portfolio.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {activityLogs.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                            No recent activity found.
+                        </div>
+                    ) : (
+                        <ScrollArea className="h-[400px]">
+                            <div className="space-y-4">
+                                {activityLogs.map((log) => (
+                                    <div key={log.id} className="flex items-start space-x-3 text-sm">
+                                        <div className="mt-1">
+                                            {getActivityIcon(log.type)}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">{log.message}</p>
+                                            {log.details && (
+                                                <p className="text-muted-foreground text-xs">
+                                                    {JSON.stringify(log.details)}
+                                                </p>
+                                            )}
+                                            <p className="text-muted-foreground text-xs">
+                                                {log.timestamp && format(log.timestamp.toDate(), 'PPP p')}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
 }

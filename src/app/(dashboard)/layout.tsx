@@ -8,7 +8,7 @@ import { ChatBubble } from '@/components/chat-bubble';
 import { SubscriptionProvider } from '@/components/subscription-checker';
 import { AnalyticsProvider } from '@/firebase/analytics-provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/firebase/auth';
+import { auth } from '@/firebase';
 
 export default function DashboardLayout({
   children,
