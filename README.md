@@ -19,3 +19,13 @@ Property management system with Firebase
 - **Run dev on port 9002 (recommended):**
 	- From repo root: `npm run dev:9002` (starts Next on port 9002 using `src/app`).
 	- From `workspace`: `cd workspace && npm run dev` (workspace already runs on port 9002 by default).
+
+If port 9002 is already in use the local script will show a helpful message and exit so you can kill the conflicting process or choose a different port.
+
+Common commands to inspect/kill the process using the port:
+
+```
+ss -ltnp | grep :9002
+lsof -i :9002
+kill <PID>
+```
