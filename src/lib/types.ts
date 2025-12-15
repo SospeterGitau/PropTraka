@@ -52,6 +52,14 @@ export interface GenerateMarketResearchOutput {
   hint?: string;
 }
 
+export interface GenerateReportSummaryInput {
+  summary: string;
+}
+
+export interface GenerateReportSummaryOutput {
+  summary: string;
+}
+
 export interface GeneratePnlReportInput {
   startDate: string;
   endDate: string;
