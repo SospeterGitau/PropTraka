@@ -39,12 +39,23 @@ jobs:
       - name: Build
         run: npm run build
       - name: Deploy to Firebase Hosting (preview channel)
+        id: firebase-deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           projectId: '${{ secrets.FIREBASE_PROJECT_ID }}'
           channelId: 'pr-${{ github.event.number }}'
+      - name: Comment PR with preview URL
+        if: always()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          token: '${{ secrets.GITHUB_TOKEN }}'
+          issue-number: '${{ github.event.number }}'
+          body: |
+            ✅ Preview deployed to Firebase Hosting
+            - Channel: `pr-${{ github.event.number }}`
+            - URL: ${{ steps.firebase-deploy.outputs.details_url || steps.firebase-deploy.outputs.url || 'see workflow logs' }}
 
   prod-deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
