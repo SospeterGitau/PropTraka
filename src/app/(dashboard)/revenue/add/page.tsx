@@ -208,7 +208,10 @@ const TenancyForm = memo(function TenancyForm({
         
         // Only generate transactions within the tenancy period
         if (transactionDate >= startDate && transactionDate <= endDate) {
+            const revenueRef = doc(collection(firestore, 'revenue'));
             const newRevenueTx: RevenueTransaction = {
+                id: revenueRef.id,
+                revenueTransactionId: revenueRef.id,
                 ownerId: user.uid,
                 tenancyId: tenancyRef.id,
                 propertyId,
@@ -223,11 +226,14 @@ const TenancyForm = memo(function TenancyForm({
                 createdAt: now,
                 updatedAt: now,
             };
-            batch.set(doc(collection(firestore, 'revenue')), newRevenueTx);
+            batch.set(revenueRef, newRevenueTx);
 
             // Add service charge transactions for this month if applicable
             if (newTenancy.serviceChargeAmount && newTenancy.serviceChargeAmount > 0) {
+                const scRef = doc(collection(firestore, 'revenue'));
                 const newServiceChargeTx: RevenueTransaction = {
+                    id: scRef.id,
+                    revenueTransactionId: scRef.id,
                     ownerId: user.uid,
                     tenancyId: tenancyRef.id,
                     propertyId,
@@ -242,7 +248,7 @@ const TenancyForm = memo(function TenancyForm({
                     createdAt: now,
                     updatedAt: now,
                 };
-                batch.set(doc(collection(firestore, 'revenue')), newServiceChargeTx);
+                batch.set(scRef, newServiceChargeTx);
             }
         }
 

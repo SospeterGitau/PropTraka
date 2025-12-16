@@ -334,7 +334,13 @@ const TenancyForm = memo(function TenancyForm({
     transactionsData.forEach(tx => {
       const { id, ...txData } = tx;
       const docRef = id ? doc(firestore, 'revenue', id) : doc(collection(firestore, 'revenue'));
-      batch.set(docRef, { ...txData, ownerId: user.uid }, { merge: true });
+      const payload = { ...txData, ownerId: user.uid } as any;
+      // Ensure new documents get a revenueTransactionId for Firestore schema compatibility
+      if (!id) {
+        payload.id = docRef.id;
+        payload.revenueTransactionId = docRef.id;
+      }
+      batch.set(docRef, payload, { merge: true });
     });
     
     await batch.commit();

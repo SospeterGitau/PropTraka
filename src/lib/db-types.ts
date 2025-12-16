@@ -88,6 +88,7 @@ export interface Tenancy {
 // Revenue Collection (Refined Transactions)
 export interface RevenueTransaction {
   id?: string; // Firestore Document ID
+  revenueTransactionId?: string; // Optional explicit transaction id used in some schemas
   ownerId: string; // Foreign key to User
   tenancyId: string; // Foreign key to Tenancy
   propertyId: string; // Foreign key to Property
