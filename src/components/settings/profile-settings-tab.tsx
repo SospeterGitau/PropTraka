@@ -69,7 +69,7 @@ export default function ProfileSettingsTab() {
   }, [settings, user, isEditing]);
 
   useEffect(() => {
-    if (!isEditing) return;
+    if (!isEditing || !tempSettings) return;
 
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
@@ -81,7 +81,7 @@ export default function ProfileSettingsTab() {
     root.classList.add(effectiveTheme);
     
     return () => {
-      const globalTheme = settings.theme || 'system';
+      const globalTheme = settings?.theme || 'system';
       let effectiveGlobalTheme = globalTheme;
       if (effectiveGlobalTheme === 'system') {
         effectiveGlobalTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -89,7 +89,30 @@ export default function ProfileSettingsTab() {
       root.classList.remove('light', 'dark');
       root.classList.add(effectiveGlobalTheme);
     }
-  }, [isEditing, tempSettings.theme, settings.theme]);
+  }, [isEditing, tempSettings?.theme, settings?.theme]);
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    let effectiveTheme = tempSettings?.theme || 'system';
+    if (effectiveTheme === 'system') {
+        effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    root.classList.add(effectiveTheme);
+    
+    return () => {
+      const globalTheme = settings?.theme || 'system';
+      let effectiveGlobalTheme = globalTheme;
+      if (effectiveGlobalTheme === 'system') {
+        effectiveGlobalTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      root.classList.remove('light', 'dark');
+      root.classList.add(effectiveGlobalTheme);
+    }
+  }, [isEditing, tempSettings?.theme, settings?.theme]);
 
   const handleEdit = () => {
     setOriginalSettings(settings);
@@ -118,8 +141,8 @@ export default function ProfileSettingsTab() {
                 emailUpdated = true;
             }
             
-            await updateSettings(tempSettings);
-            if (tempSettings.theme) {
+            await updateSettings(tempSettings ?? {});
+            if (tempSettings?.theme) {
               setTheme(tempSettings.theme)
             }
 
@@ -199,7 +222,7 @@ export default function ProfileSettingsTab() {
   }
   
   const handleClearTemplateField = (fieldName: keyof UserSettings) => {
-    setTempSettings({ ...tempSettings, [fieldName]: '' });
+    setTempSettings((prev) => ({ ...(prev ?? {}), [fieldName]: '' } as UserSettings));
   };
 
 

@@ -22,24 +22,33 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Property, Address } from '@/lib/db-types'; // Updated import
+import { Property, Address } from '@/lib/types'; // Updated import
 import { useDataContext } from '@/context/data-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
 interface PropertyFormProps {
+  // support both previous `property` prop and newer `initialData` that some callers pass
   property?: Property | null;
-  isOpen: boolean;
-  onClose: () => void;
+  initialData?: Property | null;
+  isOpen?: boolean;
+  isSubmitting?: boolean;
+  onClose?: () => void;
+  onCancel?: () => void;
   onSubmit?: (data: Property | Omit<Property, "ownerId" | "id">) => void;
 }
 
 export function PropertyForm({
-  property: initialProperty,
+  property: propProperty,
+  initialData,
   isOpen,
+  isSubmitting,
   onClose,
+  onCancel,
   onSubmit,
 }: PropertyFormProps) {
+  // Accept either `property` or `initialData` for backwards compat
+  const initialProperty = initialData ?? propProperty;
   const { addProperty, updateProperty, settings } = useDataContext();
   
   const getCurrencySymbol = (currencyCode: string) => {
@@ -140,7 +149,7 @@ export function PropertyForm({
         if (initialProperty?.id) await updateProperty(initialProperty.id, { ...propertyData, id: initialProperty.id, ownerId: initialProperty.ownerId, createdAt: initialProperty.createdAt, updatedAt: Timestamp.now() });
         else await addProperty(propertyData);
       }
-      onClose();
+      (onClose ?? onCancel)?.();
     } catch (error) {
       console.error('Failed to save property:', error);
     }

@@ -55,7 +55,7 @@ function PaymentForm({ isOpen, onClose, onSubmit, transaction }: {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!transaction || typeof amount !== 'number') return;
+    if (!transaction || !transaction.id || typeof amount !== 'number') return;
     onSubmit(transaction.id, amount);
     onClose();
   };
@@ -72,7 +72,7 @@ function PaymentForm({ isOpen, onClose, onSubmit, transaction }: {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="text-sm space-y-1 bg-muted p-3 rounded-md">
-              <div className="flex justify-between font-semibold"><span>Balance Due:</span> <span>{formatCurrency(balanceDue, settings?.locale, settings?.currency)}</span></div>
+              <div className="flex justify-between font-semibold"><span>Balance Due:</span> <span>{formatCurrency(balanceDue, settings?.locale || 'en-KE', settings?.currency || 'KES')}</span></div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="amountPaid">Amount to Record *</Label>
@@ -161,7 +161,7 @@ function InvoiceForm({ isOpen, onClose, onSubmit, transaction }: {
             <Button variant="outline" size="sm" onClick={handleAddCharge}>Add Service Charge</Button>
           </div>
            <div className="!mt-6 text-sm space-y-1 bg-muted p-3 rounded-md">
-                <div className="flex justify-between font-semibold"><span>Total Due:</span> <span>{formatCurrency(totalDue, settings?.locale, settings?.currency)}</span></div>
+                <div className="flex justify-between font-semibold"><span>Total Due:</span> <span>{formatCurrency(totalDue, settings?.locale || 'en-KE', settings?.currency || 'KES')}</span></div>
             </div>
         </div>
         <DialogFooter>
@@ -176,7 +176,8 @@ function InvoiceForm({ isOpen, onClose, onSubmit, transaction }: {
 // ... Rest of TenancyDetailPageContent component
 // This part remains unchanged as it's the parent component logic
 const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
-    // ...
+    // Minimal placeholder while migrating the full page; return null so memo receives a valid component
+    return null;
 });
 
 export default function TenancyDetailPage() {

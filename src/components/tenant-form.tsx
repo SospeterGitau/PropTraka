@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tenant } from '@/lib/db-types';
+import { Tenant } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';

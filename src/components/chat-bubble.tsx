@@ -21,7 +21,7 @@ export function ChatBubble() {
           <span className="sr-only">Open Chat</span>
         </Button>
       </div>
-      <ChatDialog isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <ChatDialog open={isChatOpen} onOpenChange={setIsChatOpen} />
     </>
   );
 }

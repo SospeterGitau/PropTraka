@@ -39,9 +39,9 @@ const ExpensesClient = memo(function ExpensesClient() {
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter(expense => {
-      const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.contractorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        expense.propertyName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (expense.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (expense.contractorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (expense.propertyName || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = !filterCategory || expense.category === filterCategory;
       
@@ -195,7 +195,7 @@ const ExpensesClient = memo(function ExpensesClient() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{expense.description}</div>
+                      <div className="font-medium">{expense.description || '—'}</div>
                       <div className="text-sm text-muted-foreground md:hidden">{expense.category}</div>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">

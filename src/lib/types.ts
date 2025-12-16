@@ -15,10 +15,30 @@ export interface SettingsTab {
 export type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD';
 
 export interface UserSettings {
-  currency: Currency;
-  language: string;
-  dateFormat: string;
+  currency: Currency | string;
+  language?: string;
+  dateFormat?: string;
   theme: 'light' | 'dark' | 'system';
+  locale?: string;
+  residencyStatus?: 'Resident' | 'NonResident' | string;
+  role?: 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor' | string;
+  portfolioSize?: '1-5' | '6-20' | '21-50' | '50+' | string;
+  areasOfInterest?: string[];
+  companyName?: string;
+  billingAddressLine1?: string;
+  billingAddressLine2?: string;
+  billingCity?: string;
+  billingCounty?: string;
+  billingPostalCode?: string;
+  billingCountry?: string;
+  vatPin?: string;
+  isPnlReportEnabled?: boolean;
+  isMarketResearchEnabled?: boolean;
+  subscription?: {
+    plan?: string;
+    startedAt?: string;
+    expiresAt?: string;
+  };
 }
 
 export interface UserData {
@@ -50,6 +70,14 @@ export interface GenerateMarketResearchOutput {
   report: string | null;
   error?: string | null;
   hint?: string;
+}
+
+export interface GenerateReportSummaryInput {
+  summary: string;
+}
+
+export interface GenerateReportSummaryOutput {
+  summary: string;
 }
 
 export interface GeneratePnlReportInput {
@@ -84,9 +112,100 @@ export interface AnalyzeMaintenanceIssueOutput {
 
 export interface CategorizeExpenseInput {
   description: string;
-  amount: number;
+  amount?: number;
 }
 
+import type * as DB from './db-types';
+
+export type ServiceCharge = { name: string; amount: number };
+
+export type ResidencyStatus = 'Resident' | 'NonResident' | string;
+
+// Compatibility aliases mapping to canonical DB types in `src/lib/db-types.ts`
+export type Expense = DB.Expense & {
+  // Backwards-compatible/denormalized fields used across the UI
+  tenancyId?: string;
+  tenant?: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
+  propertyName?: string;
+  rent?: number;
+  deposit?: number;
+  amountPaid?: number;
+  serviceCharges?: Array<{ amount: number; name: string; description?: string }>;
+  tenancyStartDate?: any;
+  tenancyEndDate?: any;
+  rentDueDate?: number;
+  contractUrl?: string;
+  applicationFormUrl?: string;
+  moveInChecklistUrl?: string;
+  moveOutChecklistUrl?: string;
+  description?: string;
+  contractorName?: string;
+  vendorName?: string;
+  expenseType?: string;
+  type?: string; // some callers set `type` on expense objects (e.g., 'revenue')
+  frequency?: string;
+  // Some UI code calls `new Date(tx.date)` so allow flexible types here
+  date?: any;
+};
+export type RevenueTransaction = DB.RevenueTransaction & {
+  // UI compat: some older callers used `tenantId` and allowed 'N/A' as a placeholder payment method
+  tenantId?: string;
+  paymentMethod?: DB.RevenueTransaction['paymentMethod'] | 'N/A';
+  date?: any; // UI code often calls new Date(tx.date)
+};
+
+export type Transaction = (DB.RevenueTransaction & {
+  type?: 'income' | 'expense';
+  // Denormalized fields used across the UI
+  tenant?: string;
+  propertyName?: string;
+  tenancyStartDate?: string;
+  tenancyEndDate?: string;
+  ownerId?: string;
+  notes?: string;
+  serviceCharges?: Array<{ name?: string; amount: number; description?: string }>;
+  rent?: number;
+  deposit?: number;
+  amountPaid?: number;
+  rentDueDate?: number;
+  contractUrl?: string;
+  applicationFormUrl?: string;
+  moveInChecklistUrl?: string;
+  moveOutChecklistUrl?: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
+  date?: any;
+}) | Expense;
+
+export type Contractor = DB.Contractor & {
+  // Backwards-compatible aliases for older UI code
+  name?: string;
+  specialty?: string;
+  contactNumber?: string;
+  phone?: string;
+  businessName?: string;
+  type?: string;
+  rating?: number;
+};
+
+export type MaintenanceRequest = DB.MaintenanceRequest & {
+  // UI compatibility fields
+  title?: string;
+  propertyName?: string;
+  reportedDate?: string;
+  dueDate?: any;
+  contractorId?: string;
+  contractorName?: string;
+  estimatedCost?: number;
+  // Accept mixed historical status strings
+  status?: DB.MaintenanceRequest['status'] | 'reported' | 'in-progress' | 'pending' | 'assigned' | 'in_progress' | 'completed' | 'on-hold' | 'canceled';
+};
+
+// Re-export a few DB-first types for parts of the app that still rely on them
+export type Tenant = DB.Tenant;
+export type AppDocument = DB.AppDocument;
 export interface CategorizeExpenseOutput {
   category: string;
   confidenceScore: number;
@@ -94,11 +213,16 @@ export interface CategorizeExpenseOutput {
 
 export interface GenerateReminderEmailInput {
   tenantName: string;
-  dueDate: string;
-  amountDue: number;
-  landlordName: string;
   propertyAddress: string;
-  currency: string;
+  amountOwed: string;
+  daysOverdue: number;
+  companyName: string;
+  arrearsBreakdown: string;
+  // Backwards-compatible optional fields (some callers used these previously)
+  dueDate?: string;
+  amountDue?: number;
+  landlordName?: string;
+  currency?: string;
 }
 
 export interface GenerateReminderEmailOutput {
@@ -156,7 +280,9 @@ export const commercialBuildingTypes = [
 ];
 
 export interface Address {
-  line1: string;
+  // Accept both legacy `line1` and newer `street` field names from DB shapes
+  line1?: string;
+  street: string;
   line2?: string;
   city: string;
   state: string;
@@ -166,65 +292,109 @@ export interface Address {
 
 export interface Property {
   id: string;
+  ownerId: string; // Match DB canonical type where ownerId is required
   name: string;
   address: Address;
-  propertyType: PropertyType;
-  buildingType: string;
-  bedrooms: number;
-  bathrooms: number;
+  // Accept both legacy string values and the typed enum
+  propertyType?: PropertyType | string;
+  // Some parts of the app use `type` instead of `propertyType`
+  type: 'Residential' | 'Commercial' | 'Mixed-Use'; // make required and compatible with DB union
+  buildingType?: string;
+  bedrooms?: number;
+  bathrooms?: number;
   size?: number;
   sizeUnit?: 'sqft' | 'sqm';
+  squareFootage?: number;
+  yearBuilt?: number;
+  amenities?: string[];
+  description?: string;
   purchasePrice?: number;
-  purchaseDate?: string;
+  purchaseDate?: any;
   marketValue?: number;
   mortgageBalance?: number;
+  // Alias used in some pages
+  mortgage?: number;
   targetRent?: number;
-  status: 'occupied' | 'vacant' | 'under-maintenance';
+  status?: 'occupied' | 'vacant' | 'under-maintenance' | string;
   imageUrl?: string;
+  imageHint?: string;
+  currentValue?: number;
+  purchaseTaxes?: number;
+  // Compatibility: some UI code expects flattened address fields
+  addressLine1?: string;
+  city?: string;
+  county?: string;
+  postalCode?: string;
+  rentalValue?: number;
+  createdAt?: any;
+  updatedAt?: any;
 }
 
 export interface Tenancy {
   id: string;
   propertyId: string;
-  tenantName: string;
-  startDate: string;
-  endDate: string;
+  ownerId?: string; // compatibility: some code creates tenancies with ownerId
+  tenantId?: string;
+  tenantName?: string;
+  startDate: any;
+  endDate: any;
   rentAmount: number;
-  paymentDay: number;
-  status: 'active' | 'ended' | 'pending';
+  depositAmount?: number;
+  serviceChargeAmount?: number; // compatibility: allow quick service charge total on tenancy
+  paymentFrequency?: 'Monthly' | 'Quarterly' | 'Annually' | string;
+  paymentDay?: number; // legacy field used by parts of the UI
+  leaseAgreementUrl?: string;
+  moveInChecklistUrl?: string;
+  status: 'active' | 'ended' | 'pending' | 'Active' | 'Ended' | 'Pending';
+  // Timestamps (compatibility with DB shapes)
+  createdAt?: any;
+  updatedAt?: any;
 }
 
-export interface Transaction {
+
+// Calendar / UI helpers
+export interface CalendarEvent {
   id: string;
-  propertyId: string;
-  tenancyId?: string;
-  date: string;
-  amount: number;
-  type: 'income' | 'expense';
-  category: string;
-  description?: string;
+  title: string;
+  // legacy support: some callers use `date` as ISO string
+  date?: string;
+  start?: string | Date;
+  end?: string | Date;
+  allDay?: boolean;
+  type?: string;
+  details?: Record<string, any>;
+  meta?: Record<string, any>;
 }
 
-export interface MaintenanceRequest {
+export interface ApiKey {
   id: string;
-  propertyId: string;
-  description: string;
-  status: 'reported' | 'in-progress' | 'completed' | 'on-hold';
-  reportedDate: string;
-  completedDate?: string;
-  priority: 'low' | 'medium' | 'high';
-  cost?: number;
-  contractorId?: string;
-}
-
-export interface Contractor {
-  id: string;
+  ownerId: string;
   name: string;
-  specialty: string;
-  contactNumber: string;
-  email?: string;
-  rating?: number;
+  key: string;
+  createdAt: any;
+  lastUsed?: any;
 }
+
+export interface ArrearEntryCalculated {
+  tenancyId: string;
+  tenantName: string;
+  amountOwed: number;
+  daysOverdue: number;
+  tenant?: string; // alias used by some components
+}
+
+// Chat / AI types
+export interface GetChatResponseInput {
+  question: string;
+  knowledgeBase: string;
+}
+
+export interface GetChatResponseOutput {
+  answer: string;
+  source?: string;
+}
+
+
 
 export interface ActivityLog {
   id: string;
@@ -245,6 +415,6 @@ export interface ArrearsSummary {
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
   features: string[];
 }

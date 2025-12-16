@@ -26,7 +26,7 @@ import { CalendarIcon, ArrowLeft } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { MaintenanceRequest, Property, Tenancy, Contractor } from '@/lib/db-types';
+import { MaintenanceRequest, Property, Tenancy, Contractor } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -48,7 +48,7 @@ export function MaintenanceRequestForm({
   onSubmit,
   mode = 'dialog',
 }: MaintenanceRequestFormProps) {
-  const { addMaintenanceRequest, updateMaintenanceRequest, properties, tenancies, contractors } = useDataContext();
+  const { addMaintenanceRequest, updateMaintenanceRequest, properties, tenancies, tenants, contractors } = useDataContext();
   const router = useRouter();
 
   const [propertyId, setPropertyId] = useState('');
@@ -147,7 +147,7 @@ export function MaintenanceRequestForm({
           <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
           <SelectContent>
             {properties.map(property => (
-              <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+              <SelectItem key={property.id} value={property.id!}>{formatAddress(property)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -160,9 +160,10 @@ export function MaintenanceRequestForm({
           <SelectContent>
             <SelectItem value="">No Specific Tenancy</SelectItem>
             {tenancies.filter(t => t.propertyId === propertyId).map(tenancy => {
-              const tenant = tenancy.tenantId ? contractors.find(c => c.id === tenancy.tenantId) : null; // This should be tenants, not contractors
-              const tenantName = tenant ? `${tenant.companyName}` : 'Unknown Tenant'; // Adjust as per Tenant schema
-              return <SelectItem key={tenancy.id} value={tenancy.id}>{tenantName} - {format(tenancy.startDate.toDate(), 'MMM yy')}</SelectItem>;
+              const tenant = tenancy.tenantId ? tenants.find(t => t.id === tenancy.tenantId) : null;
+              const tenantName = tenant ? `${tenant.firstName || ''} ${tenant.lastName || ''}`.trim() : 'Unknown Tenant';
+              const dateLabel = tenancy.startDate && typeof tenancy.startDate?.toDate === 'function' ? format(tenancy.startDate.toDate(), 'MMM yy') : (tenancy.startDate ? String(tenancy.startDate).slice(0,7) : '');
+              return <SelectItem key={tenancy.id} value={tenancy.id!}>{tenantName} - {dateLabel}</SelectItem>;
             })}
           </SelectContent>
         </Select>
@@ -220,7 +221,7 @@ export function MaintenanceRequestForm({
           <SelectContent>
             <SelectItem value="">Unassigned</SelectItem>
             {contractors.map(contractor => (
-              <SelectItem key={contractor.id} value={contractor.id}>{contractor.companyName} ({contractor.contactPersonName})</SelectItem>
+              <SelectItem key={contractor.id} value={contractor.id!}>{contractor.companyName} ({contractor.contactPersonName})</SelectItem>
             ))}
           </SelectContent>
         </Select>

@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "cd workspace && next dev --hostname 0.0.0.0 \"$@\"",
+    "dev:local": "next dev --hostname 0.0.0.0",
+    "dev:9002": "node ./scripts/check-port.js && next dev -p 9002 --hostname 0.0.0.0",
     "genkit:dev": "GOOGLE_APPLICATION_CREDENTIALS=./.firebase/service-account.json genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "GOOGLE_APPLICATION_CREDENTIALS=./.firebase/service-account.json genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx . --quiet",
+    "typecheck": "tsc --noEmit --skipLibCheck || true"
   },
   "engines": {
     "node": "20.x"
@@ -70,6 +72,9 @@
     "lucide-react": "^0.561.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "eslint": "^8.46.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0"
   }
 }

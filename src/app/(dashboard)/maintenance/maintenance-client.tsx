@@ -44,11 +44,12 @@ const MaintenanceClient = memo(function MaintenanceClient() {
 
   const filteredRequests = useMemo(() => {
     return maintenanceRequests.filter(request => {
-      const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.propertyName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (request.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (request.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (request.propertyName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
-      const matchesStatus = !filterStatus || request.status === filterStatus;
+      const normalize = (s?: string) => s ? s.toLowerCase().replace(/\s+/g, '_') : '';
+      const matchesStatus = !filterStatus || normalize(request.status) === normalize(filterStatus);
       const matchesPriority = !filterPriority || request.priority === filterPriority;
       
       return matchesSearch && matchesStatus && matchesPriority;
@@ -56,16 +57,18 @@ const MaintenanceClient = memo(function MaintenanceClient() {
   }, [maintenanceRequests, searchTerm, filterStatus, filterPriority]);
 
   const statusStats = useMemo(() => {
+    const normalize = (s?: string) => s ? s.toLowerCase().replace(/\s+/g, '_') : '';
     return {
-      pending: maintenanceRequests.filter(r => r.status === 'pending').length,
-      assigned: maintenanceRequests.filter(r => r.status === 'assigned').length,
-      inProgress: maintenanceRequests.filter(r => r.status === 'in_progress').length,
-      completed: maintenanceRequests.filter(r => r.status === 'completed').length,
+      pending: maintenanceRequests.filter(r => normalize(r.status) === 'pending').length,
+      assigned: maintenanceRequests.filter(r => normalize(r.status) === 'assigned').length,
+      inProgress: maintenanceRequests.filter(r => normalize(r.status) === 'in_progress').length,
+      completed: maintenanceRequests.filter(r => normalize(r.status) === 'completed').length,
     };
   }, [maintenanceRequests]);
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    const s = status ? status.toLowerCase().replace(/\s+/g, '_') : '';
+    switch (s) {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'in_progress':

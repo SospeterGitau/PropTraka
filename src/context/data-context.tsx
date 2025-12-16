@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { firestore } from '@/firebase';
-import { collection, onSnapshot, doc, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, doc, query, where, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useUser } from '@/firebase/auth';
 import type {
   Property,
@@ -15,7 +15,7 @@ import type {
   Tenancy,
   AppDocument,
   UserSettings,
-} from '@/lib/db-types';
+} from '@/lib/types';
 
 interface DataContextType {
   properties: Property[];
@@ -28,7 +28,18 @@ interface DataContextType {
   appDocuments: AppDocument[];
   settings: UserSettings | null;
   loading: boolean;
+  isLoading: boolean; // alias for some callers
   error: string | null;
+  // CRUD helpers
+  addProperty: (data: Omit<Property, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProperty: (id: string, data: Partial<Property>) => Promise<void>;
+  addContractor: (data: Omit<Contractor, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateContractor: (id: string, data: Partial<Contractor>) => Promise<void>;
+  addMaintenanceRequest: (data: Omit<MaintenanceRequest, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateMaintenanceRequest: (id: string, data: Partial<MaintenanceRequest>) => Promise<void>;
+  addTenant: (data: Omit<Tenant, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateTenant: (id: string, data: Partial<Tenant>) => Promise<void>;
+  updateSettings: (data: Partial<UserSettings>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -151,7 +162,70 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
         appDocuments,
         settings,
         loading,
+        isLoading: loading,
         error,
+        // helpers
+        addProperty: async (data) => {
+          if (!user) throw new Error('Not authenticated');
+          await addDoc(collection(firestore, 'properties'), {
+            ...data,
+            ownerId: user.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        },
+        updateProperty: async (id, data) => {
+          if (!user) throw new Error('Not authenticated');
+          const ref = doc(firestore, 'properties', id);
+          await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+        },
+        addContractor: async (data) => {
+          if (!user) throw new Error('Not authenticated');
+          await addDoc(collection(firestore, 'contractors'), {
+            ...data,
+            ownerId: user.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        },
+        updateContractor: async (id, data) => {
+          if (!user) throw new Error('Not authenticated');
+          const ref = doc(firestore, 'contractors', id);
+          await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+        },
+        addMaintenanceRequest: async (data) => {
+          if (!user) throw new Error('Not authenticated');
+          await addDoc(collection(firestore, 'maintenanceRequests'), {
+            ...data,
+            ownerId: user.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        },
+        updateMaintenanceRequest: async (id, data) => {
+          if (!user) throw new Error('Not authenticated');
+          const ref = doc(firestore, 'maintenanceRequests', id);
+          await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+        },
+        addTenant: async (data) => {
+          if (!user) throw new Error('Not authenticated');
+          await addDoc(collection(firestore, 'tenants'), {
+            ...data,
+            ownerId: user.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        },
+        updateTenant: async (id, data) => {
+          if (!user) throw new Error('Not authenticated');
+          const ref = doc(firestore, 'tenants', id);
+          await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+        },
+        updateSettings: async (data) => {
+          if (!user) throw new Error('Not authenticated');
+          const ref = doc(firestore, 'userSettings', user.uid);
+          await updateDoc(ref, { ...data, updatedAt: serverTimestamp() });
+        },
       }}
     >
       {children}

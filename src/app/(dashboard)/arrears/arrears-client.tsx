@@ -22,10 +22,12 @@ import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, query, where, orderBy, getDocs, writeBatch, doc } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { formatCurrency, cn } from '@/lib/utils';
-import type { RevenueTransaction, Tenancy, Property, Tenant } from '@/lib/db-types';
+import type { RevenueTransaction, Tenancy, Property, Tenant } from '@/lib/types';
 import { startOfToday, isBefore, format } from 'date-fns';
 import { ArrearsSummary } from '@/components/dashboard/arrears-summary';
+import Link from 'next/link';
 import { GenerateReportDialog } from '@/components/generate-report-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ArrearDetail {
   tenancyId: string;
@@ -37,7 +39,7 @@ interface ArrearDetail {
   daysOverdue: number;
 }
 
-export function ArrearsClient() {
+export default function ArrearsClient() {
   const { user } = useUser();
   const { revenue, tenancies, properties, tenants, loading: dataContextLoading, error: dataContextError } = useDataContext();
   
@@ -46,6 +48,7 @@ export function ArrearsClient() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [arrearToDelete, setArrearToDelete] = useState<ArrearDetail | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isLoading = dataContextLoading;
   const error = dataContextError;
@@ -174,7 +177,8 @@ export function ArrearsClient() {
   }
 
   if (error) {
-    return <div className="text-destructive">Error loading arrears: {error.message}</div>;
+    const errorMessage = typeof error === 'string' ? error : (error as Error).message || String(error);
+    return <div className="text-destructive">Error loading arrears: {errorMessage}</div>;
   }
 
   return (

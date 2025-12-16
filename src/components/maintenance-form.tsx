@@ -60,7 +60,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
   const [propertyId, setPropertyId] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<MaintenanceRequest['priority']>('medium');
+  const [priority, setPriority] = useState<MaintenanceRequest['priority']>('Medium');
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [contractorId, setContractorId] = useState('');
   const [estimatedCost, setEstimatedCost] = useState<number | ''>('');
@@ -74,7 +74,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
       setPropertyId(request.propertyId || '');
       setTitle(request.title || '');
       setDescription(request.description || '');
-      setPriority(request.priority || 'medium');
+      setPriority(request.priority || 'Medium');
       setDueDate(request.dueDate ? new Date(request.dueDate) : new Date());
       setContractorId(request.contractorId || '');
       setEstimatedCost(request.estimatedCost || '');
@@ -90,22 +90,23 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
     const selectedProperty = properties.find(p => p.id === propertyId);
     const selectedContractor = contractors.find(c => c.id === contractorId);
 
-    const data: Omit<MaintenanceRequest, 'id'> | MaintenanceRequest = {
+    const data: Partial<MaintenanceRequest> = {
       ...(request?.id ? { id: request.id } : {}),
       propertyId,
       propertyName: selectedProperty ? formatAddress(selectedProperty) : 'General',
       title,
       description,
-      priority,
-      dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : '',
-      status: request?.status || 'pending',
+      // Keep existing priority; normalization happens elsewhere
+      priority: (priority as any) || 'Medium',
+      dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : undefined,
+      status: (request?.status as any) || 'New',
       contractorId: contractorId || undefined,
       contractorName: selectedContractor?.name,
       estimatedCost: estimatedCost ? Number(estimatedCost) : undefined,
       notes,
     };
 
-    onSubmit(data);
+    onSubmit(data as Omit<MaintenanceRequest, 'id'>);
     if (mode === 'dialog') {
         onClose();
     }
@@ -144,9 +145,9 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
                   <Select name="priority" value={priority} onValueChange={(v) => setPriority(v as any)} required>
                     <SelectTrigger id="priority"><SelectValue placeholder="Select priority" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -154,7 +155,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
               <TabsContent value="assignment" className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="dueDate">Due Date *</Label>
-                  <DatePicker date={dueDate} setDate={setDueDate} />
+                  <DatePicker date={dueDate} setDate={setDueDate} locale={settings?.dateFormat || 'en-KE'} />
                 </div>
                 <div className="space-y-2">
                   <Label>Contractor (optional)</Label>
@@ -175,7 +176,7 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
                               <CommandItem
                                 key={c.id}
                                 value={c.name}
-                                onSelect={() => { setContractorId(c.id === contractorId ? "" : c.id); setIsContractorOpen(false); }}
+                                onSelect={() => { setContractorId(c.id === contractorId ? "" : (c.id ?? "")); setIsContractorOpen(false); }}
                               >
                                 <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />
                                 {c.name}

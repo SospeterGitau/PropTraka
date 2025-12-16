@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/currency-formatter';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp, TrendingDown, AlertCircle, Building, Users, Calendar, Percent, DollarSign, BarChart3, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Property, RevenueTransaction, Expense, Tenancy } from '@/lib/db-types';
+import type { Property, RevenueTransaction, Expense, Tenancy } from '@/lib/types';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
@@ -400,6 +400,8 @@ const DashboardPage = memo(function DashboardPage() {
   const currency = settings?.currency || 'KES';
   const companyName = settings?.companyName || 'My Company';
 
+  const toDate = (d: any) => d && typeof d.toDate === 'function' ? d.toDate() : d ? new Date(d) : new Date();
+
   const metrics = useMemo(() => {
     if (loading) return null;
 
@@ -434,7 +436,7 @@ const DashboardPage = memo(function DashboardPage() {
     const currentYear = now.getFullYear();
     const thisMonthRevenue = revenue
       .filter(r => {
-        const date = r.date ? new Date(r.date) : new Date();
+        const date = toDate(r.date);
         return r.status === 'Paid' && date.getMonth() === currentMonth && date.getFullYear() === currentYear;
       })
       .reduce((sum, r) => sum + r.amount, 0);
@@ -455,21 +457,21 @@ const DashboardPage = memo(function DashboardPage() {
   }, [revenue, expenses, properties, tenancies, loading]);
 
   const chartData = useMemo(() => {
-    const monthsData: Record<string, { month: string; revenue: number; expenses: number }> = {};
+    const monthsData: Record<string, { date: string; revenue: number; expenses: number }> = {};
     
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       monthsData[monthKey] = {
-        month: date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+        date: date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
         revenue: 0,
         expenses: 0,
       };
     }
 
     revenue.filter(r => r.status === 'Paid').forEach(r => {
-      const date = r.date ? new Date(r.date) : new Date();
+      const date = toDate(r.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (monthsData[monthKey]) {
         monthsData[monthKey].revenue += r.amount;
@@ -477,7 +479,7 @@ const DashboardPage = memo(function DashboardPage() {
     });
 
     expenses.forEach(e => {
-      const date = e.date ? new Date(e.date) : new Date();
+      const date = toDate(e.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (monthsData[monthKey]) {
         monthsData[monthKey].expenses += e.amount;

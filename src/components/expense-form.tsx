@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import type { Property, Expense, Contractor, UserSettings } from '@/lib/db-types'; // Updated imports
+import type { Property, Expense, Contractor, UserSettings } from '@/lib/types'; // Updated imports
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
 const defaultCategories: Expense['category'][] = [
@@ -136,6 +138,11 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction: initialExp
   const [isContractorOpen, setIsContractorOpen] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const handleCategorySelected = (category: string) => {
+    setCategory(category as Expense['category']);
+    setIsAssistantOpen(false);
+  }
   
   useEffect(() => {
     if (initialExpense) {
@@ -236,7 +243,7 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction: initialExp
                 <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None (General Business Expense)</SelectItem>
-                  {properties.map(property => (<SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>))}
+                  {properties.map(property => (<SelectItem key={property.id} value={property.id!}>{formatAddress(property)}</SelectItem>))}
                 </SelectContent>
               </Select>
             </div>
@@ -258,7 +265,7 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction: initialExp
                 </PopoverTrigger>
                 <PopoverContent className="w-[300px] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search category..." onValueChange={setCategory} />
+                    <CommandInput placeholder="Search category..." onValueChange={(value) => setCategory(value as Expense['category'])} />
                     <CommandList>
                       <CommandEmpty>{category ? <span className="cursor-pointer" onClick={() => { setCategory(category); setIsCategoryOpen(false); }}>Use "{category}"</span> : "No category found."}</CommandEmpty>
                       <CommandGroup>
@@ -325,7 +332,7 @@ export function ExpenseForm({ isOpen, onClose, onSubmit, transaction: initialExp
                       <CommandEmpty>No contractor found.</CommandEmpty>
                       <CommandGroup>
                         {contractors.map((c) => (
-                          <CommandItem key={c.id} value={c.companyName} onSelect={() => { setContractorId(c.id === contractorId ? "" : c.id); setIsContractorOpen(false); }}>
+                          <CommandItem key={c.id} value={c.companyName} onSelect={() => { setContractorId(c.id === contractorId ? "" : (c.id || "")); setIsContractorOpen(false); }}>
                             <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />{c.companyName}
                           </CommandItem>
                         ))}

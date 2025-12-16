@@ -51,14 +51,16 @@ export function KnowledgeArticleForm({ isOpen, onClose, onSubmit, article }: Kno
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
+    const nowIso = new Date().toISOString();
     const data: Omit<KnowledgeArticle, 'id' | 'ownerId'> | KnowledgeArticle = {
-      ...(article ? { id: article.id } : {}),
+      ...(article ? { id: article.id, createdAt: article.createdAt } : { createdAt: nowIso }),
       title,
       content,
       category,
+      updatedAt: nowIso,
     };
     
-    onSubmit(data);
+    onSubmit(data as KnowledgeArticle);
     onClose();
   };
 

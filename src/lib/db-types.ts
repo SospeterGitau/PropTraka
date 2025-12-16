@@ -26,6 +26,12 @@ export interface Property {
   name: string; // e.g., "Main Street Apartments"
   type: 'Residential' | 'Commercial' | 'Mixed-Use';
   address: Address;
+  // Compatibility flattened address fields used by UI
+  addressLine1?: string;
+  city?: string;
+  county?: string;
+  postalCode?: string;
+  rentalValue?: number;
   purchaseDate: Timestamp;
   purchasePrice: number;
   currentValue?: number; // Optional, can be updated
@@ -82,6 +88,7 @@ export interface Tenancy {
 // Revenue Collection (Refined Transactions)
 export interface RevenueTransaction {
   id?: string; // Firestore Document ID
+  revenueTransactionId?: string; // Optional explicit transaction id used in some schemas
   ownerId: string; // Foreign key to User
   tenancyId: string; // Foreign key to Tenancy
   propertyId: string; // Foreign key to Property
@@ -191,6 +198,26 @@ export interface UserSettings {
     applicationForm?: string;
     // Add other common document template types
     [key: string]: string | undefined;
+  };
+  // Optional extended settings used in UI
+  locale?: string;
+  residencyStatus?: string;
+  role?: string;
+  portfolioSize?: string;
+  areasOfInterest?: string[];
+  billingAddressLine1?: string;
+  billingAddressLine2?: string;
+  billingCity?: string;
+  billingCounty?: string;
+  billingPostalCode?: string;
+  billingCountry?: string;
+  vatPin?: string;
+  isPnlReportEnabled?: boolean;
+  isMarketResearchEnabled?: boolean;
+  subscription?: {
+    plan?: string;
+    startedAt?: Timestamp;
+    expiresAt?: Timestamp;
   };
   createdAt: Timestamp;
   updatedAt: Timestamp;

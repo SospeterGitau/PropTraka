@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth'; // Corrected import
 import { firestore } from '@/firebase'; // Corrected import
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -66,7 +67,12 @@ export default function ActivityPage() {
     }
 
     if (displayError) {
-        return <div className="text-destructive">Error loading activity: {displayError.message}</div>;
+        const errorMessage =
+            typeof displayError === 'string'
+                ? displayError
+                : (displayError as Error).message || String(displayError);
+
+        return <div className="text-destructive">Error loading activity: {errorMessage}</div>;
     }
 
     const getActivityIcon = (type: ActivityLogItem['type']) => {

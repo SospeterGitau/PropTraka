@@ -20,7 +20,7 @@ export default function DashboardLayout({
   return (
     <DataContextProvider>
       <AnalyticsProvider>
-        <SubscriptionProvider user={user}>
+        <SubscriptionProvider user={user ?? null}>
           <DashboardNavigation>{children}</DashboardNavigation>
           <FirebaseErrorListener />
           <ChatBubble />

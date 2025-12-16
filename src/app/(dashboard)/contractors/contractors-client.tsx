@@ -28,9 +28,9 @@ const ContractorsClient = memo(function ContractorsClient() {
 
   const filteredContractors = useMemo(() => {
     return contractors.filter(contractor =>
-      contractor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contractor.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contractor.businessName?.toLowerCase().includes(searchTerm.toLowerCase())
+      contractor.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (contractor.serviceCategories || []).join(' ').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contractor.contactPersonName?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [contractors, searchTerm]);
 
@@ -40,7 +40,7 @@ const ContractorsClient = memo(function ContractorsClient() {
   };
 
   const handleDeleteContractor = (contractor: Contractor) => {
-    if (confirm(`Are you sure you want to delete ${contractor.name}?`)) {
+    if (confirm(`Are you sure you want to delete ${contractor.companyName || contractor.contactPersonName || 'this contractor'}?`)) {
       console.log('Delete contractor:', contractor.id);
       // TODO: Implement delete functionality with Firebase
     }
@@ -117,18 +117,18 @@ const ContractorsClient = memo(function ContractorsClient() {
                 filteredContractors.map((contractor) => (
                   <TableRow key={contractor.id}>
                     <TableCell>
-                      <div className="font-medium">{contractor.name}</div>
+                      <div className="font-medium">{contractor.companyName}</div>
                       <div className="text-sm text-muted-foreground sm:hidden">
-                        {contractor.type}
+                        {(contractor.serviceCategories || []).join(', ')}
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
                       <Badge variant="secondary" className="capitalize">
-                        {contractor.type}
+                        {contractor.serviceCategories?.[0] || '—'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {contractor.businessName || '—'}
+                      <TableCell className="hidden md:table-cell">
+                      {contractor.contactPersonName || '—'}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       <div className="flex flex-col gap-1 text-sm">
@@ -138,23 +138,16 @@ const ContractorsClient = memo(function ContractorsClient() {
                             {contractor.email}
                           </a>
                         )}
-                        {contractor.phone && (
-                          <a href={`tel:${contractor.phone}`} className="flex items-center gap-1 hover:text-primary">
+                        {contractor.phoneNumber && (
+                          <a href={`tel:${contractor.phoneNumber}`} className="flex items-center gap-1 hover:text-primary">
                             <Phone className="h-3 w-3" />
-                            {contractor.phone}
+                            {contractor.phoneNumber}
                           </a>
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">
-                      {contractor.rating ? (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium">{contractor.rating}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
+                      <span className="text-muted-foreground">—</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">

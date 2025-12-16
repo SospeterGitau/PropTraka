@@ -43,7 +43,7 @@ export default function SubscriptionBillingTab() {
     const { toast } = useToast();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     
-    const currentPlanName = settings.subscription?.plan || 'Starter';
+    const currentPlanName = settings?.subscription?.plan || 'Starter';
   
     const handleChoosePlan = (planName: string) => {
         if(planName === currentPlanName) return;
