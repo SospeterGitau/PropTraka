@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Contractor, Address } from '@/lib/db-types'; // Updated imports
+import type { Contractor, Address } from '@/lib/types'; // Updated imports
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

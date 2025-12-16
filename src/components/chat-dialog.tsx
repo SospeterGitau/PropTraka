@@ -58,10 +58,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         if (error) {
             console.error("Chat Error:", error);
             if (error.code === 'permission-denied') {
-                errorEmitter.emit(new FirestorePermissionError(
-                    "You don't have permission to access chat messages.",
-                    "Missing 'read' permission on 'chatMessages' collection."
-                ));
+                errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'chatMessages', operation: 'list' }));
             }
         }
     }, [error]);
@@ -92,7 +89,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                 ownerId: user.uid,
             });
 
-            const botResponseText = await getChatResponse(userMessage);
+            const botResponseText = await getChatResponse({ question: userMessage, knowledgeBase: '' });
 
             await addDoc(collection(firestore, 'chatMessages'), {
                 text: botResponseText,

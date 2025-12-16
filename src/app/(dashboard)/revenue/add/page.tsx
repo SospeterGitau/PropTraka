@@ -5,7 +5,7 @@ import { useState, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format, getDaysInMonth, isSameMonth } from 'date-fns';
-import type { Property, RevenueTransaction, Tenancy, Tenant, UserSettings } from '@/lib/db-types'; // Updated imports
+import type { Property, RevenueTransaction, Tenancy, Tenant, UserSettings } from '@/lib/types'; // Updated imports
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ const TenancyForm = memo(function TenancyForm({
 }) {
   const { toast } = useToast();
   const router = useRouter();
-  const { user } = useUser();
+  const { user, loading: isAuthLoading } = useUser();
   const firestore = useFirestore();
   const { settings } = useDataContext();
   const [serviceCharges, setServiceCharges] = useState<FormServiceCharge[]>([]);
@@ -171,6 +171,12 @@ const TenancyForm = memo(function TenancyForm({
 
     // 2. Create Tenancy Document
     const tenancyRef = doc(collection(firestore, 'tenancies'));
+
+    // Compute finalized service charges before using them in the tenancy object
+    const finalServiceCharges = serviceCharges
+      .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
+      .filter(sc => sc.name && sc.amount > 0);
+
     const newTenancy: Tenancy = {
       id: tenancyRef.id,
       ownerId: user.uid,
@@ -191,9 +197,6 @@ const TenancyForm = memo(function TenancyForm({
     batch.set(tenancyRef, newTenancy);
 
     // 3. Generate initial Revenue Transactions
-    const finalServiceCharges = serviceCharges
-      .map(sc => ({ name: sc.name, amount: Number(sc.amount) || 0 }))
-      .filter(sc => sc.name && sc.amount > 0);
 
     let currentDate = new Date(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1);
     
@@ -213,7 +216,7 @@ const TenancyForm = memo(function TenancyForm({
                 amount: rent, // This will be the base rent for the month
                 date: Timestamp.fromDate(transactionDate),
                 type: 'Rent',
-                paymentMethod: 'N/A', // Default, to be updated upon payment
+                paymentMethod: 'Other', // Default, to be updated upon payment
                 status: 'Overdue', // Initial status
                 invoiceNumber: `INV-${tenancyRef.id}-${format(transactionDate, 'yyyyMMdd')}`,
                 notes: '',
@@ -232,7 +235,7 @@ const TenancyForm = memo(function TenancyForm({
                     amount: newTenancy.serviceChargeAmount,
                     date: Timestamp.fromDate(transactionDate),
                     type: 'Service Charge',
-                    paymentMethod: 'N/A',
+                    paymentMethod: 'Other',
                     status: 'Overdue',
                     invoiceNumber: `SC-${tenancyRef.id}-${format(transactionDate, 'yyyyMMdd')}`,
                     notes: 'Monthly Service Charge',
@@ -347,7 +350,7 @@ const TenancyForm = memo(function TenancyForm({
                         <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
                         <SelectContent>
                             {properties.map(property => (
-                            <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+                            <SelectItem key={property.id} value={property.id!}>{formatAddress(property)}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -436,7 +439,7 @@ const TenancyForm = memo(function TenancyForm({
 });
 
 export default function AddTenancyPage() {
-  const { user, isAuthLoading } = useUser();
+  const { user, loading: isAuthLoading } = useUser();
   const firestore = useFirestore();
 
   const propertiesQuery = useMemo(() => 

@@ -10,7 +10,7 @@ import { firestore } from '@/firebase'; // Corrected import
 import { collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { format, isSameDay } from 'date-fns';
-import { Event } from '@/lib/types'; // Assuming you have an Event type
+import { formatCurrency, cn } from '@/lib/utils';
 import { useDataContext } from '@/context/data-context';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -132,7 +132,8 @@ export default function CalendarPage() {
     }
 
     if (error) {
-        return <div className="text-destructive">Error loading calendar data: {error.message}</div>;
+        const errorMessage = typeof error === 'string' ? error : (error as Error).message || String(error);
+        return <div className="text-destructive">Error loading calendar data: {errorMessage}</div>;
     }
 
     return (

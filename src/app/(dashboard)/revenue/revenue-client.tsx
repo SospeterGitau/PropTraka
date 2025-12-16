@@ -81,7 +81,7 @@ const RevenueClient = memo(function RevenueClient() {
         });
         
         const unpaidTransactions = sortedTransactions.filter(tx => {
-          const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => scSum + sc.amount, 0);
+          const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
           const due = (tx.rent ?? 0) + totalServiceCharges + (tx.deposit ?? 0);
           const paid = tx.amountPaid ?? 0;
           return paid < due;

@@ -24,17 +24,18 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PropertyForm } from '@/components/property-form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { PlusCircle, Loader2, Home, BarChart2, TrendingUp, AlertCircle, Percent } from 'lucide-react';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth'; // Corrected import
 import { firestore } from '@/firebase'; // Corrected import
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query, getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
-import type { Property } from '@/lib/db-types';
+import type { Property } from '@/lib/types';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 
 export function PropertiesClient() {
@@ -55,7 +56,7 @@ export function PropertiesClient() {
 
     const propertiesQuery = useMemo(() => {
         if (!propertiesCollectionRef || !user) return null;
-        return createUserQuery<Property>(propertiesCollectionRef, user.uid);
+        return createUserQuery(firestore, 'properties', user.uid);
     }, [propertiesCollectionRef, user]);
 
     const [propertiesSnapshot, loading, error] = useCollection(propertiesQuery);
@@ -76,7 +77,7 @@ export function PropertiesClient() {
         setIsFormOpen(true);
     };
 
-    const handleSubmitForm = async (formData: Property) => {
+    const handleSubmitForm = async (formData: Property | Omit<Property, 'id' | 'ownerId'>) => {
         if (!user) return;
         setIsSubmitting(true);
         try {
@@ -179,7 +180,8 @@ export function PropertiesClient() {
     }
 
     if (propertiesError) {
-        return <div className="text-destructive">Error loading properties: {propertiesError.message}</div>;
+        const msg = typeof propertiesError === 'string' ? propertiesError : (propertiesError as any)?.message || String(propertiesError);
+        return <div className="text-destructive">Error loading properties: {msg}</div>;
     }
 
     return (

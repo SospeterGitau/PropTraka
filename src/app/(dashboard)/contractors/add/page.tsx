@@ -14,9 +14,9 @@ export default function AddContractorPage() {
   const router = useRouter();
   const { addContractor } = useDataContext();
 
-  const handleAddContractor = async (data: Omit<Contractor, 'id'> | Contractor) => {
+  const handleAddContractor = async (data: Contractor | Omit<Contractor, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) => {
     try {
-      await addContractor(data as Omit<Contractor, 'id'>);
+      await addContractor(data as Omit<Contractor, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>);
       router.push('/contractors');
     } catch (error) {
       console.error("Failed to add contractor:", error);

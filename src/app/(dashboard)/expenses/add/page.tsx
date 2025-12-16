@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useDataContext } from '@/context/data-context';
 import { addTransaction } from '@/lib/actions';
 import { ExpenseForm } from '@/components/expense-form';
-import type { Transaction } from '@/lib/types';
+import type { Expense, Transaction } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,9 @@ export default function AddExpensePage() {
   const router = useRouter();
   const { properties, contractors } = useDataContext();
 
-  const handleAddExpense = async (data: Omit<Transaction, 'id'> | Transaction) => {
+  const handleAddExpense = async (data: Expense | Omit<Expense, 'ownerId' | 'createdAt' | 'updatedAt'>) => {
     try {
-      await addTransaction(data);
+      await addTransaction(data as unknown as Omit<Transaction, 'id'>);
       router.push('/expenses');
     } catch (error) {
       console.error("Failed to add expense:", error);

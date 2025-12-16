@@ -86,7 +86,7 @@ const TenancyForm = memo(function TenancyForm({
   useEffect(() => {
     if (tenancyToEdit) {
       setServiceCharges(
-        (tenancyToEdit.serviceCharges || []).map(sc => ({...sc, amount: sc.amount.toString()}))
+        (tenancyToEdit.serviceCharges || []).map(sc => ({ name: sc.name || sc.description || '', amount: sc.amount.toString() }))
       );
       const initialStartDate = tenancyToEdit.tenancyStartDate ? parseLocalDate(tenancyToEdit.tenancyStartDate) : new Date();
       setStartDate(initialStartDate);
@@ -324,7 +324,9 @@ const TenancyForm = memo(function TenancyForm({
         if (tx.date) {
             const txDate = format(parseLocalDate(tx.date), 'yyyy-MM');
             if (!newTxDates.has(txDate)) {
-                 batch.delete(doc(firestore, 'revenue', tx.id));
+                 if (tx.id) {
+                   batch.delete(doc(firestore, 'revenue', tx.id));
+                 }
             }
         }
     });

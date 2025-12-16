@@ -176,7 +176,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
                 onDelete={onDeleteRequest}
                 onCreateExpense={onCreateExpense}
                 onStatusChange={onStatusChange}
-                formattedDate={formattedDates[request.id] || ''}
+                formattedDate={request.id ? (formattedDates[request.id] || '') : ''}
             />
           ))
         ) : (
@@ -219,7 +219,9 @@ export function MaintenanceKanbanBoard({
       const localeData = await getLocale(locale);
       const newFormattedDates: Record<string, string> = {};
       for (const item of requests) {
-        newFormattedDates[item.id] = format(new Date((item as any).reportedDate), 'MMM dd', { locale: localeData });
+        if (item.id) {
+          newFormattedDates[item.id] = format(new Date((item as any).reportedDate), 'MMM dd', { locale: localeData });
+        }
       }
       setFormattedDates(newFormattedDates);
     };

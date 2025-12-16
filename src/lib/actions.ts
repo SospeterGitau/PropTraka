@@ -126,10 +126,14 @@ export async function getChatResponse(input: GetChatResponseInput): Promise<GetC
 export async function categorizeExpense(input: CategorizeExpenseInput): Promise<CategorizeExpenseOutput> {
     try {
         const result = await categorizeExpenseFlow(input);
-        return result;
+        // Ensure the flow returns a confidence score for compatibility
+        return {
+            category: result.category || '',
+            confidenceScore: typeof (result as any).confidenceScore === 'number' ? (result as any).confidenceScore : 0,
+        };
     } catch (e: any) {
         console.error('Error categorizing expense:', e);
-        return { category: '' };
+        return { category: '', confidenceScore: 0 };
     }
 }
 
