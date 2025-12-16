@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, parseDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth'; // Corrected import path for useUser
@@ -75,8 +75,8 @@ const RevenueClient = memo(function RevenueClient() {
     ).map(tenancy => {
         const today = startOfToday();
         const sortedTransactions = tenancy.transactions.sort((a, b) => {
-          const aDate = a.date ? new Date(a.date).getTime() : 0;
-          const bDate = b.date ? new Date(b.date).getTime() : 0;
+          const aDate = parseDate(a.date)?.getTime() ?? 0;
+          const bDate = parseDate(b.date)?.getTime() ?? 0;
           return aDate - bDate;
         });
         
@@ -87,8 +87,8 @@ const RevenueClient = memo(function RevenueClient() {
           return paid < due;
         });
   
-        const earliestOverdue = unpaidTransactions.find(tx => tx.date && isBefore(new Date(tx.date), today));
-        const nextUpcoming = unpaidTransactions.find(tx => !tx.date || !isBefore(new Date(tx.date), today));
+        const earliestOverdue = unpaidTransactions.find(tx => tx.date && isBefore(parseDate(tx.date) ?? new Date(0), today));
+        const nextUpcoming = unpaidTransactions.find(tx => !tx.date || !isBefore(parseDate(tx.date) ?? new Date(0), today));
   
         const nextDueTransaction = earliestOverdue || nextUpcoming;
         
@@ -108,16 +108,19 @@ const RevenueClient = memo(function RevenueClient() {
       const newFormattedDates: { [key: string]: string } = {};
       for (const item of revenue) {
         if(item.tenancyId && item.tenancyStartDate && !newFormattedDates[`${item.tenancyId}-start`]) {
-          newFormattedDates[`${item.tenancyId}-start`] = format(new Date(item.tenancyStartDate), 'PP', { locale: localeData });
+          const d = parseDate(item.tenancyStartDate);
+          if (d) newFormattedDates[`${item.tenancyId}-start`] = format(d, 'PP', { locale: localeData });
         }
         if(item.tenancyId && item.tenancyEndDate && !newFormattedDates[`${item.tenancyId}-end`]) {
-          newFormattedDates[`${item.tenancyId}-end`] = format(new Date(item.tenancyEndDate), 'PP', { locale: localeData });
+          const d = parseDate(item.tenancyEndDate);
+          if (d) newFormattedDates[`${item.tenancyId}-end`] = format(d, 'PP', { locale: localeData });
         }
       }
       // This needs to be separate because `tenancies` depends on `revenue`
       for (const tenancy of tenancies) {
           if (tenancy.tenancyId && tenancy.nextDueDate && !newFormattedDates[`${tenancy.tenancyId}-nextDue`]) {
-            newFormattedDates[`${tenancy.tenancyId}-nextDue`] = format(new Date(tenancy.nextDueDate), 'PP', { locale: localeData });
+            const d = parseDate(tenancy.nextDueDate);
+            if (d) newFormattedDates[`${tenancy.tenancyId}-nextDue`] = format(d, 'PP', { locale: localeData });
           }
       }
       setFormattedDates(newFormattedDates);

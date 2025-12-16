@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { parseDate } from '@/lib/utils';
 import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle, X, User } from 'lucide-react';
 import type { MaintenanceRequest } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -220,7 +221,8 @@ export function MaintenanceKanbanBoard({
       const newFormattedDates: Record<string, string> = {};
       for (const item of requests) {
         if (item.id) {
-          newFormattedDates[item.id] = format(new Date((item as any).reportedDate), 'MMM dd', { locale: localeData });
+          const d = parseDate((item as any).reportedDate);
+          newFormattedDates[item.id] = d ? format(d, 'MMM dd', { locale: localeData }) : '';
         }
       }
       setFormattedDates(newFormattedDates);
