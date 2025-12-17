@@ -12,15 +12,15 @@ import { firebaseConfig } from './config';
 
 const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Check if we're in a browser environment and on localhost
-const isLocalhost = typeof window !== 'undefined' && (
-  window.location.hostname === 'localhost' || 
-  window.location.hostname === '127.0.0.1'
-);
+// Check if we should use emulators
+// Only connect to emulators if explicitly enabled via environment variable
+const useEmulators = typeof window !== 'undefined' && 
+  window.location.hostname === 'localhost' &&
+  process.env.NEXT_PUBLIC_USE_EMULATORS === 'true';
 
 // Initialize Auth
 const auth: Auth = getAuth(app);
-if (isLocalhost) {
+if (useEmulators) {
   try {
     connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: false });
     // eslint-disable-next-line no-console
@@ -29,10 +29,11 @@ if (isLocalhost) {
     if (!e?.message?.includes('already')) {
       // eslint-disable-next-line no-console
       console.error('❌ Auth emulator connection FAILED:', e?.message || e);
-      // eslint-disable-next-line no-console
-      console.warn('⚠️  Make sure emulators are running: npm run emulator:start');
     }
   }
+} else {
+  // eslint-disable-next-line no-console
+  console.info('🌐 Firebase Auth → Production');
 }
 
 // Set auth persistence to LOCAL (browser storage)
@@ -44,9 +45,9 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Initialize Firestore with emulator if on localhost
+// Initialize Firestore with emulator if enabled
 const firestore: Firestore = getFirestore(app);
-if (isLocalhost) {
+if (useEmulators) {
   try {
     // CRITICAL: This must be called synchronously during module init
     // Use 127.0.0.1 instead of 'localhost' to avoid IPv6 issues
@@ -58,10 +59,11 @@ if (isLocalhost) {
     if (!e?.message?.includes('already') && !e?.message?.includes('custom')) {
       // eslint-disable-next-line no-console
       console.error('❌ Firestore emulator connection FAILED:', e?.message || e);
-      // eslint-disable-next-line no-console
-      console.warn('⚠️  Make sure emulators are running: npm run emulator:start');
     }
   }
+} else {
+  // eslint-disable-next-line no-console
+  console.info('🌐 Firestore → Production');
 }
 
 const functions: Functions = getFunctions(app);
