@@ -35,6 +35,15 @@ if (isLocalhost) {
   }
 }
 
+// Set auth persistence to LOCAL (browser storage)
+import { setPersistence, browserLocalPersistence } from 'firebase/auth';
+if (typeof window !== 'undefined') {
+  setPersistence(auth, browserLocalPersistence).catch((error) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to set auth persistence:', error);
+  });
+}
+
 // Initialize Firestore with emulator if on localhost
 const firestore: Firestore = getFirestore(app);
 if (isLocalhost) {

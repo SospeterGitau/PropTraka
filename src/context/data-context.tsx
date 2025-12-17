@@ -113,22 +113,6 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
             );
             unsubscribers.push(unsubscribe);
         });
-              (snapshot) => {
-                try {
-                  const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                  console.log(`[DataContext] Fetched ${snapshot.size} documents from '${name}'.`);
-                  setter(data);
-                } catch (err) {
-                  console.error(`[DataContext] Error processing snapshot for '${name}':`, err);
-                }
-              },
-              (err) => {
-                console.error(`[DataContext] Firestore snapshot error for '${name}':`, err);
-                setError(err.message);
-              }
-            );
-            unsubscribers.push(unsubscribe);
-        });
 
       // UserSettings
       const unsubSettings = onSnapshot(

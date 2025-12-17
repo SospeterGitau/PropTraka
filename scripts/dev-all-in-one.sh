@@ -28,6 +28,10 @@ nohup firebase emulators:start --only firestore,auth --project=studio-4661291525
 EMULATOR_PID=$!
 echo "   Emulator PID: $EMULATOR_PID"
 
+# Detach the emulator process from this script's process group
+# This prevents signals from being forwarded to it
+disown $EMULATOR_PID 2>/dev/null || true
+
 # Wait for emulator ports
 echo "⏳ Waiting for emulators..."
 for i in {1..60}; do
@@ -38,11 +42,11 @@ for i in {1..60}; do
     fi
     if [ $i -eq 60 ]; then
         echo "❌ Timeout"
-        kill $EMULATOR_PID 2>/dev/null || true
+        echo "Check logs: cat /tmp/firebase-emulator-output.log"
         exit 1
     fi
     sleep 1
-    echo -n "."
+    printf "."
 done
 
 # Seed auth
@@ -76,9 +80,10 @@ echo ""
 # Cleanup on exit
 cleanup() {
     echo ""
-    echo "🛑 Stopping..."
-    kill $EMULATOR_PID 2>/dev/null || true
-    pkill -9 -f "firebase.*emulator" 2>/dev/null || true
+    echo "🛑 Stopping Next.js..."
+    pkill -9 -f "next-server" 2>/dev/null || true
+    echo "Note: Emulators will keep running in background"
+    echo "To stop emulators: pkill -9 -f firebase"
 }
 trap cleanup EXIT INT TERM
 

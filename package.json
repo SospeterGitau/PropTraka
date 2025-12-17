@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "./scripts/dev-all-in-one.sh",
+    "dev": "./scripts/dev-simple.sh",
+    "dev:old": "./scripts/dev-all-in-one.sh",
     "dev:emulators": "./scripts/start-emulators-simple.sh",
     "seed-and-dev": "./scripts/seed-and-start-next.sh",
     "dev:watch": "./scripts/dev-watch.sh",
