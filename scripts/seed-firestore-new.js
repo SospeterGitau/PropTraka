@@ -10,7 +10,52 @@
 // 6. Run: node scripts/seed-firestore-new.js
 
 const admin = require('firebase-admin');
-const serviceAccount = require('../serviceAccountKey.json'); // This path assumes serviceAccountKey.json is in the project root
+const fs = require('fs');
+const path = require('path');
+
+// Allow service account to be provided via env var (FIREBASE_SERVICE_ACCOUNT) or
+// via a file path in GOOGLE_APPLICATION_CREDENTIALS or ./serviceAccountKey.json (legacy).
+function loadServiceAccount() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    } catch (err) {
+      console.error('❌ FIREBASE_SERVICE_ACCOUNT is set but is not valid JSON.');
+      process.exit(1);
+    }
+  }
+
+  // If GOOGLE_APPLICATION_CREDENTIALS points to a file, prefer it
+  const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, '..', 'serviceAccountKey.json');
+  if (fs.existsSync(credPath)) {
+    try {
+      return require(credPath);
+    } catch (err) {
+      console.error('❌ Failed to load service account from', credPath, err.message || err);
+      process.exit(1);
+    }
+  }
+
+  // Also accept a service account placed at the recommended path
+  const altPath = path.join(__dirname, '..', '.firebase', 'service-account.json');
+  if (fs.existsSync(altPath)) {
+    try { return require(altPath); } catch (err) { console.error('❌ Failed to load service account from', altPath, err.message || err); process.exit(1); }
+  }
+
+  console.error('❌ No service account found. Set FIREBASE_SERVICE_ACCOUNT env var or place a JSON at .firebase/service-account.json and set GOOGLE_APPLICATION_CREDENTIALS accordingly.');
+  process.exit(1);
+}
+
+const serviceAccount = loadServiceAccount();
+
+// Safety check: refuse to run against production Firestore unless explicitly allowed.
+// To intentionally seed a real project, set ALLOW_REAL_SEED=true in your environment.
+if (!process.env.FIRESTORE_EMULATOR_HOST && process.env.ALLOW_REAL_SEED !== 'true') {
+  console.error('\n❌ Refusing to run seed against production Firestore.');
+  console.error('   To seed production intentionally, set ALLOW_REAL_SEED=true and ensure you understand the impact.');
+  console.error('   To run locally with the emulator, run the emulator (\`npm run emulator:start\`) or set FIRESTORE_EMULATOR_HOST=localhost:8080.\n');
+  process.exit(1);
+}
 
 // --- CONFIGURATION ---
 const FIREBASE_PROJECT_ID = 'studio-4661291525-66fea'; // CORRECTED: Reverted to the project ID from your service account key

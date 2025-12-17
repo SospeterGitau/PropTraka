@@ -26,7 +26,8 @@ import {
   signInWithPopup,
   updateProfile
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase';
 import { SocialAuthButtons } from '@/components/auth/social-auth-buttons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -56,7 +57,6 @@ export default function SignUpPage() {
   const onSubmit = (data: SignupFormValues) => {
     startTransition(async () => {
       const auth = getAuth();
-      const firestore = getFirestore();
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;

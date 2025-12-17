@@ -2,8 +2,8 @@
 'use client';
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getFunctions, Functions } from 'firebase/functions';
 import { getPerformance } from 'firebase/performance';
 import { firebaseConfig } from './config';
@@ -12,10 +12,70 @@ import { firebaseConfig } from './config';
 
 const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-export const auth: Auth = getAuth(app);
-export const firestore: Firestore = getFirestore(app);
-export const functions: Functions = getFunctions(app);
-export const performance: ReturnType<typeof getPerformance> | null = typeof window !== 'undefined' ? getPerformance(app) : null;
+// Check if we're in a browser environment and on localhost
+const isLocalhost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' || 
+  window.location.hostname === '127.0.0.1'
+);
+
+// Initialize Auth
+const auth: Auth = getAuth(app);
+if (isLocalhost) {
+  try {
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: false });
+    // eslint-disable-next-line no-console
+    console.info('✅ Firebase Auth → Emulator (localhost:9099)');
+  } catch (e: any) {
+    if (!e?.message?.includes('already')) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Auth emulator connection FAILED:', e?.message || e);
+      // eslint-disable-next-line no-console
+      console.warn('⚠️  Make sure emulators are running: npm run emulator:start');
+    }
+  }
+}
+
+// Initialize Firestore with emulator if on localhost
+const firestore: Firestore = getFirestore(app);
+if (isLocalhost) {
+  try {
+    // CRITICAL: This must be called synchronously during module init
+    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    // eslint-disable-next-line no-console
+    console.info('✅ Firestore → Emulator (localhost:8080)');
+    
+    // Add a health check
+    setTimeout(async () => {
+      try {
+        const { collection, getDocs, limit, query } = await import('firebase/firestore');
+        await getDocs(query(collection(firestore, 'properties'), limit(1)));
+        // eslint-disable-next-line no-console
+        console.info('✅ Firestore emulator connection verified');
+      } catch (err: any) {
+        // eslint-disable-next-line no-console
+        console.error('❌ Firestore emulator not responding!');
+        // eslint-disable-next-line no-console
+        console.error('   Error:', err?.message || err);
+        // eslint-disable-next-line no-console
+        console.warn('⚠️  Run: npm run dev (to start everything)');
+      }
+    }, 2000);
+  } catch (e: any) {
+    // The "custom object" error happens when emulator is already connected - this is OK
+    if (!e?.message?.includes('already') && !e?.message?.includes('custom')) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Firestore emulator connection FAILED:', e?.message || e);
+      // eslint-disable-next-line no-console
+      console.warn('⚠️  Make sure emulators are running: npm run emulator:start');
+    }
+  }
+}
+
+const functions: Functions = getFunctions(app);
+const performance: ReturnType<typeof getPerformance> | null = typeof window !== 'undefined' ? getPerformance(app) : null;
+
+// Export initialized services
+export { auth, firestore, functions, performance };
 
 
 // --- HOOKS AND PROVIDERS ---
