@@ -40,26 +40,10 @@ const firestore: Firestore = getFirestore(app);
 if (isLocalhost) {
   try {
     // CRITICAL: This must be called synchronously during module init
-    connectFirestoreEmulator(firestore, 'localhost', 8080);
+    // Use 127.0.0.1 instead of 'localhost' to avoid IPv6 issues
+    connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
     // eslint-disable-next-line no-console
-    console.info('✅ Firestore → Emulator (localhost:8080)');
-    
-    // Add a health check
-    setTimeout(async () => {
-      try {
-        const { collection, getDocs, limit, query } = await import('firebase/firestore');
-        await getDocs(query(collection(firestore, 'properties'), limit(1)));
-        // eslint-disable-next-line no-console
-        console.info('✅ Firestore emulator connection verified');
-      } catch (err: any) {
-        // eslint-disable-next-line no-console
-        console.error('❌ Firestore emulator not responding!');
-        // eslint-disable-next-line no-console
-        console.error('   Error:', err?.message || err);
-        // eslint-disable-next-line no-console
-        console.warn('⚠️  Run: npm run dev (to start everything)');
-      }
-    }, 2000);
+    console.info('✅ Firestore → Emulator (127.0.0.1:8080)');
   } catch (e: any) {
     // The "custom object" error happens when emulator is already connected - this is OK
     if (!e?.message?.includes('already') && !e?.message?.includes('custom')) {
