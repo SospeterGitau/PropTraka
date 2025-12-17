@@ -1,7 +1,7 @@
 
 'use client';
 
-import { DataContextProvider } from '@/context/data-context';
+
 import { DashboardNavigation } from '@/components/dashboard-navigation';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { ChatBubble } from '@/components/chat-bubble';
@@ -18,14 +18,12 @@ export default function DashboardLayout({
   const [user] = useAuthState(auth);
 
   return (
-    <DataContextProvider>
-      <AnalyticsProvider>
-        <SubscriptionProvider user={user ?? null}>
-          <DashboardNavigation>{children}</DashboardNavigation>
-          <FirebaseErrorListener />
-          <ChatBubble />
-        </SubscriptionProvider>
-      </AnalyticsProvider>
-    </DataContextProvider>
+    <AnalyticsProvider>
+      <SubscriptionProvider user={user ?? null}>
+        <DashboardNavigation>{children}</DashboardNavigation>
+        <FirebaseErrorListener />
+        <ChatBubble />
+      </SubscriptionProvider>
+    </AnalyticsProvider>
   );
 }

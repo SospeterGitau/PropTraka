@@ -3,6 +3,7 @@
 
 import React, { useMemo, memo, useState, useEffect } from 'react';
 import { useDataContext } from '@/context/data-context';
+import { useUser } from '@/firebase/auth';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,7 +40,7 @@ function MLPredictionsPanel() {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await fetch(
         `https://us-central1-studio-4661291525-66fea.cloudfunctions.net/${functionName}`,
         {
@@ -131,7 +132,7 @@ function MLPredictionsPanel() {
     setLoading(true);
     setShowComparison(true);
     const results = [];
-    
+
     // Compare top 3 properties or all if less than 3
     const propertiesToCompare = properties.slice(0, 3);
 
@@ -150,7 +151,7 @@ function MLPredictionsPanel() {
         });
       }
     }
-    
+
     setComparisonResults(results);
     setLoading(false);
   };
@@ -173,7 +174,7 @@ function MLPredictionsPanel() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>ML Predictions & Analysis</CardTitle>
-          <Button 
+          <Button
             variant={showComparison ? "default" : "outline"}
             onClick={handleCompareProperties}
             disabled={loading}
@@ -212,8 +213,8 @@ function MLPredictionsPanel() {
                   <div className="bg-muted p-4 rounded-md space-y-2">
                     <p><strong>City:</strong> {selectedProperty.address.city}</p>
                     <p><strong>Type:</strong> {selectedProperty.type}</p>
-                    <p><strong>Target Rent:</strong> {formatCurrency(selectedProperty.targetRent || 0, 'en-KE', 'KES')}</p>
-                    <p><strong>Value:</strong> {formatCurrency(selectedProperty.currentValue || 0, 'en-KE', 'KES')}</p>
+                    <p><strong>Target Rent:</strong> {formatCurrency(selectedProperty.targetRent || 0, 'KES', 'en-KE')}</p>
+                    <p><strong>Value:</strong> {formatCurrency(selectedProperty.currentValue || 0, 'KES', 'en-KE')}</p>
                   </div>
                 )}
               </>
@@ -235,7 +236,7 @@ function MLPredictionsPanel() {
           </CardHeader>
           <CardContent>
             {comparisonResults.length > 0 ? (
-               <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
@@ -251,7 +252,7 @@ function MLPredictionsPanel() {
                     {comparisonResults.map((result: any, idx: number) => (
                       <tr key={idx} className="hover:bg-muted/20">
                         <td className="px-4 py-3 font-medium">{result.property_name}</td>
-                        <td className="px-4 py-3">{formatCurrency(result.initial_investment || 0, 'en-KE', 'KES')}</td>
+                        <td className="px-4 py-3">{formatCurrency(result.initial_investment || 0, 'KES', 'en-KE')}</td>
                         <td className="px-4 py-3 font-bold text-green-600">{result.roi_percentage}</td>
                         <td className="px-4 py-3 text-blue-600">{result.annual_roi}%</td>
                         <td className="px-4 py-3">{result.break_even_months} months</td>
@@ -265,7 +266,7 @@ function MLPredictionsPanel() {
               </div>
             ) : (
               <div className="text-center py-8">
-                 {loading ? <p>Comparing properties...</p> : <p>No comparison data available.</p>}
+                {loading ? <p>Comparing properties...</p> : <p>No comparison data available.</p>}
               </div>
             )}
           </CardContent>
@@ -293,13 +294,15 @@ function MLPredictionsPanel() {
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
                     <p className="text-muted-foreground">Predicted Price (5 Years)</p>
                     <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {formatCurrency(priceResult.predicted_price, 'en-KE', 'KES')}
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {formatCurrency(priceResult.predicted_price, 'KES', 'en-KE')}
+                      </p>
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-muted p-2 rounded">
                       <p className="text-xs text-muted-foreground">Current</p>
-                      <p className="font-semibold">{formatCurrency(selectedProperty?.currentValue || 0, 'en-KE', 'KES')}</p>
+                      <p className="font-semibold">{formatCurrency(selectedProperty?.currentValue || 0, 'KES', 'en-KE')}</p>
                     </div>
                     <div className="bg-muted p-2 rounded">
                       <p className="text-xs text-muted-foreground">Appreciation</p>
@@ -338,7 +341,7 @@ function MLPredictionsPanel() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
                       <span>Recommended Rental</span>
-                      <span className="font-semibold">{formatCurrency(demandResult.recommended_rental_rate, 'en-KE', 'KES')}</span>
+                      <span className="font-semibold">{formatCurrency(demandResult.recommended_rental_rate, 'KES', 'en-KE')}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span>Market Status</span>
@@ -377,7 +380,7 @@ function MLPredictionsPanel() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs">
                       <span>Total Return</span>
-                      <span className="font-semibold text-green-600">+{formatCurrency(roiResult.total_return, 'en-KE', 'KES')}</span>
+                      <span className="font-semibold text-green-600">+{formatCurrency(roiResult.total_return, 'KES', 'en-KE')}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span>Annual Yield</span>
@@ -396,6 +399,7 @@ function MLPredictionsPanel() {
 
 const DashboardPage = memo(function DashboardPage() {
   const { properties, revenue, expenses, tenancies, settings, loading } = useDataContext();
+  const { user } = useUser();
   const locale = settings?.dateFormat || 'en-KE';
   const currency = settings?.currency || 'KES';
   const companyName = settings?.companyName || 'My Company';
@@ -458,7 +462,7 @@ const DashboardPage = memo(function DashboardPage() {
 
   const chartData = useMemo(() => {
     const monthsData: Record<string, { date: string; revenue: number; expenses: number }> = {};
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -491,18 +495,18 @@ const DashboardPage = memo(function DashboardPage() {
 
   const profitPerProperty = useMemo(() => {
     return properties.map(prop => {
-        const propRevenue = revenue
-            .filter(r => r.propertyId === prop.id && r.status === 'Paid')
-            .reduce((sum, r) => sum + r.amount, 0);
-        
-        const propExpenses = expenses
-            .filter(e => e.propertyId === prop.id)
-            .reduce((sum, e) => sum + e.amount, 0);
-        
-        return {
-            name: `${prop.name}`,
-            profit: propRevenue - propExpenses,
-        };
+      const propRevenue = revenue
+        .filter(r => r.propertyId === prop.id && r.status === 'Paid')
+        .reduce((sum, r) => sum + r.amount, 0);
+
+      const propExpenses = expenses
+        .filter(e => e.propertyId === prop.id)
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      return {
+        name: `${prop.name}`,
+        profit: propRevenue - propExpenses,
+      };
     }).sort((a, b) => b.profit - a.profit).slice(0, 5); // Top 5
   }, [properties, revenue, expenses]);
 
@@ -529,7 +533,7 @@ const DashboardPage = memo(function DashboardPage() {
 
   return (
     <>
-      <PageHeader title={`Welcome back, ${companyName}!`} />
+      <PageHeader title={`Welcome back, ${user?.displayName || companyName}!`} />
 
       {metrics && (
         <>
@@ -549,7 +553,7 @@ const DashboardPage = memo(function DashboardPage() {
               description={`${metrics.activeTenanciesCount} active tenanc(ies)`}
               formatAs="percent"
             />
-            
+
             <KpiCard
               icon={TrendingDown}
               title="Total Expenses"
@@ -565,7 +569,7 @@ const DashboardPage = memo(function DashboardPage() {
               description="Total outstanding arrears"
               variant="destructive"
             />
-            
+
             <KpiCard
               icon={Building}
               title="Portfolio Asset Value"
@@ -609,7 +613,7 @@ const DashboardPage = memo(function DashboardPage() {
                 <AreaChart data={chartData} />
               </CardContent>
             </Card>
-            
+
             {properties.length > 0 && (
               <Card>
                 <CardHeader>
@@ -621,10 +625,10 @@ const DashboardPage = memo(function DashboardPage() {
               </Card>
             )}
           </div>
-          
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
             <Card className="md:col-span-2 lg:col-span-3">
-               <CardHeader>
+              <CardHeader>
                 <CardTitle>Quick Links</CardTitle>
                 <CardDescription>Navigate to key sections</CardDescription>
               </CardHeader>

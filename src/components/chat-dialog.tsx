@@ -18,7 +18,7 @@ import { useUser } from '@/firebase/auth'; // CORRECTED IMPORT PATH for useUser
 import { firestore, errorEmitter } from '@/firebase'; // firestore and errorEmitter are still from @/firebase
 import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { getChatResponse } from '@/ai/flows/get-chat-response-flow';
 
@@ -39,6 +39,7 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
         if (!user) return null;
         return query(
             collection(firestore, 'chatMessages'),
+            where('ownerId', '==', user.uid),
             orderBy('timestamp', 'asc'),
             limit(100)
         );
@@ -152,12 +153,12 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                         ))}
                         {isThinking && (
                             <div className="flex items-start gap-3 justify-start">
-                                 <div className="bg-primary/10 p-2 rounded-full">
+                                <div className="bg-primary/10 p-2 rounded-full">
                                     <Bot className="w-6 h-6 text-primary" />
                                 </div>
                                 <div className="p-3 rounded-lg bg-muted flex items-center gap-2">
-                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                     <span className="text-sm text-muted-foreground">Thinking...</span>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span className="text-sm text-muted-foreground">Thinking...</span>
                                 </div>
                             </div>
                         )}
