@@ -8,6 +8,13 @@ service cloud.firestore {
       return resource.data.keys().hasAny(['isSampleData']) && resource.data.isSampleData == true;
     }
 
+    // Helper function to check if user owns the document
+    function isOwner() {
+      return request.auth != null && 
+             resource.data.keys().hasAny(['ownerId']) && 
+             request.auth.uid == resource.data.ownerId;
+    }
+
     // This rule matches any document in any collection.
     match /{document=**} {
 
@@ -15,7 +22,7 @@ service cloud.firestore {
       // 1. User is authenticated AND document's ownerId matches their UID, OR
       // 2. Document is marked as sample data (isSampleData: true)
       allow read: if request.auth != null && (
-        request.auth.uid == resource.data.ownerId ||
+        isOwner() ||
         isSampleData()
       );
 
