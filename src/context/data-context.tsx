@@ -95,9 +95,24 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
 
     try {
         collectionsToSubscribe.forEach(({ name, setter }) => {
+            const startTime = Date.now();
+            console.log(`[DataContext] Setting up listener for: ${name}`);
             const q = query(collection(firestore, name), where('ownerId', '==', user.uid));
             const unsubscribe = onSnapshot(
               q,
+              (snapshot) => {
+                const elapsed = Date.now() - startTime;
+                console.log(`[DataContext] ${name}: received ${snapshot.size} docs (${elapsed}ms)`);
+                const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                setter(docs as any);
+              },
+              (err) => {
+                console.error(`[DataContext] Error in ${name} listener:`, err);
+                setError(`Failed to fetch ${name}: ${err.message}`);
+              }
+            );
+            unsubscribers.push(unsubscribe);
+        });
               (snapshot) => {
                 try {
                   const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));

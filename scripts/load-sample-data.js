@@ -54,7 +54,11 @@ async function initAndLoad() {
 
   const db = app.firestore();
 
-  console.log('\n🌱 Loading sample data (marked with isSampleData: true)...\n');
+  // Use test-user-001 as the owner for sample data
+  const SAMPLE_OWNER_ID = 'test-user-001';
+
+  console.log('\n🌱 Loading sample data (marked with isSampleData: true)...');
+  console.log(`   Owner ID: ${SAMPLE_OWNER_ID}\n`);
 
   const sampleData = {
     properties: [
@@ -71,6 +75,7 @@ async function initAndLoad() {
         mortgage: 2500000,
         currentValue: 5500000,
         rentalValue: 45000,
+        ownerId: SAMPLE_OWNER_ID,
         isSampleData: true,
         createdDate: new Date().toISOString(),
         updatedDate: new Date().toISOString(),
@@ -88,6 +93,7 @@ async function initAndLoad() {
         mortgage: 6000000,
         currentValue: 13000000,
         rentalValue: 120000,
+        ownerId: SAMPLE_OWNER_ID,
         isSampleData: true,
         createdDate: new Date().toISOString(),
         updatedDate: new Date().toISOString(),
@@ -103,6 +109,7 @@ async function initAndLoad() {
         idNumber: 'SAMPLE123',
         employmentStatus: 'Employed',
         employer: 'Sample Corp',
+        ownerId: SAMPLE_OWNER_ID,
         isSampleData: true,
         createdDate: new Date().toISOString(),
       },
