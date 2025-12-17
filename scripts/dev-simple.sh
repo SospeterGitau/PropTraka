@@ -12,18 +12,30 @@ sleep 2
 
 # Start emulators in dedicated terminal/background
 echo "📦 Starting Firebase Emulators (background)..."
-(firebase emulators:start --only firestore,auth --project=studio-4661291525-66fea > /tmp/firebase-emulator.log 2>&1) &
+setsid firebase emulators:start --only firestore,auth --project=studio-4661291525-66fea > /tmp/firebase-emulator.log 2>&1 &
+EMULATOR_PID=$!
+echo "   Emulator PID: $EMULATOR_PID"
 
 # Wait for ports (simpler check)
 echo "⏳ Waiting for emulators..."
-for i in {1..30}; do
+WAITED=0
+while [ $WAITED -lt 60 ]; do
     if curl -s http://localhost:8080 > /dev/null 2>&1 && curl -s http://localhost:9099 > /dev/null 2>&1; then
+        echo ""
         echo "✅ Emulators ready!"
         break
     fi
+    WAITED=$((WAITED + 2))
     sleep 2
-    echo -n "."
+    printf "."
 done
+
+if [ $WAITED -ge 60 ]; then
+    echo ""
+    echo "❌ Emulators failed to start in 60 seconds"
+    echo "Check: cat /tmp/firebase-emulator.log"
+    exit 1
+fi
 
 # Seed data
 echo ""
