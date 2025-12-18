@@ -196,7 +196,7 @@ export function TenantForm({
             I confirm the tenant has consented to their personal data being collected and processed for tenancy management purposes. *
           </label>
           <p className="text-sm text-muted-foreground">
-            This is required for KYC compliance. View the <Link href="/privacy-policy" className="text-primary underline">Privacy Policy</Link>.
+            This is required for KYC compliance. View the <Link href="/help-center/privacy-policy" className="text-primary underline">Privacy Policy</Link>.
           </p>
         </div>
       </div>

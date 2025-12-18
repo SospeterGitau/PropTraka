@@ -13,10 +13,18 @@ export const predictPrice = functions.https.onCall(
       const { location, propertyType, bedrooms, sqm, currentPrice } = data;
 
       // Input validation
-      if (!location || !propertyType || !bedrooms || !sqm || !currentPrice) {
+      const missingFields = [];
+      if (!location) missingFields.push("location");
+      if (!propertyType) missingFields.push("propertyType");
+      if (!bedrooms) missingFields.push("bedrooms");
+      if (!sqm) missingFields.push("sqm");
+      if (!currentPrice) missingFields.push("currentPrice");
+
+      if (missingFields.length > 0) {
+        console.error("Missing fields:", missingFields, "Received data:", JSON.stringify(data));
         throw new functions.https.HttpsError(
           "invalid-argument",
-          "Missing required fields"
+          `Missing required fields: ${missingFields.join(", ")}`
         );
       }
 

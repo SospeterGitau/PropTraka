@@ -16,6 +16,14 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import {
     Card,
     CardContent,
     CardDescription,
@@ -23,9 +31,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { PropertyForm } from '@/components/property-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { PlusCircle, Loader2, Home, BarChart2, TrendingUp, AlertCircle, Percent } from 'lucide-react';
+import { PlusCircle, Loader2, Home, BarChart2, TrendingUp, AlertCircle, Percent, Search, Edit2, Trash2 } from 'lucide-react';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth'; // Corrected import
@@ -48,6 +58,17 @@ export function PropertiesClient() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
     const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredProperties = useMemo(() => {
+        if (!searchTerm) return dataContextProperties;
+        const lowerTerm = searchTerm.toLowerCase();
+        return dataContextProperties.filter(property =>
+            property.name.toLowerCase().includes(lowerTerm) ||
+            property.address.city?.toLowerCase().includes(lowerTerm) ||
+            property.type.toLowerCase().includes(lowerTerm)
+        );
+    }, [dataContextProperties, searchTerm]);
 
     const propertiesCollectionRef = useMemo(() => {
         if (!user) return null; // Ensure user is available
@@ -118,7 +139,7 @@ export function PropertiesClient() {
             // Delete related documents first (tenancies, revenue, expenses, maintenance requests, app documents)
             // This is a simplified example; in a real app, you'd use Firebase Functions
             // to recursively delete subcollections and related data securely on the backend.
-            
+
             // Fetch and delete tenancies
             const tenanciesSnapshot = await getDocs(query(collection(firestore, 'tenancies'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
             const batch = writeBatch(firestore); // Use firestore directly
@@ -143,7 +164,7 @@ export function PropertiesClient() {
             // Delete the property itself
             batch.delete(doc(firestore, 'properties', propertyToDelete.id!)); // Use firestore directly
             await batch.commit();
-            
+
             setPropertyToDelete(null);
             setDeleteConfirmationOpen(false);
         } catch (e) {
@@ -206,60 +227,109 @@ export function PropertiesClient() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                     <KpiCard
-                        icon={Home}
-                        title="Total Properties"
-                        value={totalProperties}
-                        description="Currently managed"
-                        formatAs="integer"
-                    />
-                    <KpiCard
-                        icon={TrendingUp}
-                        title="Total Portfolio Value"
-                        value={totalPropertyValue}
-                        description="Estimated current market value"
-                        formatAs="currency"
-                    />
-                     <KpiCard
-                        icon={Percent}
-                        title="Average Occupancy"
-                        value={averageOccupancyRate}
-                        description="Across all properties"
-                        formatAs="percent"
-                    />
+                <div className="space-y-6">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <KpiCard
+                            icon={Home}
+                            title="Total Properties"
+                            value={totalProperties}
+                            description="Currently managed"
+                            formatAs="integer"
+                        />
+                        <KpiCard
+                            icon={TrendingUp}
+                            title="Total Portfolio Value"
+                            value={totalPropertyValue}
+                            description="Estimated current market value"
+                            formatAs="currency"
+                        />
+                        <KpiCard
+                            icon={Percent}
+                            title="Average Occupancy"
+                            value={averageOccupancyRate}
+                            description="Across all properties"
+                            formatAs="percent"
+                        />
+                    </div>
 
-                    {properties.map((property) => (
-                        <Card key={property.id} className="relative group">
-                            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                <div className="flex items-center space-x-2">
-                                    <PropertyIcon type={property.type} className="h-5 w-5 text-muted-foreground" />
-                                    <CardTitle className="text-lg font-semibold">{property.name}</CardTitle>
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                    {property.address.city}
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {formatCurrency(property.currentValue || 0, 'en-KE', 'KES')}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Target Rent: {formatCurrency(property.targetRent || 0, 'en-KE', 'KES')}/month
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    Status: <span className="capitalize">{property.status}</span>
-                                </p>
-                                <div className="flex justify-end gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="outline" size="sm" onClick={() => handleEditProperty(property)}>Edit</Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDeleteProperty(property)}>Delete</Button>
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href={`/properties/${property.id}`}>View</Link>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Properties List</CardTitle>
+                            <CardDescription>Manage your portfolio properties.</CardDescription>
+
+                            <div className="relative mt-4">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search by name, address, or type..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="relative w-full overflow-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Property</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Value</TableHead>
+                                            <TableHead>Target Rent</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredProperties.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                                    {searchTerm ? 'No properties found matching your search.' : 'No properties found.'}
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredProperties.map((property) => (
+                                                <TableRow key={property.id}>
+                                                    <TableCell>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-semibold">{property.name}</span>
+                                                            <span className="text-xs text-muted-foreground">{property.address.city}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            <PropertyIcon type={property.type} className="h-4 w-4 text-muted-foreground" />
+                                                            <span>{property.type}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant="secondary" className={`capitalize ${property.status === 'occupied' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : ''}`}>
+                                                            {property.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formatCurrency(property.currentValue || 0, 'en-KE', 'KES')}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {formatCurrency(property.targetRent || 0, 'en-KE', 'KES')}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button variant="ghost" size="sm" onClick={() => handleEditProperty(property)} className="h-8 w-8 p-0"><Edit2 className="h-4 w-4" /></Button>
+                                                            <Button variant="ghost" size="sm" onClick={() => handleDeleteProperty(property)} className="h-8 w-8 p-0 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                                                            <Button variant="outline" size="sm" asChild>
+                                                                <Link href={`/properties/${property.id}`}>View</Link>
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
 
@@ -268,8 +338,8 @@ export function PropertiesClient() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the property 
-                            <span className="font-bold">{propertyToDelete?.name}</span> and all its associated data 
+                            This action cannot be undone. This will permanently delete the property
+                            <span className="font-bold">{propertyToDelete?.name}</span> and all its associated data
                             (tenancies, revenue, expenses, maintenance requests, and documents).
                         </AlertDialogDescription>
                     </AlertDialogHeader>
