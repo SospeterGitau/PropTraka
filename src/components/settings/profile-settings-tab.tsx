@@ -242,9 +242,7 @@ export default function ProfileSettingsTab() {
     }
   };
 
-  const handleClearTemplateField = (fieldName: keyof UserSettings) => {
-    setTempSettings((prev) => ({ ...(prev ?? {}), [fieldName]: '' } as UserSettings));
-  };
+
 
 
   if (isDataLoading || !tempSettings) {
@@ -385,45 +383,7 @@ export default function ProfileSettingsTab() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Document Templates</CardTitle>
-              <CardDescription>Please provide links to your documents stored in your cloud storage provider (e.g., Google Drive, Dropbox).</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { id: 'templateApplicationFormUrl', label: 'Application Form Template URL' },
-                { id: 'templateLandlordAssessmentFormUrl', label: 'Landlord Assessment Form URL' },
-                { id: 'templateTenancyAgreementUrl', label: 'Tenancy Agreement Template URL' },
-                { id: 'templateMoveInChecklistUrl', label: 'Move-in Checklist Template URL' },
-                { id: 'templateMoveOutChecklistUrl', label: 'Move-out Checklist Template URL' },
-              ].map(field => (
-                <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.id}>{field.label}</Label>
-                  <div className="relative">
-                    <Input
-                      id={field.id}
-                      value={tempSettings[field.id as keyof UserSettings] as string || ''}
-                      onChange={(e) => setTempSettings({ ...tempSettings, [field.id]: e.target.value })}
-                      placeholder="https://docs.google.com/document/..."
-                      className="pr-10"
-                    />
-                    {isEditing && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleClearTemplateField(field.id as keyof UserSettings)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+
 
 
           <Card>
