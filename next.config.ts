@@ -1,35 +1,20 @@
-import type {NextConfig} from 'next';
-import path from 'path';
+import createNextIntlPlugin from 'next-intl/plugin';
+import type { NextConfig } from "next";
+
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  outputFileTracingRoot: process.cwd(),
+  /* config options here */
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https' ,
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
+        pathname: '/v0/b/**',
       },
     ],
   },
-  webpack: (config) => {
-    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
-    return config;
-  },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

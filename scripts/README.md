@@ -52,6 +52,17 @@ Used in CI/CD pipelines.
 FIREBASE_SERVICE_ACCOUNT='<json>' node scripts/write-service-account.js
 ```
 
+### `update-translations.ts`
+**AI Translation Automation**
+- Audits translation files for missing keys.
+- Uses Genkit + Gemini to auto-translate content from `en.json`.
+- Requires `GOOGLE_API_KEY` or `GEMINI_API_KEY` in `.env.local` (or environment).
+
+**Usage:**
+```bash
+npm run i18n:update
+```
+
 ## Production Data Scripts
 
 ⚠️ **Use with caution - these interact with production Firestore**

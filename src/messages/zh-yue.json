@@ -1,0 +1,26 @@
+{
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "properties": "Properties",
+        "revenue": "Revenue",
+        "maintenance": "Maintenance",
+        "logout": "Log Out"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "Settings": {
+        "title": "Profile & Settings",
+        "language": "Language",
+        "languageDesc": "Select your preferred language."
+    },
+    "NewFeature": "badge",
+    "badge": "新",
+    "description": "AI會自動將此文字翻譯成所有支援嘅語言。",
+    "新": "description",
+    "AI 自動將此文字翻譯成所有支援嘅語言。": ""
+}

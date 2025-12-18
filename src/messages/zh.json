@@ -1,0 +1,27 @@
+{
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "properties": "Properties",
+        "revenue": "Revenue",
+        "maintenance": "Maintenance",
+        "logout": "Log Out"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "Settings": {
+        "title": "Profile & Settings",
+        "language": "Language",
+        "languageDesc": "Select your preferred language."
+    },
+    "NewFeature": 2,
+    "新": "description",
+    "AI 自动将此文本翻译为所有支持的语言。": "zh",
+    "NewFeature_zh-Hans-CN_badge_value": "新",
+    "NewFeature_zh-Hans-CN_description_value": "AI 自动将此文本翻译成所有支持的语言。",
+    "description": "AI 自动将此文本翻译为所有支持的语言。"
+}

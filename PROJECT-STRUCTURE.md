@@ -22,12 +22,19 @@ PropTraka/
 ```
 src/
 ├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Authentication pages (signin, signup)
-│   ├── (dashboard)/       # Dashboard layout and pages
-│   ├── contexts/          # React contexts
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
+│   ├── [locale]/          # Localized routes root
+│   │   ├── (auth)/        # Authentication pages (signin, signup)
+│   │   ├── (dashboard)/   # Dashboard layout and pages
+│   │   ├── layout.tsx     # Root locale layout
+│   │   └── page.tsx       # Localized home page
+│   ├── api/               # API routes (not localized)
 │   └── globals.css        # Global styles
+│
+├── messages/               # i18n translation files (en.json, etc.)
+│
+├── i18n.ts                 # next-intl configuration
+├── middleware.ts           # Auth & Locale middleware
+├── navigation.ts           # Navigation wrappers (Link, useRouter)
 │
 ├── components/             # React components
 │   ├── ui/                # Shadcn UI components

@@ -1,0 +1,24 @@
+{
+    "Navigation": {
+        "dashboard": "Tablero",
+        "properties": "Propiedades",
+        "revenue": "Ingresos",
+        "maintenance": "Mantenimiento",
+        "logout": "Cerrar sesión"
+    },
+    "Common": {
+        "loading": "Cargando...",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "edit": "Editar",
+        "delete": "Eliminar"
+    },
+    "Settings": {
+        "title": "Perfil y Configuración",
+        "language": "Idioma",
+        "languageDesc": "Seleccione su idioma preferido."
+    },
+    "NewFeature": "badge",
+    "badge": "Nuevo",
+    "description": "La IA traduce automáticamente este texto a todos los idiomas compatibles."
+}

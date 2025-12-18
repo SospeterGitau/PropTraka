@@ -18,3 +18,4 @@ import '@/ai/flows/generate-health-insights.ts';
 import '@/ai/flows/analyze-maintenance-request.ts';
 import '@/ai/flows/portfolio-assistant-chat.ts';
 import '@/ai/flows/assess-tenant-risk.ts';
+import '@/ai/flows/translate-locales.ts';

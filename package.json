@@ -27,7 +27,8 @@
     "sample-data:clear": "FIRESTORE_EMULATOR_HOST=localhost:8080 node scripts/clear-sample-data.js",
     "test:e2e": "playwright test",
     "playwright:install": "npx playwright install --with-deps",
-    "service-account:write": "node scripts/write-service-account.js"
+    "service-account:write": "node scripts/write-service-account.js",
+    "i18n:update": "GOOGLE_APPLICATION_CREDENTIALS=./.firebase/service-account.json tsx scripts/update-translations.ts"
   },
   "engines": {
     "node": "20.x"
@@ -69,6 +70,7 @@
     "genkit": "^1.14.1",
     "iron-session": "^8.0.2",
     "next": "^16.0.7",
+    "next-intl": "^4.6.1",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

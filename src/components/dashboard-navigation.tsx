@@ -1,9 +1,6 @@
-
-'use client';
-
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Link, usePathname, useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
   Building,
@@ -33,15 +30,16 @@ interface DashboardNavigationProps {
 }
 
 export function DashboardNavigation({ children }: DashboardNavigationProps) {
+  const t = useTranslations('Navigation');
   const pathname = usePathname();
   const router = useRouter();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/properties', label: 'Properties', icon: Building },
-    { href: '/revenue', label: 'Revenue', icon: TrendingUp },
-    { href: '/maintenance', label: 'Maintenance', icon: Wrench },
+    { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { href: '/properties', label: t('properties'), icon: Building },
+    { href: '/revenue', label: t('revenue'), icon: TrendingUp },
+    { href: '/maintenance', label: t('maintenance'), icon: Wrench },
   ];
 
   const addMenuItems = [
@@ -85,7 +83,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
               className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 px-3 min-h-[44px]" // Ensure min height for touch
             >
               <LogOut className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t('logout')}</span>
             </button>
           </div>
         </div>

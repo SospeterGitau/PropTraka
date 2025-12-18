@@ -4,6 +4,7 @@ Property management system with Firebase
 ## ✨ Key Features
 
 - **📱 Mobile-First Design**: Optimized for on-the-go management with Uber-style navigation and touch-friendly controls.
+- **🌐 Multi-language Support**: Full internationalization (i18n) support for 13+ languages including English, French, Spanish, Chinese, and more.
 - **🧠 AI Insights**: Powered by Genkit, providing portfolio health checks, diversity scoring, and predictive maintenance alerts.
 - **💰 Smart Billing**: Integrated recurring billing and trial management.
 - **📊 Real-time Dashboard**: Instant financial overview, occupancy tracking, and interactive charts.

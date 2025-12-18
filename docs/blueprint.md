@@ -2,6 +2,7 @@
 
 ## Core Features:
 - **Mobile-First Dashboard**: Uber-style navigation and touch-optimized layout for managing properties on the go. Displays key metrics: Occuapncy, Revenue, Arrears, and Net Profit.
+- **Global Accessibility**: Built-in multi-language support (i18n) catering to a diverse range of international users (13+ locales).
 - **AI-Powered Insights**: Leveraging Genkit to analyze portfolio health, predict maintenance needs, and score portfolio diversity. Generates actionable insights to improve ROI.
 - **Property Management**: Comprehensive CRUD operations for properties, including image management, mortgage tracking, and detailed unit specifications.
 - **Revenue & Expense Tracking**: Ledger-based financial tracking with support for recurring payments, one-off expenses, and detailed categorization.

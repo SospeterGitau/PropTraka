@@ -1,0 +1,28 @@
+{
+    "Navigation": {
+        "dashboard": "Tableau de bord",
+        "properties": "Propriétés",
+        "revenue": "Revenus",
+        "maintenance": "Entretien",
+        "logout": "Se déconnecter"
+    },
+    "Common": {
+        "loading": "Chargement...",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "edit": "Modifier",
+        "delete": "Supprimer"
+    },
+    "Settings": {
+        "title": "Profil et paramètres",
+        "language": "Langue",
+        "languageDesc": "Sélectionnez votre langue préférée."
+    },
+    "NewFeature_badge": "Nouveau",
+    "NewFeature_description": "L'IA traduit automatiquement ce texte dans toutes les langues prises en charge.",
+    "NewFeature": "fr",
+    "Nouveau": "description",
+    "L'IA traduit automatiquement ce texte dans toutes les langues prises en charge.": "",
+    "badge": "Nouveau",
+    "description": "L'IA traduit automatiquement ce texte dans toutes les langues prises en charge."
+}

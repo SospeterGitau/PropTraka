@@ -13,6 +13,8 @@ import { useDataContext } from '@/context/data-context';
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/app/actions';
 import { collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { useRouter, usePathname } from '@/navigation';
+import { useLocale } from 'next-intl';
 
 import type { ResidencyStatus, UserSettings } from '@/lib/types';
 import { clearSampleData } from '@/lib/sample-data';
@@ -43,6 +45,9 @@ export default function ProfileSettingsTab() {
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const { toast } = useToast();
+  const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
 
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -149,6 +154,11 @@ export default function ProfileSettingsTab() {
         await updateSettings(tempSettings ?? {});
         if (tempSettings?.theme) {
           setTheme(tempSettings.theme)
+        }
+
+        // Handle language change
+        if (tempSettings?.language && tempSettings.language !== currentLocale) {
+          router.replace(pathname, { locale: tempSettings.language });
         }
 
         if (profileUpdated || emailUpdated) {
@@ -437,6 +447,31 @@ export default function ProfileSettingsTab() {
                   <SelectContent>
                     <SelectItem value="en-GB">DD/MM/YYYY</SelectItem>
                     <SelectItem value="en-US">MM/DD/YYYY</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Language</Label>
+                <Select
+                  value={tempSettings.language || currentLocale}
+                  onValueChange={(v) => setTempSettings({ ...tempSettings, language: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="zh-yue">Cantonese (Traditional)</SelectItem>
+                    <SelectItem value="zh">Mandarin (Simplified)</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="pt">Portuguese</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="it">Italian</SelectItem>
+                    <SelectItem value="am">Amharic (Ethiopian)</SelectItem>
+                    <SelectItem value="ar">Arabic</SelectItem>
+                    <SelectItem value="hi">Hindi</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="ja">Japanese</SelectItem>
+                    <SelectItem value="ur">Urdu</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
