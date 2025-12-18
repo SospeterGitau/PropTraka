@@ -1,6 +1,14 @@
 # PropTraka
 Property management system with Firebase
 
+## ✨ Key Features
+
+- **📱 Mobile-First Design**: Optimized for on-the-go management with Uber-style navigation and touch-friendly controls.
+- **🧠 AI Insights**: Powered by Genkit, providing portfolio health checks, diversity scoring, and predictive maintenance alerts.
+- **💰 Smart Billing**: Integrated recurring billing and trial management.
+- **📊 Real-time Dashboard**: Instant financial overview, occupancy tracking, and interactive charts.
+- **🔐 Role-Based Access**: Secure authentication with support for Landlords, Property Managers, and Investors.
+
 ## CI & Deploy
 
 - **Local dev:** Run `npx next dev --hostname 0.0.0.0` from the repository root. If you intend to run the app under the `workspace` folder, use `npm run dev` inside `workspace`.

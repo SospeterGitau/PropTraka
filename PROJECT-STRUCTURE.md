@@ -52,7 +52,10 @@ src/
 │   ├── types.ts           # UI-compatible types
 │   └── utils.ts           # Utility functions
 │
-└── ai/                     # AI/Genkit flows (if applicable)
+└── ai/                     # AI/Genkit Integration
+    ├── flows/             # Defined Genkit flows (maintenance, health, etc.)
+    ├── dev.ts             # Development tools for AI
+    └── genkit.ts          # Genkit configuration and initialization
 ```
 
 ## 🔧 Scripts (`scripts/`)
