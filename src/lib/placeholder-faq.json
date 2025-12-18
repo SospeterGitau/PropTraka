@@ -86,6 +86,14 @@
                 "content": "<b>Control your experience from the 'Account' page.</b><br/><br/>Here you can switch between Light and Dark mode, set your preferred currency and date format, and manage your subscription. This is also where you can find the **'Clear Sample Data'** button if you wish to reset your dashboard after testing."
             },
             {
+                "title": "How does the Free Trial work?",
+                "content": "<b>Experience the full power of PropTraka for 14 days, completely free.</b><br/><br/>When you sign up, you automatically receive a 14-day trial of our Professional plan. This gives you access to all premium features, including AI insights and advanced reports. No credit card is required to start. You can upgrade to a paid plan at any time from the Settings page."
+            },
+            {
+                "title": "What payment methods do you accept?",
+                "content": "<b>We accept secure payments via PesaPal.</b><br/><br/>You can pay for your subscription using M-Pesa, Visa, or Mastercard. All payments are processed securely through PesaPal, ensuring your financial data is protected. Subscriptions can be billed monthly or annually (with a discount)."
+            },
+            {
                 "title": "What is the PropTraka API?",
                 "content": "<b>Enterprise-grade connectivity for developers.</b><br/><br/>Users on the Enterprise plan can use the PropTraka API to programmatically access their data. Whether you're building a custom dashboard or integrating with accounting software, our read-only API endpoints for Properties, Revenue, and Expenses give you the raw data you need."
             }

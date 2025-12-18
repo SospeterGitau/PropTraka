@@ -26,10 +26,11 @@ import {
   signInWithPopup,
   updateProfile
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { firestore } from '@/firebase';
 import { SocialAuthButtons } from '@/components/auth/social-auth-buttons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { addDays } from 'date-fns';
 
 const signupSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
@@ -60,39 +61,52 @@ export default function SignUpPage() {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;
-        
+
         await updateProfile(user, { displayName: data.fullName });
 
-        // Save additional profile info to Firestore
+        // Save additional profile info to Firestore with Trial Subscription
         const userSettingsRef = doc(firestore, 'userSettings', user.uid);
+        const trialExpiresAt = Timestamp.fromDate(addDays(new Date(), 14));
+
         await setDoc(userSettingsRef, {
-            ownerId: user.uid,
-            role: data.role || null,
-            portfolioSize: data.portfolioSize || null,
+          ownerId: user.uid,
+          role: data.role || null,
+          portfolioSize: data.portfolioSize || null,
+          subscription: {
+            plan: 'trial',
+            startedAt: Timestamp.now(),
+            expiresAt: trialExpiresAt
+          },
+          emailNotificationsEnabled: true,
+          theme: 'system',
+          currency: 'KES',
+          dateFormat: 'DD/MM/YYYY',
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
         }, { merge: true });
 
         toast({
-            title: "Account Created",
-            description: "Welcome! Your new account has been successfully created.",
+          title: "Account Created",
+          description: "Welcome! Your new account has been successfully created.",
         });
         await createSession();
       } catch (error: any) {
         if (error.message?.includes('NEXT_REDIRECT')) {
-            return;
+          return;
         }
-        
+
         if (error.code === 'auth/email-already-in-use') {
-            toast({
-                variant: "destructive",
-                title: "Sign Up Failed",
-                description: "An account with this email address already exists.",
-            });
+          toast({
+            variant: "destructive",
+            title: "Sign Up Failed",
+            description: "An account with this email address already exists.",
+          });
         } else {
-            toast({
-                variant: 'destructive',
-                title: 'Sign Up Error',
-                description: error.message,
-            });
+          toast({
+            variant: 'destructive',
+            title: 'Sign Up Error',
+            description: error.message,
+          });
         }
       }
     });
@@ -103,16 +117,16 @@ export default function SignUpPage() {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
-        await createSession();
+      await signInWithPopup(auth, provider);
+      await createSession();
     } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Google Sign-In Failed",
-            description: error.message,
-        });
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: error.message,
+      });
     } finally {
-        setIsGooglePending(false);
+      setIsGooglePending(false);
     }
   }
 
@@ -124,106 +138,106 @@ export default function SignUpPage() {
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-4">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
                 id="fullName"
                 placeholder="e.g. John Doe"
                 {...register('fullName')}
-                />
-                {errors.fullName && (
+              />
+              {errors.fullName && (
                 <p className="text-sm text-destructive">{errors.fullName.message}</p>
-                )}
+              )}
             </div>
             <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
+              <Label htmlFor="email">Email</Label>
+              <Input
                 id="email"
                 type="email"
                 placeholder="m@example.com"
                 {...register('email')}
-                />
-                {errors.email && (
+              />
+              {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
+              )}
             </div>
             <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
+              <Label htmlFor="password">Password</Label>
+              <Input
                 id="password"
                 type="password"
                 {...register('password')}
-                />
-                {errors.password && (
+              />
+              {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
-                )}
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="role">I am a...</Label>
                 <Select name="role">
-                    <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
-                        <SelectItem value="Property Manager">Property Manager</SelectItem>
-                        <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
-                        <SelectItem value="Investor">Investor</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
+                    <SelectItem value="Property Manager">Property Manager</SelectItem>
+                    <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
+                    <SelectItem value="Investor">Investor</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="portfolioSize">I manage...</Label>
                 <Select name="portfolioSize">
-                    <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="1-5">1-5 Units</SelectItem>
-                        <SelectItem value="6-20">6-20 Units</SelectItem>
-                        <SelectItem value="21-50">21-50 Units</SelectItem>
-                        <SelectItem value="50+">50+ Units</SelectItem>
-                    </SelectContent>
+                  <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1-5">1-5 Units</SelectItem>
+                    <SelectItem value="6-20">6-20 Units</SelectItem>
+                    <SelectItem value="21-50">21-50 Units</SelectItem>
+                    <SelectItem value="50+">50+ Units</SelectItem>
+                  </SelectContent>
                 </Select>
               </div>
             </div>
 
             <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? (
+              {isPending ? (
                 <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Please wait
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
                 </>
-                ) : (
+              ) : (
                 'Create Account'
-                )}
+              )}
             </Button>
-            </form>
+          </form>
 
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                    </span>
-                </div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
             </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
 
-            <SocialAuthButtons 
-                onGoogleSignIn={handleGoogleSignIn} 
-                isPending={isGooglePending}
-            />
+          <SocialAuthButtons
+            onGoogleSignIn={handleGoogleSignIn}
+            isPending={isGooglePending}
+          />
 
-             <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link
-                    href="/signin"
-                    className="font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                    Sign in
-                </Link>
-            </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link
+              href="/signin"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       </CardContent>
     </Card>
