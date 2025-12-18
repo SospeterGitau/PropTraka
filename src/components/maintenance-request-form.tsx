@@ -32,6 +32,9 @@ import { Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
+import { analyzeMaintenanceRequest } from '@/ai/flows/analyze-maintenance-request';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { useTransition } from 'react';
 
 interface MaintenanceRequestFormProps {
   maintenanceRequest?: MaintenanceRequest | null;
@@ -65,6 +68,47 @@ export function MaintenanceRequestForm({
 
   const [isScheduledCalendarOpen, setIsScheduledCalendarOpen] = useState(false);
   const [isCompletedCalendarOpen, setIsCompletedCalendarOpen] = useState(false);
+  const [isAnalyzing, startAnalysis] = useTransition();
+
+  const handleAnalyze = () => {
+    if (!description) return;
+
+    // Find property type for context
+    const property = properties.find(p => p.id === propertyId);
+    const propertyType = property?.type || property?.propertyType || 'Residential';
+
+    startAnalysis(async () => {
+      try {
+        const result = await analyzeMaintenanceRequest({
+          description,
+          propertyType: String(propertyType)
+        });
+
+        // Map AI Urgency to Priority
+        let mappedPriority: MaintenanceRequest['priority'] = 'Medium';
+        switch (result.urgency) {
+          case 'Emergency': mappedPriority = 'Urgent'; break;
+          case 'High': mappedPriority = 'High'; break;
+          case 'Medium': mappedPriority = 'Medium'; break;
+          case 'Low': mappedPriority = 'Low'; break;
+        }
+        setPriority(mappedPriority);
+
+        // Set Cost if valid number
+        if (result.estimatedCost && !isNaN(result.estimatedCost)) {
+          setCost(result.estimatedCost);
+        }
+
+        // Append Category and Recommendation to Notes
+        const aiNotes = `[AI Analysis]\nCategory: ${result.category}\nRecommendation: ${result.recommendation}`;
+        setNotes(prev => prev ? `${prev}\n\n${aiNotes}` : aiNotes);
+
+      } catch (error) {
+        console.error("AI Analysis failed:", error);
+        // Optionally show toast error here
+      }
+    });
+  };
 
   useEffect(() => {
     if (initialRequest) {
@@ -162,7 +206,7 @@ export function MaintenanceRequestForm({
             {tenancies.filter(t => t.propertyId === propertyId).map(tenancy => {
               const tenant = tenancy.tenantId ? tenants.find(t => t.id === tenancy.tenantId) : null;
               const tenantName = tenant ? `${tenant.firstName || ''} ${tenant.lastName || ''}`.trim() : 'Unknown Tenant';
-              const dateLabel = tenancy.startDate && typeof tenancy.startDate?.toDate === 'function' ? format(tenancy.startDate.toDate(), 'MMM yy') : (tenancy.startDate ? String(tenancy.startDate).slice(0,7) : '');
+              const dateLabel = tenancy.startDate && typeof tenancy.startDate?.toDate === 'function' ? format(tenancy.startDate.toDate(), 'MMM yy') : (tenancy.startDate ? String(tenancy.startDate).slice(0, 7) : '');
               return <SelectItem key={tenancy.id} value={tenancy.id!}>{tenantName} - {dateLabel}</SelectItem>;
             })}
           </SelectContent>
@@ -182,8 +226,31 @@ export function MaintenanceRequestForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description *</Label>
-        <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required className="min-h-[100px]" placeholder="Describe the maintenance issue..." />
+        <div className="flex items-center justify-between">
+          <Label htmlFor="description">Description *</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-auto p-0 text-primary hover:text-primary/80"
+            onClick={handleAnalyze}
+            disabled={!description || isAnalyzing}
+          >
+            {isAnalyzing ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Sparkles className="mr-1 h-3 w-3" />}
+            Analyze with AI
+          </Button>
+        </div>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+          className="min-h-[100px]"
+          placeholder="Describe the maintenance issue details..."
+        />
+        <p className="text-xs text-muted-foreground">
+          Describe the issue and click "Analyze with AI" to auto-estimate priority and cost.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

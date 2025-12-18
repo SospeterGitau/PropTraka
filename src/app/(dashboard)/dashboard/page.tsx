@@ -17,8 +17,10 @@ import { KpiCard } from '@/components/dashboard/kpi-card';
 import { AreaChart } from '@/components/dashboard/area-chart';
 import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { CurrencyIcon } from '@/components/currency-icon';
+import { HealthCheckSection } from '@/components/dashboard/health-check-section';
 import { startOfToday, isBefore } from 'date-fns';
 
+import { generateHealthInsights } from '@/ai/flows/generate-health-insights';
 import { fetchMLPrediction } from '@/app/actions';
 
 // ML Predictions Component
@@ -449,6 +451,9 @@ const DashboardPage = memo(function DashboardPage() {
 
   const toDate = (d: any) => d && typeof d.toDate === 'function' ? d.toDate() : d ? new Date(d) : new Date();
 
+  const [aiInsights, setAiInsights] = useState<any>(null);
+  const [loadingInsights, setLoadingInsights] = useState(false);
+
   // Metrics calculation kept for KPI cards
   const metrics = useMemo(() => {
     if (loading) return null;
@@ -461,9 +466,10 @@ const DashboardPage = memo(function DashboardPage() {
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const profit = totalRevenue - totalExpenses;
 
-    const totalArrears = revenue
-      .filter(tx => tx.status === 'Overdue')
-      .reduce((sum, tx) => sum + tx.amount, 0);
+    const overdueTransactions = revenue.filter(tx => tx.status === 'Overdue');
+    const totalArrears = overdueTransactions.reduce((sum, tx) => sum + tx.amount, 0);
+    // Count unique properties/tenants in arrears if possible, or just transaction count for now
+    const arrearsCount = overdueTransactions.length;
 
     // Property KPIs
     const totalPropertyValue = properties.reduce((sum, p) => sum + (p.currentValue || 0), 0);
@@ -501,8 +507,46 @@ const DashboardPage = memo(function DashboardPage() {
       totalProperties: properties.length,
       activeTenanciesCount: activeTenancies.length,
       thisMonthRevenue,
+      arrearsCount,
     };
   }, [revenue, expenses, properties, tenancies, loading]);
+
+  // Fetch AI Insights when metrics are ready
+  useEffect(() => {
+    if (metrics && properties.length > 0 && !aiInsights && !loadingInsights) {
+      setLoadingInsights(true);
+
+      // Diversity Score logic duplicated here to pass to AI, 
+      // ideally we'd extract this calculation to a shared utility or calculate it once and pass it down.
+      // For now, I'll do a quick calculation or just pass 0 if we want the AI to calculate it?
+      // Actually, the InputSchema expects it.
+      const types = new Set(properties.map(p => p.type).filter(Boolean));
+      const locations = new Set(properties.map(p => p.address?.city).filter(Boolean));
+      let diversityScore = 0;
+      diversityScore += Math.min(types.size, 3) * 1.5;
+      diversityScore += Math.min(locations.size, 3) * 1.5;
+      if (properties.length > 4) diversityScore += 1;
+      diversityScore = Math.min(Math.round(diversityScore), 10);
+
+      generateHealthInsights({
+        occupancyRate: metrics.occupancyRate,
+        totalArrears: metrics.totalArrears,
+        arrearsCount: metrics.arrearsCount,
+        diversityScore,
+        propertyCount: metrics.totalProperties
+      })
+        .then(result => {
+          setAiInsights(result);
+        })
+        .catch(err => {
+          console.error("Failed to generate AI insights:", err);
+          // setAiInsights(null); // Fallback to static
+        })
+        .finally(() => {
+          setLoadingInsights(false);
+        });
+    }
+  }, [metrics, properties, aiInsights, loadingInsights]);
 
   // Chart data and profit per property calculation removed as related UI is being removed
 
@@ -593,6 +637,18 @@ const DashboardPage = memo(function DashboardPage() {
               title="Monthly Revenue (Current)"
               value={metrics.thisMonthRevenue}
               description={`${new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}`}
+            />
+          </div>
+
+
+          <div className="mb-0">
+            <HealthCheckSection
+              occupancyRate={metrics.occupancyRate}
+              totalArrears={metrics.totalArrears}
+              properties={properties}
+              arrearsCount={metrics.arrearsCount}
+              aiInsights={aiInsights}
+              loadingInsights={loadingInsights}
             />
           </div>
 

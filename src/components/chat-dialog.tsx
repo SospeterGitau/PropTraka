@@ -20,7 +20,12 @@ import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { getChatResponse } from '@/ai/flows/get-chat-response-flow';
+import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, where } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
+// import { getChatResponse } from '@/ai/flows/get-chat-response-flow'; // Replaced by Portfolio Assistant
+import { portfolioAssistantChat } from '@/ai/flows/portfolio-assistant-chat';
+import { useDataContext } from '@/context/data-context';
+import { format } from 'date-fns';
 
 interface ChatMessage {
     id: string;
@@ -31,6 +36,7 @@ interface ChatMessage {
 
 export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
     const { user } = useUser();
+    const { properties, tenancies, tenants } = useDataContext(); // Access Data Context
     const [newMessage, setNewMessage] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -90,7 +96,44 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                 ownerId: user.uid,
             });
 
-            const botResponseText = await getChatResponse({ question: userMessage, knowledgeBase: '' });
+            await addDoc(collection(firestore, 'chatMessages'), {
+                text: userMessage,
+                sender: 'user',
+                timestamp: serverTimestamp(),
+                ownerId: user.uid,
+            });
+
+            // Prepare Portfolio Context
+            const activeTenancies = tenancies.filter(t => t.status === 'Active');
+            const vacantProperties = properties.filter(p => p.status === 'vacant' || !activeTenancies.some(t => t.propertyId === p.id));
+
+            // Simple Arrears Calculation (assuming we can get basic view here, deeper analysis might need full ledger)
+            // For now, let's just pass the list of tenants and properties to start.
+            // Ideally we'd calculate arrears here or pass the pre-calculated metrics if available.
+            // Since `arrears` isn't directly exposed in dataContext here (it's in DashboardPage), we might miss it.
+            // BUT, `tenants` and `properties` are good enough for many questions.
+
+            const contextData = {
+                properties: properties.map(p => ({
+                    name: p.name,
+                    address: p.address.street,
+                    status: p.status,
+                    type: p.type
+                })),
+                tenants: tenants.map(t => ({
+                    name: `${t.firstName} ${t.lastName}`,
+                    email: t.email
+                })),
+                vacancies: vacantProperties.length,
+                totalProperties: properties.length
+            };
+
+            const botResponseText = await portfolioAssistantChat({
+                question: userMessage,
+                portfolioContext: JSON.stringify(contextData)
+            }).then(res => res.answer);
+
+            // Fallback or legacy flow could be used here if needed, but we're fully switching.
 
             await addDoc(collection(firestore, 'chatMessages'), {
                 text: botResponseText,

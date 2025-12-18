@@ -320,6 +320,7 @@ export interface Property {
   imageHint?: string;
   currentValue?: number;
   purchaseTaxes?: number;
+  insuranceExpiry?: string | any;
   // Compatibility: some UI code expects flattened address fields
   addressLine1?: string;
   city?: string;

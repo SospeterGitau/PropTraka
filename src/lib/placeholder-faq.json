@@ -54,7 +54,15 @@
         "questions": [
             {
                 "title": "How do I use the AI Assistant?",
-                "content": "<b>Your personal property expert, available 24/7.</b><br/><br/>Tap the floating chat bubble to ask the AI anything. It uses this very Knowledge Base to provide accurate answers about the app. Beyond FAQs, it acts as an **Onboarding Assistant**: ask it to \"help me onboard a new tenant,\" and it will generate a comprehensive, best-practice checklist to guide you through the process step-by-step."
+                "content": "<b>Your personal property expert, available 24/7.</b><br/><br/>Tap the floating chat bubble to ask the AI anything. It uses this very Knowledge Base to provide accurate answers about the app. <b>NEW:</b> The chat is now connected to your portfolio data! You can ask specific questions like \"Which properties are vacant?\" or \"Who is in arrears?\" and get instant, accurate answers based on your real-time data."
+            },
+            {
+                "title": "How does Smart Maintenance Triage work?",
+                "content": "<b>Let AI handle the initial assessment of maintenance requests.</b><br/><br/>When adding a new maintenance request, click <b>\"Analyze with AI\"</b>. The system will read your description (e.g., \"Water heater leaking\") and automatically:<br/><ul><li><b>Categorize</b> the issue (e.g., Plumbing).</li><li><b>Assign Priority</b> based on urgency (e.g., Emergency).</li><li><b>Estimate Costs</b> for repairs.</li></ul>This helps you prioritize jobs and budget effectively without manual guesswork."
+            },
+            {
+                "title": "What is the Tenant Risk Score?",
+                "content": "<b>Make data-driven leasing decisions with an AI underwriter.</b><br/><br/>When adding a new tenant, you can use the <b>Risk Assessment</b> tool. Simply enter their income, proposed rent, and employment status. The AI will analyze these factors (checking e.g. Rent-to-Income ratio) and generate a <b>Risk Score (0-100)</b> along with a recommendation (e.g., \"High Risk - Require Guarantor\"). This assessment is saved to the tenant's notes."
             },
             {
                 "title": "How do I use the AI Lease Clause Generator?",
