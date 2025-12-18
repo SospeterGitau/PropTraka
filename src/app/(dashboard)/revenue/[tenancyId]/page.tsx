@@ -5,7 +5,7 @@ import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { format, startOfToday, isBefore, isAfter } from 'date-fns';
-import type { Transaction, ServiceCharge, Property } from '@/lib/types';
+import type { Transaction, ServiceCharge, Property, Tenancy, Tenant } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,13 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn, formatCurrency } from '@/lib/utils';
-import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, ListChecks, FileInput, Edit, ChevronDown, Landmark } from 'lucide-react';
+import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, ListChecks, FileInput, Edit, ChevronDown, Landmark, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { EndTenancyDialog } from '@/components/end-tenancy-dialog';
 import { useUser, useFirestore } from '@/firebase';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, writeBatch, Query } from 'firebase/firestore';
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc, updateDoc, serverTimestamp, addDoc, writeBatch, orderBy } from 'firebase/firestore'; // Added orderBy
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -160,9 +160,9 @@ function InvoiceForm({ isOpen, onClose, onSubmit, transaction }: {
             ))}
             <Button variant="outline" size="sm" onClick={handleAddCharge}>Add Service Charge</Button>
           </div>
-           <div className="!mt-6 text-sm space-y-1 bg-muted p-3 rounded-md">
-                <div className="flex justify-between font-semibold"><span>Total Due:</span> <span>{formatCurrency(totalDue, settings?.locale || 'en-KE', settings?.currency || 'KES')}</span></div>
-            </div>
+          <div className="!mt-6 text-sm space-y-1 bg-muted p-3 rounded-md">
+            <div className="flex justify-between font-semibold"><span>Total Due:</span> <span>{formatCurrency(totalDue, settings?.locale || 'en-KE', settings?.currency || 'KES')}</span></div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
@@ -173,13 +173,237 @@ function InvoiceForm({ isOpen, onClose, onSubmit, transaction }: {
   );
 }
 
-// ... Rest of TenancyDetailPageContent component
-// This part remains unchanged as it's the parent component logic
 const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
-    // Minimal placeholder while migrating the full page; return null so memo receives a valid component
-    return null;
+  const params = useParams();
+  const router = useRouter();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { settings } = useDataContext();
+  const tenancyId = typeof params.tenancyId === 'string' ? params.tenancyId : '';
+
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+
+  // Queries
+  const [tenancySnapshot, isTenancyLoading] = useDocument(
+    tenancyId ? doc(firestore, 'tenancies', tenancyId) : null
+  );
+  const tenancy = tenancySnapshot?.exists() ? { id: tenancySnapshot.id, ...tenancySnapshot.data() } as Tenancy : null;
+
+  const [propertySnapshot] = useDocument(
+    tenancy?.propertyId ? doc(firestore, 'properties', tenancy.propertyId) : null
+  );
+  const property = propertySnapshot?.exists() ? { id: propertySnapshot.id, ...propertySnapshot.data() } as Property : null;
+
+  const [tenantSnapshot] = useDocument(
+    tenancy?.tenantId ? doc(firestore, 'tenants', tenancy.tenantId) : null
+  );
+  const tenant = tenantSnapshot?.exists() ? { id: tenantSnapshot.id, ...tenantSnapshot.data() } as Tenant : null;
+
+  const transactionsQuery = useMemo(() =>
+    tenancyId ? query(collection(firestore, 'revenue'), where('tenancyId', '==', tenancyId), orderBy('date', 'desc')) : null
+    , [firestore, tenancyId]);
+
+  const [transactionsSnapshot, isTransactionsLoading] = useCollection(transactionsQuery);
+  const transactions = useMemo(() => transactionsSnapshot?.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      date: data.date?.toDate ? data.date.toDate() : new Date(data.date)
+    } as Transaction;
+  }) || [], [transactionsSnapshot]);
+
+  const isLoading = isTenancyLoading || isTransactionsLoading;
+
+  if (isLoading) {
+    return <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
+  if (!tenancy) {
+    return <div className="p-8 text-center text-muted-foreground">Tenancy not found.</div>;
+  }
+
+  // Handlers
+  const handleRecordPayment = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsPaymentOpen(true);
+  };
+
+  const submitPayment = async (transactionId: string, amount: number) => {
+    if (!user) return;
+    try {
+      const txRef = doc(firestore, 'revenue', transactionId);
+      const tx = transactions.find(t => t.id === transactionId);
+      if (!tx) return;
+
+      const existingPaid = tx.amountPaid || 0;
+      const newTotalPaid = existingPaid + amount;
+
+      // Calculate total due
+      const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+      const totalDue = (tx.rent || 0) + totalServiceCharges + (tx.deposit || 0);
+
+      let newStatus = tx.status;
+      const now = new Date();
+      if (newTotalPaid >= totalDue) {
+        newStatus = 'Paid';
+      } else if (now > new Date(tx.date) && newTotalPaid < totalDue) {
+        newStatus = 'Overdue'; // Or 'Partially Paid' if you add that status
+      }
+
+      await updateDoc(txRef, {
+        amountPaid: newTotalPaid,
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      });
+      // You might want to log this payment in a separate collection too
+    } catch (error) {
+      console.error("Error recording payment:", error);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Tenancy Details">
+        <Button variant="outline" asChild>
+          <Link href="/revenue">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to List
+          </Link>
+        </Button>
+      </PageHeader>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-muted-foreground">Tenant</span>
+              <span className="font-medium">{tenant ? `${tenant.firstName} ${tenant.lastName}` : 'Unknown'}</span>
+            </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-muted-foreground">Property</span>
+              <span className="font-medium">{property ? `${property.address.street}` : 'Unknown'}</span>
+            </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-muted-foreground">Status</span>
+              <Badge variant={tenancy.status === 'Active' ? 'success' : 'secondary'}>{tenancy.status}</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Period</span>
+              <span className="text-sm">
+                {tenancy.startDate ? format(new Date(tenancy.startDate.seconds * 1000), 'dd MMM yyyy') : '-'} — {tenancy.endDate ? format(new Date(tenancy.endDate.seconds * 1000), 'dd MMM yyyy') : '-'}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Financial Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Monthly Rent</span>
+              <span className="text-xl font-bold">{formatCurrency(tenancy.rentAmount, settings?.locale, settings?.currency)}</span>
+            </div>
+            {tenancy.depositAmount && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Deposit</span>
+                <span>{formatCurrency(tenancy.depositAmount, settings?.locale, settings?.currency)}</span>
+              </div>
+            )}
+            {tenancy.serviceChargeAmount && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Service Charges</span>
+                <span>{formatCurrency(tenancy.serviceChargeAmount, settings?.locale, settings?.currency)}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Billing History</CardTitle>
+          <CardDescription>Breakdown of rent, deposits, and service charges.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Paid</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="text-center py-8">No transactions found.</TableCell></TableRow>
+              ) : (
+                transactions.map(tx => (
+                  <TableRow key={tx.id}>
+                    <TableCell>{format(tx.date, 'dd MMM yyyy')}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{tx.invoiceNumber}</div>
+                      {tx.notes && <div className="text-xs text-muted-foreground">{tx.notes}</div>}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{tx.type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={tx.status === 'Paid' ? 'success' : tx.status === 'Overdue' ? 'destructive' : 'secondary'}>
+                        {tx.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(tx.amount, settings?.locale, settings?.currency)}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {formatCurrency(tx.amountPaid || 0, settings?.locale, settings?.currency)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {tx.status !== 'Paid' && (
+                            <DropdownMenuItem onClick={() => handleRecordPayment(tx)}>
+                              <BadgeCheck className="mr-2 h-4 w-4" /> Record Payment
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem><FileText className="mr-2 h-4 w-4" /> View Invoice</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <PaymentForm
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        onSubmit={submitPayment}
+        transaction={selectedTransaction}
+      />
+    </div>
+  );
 });
 
 export default function TenancyDetailPage() {
-    return <TenancyDetailPageContent />
+  return <TenancyDetailPageContent />
 }

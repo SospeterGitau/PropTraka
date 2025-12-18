@@ -44,6 +44,7 @@ export interface Property {
   amenities?: string[]; // e.g., ['Pool', 'Gym', 'Parking']
   images?: string[]; // Array of image URLs
   description?: string;
+  isSample?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -62,6 +63,7 @@ export interface Tenant {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   notes?: string;
+  isSample?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -78,6 +80,8 @@ export interface Tenancy {
   depositAmount: number;
   serviceChargeAmount?: number; // Optional, per payment frequency
   paymentFrequency: 'Monthly' | 'Quarterly' | 'Annually';
+  rentDay?: number; // Day of month rent is due
+  isSample?: boolean;
   status: 'Active' | 'Ended' | 'Pending' | 'Evicted';
   leaseAgreementUrl?: string; // Reference to a document URL
   moveInChecklistUrl?: string; // Reference to a document URL
@@ -99,6 +103,11 @@ export interface RevenueTransaction {
   status: 'Paid' | 'Partial' | 'Overdue' | 'Waived';
   invoiceNumber?: string;
   notes?: string;
+  amountPaid?: number; // Amount paid so far
+  serviceCharges?: Array<{ name: string; amount: number; description?: string }>;
+  rent?: number; // Breakdown: Rent portion
+  deposit?: number; // Breakdown: Deposit portion
+  isSample?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -117,6 +126,7 @@ export interface Expense {
   receiptUrl?: string; // Reference to a document URL
   isRecurring: boolean;
   notes?: string;
+  isSample?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -132,6 +142,7 @@ export interface Contractor {
   serviceCategories: string[]; // e.g., ['Plumbing', 'Electrical', 'Painting']
   address?: Address; // Optional business address
   notes?: string;
+  isSample?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -151,6 +162,7 @@ export interface MaintenanceRequest {
   completedDate?: Timestamp;
   cost?: number; // Actual cost of maintenance
   notes?: string;
+  isSample?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

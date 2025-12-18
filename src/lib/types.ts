@@ -328,6 +328,7 @@ export interface Property {
   rentalValue?: number;
   createdAt?: any;
   updatedAt?: any;
+  isSample?: boolean;
 }
 
 export interface Tenancy {

@@ -13,7 +13,9 @@ import { useDataContext } from '@/context/data-context';
 import { useToast } from '@/hooks/use-toast';
 import { logout } from '@/app/actions';
 import { collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+
 import type { ResidencyStatus, UserSettings } from '@/lib/types';
+import { clearSampleData } from '@/lib/sample-data';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -50,6 +52,9 @@ export default function ProfileSettingsTab() {
 
   const [isClearingChat, setIsClearingChat] = useState(false);
   const [isClearChatDialogOpen, setIsClearChatDialogOpen] = useState(false);
+
+  const [isClearingSample, setIsClearingSample] = useState(false);
+  const [isClearSampleDialogOpen, setIsClearSampleDialogOpen] = useState(false);
 
   const {
     register,
@@ -220,6 +225,22 @@ export default function ProfileSettingsTab() {
       setIsClearingChat(false);
     }
   }
+
+  const handleClearSampleData = async () => {
+    if (!user) return;
+    setIsClearingSample(true);
+    try {
+      await clearSampleData(user.uid);
+      toast({ title: 'Sample Data Cleared', description: 'All sample properties, tenants, and transactions have been removed.' });
+      // Force refresh of data context if needed, but context usually listens to snapshots
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to clear sample data.' });
+    } finally {
+      setIsClearingSample(false);
+      setIsClearSampleDialogOpen(false);
+    }
+  };
 
   const handleClearTemplateField = (fieldName: keyof UserSettings) => {
     setTempSettings((prev) => ({ ...(prev ?? {}), [fieldName]: '' } as UserSettings));
@@ -543,6 +564,17 @@ export default function ProfileSettingsTab() {
                 Clear History
               </Button>
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-orange-500/50 p-4 mt-4">
+              <div>
+                <h3 className="font-medium text-orange-600">Clear Sample Data</h3>
+                <p className="text-sm text-muted-foreground max-w-md">Remove all data marked as "Sample" (properties, tenants, etc.). Use this when you are ready to enter real data.</p>
+              </div>
+              <Button variant="outline" className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700" onClick={() => setIsClearSampleDialogOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Sample Data
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -601,6 +633,13 @@ export default function ProfileSettingsTab() {
         onConfirm={handleClearChatHistory}
         itemName="your entire AI chat history"
         isDestructive={isClearingChat}
+      />
+      <DeleteConfirmationDialog
+        isOpen={isClearSampleDialogOpen}
+        onClose={() => setIsClearSampleDialogOpen(false)}
+        onConfirm={handleClearSampleData}
+        itemName="all sample data"
+        isDestructive={isClearingSample}
       />
     </>
   );

@@ -4,11 +4,16 @@ import React, { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useDataContext } from '@/context/data-context';
 import { Building2, Download, Play, TrendingUp, BarChart3, DollarSign, AlertCircle, Loader2 } from 'lucide-react';
 import type { Property } from '@/lib/types';
+import { generateSampleData } from '@/lib/sample-data';
+import { useUser } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 // Type definitions for ML Analysis results
 interface PriceForecastResult {
@@ -74,19 +79,19 @@ const MLPredictionsPanel = ({ properties }: { properties: Property[] }) => {
 
   const handleRunAnalysis = async () => {
     if (!selectedProperty) return;
-    
+
     setIsPending(true);
     setError(null);
-    
+
     try {
       // Simulate API calls to cloud functions
       // In production, these would be actual HTTP requests to your cloud functions
-      
+
       // Mock data for demonstration
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       const basePrice = selectedProperty.currentValue ?? selectedProperty.purchasePrice ?? 0;
-      
+
       const mockReport: MLReport = {
         propertyId: selectedProperty.id,
         propertyName: `${selectedProperty.propertyType} - ${selectedProperty.city}`,
@@ -111,7 +116,7 @@ const MLPredictionsPanel = ({ properties }: { properties: Property[] }) => {
           riskLevel: 'low',
         },
       };
-      
+
       setReport(mockReport);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
@@ -122,7 +127,7 @@ const MLPredictionsPanel = ({ properties }: { properties: Property[] }) => {
 
   const handleExport = () => {
     if (!report) return;
-    
+
     // Create CSV content
     const csvContent = `
 Property Analysis Report
@@ -309,10 +314,9 @@ Risk Level: ${report.roiAnalysis?.riskLevel}
                 <p className="text-sm font-medium">
                   Payback Period: {report.roiAnalysis?.paybackPeriod.toFixed(1)} years
                 </p>
-                <p className={`text-xs font-medium ${
-                  report.roiAnalysis?.riskLevel === 'low' ? 'text-green-600' : 
+                <p className={`text-xs font-medium ${report.roiAnalysis?.riskLevel === 'low' ? 'text-green-600' :
                   report.roiAnalysis?.riskLevel === 'medium' ? 'text-yellow-600' : 'text-red-600'
-                }`}>
+                  }`}>
                   Risk: {report.roiAnalysis?.riskLevel.toUpperCase()}
                 </p>
               </div>
@@ -331,14 +335,15 @@ Risk Level: ${report.roiAnalysis?.riskLevel}
 };
 
 // KPI Card Component
-const KpiCard = ({ title, value, icon: Icon, suffix = '', description }: {
+const KpiCard = ({ title, value, icon: Icon, suffix = '', description, className }: {
   title: string;
   value: string | number;
   icon: React.ComponentType<{ className?: string }>;
   suffix?: string;
   description?: string;
+  className?: string;
 }) => (
-  <Card>
+  <Card glass className={cn("card-hover", className)}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -356,13 +361,13 @@ const DashboardPageContent = () => {
 
   const stats = useMemo(() => {
     if (!properties || properties.length === 0) return null;
-    
+
     const totalProperties = properties.length;
     const totalRevenue = (revenue || []).reduce((sum, r) => sum + ((r as any)?.rent || 0), 0);
     const totalExpenses = (expenses || []).reduce((sum, e) => sum + ((e as any)?.amount || 0), 0);
     const netProfit = totalRevenue - totalExpenses;
-    const occupancyRate = properties.length > 0 
-      ? ((revenue || []).filter(r => (r as any)?.rent > 0).length / (properties.length * 12)) * 100 
+    const occupancyRate = properties.length > 0
+      ? ((revenue || []).filter(r => (r as any)?.rent > 0).length / (properties.length * 12)) * 100
       : 0;
 
     return {
@@ -373,6 +378,24 @@ const DashboardPageContent = () => {
       occupancyRate,
     };
   }, [properties, revenue, expenses]);
+
+  const { user } = useUser();
+  const { toast } = useToast();
+  const [isLoadingSample, setIsLoadingSample] = useState(false);
+
+  const handleLoadSampleData = async () => {
+    if (!user) return;
+    setIsLoadingSample(true);
+    try {
+      await generateSampleData(user.uid);
+      toast({ title: "Sample Data Loaded", description: "Your dashboard has been populated with sample data." });
+    } catch (error) {
+      console.error(error);
+      toast({ variant: "destructive", title: "Error", description: "Failed to load sample data." });
+    } finally {
+      setIsLoadingSample(false);
+    }
+  }
 
   if (loading || !stats) {
     return (
@@ -385,7 +408,7 @@ const DashboardPageContent = () => {
   return (
     <>
       <PageHeader title="Dashboard" />
-      
+
       <div className="space-y-8">
         {/* KPI Cards Section */}
         <div>
@@ -439,11 +462,29 @@ const DashboardPageContent = () => {
 
         {/* Empty State */}
         {(!properties || properties.length === 0) && (
-          <Card>
-            <CardContent className="pt-6 text-center py-12">
-              <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Properties Yet</h3>
-              <p className="text-muted-foreground">Add properties to see analytics and ML predictions</p>
+          <Card className="border-dashed border-2">
+            <CardContent className="pt-6 text-center py-12 flex flex-col items-center">
+              <div className="bg-primary/10 p-4 rounded-full mb-4">
+                <Building2 className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Welcome to PropTraka!</h3>
+              <p className="text-muted-foreground max-w-md mb-8">
+                It looks like you haven't added any properties yet. You can start by adding your own, or load our sample data to see the dashboard in action.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
+                <Button onClick={handleLoadSampleData} disabled={isLoadingSample}>
+                  {isLoadingSample && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Load Sample Data
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/properties/add">Add Your First Property</Link>
+                </Button>
+              </div>
+
+              <div className="mt-8 text-sm text-muted-foreground">
+                Need help getting started? <Link href="/knowledge" className="text-primary underline underline-offset-4">Read our FAQ & Guides</Link>
+              </div>
             </CardContent>
           </Card>
         )}

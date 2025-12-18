@@ -1,105 +1,131 @@
-@import url('https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-
 body {
-  font-family: 'PT Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
+  /* Smoother font rendering for that "Apple" look */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer base {
   :root {
-    --background: 222 84% 98%;
-    --foreground: 224 71.4% 4.1%; 
+    /* Base: Zinc/Slate-like off-white for less harshness than pure white */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
 
+    /* Card: Pure white for classic elevation */
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
- 
+    --card-foreground: 240 10% 3.9%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
- 
-    --primary: 217 91% 60%;
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Primary: Vibrant Violet/Indigo (Modern SaaS standard) */
+    /* HSL: 262 83% 58% -> Violet-600ish */
+    /* Let's go for a sophisticated Deep Indigo: 226 100% 50% was old? No let's try 246 80% 60% */
+    --primary: 250 95% 64%;
+    /* Stunning vivid purple-blue */
     --primary-foreground: 0 0% 98%;
- 
+
+    /* Secondary: Soft gray for subtle buttons */
     --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
+    --secondary-foreground: 240 5.9% 10%;
+
+    /* Muted: For backgrounds that need separation */
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
- 
-    --accent: 159 41% 64%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
+
+    /* Accent: For hover states, list items */
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
+    /* Border: Very subtle, high-key gray */
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 217 91% 60%;
- 
-    --radius: 0.4rem;
+    --ring: 250 95% 64%;
+    /* Matches Primary */
 
-    --chart-1: 217 91% 60%; /* Blue for Revenue / Net Income */
-    --chart-2: 0 72% 51%; /* Red for Expenses / Loss */
-    --chart-3: 159 41% 55%; /* Teal */
-    --chart-4: 38 92% 50%; /* Gold for Potential Income */
-    --chart-5: 281 90% 61%; /* Purple for additional data */
+    --radius: 0.75rem;
+    /* 12px - Modern "Squircle"-ish */
 
-    --sidebar-background: hsl(var(--card));
-    --sidebar-foreground: hsl(var(--card-foreground));
-    --sidebar-primary: hsl(var(--primary));
-    --sidebar-primary-foreground: hsl(var(--primary-foreground));
-    --sidebar-accent: hsl(var(--muted));
-    --sidebar-accent-foreground: hsl(var(--muted-foreground));
-    --sidebar-border: hsl(var(--border));
-    --sidebar-ring: hsl(var(--ring));
+    /* Chart Colors - Updated to harmonize with the Violet primary */
+    --chart-1: 250 95% 64%;
+    /* Primary Violet */
+    --chart-2: 173 58% 39%;
+    /* Teal */
+    --chart-3: 197 37% 24%;
+    /* Navy */
+    --chart-4: 43 74% 66%;
+    /* Gold */
+    --chart-5: 27 87% 67%;
+    /* Orange */
+
+    /* Sidebar - keeping it clean */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
   }
- 
+
   .dark {
-    --background: 220 13% 9%;
-    --foreground: 210 20% 98%;
+    /* Dark Mode: Neutral Dark Grey (Antigravity-style) */
+    --background: 0 0% 9%;
+    /* #171717 */
+    --foreground: 0 0% 98%;
 
-    --card: 220 13% 11%;
-    --card-foreground: 210 20% 98%;
+    /* Cards: Slightly lighter neutral grey */
+    --card: 0 0% 13%;
+    /* #212121 */
+    --card-foreground: 0 0% 98%;
 
-    --popover: 220 13% 9%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 0 0% 13%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 217 91% 60%;
-    --primary-foreground: 210 20% 98%;
+    /* Keep Primary Vivid */
+    --primary: 250 95% 64%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 215 28% 17%;
-    --muted-foreground: 217 10% 65%;
-    
-    --accent: 159 41% 70%;
-    --accent-foreground: 210 20% 98%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
 
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 210 20% 98%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 98%;
 
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
-    --ring: 217 91% 60%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --chart-1: 217 91% 60%; /* Blue for Revenue / Net Income */
-    --chart-2: 0 62.8% 50.6%; /* Red for Expenses / Loss */
-    --chart-3: 159 41% 65%; /* Teal */
-    --chart-4: 48 96% 50%; /* Gold for Potential Income */
-    --chart-5: 281 90% 61%; /* Purple for additional data */
-    
-    --sidebar-background: hsl(var(--card));
-    --sidebar-foreground: hsl(var(--card-foreground));
-    --sidebar-primary: hsl(var(--primary));
-    --sidebar-primary-foreground: hsl(var(--primary-foreground));
-    --sidebar-accent: hsl(var(--muted));
-    --sidebar-accent-foreground: hsl(var(--muted-foreground));
-    --sidebar-border: hsl(var(--border));
-    --sidebar-ring: hsl(var(--ring));
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 250 95% 64%;
+
+    --chart-1: 250 95% 64%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 250 95% 64%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 250 95% 64%;
   }
 }
 
@@ -107,17 +133,30 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
+
+  /* Glassmorphism Utility */
+  .glass {
+    @apply bg-white/60 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-sm supports-[backdrop-filter]:bg-opacity-60;
+  }
+
+  /* Modern Card Hover */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
+
   input[type=number] {
     -moz-appearance: textfield;
   }
