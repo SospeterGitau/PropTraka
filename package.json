@@ -6,7 +6,6 @@
     "dev": "./scripts/dev-no-emulator.sh",
     "dev:emulators": "./scripts/dev-simple.sh",
     "dev:old": "./scripts/dev-all-in-one.sh",
-    "dev:emulators": "./scripts/start-emulators-simple.sh",
     "seed-and-dev": "./scripts/seed-and-start-next.sh",
     "dev:watch": "./scripts/dev-watch.sh",
     "dev:next-only": "next dev --hostname 0.0.0.0",
@@ -17,7 +16,6 @@
     "start": "next start",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx . --quiet",
     "typecheck": "tsc --noEmit --skipLibCheck || true",
-
     "emulator:start": "./scripts/start-emulators.sh",
     "emulator:seed": "FIRESTORE_EMULATOR_HOST=localhost:8080 node scripts/seed-firestore.js",
     "emulator:seed:auth": "FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 node scripts/seed-auth.js",
@@ -25,10 +23,8 @@
     "emulator:ui": "npx firebase emulators:start --project=studio-4661291525-66fea --only firestore,auth",
     "emulator:export": "npx firebase emulators:export ./emulator-export --project=studio-4661291525-66fea",
     "emulator:start:import": "npx firebase emulators:start --import=./emulator-export --project=studio-4661291525-66fea",
-
     "sample-data:load": "FIRESTORE_EMULATOR_HOST=localhost:8080 node scripts/load-sample-data.js",
     "sample-data:clear": "FIRESTORE_EMULATOR_HOST=localhost:8080 node scripts/clear-sample-data.js",
-
     "test:e2e": "playwright test",
     "playwright:install": "npx playwright install --with-deps",
     "service-account:write": "node scripts/write-service-account.js"
