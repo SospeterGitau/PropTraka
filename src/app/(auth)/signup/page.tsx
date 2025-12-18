@@ -3,7 +3,7 @@
 
 import { useTransition, useState } from 'react';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createSession } from '@/app/actions';
@@ -50,6 +50,7 @@ export default function SignUpPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -144,6 +145,7 @@ export default function SignUpPage() {
               <Input
                 id="fullName"
                 placeholder="e.g. John Doe"
+                className="h-12"
                 {...register('fullName')}
               />
               {errors.fullName && (
@@ -156,6 +158,7 @@ export default function SignUpPage() {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
+                className="h-12"
                 {...register('email')}
               />
               {errors.email && (
@@ -167,6 +170,7 @@ export default function SignUpPage() {
               <Input
                 id="password"
                 type="password"
+                className="h-12"
                 {...register('password')}
               />
               {errors.password && (
@@ -177,31 +181,47 @@ export default function SignUpPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="role">I am a...</Label>
-                <Select name="role">
-                  <SelectTrigger><SelectValue placeholder="Select your role" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
-                    <SelectItem value="Property Manager">Property Manager</SelectItem>
-                    <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
-                    <SelectItem value="Investor">Investor</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Individual Landlord">Individual Landlord</SelectItem>
+                        <SelectItem value="Property Manager">Property Manager</SelectItem>
+                        <SelectItem value="Real Estate Agent">Real Estate Agent</SelectItem>
+                        <SelectItem value="Investor">Investor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="portfolioSize">I manage...</Label>
-                <Select name="portfolioSize">
-                  <SelectTrigger><SelectValue placeholder="Select portfolio size" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1-5">1-5 Units</SelectItem>
-                    <SelectItem value="6-20">6-20 Units</SelectItem>
-                    <SelectItem value="21-50">21-50 Units</SelectItem>
-                    <SelectItem value="50+">50+ Units</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="portfolioSize"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select portfolio size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-5">1-5 Units</SelectItem>
+                        <SelectItem value="6-20">6-20 Units</SelectItem>
+                        <SelectItem value="21-50">21-50 Units</SelectItem>
+                        <SelectItem value="50+">50+ Units</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button type="submit" className="w-full h-12 text-base" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

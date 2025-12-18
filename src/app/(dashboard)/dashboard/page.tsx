@@ -174,21 +174,21 @@ function MLPredictionsPanel() {
       </div>
 
       <Tabs defaultValue="price" className="w-full">
-        <div className="flex items-center justify-between mb-4 bg-muted/40 p-1 rounded-lg">
-          <TabsList className="bg-transparent">
-            <TabsTrigger value="price" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <div className="flex items-center justify-between mb-4 bg-muted/40 p-1 rounded-lg overflow-x-auto">
+          <TabsList className="bg-transparent h-auto min-h-[44px] w-full justify-start md:justify-center">
+            <TabsTrigger value="price" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[40px] px-4">
               <TrendingUp className="w-4 h-4 mr-2" />
               Price
             </TabsTrigger>
-            <TabsTrigger value="demand" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="demand" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[40px] px-4">
               <Users className="w-4 h-4 mr-2" />
               Demand
             </TabsTrigger>
-            <TabsTrigger value="roi" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="roi" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground min-h-[40px] px-4">
               <Percent className="w-4 h-4 mr-2" />
               % ROI
             </TabsTrigger>
-            <TabsTrigger value="compare" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            <TabsTrigger value="compare" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white min-h-[40px] px-4">
               <BarChart3 className="w-4 h-4 mr-2" />
               Compare
             </TabsTrigger>
@@ -221,7 +221,7 @@ function MLPredictionsPanel() {
                           setSelectedProperty(prop || null);
                           setPriceResult(null);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-background text-foreground"
+                        className="w-full h-12 px-3 py-2 border border-gray-300 rounded-md bg-background text-foreground"
                       >
                         {properties.map(prop => (
                           <option key={prop.id} value={prop.id}>{prop.name}</option>
@@ -229,7 +229,7 @@ function MLPredictionsPanel() {
                       </select>
                     </div>
                     <div className="flex items-end">
-                      <Button onClick={handlePredictPrice} disabled={loading || !selectedProperty} className="w-full">
+                      <Button onClick={handlePredictPrice} disabled={loading || !selectedProperty} className="w-full h-12">
                         {loading ? 'Analyzing...' : 'Predict Future Price'}
                       </Button>
                     </div>
@@ -280,7 +280,7 @@ function MLPredictionsPanel() {
                           setSelectedProperty(prop || null);
                           setDemandResult(null);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-background text-foreground"
+                        className="w-full h-12 px-3 py-2 border border-gray-300 rounded-md bg-background text-foreground"
                       >
                         {properties.map(prop => (
                           <option key={prop.id} value={prop.id}>{prop.name}</option>
@@ -288,7 +288,7 @@ function MLPredictionsPanel() {
                       </select>
                     </div>
                     <div className="flex items-end">
-                      <Button onClick={handleAnalyzeDemand} disabled={loading || !selectedProperty} className="w-full bg-green-600 hover:bg-green-700 text-white">
+                      <Button onClick={handleAnalyzeDemand} disabled={loading || !selectedProperty} className="w-full h-12 bg-green-600 hover:bg-green-700 text-white">
                         {loading ? 'Analyzing...' : 'Analyze Market Demand'}
                       </Button>
                     </div>
@@ -339,7 +339,7 @@ function MLPredictionsPanel() {
                           setSelectedProperty(prop || null);
                           setRoiResult(null);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-background text-foreground"
+                        className="w-full h-12 px-3 py-2 border border-gray-300 rounded-md bg-background text-foreground"
                       >
                         {properties.map(prop => (
                           <option key={prop.id} value={prop.id}>{prop.name}</option>
@@ -347,7 +347,7 @@ function MLPredictionsPanel() {
                       </select>
                     </div>
                     <div className="flex items-end">
-                      <Button onClick={handleCalculateROI} disabled={loading || !selectedProperty} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                      <Button onClick={handleCalculateROI} disabled={loading || !selectedProperty} className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white">
                         {loading ? 'Calculating...' : 'Calculate 5-Year ROI'}
                       </Button>
                     </div>

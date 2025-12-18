@@ -269,7 +269,7 @@ export function PropertiesClient() {
                         </CardHeader>
                         <CardContent>
                             <div className="relative w-full overflow-auto">
-                                <Table>
+                                <Table className="hidden md:table">
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Property</TableHead>
@@ -289,7 +289,7 @@ export function PropertiesClient() {
                                             </TableRow>
                                         ) : (
                                             filteredProperties.map((property) => (
-                                                <TableRow key={property.id}>
+                                                <TableRow key={property.id} className="h-14"> {/* Min height 56px for rows */}
                                                     <TableCell>
                                                         <div className="flex flex-col">
                                                             <span className="font-semibold">{property.name}</span>
@@ -315,9 +315,9 @@ export function PropertiesClient() {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex justify-end gap-2">
-                                                            <Button variant="ghost" size="sm" onClick={() => handleEditProperty(property)} className="h-8 w-8 p-0"><Edit2 className="h-4 w-4" /></Button>
-                                                            <Button variant="ghost" size="sm" onClick={() => handleDeleteProperty(property)} className="h-8 w-8 p-0 text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                                                            <Button variant="outline" size="sm" asChild>
+                                                            <Button variant="ghost" size="sm" onClick={() => handleEditProperty(property)} className="h-9 w-9 p-0 rounded-full hover:bg-muted" aria-label={`Edit ${property.name}`}><Edit2 className="h-4 w-4" /></Button>
+                                                            <Button variant="ghost" size="sm" onClick={() => handleDeleteProperty(property)} className="h-9 w-9 p-0 rounded-full text-destructive hover:bg-destructive/10" aria-label={`Delete ${property.name}`}><Trash2 className="h-4 w-4" /></Button>
+                                                            <Button variant="outline" size="sm" asChild className="h-9">
                                                                 <Link href={`/properties/${property.id}`}>View</Link>
                                                             </Button>
                                                         </div>
@@ -327,6 +327,54 @@ export function PropertiesClient() {
                                         )}
                                     </TableBody>
                                 </Table>
+
+                                {/* Mobile Card View */}
+                                <div className="md:hidden space-y-4">
+                                    {filteredProperties.length === 0 ? (
+                                        <div className="text-center text-muted-foreground py-8">
+                                            {searchTerm ? 'No properties found matching your search.' : 'No properties found.'}
+                                        </div>
+                                    ) : (
+                                        filteredProperties.map((property) => (
+                                            <div key={property.id} className="bg-card border rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex gap-3">
+                                                        <div className="p-2 bg-muted rounded-md h-fit">
+                                                            <PropertyIcon type={property.type} className="h-5 w-5 text-foreground" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-semibold text-base">{property.name}</h3>
+                                                            <p className="text-sm text-muted-foreground">{property.address.city}, {property.address.state}</p>
+                                                        </div>
+                                                    </div>
+                                                    <Badge variant="secondary" className={`capitalize ${property.status === 'occupied' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : ''}`}>
+                                                        {property.status}
+                                                    </Badge>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                                    <div>
+                                                        <p className="text-muted-foreground text-xs">Target Rent</p>
+                                                        <p className="font-medium">{formatCurrency(property.targetRent || 0, 'en-KE', 'KES')}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-muted-foreground text-xs">Value</p>
+                                                        <p className="font-medium">{formatCurrency(property.currentValue || 0, 'en-KE', 'KES')}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-2 mt-2 pt-3 border-t">
+                                                    <Button variant="outline" className="flex-1 h-11" onClick={() => handleEditProperty(property)}>
+                                                        Edit
+                                                    </Button>
+                                                    <Button variant="default" className="flex-1 h-11" asChild>
+                                                        <Link href={`/properties/${property.id}`}>View Details</Link>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
