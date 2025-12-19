@@ -41,7 +41,7 @@ const leaseClausePrompt = ai.definePrompt({
   },
 });
 
-export const generateLeaseClauseFlow = ai.defineFlow(
+const generateLeaseClauseFlow = ai.defineFlow(
   {
     name: 'generateLeaseClauseFlow',
     inputSchema: GenerateLeaseClauseInputSchema,

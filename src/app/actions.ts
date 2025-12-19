@@ -5,7 +5,7 @@ import { getSession } from '@/lib/session';
 
 // This server action's only purpose is to create a session cookie.
 // The actual authentication (login/signup) happens on the client.
-export async function createSession() {
+export async function createSession(shouldRedirect: boolean = true) {
   const session = await getSession();
 
   // The onAuthStateChanged listener in the layout is now the source of truth for the user's state.
@@ -16,7 +16,9 @@ export async function createSession() {
   session.isLoggedIn = true;
   await session.save();
 
-  redirect('/');
+  if (shouldRedirect) {
+    redirect('/');
+  }
 }
 
 export async function logout() {

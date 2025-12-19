@@ -459,19 +459,19 @@ export default function ProfileSettingsTab() {
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="zh-yue">Cantonese (Traditional)</SelectItem>
-                    <SelectItem value="zh">Mandarin (Simplified)</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="pt">Portuguese</SelectItem>
-                    <SelectItem value="de">German</SelectItem>
-                    <SelectItem value="it">Italian</SelectItem>
-                    <SelectItem value="am">Amharic (Ethiopian)</SelectItem>
-                    <SelectItem value="ar">Arabic</SelectItem>
-                    <SelectItem value="hi">Hindi</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="ja">Japanese</SelectItem>
-                    <SelectItem value="ur">Urdu</SelectItem>
+                    <SelectItem value="am">🇪🇹 Amharic (Ethiopian)</SelectItem>
+                    <SelectItem value="ar">🇸🇦 Arabic</SelectItem>
+                    <SelectItem value="zh-yue">🇭🇰 Cantonese (Traditional)</SelectItem>
+                    <SelectItem value="en">🇬🇧 English</SelectItem>
+                    <SelectItem value="fr">🇫🇷 French</SelectItem>
+                    <SelectItem value="de">🇩🇪 German</SelectItem>
+                    <SelectItem value="hi">🇮🇳 Hindi</SelectItem>
+                    <SelectItem value="it">🇮🇹 Italian</SelectItem>
+                    <SelectItem value="ja">🇯🇵 Japanese</SelectItem>
+                    <SelectItem value="zh">🇨🇳 Mandarin (Simplified)</SelectItem>
+                    <SelectItem value="pt">🇵🇹 Portuguese</SelectItem>
+                    <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+                    <SelectItem value="ur">🇵🇰 Urdu</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

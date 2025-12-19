@@ -81,7 +81,7 @@ Once signed and agreed, you can create the tenancy in PropTraka."
 });
 
 // Define the main flow that orchestrates the process.
-export const getOnboardingPackFlow = ai.defineFlow(
+const getOnboardingPackFlow = ai.defineFlow(
   {
     name: 'getOnboardingPackFlow',
     inputSchema: OnboardingPackInputSchema,

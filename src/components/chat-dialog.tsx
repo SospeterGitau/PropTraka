@@ -20,8 +20,7 @@ import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, where } from 'firebase/firestore';
-import { cn } from '@/lib/utils';
+
 // import { getChatResponse } from '@/ai/flows/get-chat-response-flow'; // Replaced by Portfolio Assistant
 import { portfolioAssistantChat } from '@/ai/flows/portfolio-assistant-chat';
 import { useDataContext } from '@/context/data-context';
