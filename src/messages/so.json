@@ -1,0 +1,25 @@
+{
+    "Navigation": {
+        "dashboard": "Guddiga",
+        "properties": "Guryaha",
+        "revenue": "Dakhliga",
+        "maintenance": "Dayactirka",
+        "logout": "Ka Bax"
+    },
+    "Common": {
+        "loading": "Inagoo soo dejinayna...",
+        "save": "Keydi",
+        "cancel": "Jooji",
+        "edit": "Wax ka bedel",
+        "delete": "Tirtir"
+    },
+    "Settings": {
+        "title": "Macluumaadka & Rogrogista",
+        "language": "Luqad",
+        "languageDesc": "Dooro luqadda aad doorbideyso."
+    },
+    "NewFeature": {
+        "badge": "Cusub",
+        "description": "AI-da ayaa si toos ah u tarjumeysa qoraalkan dhamaan luqadaha la taageeray."
+    }
+}

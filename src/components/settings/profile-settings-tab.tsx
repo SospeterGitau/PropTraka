@@ -471,6 +471,8 @@ export default function ProfileSettingsTab() {
                     <SelectItem value="zh">🇨🇳 Mandarin (Simplified)</SelectItem>
                     <SelectItem value="pt">🇵🇹 Portuguese</SelectItem>
                     <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+                    <SelectItem value="so">🇸🇴 Somali</SelectItem>
+                    <SelectItem value="sw">🇰🇪 Swahili</SelectItem>
                     <SelectItem value="ur">🇵🇰 Urdu</SelectItem>
                   </SelectContent>
                 </Select>

@@ -1,0 +1,25 @@
+{
+    "Navigation": {
+        "dashboard": "Dashibodi",
+        "properties": "Mali",
+        "revenue": "Mapato",
+        "maintenance": "Matengenezo",
+        "logout": "Toka"
+    },
+    "Common": {
+        "loading": "Inapakia...",
+        "save": "Hifadhi",
+        "cancel": "Ghairi",
+        "edit": "Hariri",
+        "delete": "Futa"
+    },
+    "Settings": {
+        "title": "Wasifu na Mipangilio",
+        "language": "Lugha",
+        "languageDesc": "Chagua lugha unayopendelea."
+    },
+    "NewFeature": {
+        "badge": "Mpya",
+        "description": "AI hutafsiri maandishi haya kiotomatiki kwa lugha zote zinazotumika."
+    }
+}
