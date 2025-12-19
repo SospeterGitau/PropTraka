@@ -433,10 +433,11 @@ export default function ProfileSettingsTab() {
                 <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({ ...tempSettings, currency: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                    <SelectItem value="CNY">CNY - Chinese Yuan (¥)</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                    <SelectItem value="KES">KES - Kenyan Shilling (KSh)</SelectItem>
+                    <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
