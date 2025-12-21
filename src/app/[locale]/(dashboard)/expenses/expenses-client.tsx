@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, memo } from 'react';
+import { deleteExpense } from '@/app/actions/expenses';
 import type { Expense } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
@@ -28,9 +29,20 @@ import { Plus, Search, MoreHorizontal, Edit2, Trash2, Calendar, Tag } from 'luci
 import { formatCurrency } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
-const ExpensesClient = memo(function ExpensesClient() {
-  const { expenses: expensesData, settings, loading } = useDataContext();
-  const expenses = expensesData as Expense[];
+interface ExpensesClientProps {
+  initialExpenses: Expense[];
+}
+
+const ExpensesClient = memo(function ExpensesClient({ initialExpenses }: ExpensesClientProps) {
+  const { settings } = useDataContext();
+  // Expenses now managed via local state initialized from server props
+  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+
+  // Sync with props if revalidated (optional but good practice)
+  React.useEffect(() => {
+    setExpenses(initialExpenses);
+  }, [initialExpenses]);
+
   const locale = settings?.locale || 'en-KE';
   const currency = settings?.currency || 'KES';
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,9 +54,9 @@ const ExpensesClient = memo(function ExpensesClient() {
       const matchesSearch = (expense.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (expense.contractorName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (expense.propertyName || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesCategory = !filterCategory || expense.category === filterCategory;
-      
+
       return matchesSearch && matchesCategory;
     });
   }, [expenses, searchTerm, filterCategory]);
@@ -58,10 +70,21 @@ const ExpensesClient = memo(function ExpensesClient() {
     return filteredExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
   }, [filteredExpenses]);
 
-  const handleDeleteExpense = (expense: Expense) => {
+  const handleDeleteExpense = async (expense: Expense) => {
     if (confirm(`Are you sure you want to delete this expense (${formatCurrency(expense.amount, locale, currency)})?`)) {
-      console.log('Delete expense:', expense.id);
-      // TODO: Implement delete functionality with Firebase
+      // Optimistic update
+      const previousExpenses = [...expenses];
+      setExpenses(prev => prev.filter(e => e.id !== expense.id));
+
+      try {
+        await deleteExpense(expense.id);
+        router.refresh();
+      } catch (err) {
+        console.error(err);
+        // Revert
+        setExpenses(previousExpenses);
+        alert('Failed to delete expense.');
+      }
     }
   };
 
@@ -69,21 +92,9 @@ const ExpensesClient = memo(function ExpensesClient() {
     router.push('/expenses/add');
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Expenses" />
-        <Card>
-          <CardHeader>
-            <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Removed loading check as data is pre-fetched
+  // Using skeletons would require "isPending" from useTransition if we were navigating
+  // For now, render immediately.
 
   return (
     <div className="space-y-6">

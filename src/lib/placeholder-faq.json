@@ -94,6 +94,10 @@
                 "content": "<b>We accept secure payments via PesaPal.</b><br/><br/>You can pay for your subscription using M-Pesa, Visa, or Mastercard. All payments are processed securely through PesaPal, ensuring your financial data is protected. Subscriptions can be billed monthly or annually (with a discount)."
             },
             {
+                "title": "How do I set up Payment Integrations (M-Pesa, Airtel, Pesapal)?",
+                "content": "<b>Configure your preferred payment gateways in 'Settings > Profile'.</b><br/><br/>You can now accept rent via multiple channels:<br/><ul><li><b>M-Pesa:</b> Use manual Paybill instructions or connect directly to the Daraja API for automated verification.</li><li><b>Airtel Money:</b> Display a manual Till number or integrate with the Airtel Money API for direct payments.</li><li><b>Pesapal:</b> Use our aggregator integration for automated card and mobile money processing.</li></ul>"
+            },
+            {
                 "title": "What is the PropTraka API?",
                 "content": "<b>Enterprise-grade connectivity for developers.</b><br/><br/>Users on the Enterprise plan can use the PropTraka API to programmatically access their data. Whether you're building a custom dashboard or integrating with accounting software, our read-only API endpoints for Properties, Revenue, and Expenses give you the raw data you need."
             }

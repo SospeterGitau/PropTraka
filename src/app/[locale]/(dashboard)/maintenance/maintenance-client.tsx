@@ -4,6 +4,8 @@
 import React, { useState, useMemo, memo } from 'react';
 import type { MaintenanceRequest, Property } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
+import { deleteMaintenanceRequest } from '@/app/actions/maintenance';
+import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,8 +33,13 @@ function formatAddress(property: Property) {
   return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
 }
 
-const MaintenanceClient = memo(function MaintenanceClient() {
-  const { maintenanceRequests, properties, loading } = useDataContext();
+interface MaintenanceClientProps {
+  maintenanceRequests: MaintenanceRequest[];
+  properties: Property[];
+}
+
+const MaintenanceClient = memo(function MaintenanceClient({ maintenanceRequests, properties }: MaintenanceClientProps) {
+  const loading = false;
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
@@ -47,11 +54,11 @@ const MaintenanceClient = memo(function MaintenanceClient() {
       const matchesSearch = (request.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (request.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (request.propertyName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-      
+
       const normalize = (s?: string) => s ? s.toLowerCase().replace(/\s+/g, '_') : '';
       const matchesStatus = !filterStatus || normalize(request.status) === normalize(filterStatus);
       const matchesPriority = !filterPriority || request.priority === filterPriority;
-      
+
       return matchesSearch && matchesStatus && matchesPriority;
     });
   }, [maintenanceRequests, searchTerm, filterStatus, filterPriority]);
@@ -81,6 +88,8 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     }
   };
 
+  const { toast } = useToast();
+
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case 'urgent':
@@ -96,10 +105,22 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     }
   };
 
-  const handleDeleteRequest = (request: MaintenanceRequest) => {
+  const handleDeleteRequest = async (request: MaintenanceRequest) => {
     if (confirm(`Are you sure you want to delete this maintenance request: "${request.title}"?`)) {
-      console.log('Delete request:', request.id);
-      // TODO: Implement delete functionality with Firebase
+      try {
+        await deleteMaintenanceRequest(request.id);
+        toast({
+          title: "Request deleted",
+          description: "The maintenance request has been successfully deleted.",
+        });
+      } catch (error) {
+        console.error("Failed to delete request:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete maintenance request.",
+        });
+      }
     }
   };
 

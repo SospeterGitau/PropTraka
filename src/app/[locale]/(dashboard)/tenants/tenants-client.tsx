@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, memo } from 'react';
 import type { Tenant } from '@/lib/types';
-import { useDataContext } from '@/context/data-context';
+import { deleteTenant } from '@/app/actions/tenants';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,8 +21,8 @@ import { Plus, Search, Mail, Phone, Edit2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TenantForm } from '@/components/tenant-form';
 
-const TenantsClient = memo(function TenantsClient() {
-  const { tenants, deleteTenant, loading } = useDataContext();
+const TenantsClient = memo(function TenantsClient({ initialTenants = [] }: { initialTenants?: Tenant[] }) {
+  const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -45,7 +45,11 @@ const TenantsClient = memo(function TenantsClient() {
   const handleDeleteTenant = async (tenant: Tenant) => {
     if (confirm(`Are you sure you want to delete ${tenant.firstName} ${tenant.lastName}?`)) {
       try {
-        await deleteTenant(tenant.id);
+        if (tenant.id) {
+          // Optimistic update
+          setTenants(prev => prev.filter(t => t.id !== tenant.id));
+          await deleteTenant(tenant.id);
+        }
       } catch (error) {
         console.error("Failed to delete tenant:", error);
         alert("Failed to delete tenant");
@@ -57,21 +61,7 @@ const TenantsClient = memo(function TenantsClient() {
     router.push('/tenants/add');
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader title="Tenants" />
-        <Card>
-          <CardHeader>
-            <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6">
@@ -145,10 +135,10 @@ const TenantsClient = memo(function TenantsClient() {
                       </div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                       {tenant.idType}
+                      {tenant.idType}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                       {tenant.idNumber}
+                      {tenant.idNumber}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">

@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import { useUser } from '@/firebase';
 import { useDataContext } from '@/context/data-context';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
 
 
 export default function SubscriptionBillingTab() {
+    const { user } = useUser();
     const { settings } = useDataContext();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
@@ -64,7 +66,7 @@ export default function SubscriptionBillingTab() {
                         amount: PLAN_AMOUNTS[planName] || 100, // Fallback
                         description: `Upgrade to ${planName} Plan (${billingCycle})`,
                         user: {
-                            email: settings?.email || 'user@example.com', // Should come from auth context really
+                            email: user?.email || 'user@example.com',
                             firstName: settings?.companyName || 'Valued Customer'
                         },
                         callbackUrl: `${window.location.origin}/settings?tab=subscription&status=success`

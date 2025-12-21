@@ -5,7 +5,7 @@
 - **Global Accessibility**: Built-in multi-language support (i18n) catering to a diverse range of international users (13+ locales).
 - **AI-Powered Insights**: Leveraging Genkit to analyze portfolio health, predict maintenance needs, and score portfolio diversity. Generates actionable insights to improve ROI.
 - **Property Management**: Comprehensive CRUD operations for properties, including image management, mortgage tracking, and detailed unit specifications.
-- **Revenue & Expense Tracking**: Ledger-based financial tracking with support for recurring payments, one-off expenses, and detailed categorization.
+- **Revenue & Expense Tracking**: Ledger-based financial tracking with support for recurring payments, one-off expenses, and detailed categorization. Supports automated payments via M-Pesa, Airtel Money, and Pesapal.
 - **Tenant Portal**: Dedicated views for tenants to view lease details and payment history (roadmap).
 - **Smart Alerts**: Proactive notifications for lease expiries, overdue payments, and maintenance anomalies.
 

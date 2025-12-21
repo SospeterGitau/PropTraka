@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import { useUser, useFirestore, useFirebase } from '@/firebase';
+import { useUser, useFirebase } from '@/firebase';
 import { useTheme } from '@/context/theme-context';
 import { useDataContext } from '@/context/data-context';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,7 @@ import { collection, query, where, getDocs, writeBatch } from 'firebase/firestor
 import { useRouter, usePathname } from '@/navigation';
 import { useLocale } from 'next-intl';
 
-import type { ResidencyStatus, UserSettings } from '@/lib/types';
+import type { ResidencyStatus } from '@/lib/types';
 import { clearSampleData } from '@/lib/sample-data';
 
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import { PaymentSettings } from './payment-settings';
 import { Loader2, LogOut, Sun, Moon, Laptop, Trash2 } from 'lucide-react';
 
 const passwordSchema = z.object({
@@ -278,7 +279,7 @@ export default function ProfileSettingsTab() {
       </div>
       <div className="space-y-6">
         <fieldset disabled={!isEditing} className="space-y-6">
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>Security</CardTitle>
               <CardDescription>Manage your account credentials and session.</CardDescription>
@@ -310,7 +311,7 @@ export default function ProfileSettingsTab() {
             </CardFooter>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>User Profile</CardTitle>
               <CardDescription>This helps us tailor the experience to your needs.</CardDescription>
@@ -350,7 +351,7 @@ export default function ProfileSettingsTab() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>Billing Information</CardTitle>
               <CardDescription>This information will be used for invoices and payment processing.</CardDescription>
@@ -396,7 +397,7 @@ export default function ProfileSettingsTab() {
 
 
 
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>Reporting</CardTitle>
               <CardDescription>Customise details for your financial reports.</CardDescription>
@@ -422,7 +423,7 @@ export default function ProfileSettingsTab() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>Regional</CardTitle>
               <CardDescription>Set your currency and date format preferences.</CardDescription>
@@ -433,11 +434,11 @@ export default function ProfileSettingsTab() {
                 <Select value={tempSettings.currency} onValueChange={(v) => setTempSettings({ ...tempSettings, currency: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CNY">CNY - Chinese Yuan (¥)</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
-                    <SelectItem value="KES">KES - Kenyan Shilling (KSh)</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                    <SelectItem value="CNY">¥ - Chinese Yuan</SelectItem>
+                    <SelectItem value="EUR">€ - Euro</SelectItem>
+                    <SelectItem value="GBP">£ - British Pound</SelectItem>
+                    <SelectItem value="KES">KSh - Kenyan Shilling</SelectItem>
+                    <SelectItem value="USD">$ - US Dollar</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -481,7 +482,7 @@ export default function ProfileSettingsTab() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
               <CardDescription>Choose how PropTraka looks and feels.</CardDescription>
@@ -522,7 +523,7 @@ export default function ProfileSettingsTab() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-0 shadow-md">
             <CardHeader>
               <CardTitle>AI Features</CardTitle>
               <CardDescription>Enable or disable AI-powered functionality.</CardDescription>
@@ -544,9 +545,141 @@ export default function ProfileSettingsTab() {
               </div>
             </CardContent>
           </Card>
+          <Card className="border-0 shadow-md">
+            <CardHeader>
+              <CardTitle>Automation & Notifications</CardTitle>
+              <CardDescription>Configure automated payments and tenant notifications.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+
+              <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold text-sm">Payment Automation</h3>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="auto-verify-switch">Auto-Verify Payments</Label>
+                    <p className="text-xs text-muted-foreground">Automatically mark rent as "Paid" when a matching M-Pesa/Airtel transaction is received.</p>
+                  </div>
+                  <Switch
+                    id="auto-verify-switch"
+                    checked={tempSettings.paymentAutomation?.autoVerify ?? false}
+                    onCheckedChange={(checked) => setTempSettings({
+                      ...tempSettings,
+                      paymentAutomation: {
+                        enabled: checked, // Assuming enabling auto-verify enables the feature block
+                        provider: checked ? 'pesapal' : 'manual',
+                        autoVerify: checked
+                      }
+                    })}
+                  />
+                </div>
+              </div>
+
+              <PaymentSettings
+                settings={tempSettings}
+                onSettingsChange={(updates) => setTempSettings(prev => prev ? ({ ...prev, ...updates }) : null)}
+                disabled={!isEditing}
+              />
+
+              <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold text-sm">Notifications</h3>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="rent-due-switch">Send Rent Due Reminders</Label>
+                    <p className="text-xs text-muted-foreground">Notify tenants before rent is due.</p>
+                  </div>
+                  <Switch
+                    id="rent-due-switch"
+                    onCheckedChange={(checked) => setTempSettings({
+                      ...tempSettings,
+                      notificationPreferences: {
+                        ...tempSettings.notificationPreferences || { sendReceipts: false, sendLateNotices: false, rentDueReminderDays: 0 },
+                        rentDueReminderDays: checked ? 3 : 0
+                      }
+                    })}
+                    checked={!!(tempSettings.notificationPreferences?.rentDueReminderDays && tempSettings.notificationPreferences.rentDueReminderDays > 0)}
+                  />
+                </div>
+                {(tempSettings.notificationPreferences?.rentDueReminderDays || 0) > 0 && (
+                  <div className="ml-4 space-y-4 border-l-2 pl-4">
+                    <div className="grid w-full max-w-sm items-center gap-1.5">
+                      <Label htmlFor="days-before">Days before due date</Label>
+                      <Input
+                        type="number"
+                        id="days-before"
+                        value={tempSettings.notificationPreferences?.rentDueReminderDays ?? 3}
+                        onChange={(e) => setTempSettings({
+                          ...tempSettings,
+                          notificationPreferences: {
+                            ...tempSettings.notificationPreferences!,
+                            rentDueReminderDays: parseInt(e.target.value) || 0
+                          }
+                        })}
+                        max={30} min={1}
+                      />
+                    </div>
+                    <div className="grid w-full gap-1.5">
+                      <Label htmlFor="rent-due-template">Email/SMS Template</Label>
+                      <textarea
+                        id="rent-due-template"
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={tempSettings.notificationTemplates?.rentDueEmail ?? "Dear {TenantName}, your rent of {Amount} for {Property} is due on {DueDate}. Please pay via M-Pesa to prevent arrears."}
+                        onChange={(e) => setTempSettings({
+                          ...tempSettings,
+                          notificationTemplates: {
+                            ...tempSettings.notificationTemplates,
+                            rentDueEmail: e.target.value
+                          }
+                        })}
+                      />
+                      <p className="text-xs text-muted-foreground">Variables: {`{TenantName}, {Amount}, {Property}, {DueDate}`}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-4">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="receipt-switch">Send Payment Receipts</Label>
+                    <p className="text-xs text-muted-foreground">Automatically send a receipt when payment is recorded.</p>
+                  </div>
+                  <Switch
+                    id="receipt-switch"
+                    checked={tempSettings.notificationPreferences?.sendReceipts ?? false}
+                    onCheckedChange={(checked) => setTempSettings({
+                      ...tempSettings,
+                      notificationPreferences: {
+                        ...tempSettings.notificationPreferences || { rentDueReminderDays: 0, sendLateNotices: false, sendReceipts: false },
+                        sendReceipts: checked
+                      }
+                    })}
+                  />
+                </div>
+                {tempSettings.notificationPreferences?.sendReceipts && (
+                  <div className="ml-4 space-y-4 border-l-2 pl-4">
+                    <div className="grid w-full gap-1.5">
+                      <Label htmlFor="receipt-template">Receipt Template</Label>
+                      <textarea
+                        id="receipt-template"
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={tempSettings.notificationTemplates?.paymentReceiptEmail ?? "Dear {TenantName}, we received your payment of {Amount} for {Property}. Thank you!"}
+                        onChange={(e) => setTempSettings({
+                          ...tempSettings,
+                          notificationTemplates: {
+                            ...tempSettings.notificationTemplates,
+                            paymentReceiptEmail: e.target.value
+                          }
+                        })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </CardContent>
+          </Card>
         </fieldset>
 
-        <Card>
+        <Card className="border-0 shadow-md">
           <CardHeader>
             <CardTitle>Data Management</CardTitle>
             <CardDescription>Manage your application data.</CardDescription>
@@ -576,7 +709,7 @@ export default function ProfileSettingsTab() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-md border-t-4 border-t-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Sign Out</CardTitle>
             <CardDescription>End your current session on this device.</CardDescription>
@@ -590,7 +723,7 @@ export default function ProfileSettingsTab() {
             </form>
           </CardFooter>
         </Card>
-      </div>
+      </div >
 
       <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
         <DialogContent aria-describedby="password-description">

@@ -25,11 +25,10 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tenant } from '@/lib/types';
-import { useDataContext } from '@/context/data-context';
-import { Timestamp } from 'firebase/firestore';
+import { createTenant, updateTenant } from '@/app/actions/tenants';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Link from 'next/link';
+
 import { ArrowLeft, Sparkles, Loader2, PlayCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { assessTenantRisk } from '@/ai/flows/assess-tenant-risk';
@@ -52,7 +51,6 @@ export function TenantForm({
   onSubmit,
   mode = 'dialog',
 }: TenantFormProps) {
-  const { addTenant, updateTenant } = useDataContext();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState('');
@@ -104,7 +102,9 @@ export function TenantForm({
       setLastName(initialTenant.lastName);
       setEmail(initialTenant.email);
       setPhoneNumber(initialTenant.phoneNumber);
-      setDateOfBirth(initialTenant.dateOfBirth ? initialTenant.dateOfBirth.toDate().toISOString().split('T')[0] : '');
+      const dob = initialTenant.dateOfBirth;
+      const dobString = typeof dob === 'object' && dob && 'toDate' in dob ? (dob as any).toDate().toISOString().split('T')[0] : (typeof dob === 'string' ? dob : '');
+      setDateOfBirth(dobString);
       setIdType(initialTenant.idType);
       setIdNumber(initialTenant.idNumber);
       setEmergencyContactName(initialTenant.emergencyContactName || '');
@@ -131,12 +131,12 @@ export function TenantForm({
       return;
     }
 
-    const tenantData: Omit<Tenant, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'> = {
+    const tenantData = {
       firstName,
       lastName,
       email,
       phoneNumber,
-      dateOfBirth: dateOfBirth ? Timestamp.fromDate(new Date(dateOfBirth)) : undefined,
+      dateOfBirth: dateOfBirth || undefined,
       idType,
       idNumber,
       emergencyContactName: emergencyContactName || undefined,
@@ -146,17 +146,14 @@ export function TenantForm({
 
     try {
       if (onSubmit) {
-        // For external onSubmit, assume ownerId, createdAt, updatedAt are handled upstream
-        if (initialTenant?.id) {
-          onSubmit({ ...tenantData, id: initialTenant.id, ownerId: initialTenant.ownerId, createdAt: initialTenant.createdAt, updatedAt: Timestamp.now() });
-        } else {
-          onSubmit(tenantData);
-        }
+        // If onSubmit is provided, use it (wrapping simple payload)
+        // Ideally onSubmit shouldn't be used if we standardized on Action, but support legacy for now
+        onSubmit({ ...tenantData, id: initialTenant?.id, ownerId: initialTenant?.ownerId } as any);
       } else {
         if (initialTenant?.id) {
-          await updateTenant(initialTenant.id, { ...tenantData, id: initialTenant.id, ownerId: initialTenant.ownerId, createdAt: initialTenant.createdAt, updatedAt: Timestamp.now() });
+          await updateTenant(initialTenant.id, tenantData);
         } else {
-          await addTenant(tenantData);
+          await createTenant(tenantData as any);
         }
       }
       if (mode === 'dialog' && onClose) onClose();

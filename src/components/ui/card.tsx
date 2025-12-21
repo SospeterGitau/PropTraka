@@ -12,6 +12,7 @@ const Card = React.forwardRef<
     className={cn(
       "rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-300",
       glass && "bg-white/60 dark:bg-black/40 backdrop-blur-xl border-white/20 shadow-xl",
+      // Allow overriding border/shadow behavior via className, e.g. "border-0 shadow-md"
       className
     )}
     {...props}

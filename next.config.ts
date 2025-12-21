@@ -5,7 +5,6 @@ const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // @ts-expect-error - Turbopack option might not be in the types yet but was in the original js config
   turbopack: {},
   images: {
     remotePatterns: [

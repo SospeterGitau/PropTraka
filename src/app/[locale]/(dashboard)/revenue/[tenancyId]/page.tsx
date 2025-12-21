@@ -5,7 +5,7 @@ import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { notFound, useParams, useRouter } from 'next/navigation';
 import { format, startOfToday, isBefore, isAfter } from 'date-fns';
-import type { Transaction, ServiceCharge, Property, Tenancy, Tenant } from '@/lib/types';
+import type { Transaction, Property, Tenancy, Tenant, RevenueTransaction, ServiceCharge } from '@/lib/types';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, parseDate } from '@/lib/utils';
 import { ArrowLeft, FileText, BadgeCheck, CircleDollarSign, CalendarX2, Info, Pencil, Trash2, MoreVertical, HandCoins, ListChecks, FileInput, Edit, ChevronDown, Landmark, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -44,9 +44,10 @@ function PaymentForm({ isOpen, onClose, onSubmit, transaction }: {
 
   useEffect(() => {
     if (transaction) {
-      const totalServiceCharges = transaction.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
-      const totalDue = (transaction.rent || 0) + totalServiceCharges + (transaction.deposit || 0);
-      const paid = transaction.amountPaid || 0;
+      const rTx = transaction as unknown as RevenueTransaction;
+      const totalServiceCharges = rTx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
+      const totalDue = (rTx.rent || 0) + totalServiceCharges + (rTx.deposit || 0);
+      const paid = rTx.amountPaid || 0;
       const newBalance = totalDue - paid;
       setBalanceDue(newBalance);
       setAmount(newBalance > 0 ? newBalance : '');
@@ -67,7 +68,7 @@ function PaymentForm({ isOpen, onClose, onSubmit, transaction }: {
       <DialogContent aria-describedby="payment-description">
         <DialogHeader>
           <DialogTitle>Record Payment</DialogTitle>
-          <DialogDescription id="payment-description">For {transaction.tenant} at {transaction.propertyName}</DialogDescription>
+          <DialogDescription id="payment-description">For {(transaction as any).tenant || (transaction as any).tenantName} at {(transaction as any).propertyName}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -109,8 +110,9 @@ function InvoiceForm({ isOpen, onClose, onSubmit, transaction }: {
 
   useEffect(() => {
     if (transaction) {
-      setRent(transaction.rent || '');
-      setServiceCharges(transaction.serviceCharges || []);
+      const rTx = transaction as unknown as RevenueTransaction;
+      setRent(rTx.rent || '');
+      setServiceCharges(rTx.serviceCharges || []);
     }
   }, [transaction]);
 
@@ -124,12 +126,13 @@ function InvoiceForm({ isOpen, onClose, onSubmit, transaction }: {
 
   const handleSubmit = () => {
     if (!transaction) return;
-    onSubmit({ ...transaction, rent: Number(rent), serviceCharges });
+    onSubmit({ ...(transaction as any), rent: Number(rent), serviceCharges });
   };
 
   if (!isOpen || !transaction) return null;
 
-  const totalDue = Number(rent) + serviceCharges.reduce((sum, sc) => sum + sc.amount, 0) + (transaction.deposit || 0);
+  const rTx = transaction as unknown as RevenueTransaction;
+  const totalDue = Number(rent) + serviceCharges.reduce((sum, sc) => sum + sc.amount, 0) + (rTx.deposit || 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -210,7 +213,7 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
     return {
       id: doc.id,
       ...data,
-      date: data.date?.toDate ? data.date.toDate() : new Date(data.date)
+      date: (parseDate(data.date) || new Date()).toISOString()
     } as Transaction;
   }) || [], [transactionsSnapshot]);
 
@@ -237,18 +240,40 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
       const tx = transactions.find(t => t.id === transactionId);
       if (!tx) return;
 
-      const existingPaid = tx.amountPaid || 0;
+      const rTxLogic = tx as unknown as RevenueTransaction;
+      const existingPaid = rTxLogic.amountPaid || 0;
       const newTotalPaid = existingPaid + amount;
 
       // Calculate total due
-      const totalServiceCharges = tx.serviceCharges?.reduce((sum, sc) => sum + sc.amount, 0) || 0;
-      const totalDue = (tx.rent || 0) + totalServiceCharges + (tx.deposit || 0);
+      const rTx = tx as unknown as RevenueTransaction; // rTx is already defined above? reusing variable or renaming?
+      // I'll reuse rTxLogic or let the next block use rTx
+      // Wait, replacement connects to line 243.
+      // Next block 247 uses `const rTx = ...` (from Step 435).
+      // If I declare `const rTxLogic = ...` here, it is fine.
 
-      let newStatus = tx.status;
+      // Actually, I should just cast inline or define `const rTx` at the top of the block (line 240) and reuse it.
+      // Line 241: `const tx = ...`.
+      // I can insert `const rTx = tx as unknown as RevenueTransaction;` after line 242.
+      // But my replace tool works on chunks. I'll replace 243-246.
+
+      // And I need to fix lines 250-256.
+      // Line 250: `let newStatus = tx.status;` -> `rTx.status`.
+
+      // I will do two chunks or one big chunk.
+      // Chunk 1: Lines 243-246.
+      // Chunk 2: Lines 250-256.
+
+      // Calculate total due
+
+      const totalServiceCharges = rTx.serviceCharges?.reduce((sum: number, sc: ServiceCharge) => sum + sc.amount, 0) || 0;
+      const totalDue = (rTx.rent || 0) + totalServiceCharges + (rTx.deposit || 0);
+
+      const rTxAny = tx as any; // Quick cast for status/date
+      let newStatus = rTxAny.status;
       const now = new Date();
       if (newTotalPaid >= totalDue) {
         newStatus = 'Paid';
-      } else if (now > new Date(tx.date) && newTotalPaid < totalDue) {
+      } else if (now > new Date(rTxAny.date) && newTotalPaid < totalDue) {
         newStatus = 'Overdue'; // Or 'Partially Paid' if you add that status
       }
 
@@ -290,12 +315,12 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-muted-foreground">Status</span>
-              <Badge variant={tenancy.status === 'Active' ? 'success' : 'secondary'}>{tenancy.status}</Badge>
+              <Badge variant={tenancy.status === 'Active' ? 'outline' : 'secondary'} className={tenancy.status === 'Active' ? 'text-green-600 border-green-600 bg-green-50' : ''}>{tenancy.status}</Badge>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Period</span>
               <span className="text-sm">
-                {tenancy.startDate ? format(new Date(tenancy.startDate.seconds * 1000), 'dd MMM yyyy') : '-'} — {tenancy.endDate ? format(new Date(tenancy.endDate.seconds * 1000), 'dd MMM yyyy') : '-'}
+                {tenancy.startDate ? format(new Date(tenancy.startDate), 'dd MMM yyyy') : '-'} — {tenancy.endDate ? format(new Date(tenancy.endDate), 'dd MMM yyyy') : '-'}
               </span>
             </div>
           </CardContent>
@@ -358,15 +383,18 @@ const TenancyDetailPageContent = memo(function TenancyDetailPageContent() {
                       <Badge variant="outline">{tx.type}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={tx.status === 'Paid' ? 'success' : tx.status === 'Overdue' ? 'destructive' : 'secondary'}>
+                      <Badge
+                        variant={tx.status === 'Paid' ? 'outline' : tx.status === 'Overdue' ? 'destructive' : 'secondary'}
+                        className={tx.status === 'Paid' ? 'text-green-600 border-green-600 bg-green-50' : ''}
+                      >
                         {tx.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {formatCurrency(tx.amount, settings?.locale, settings?.currency)}
+                      {formatCurrency(tx.amount || 0, settings?.locale, settings?.currency)}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
-                      {formatCurrency(tx.amountPaid || 0, settings?.locale, settings?.currency)}
+                      {formatCurrency((tx as unknown as RevenueTransaction).amountPaid || 0, settings?.locale, settings?.currency)}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

@@ -39,10 +39,30 @@ interface ArrearDetail {
   daysOverdue: number;
 }
 
-export default function ArrearsClient() {
+interface ArrearsClientProps {
+  initialRevenue: RevenueTransaction[];
+  initialTenancies: Tenancy[];
+  initialProperties: Property[];
+  initialTenants: Tenant[];
+}
+
+export default function ArrearsClient({
+  initialRevenue = [],
+  initialTenancies = [],
+  initialProperties = [],
+  initialTenants = []
+}: ArrearsClientProps) {
   const { user } = useUser();
-  const { revenue, tenancies, properties, tenants, loading: dataContextLoading, error: dataContextError } = useDataContext();
-  
+  // const { revenue, tenancies, properties, tenants, loading: dataContextLoading, error: dataContextError } = useDataContext(); // Removed
+
+  const revenue = initialRevenue;
+  const tenancies = initialTenancies;
+  const properties = initialProperties;
+  const tenants = initialTenants;
+
+  const isLoading = false; // Data is pre-fetched
+  const error = null;
+
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [reportData, setReportData] = useState<{ title: string; content: string } | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -50,8 +70,8 @@ export default function ArrearsClient() {
   const [arrearToDelete, setArrearToDelete] = useState<ArrearDetail | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isLoading = dataContextLoading;
-  const error = dataContextError;
+  // const isLoading = dataContextLoading;
+  // const error = dataContextError;
 
   const tenantMap = useMemo(() => {
     return new Map(tenants.map(t => [t.id, t]));
@@ -68,11 +88,11 @@ export default function ArrearsClient() {
 
     tenancies.forEach(tenancy => {
       const relatedRevenue = revenue.filter(tx => tx.tenancyId === tenancy.id && tx.status === 'Overdue');
-      
+
       if (relatedRevenue.length > 0) {
         const amountOwed = relatedRevenue.reduce((sum, tx) => sum + tx.amount, 0);
-        const latestOverdueTx = relatedRevenue.sort((a, b) => b.date.toDate().getTime() - a.date.toDate().getTime())[0];
-        const dueDate = latestOverdueTx ? latestOverdueTx.date.toDate() : new Date();
+        const latestOverdueTx = relatedRevenue.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        const dueDate = latestOverdueTx ? new Date(latestOverdueTx.date) : new Date();
         const daysOverdue = latestOverdueTx ? Math.floor((startOfToday().getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
         const tenant = tenantMap.get(tenancy.tenantId);
@@ -103,31 +123,31 @@ export default function ArrearsClient() {
     if (!user) return;
     setIsGeneratingReport(true);
     try {
-        const reportSummary = arrearsDetails.map(a => 
-            `- Tenancy ID: ${a.tenancyId}, Tenant: ${a.tenantName}, Property: ${a.propertyName}, Amount Owed: ${formatCurrency(a.amountOwed, 'en-KE', 'KES')}, Due Date: ${format(a.dueDate, 'P')}, Days Overdue: ${a.daysOverdue}`
-        ).join('\n');
+      const reportSummary = arrearsDetails.map(a =>
+        `- Tenancy ID: ${a.tenancyId}, Tenant: ${a.tenantName}, Property: ${a.propertyName}, Amount Owed: ${formatCurrency(a.amountOwed, 'en-KE', 'KES')}, Due Date: ${format(a.dueDate, 'P')}, Days Overdue: ${a.daysOverdue}`
+      ).join('\n');
 
-        const prompt = `Generate a detailed arrears report based on the following overdue tenancies:\n${reportSummary}\n\nHighlight key figures, oldest overdue accounts, and suggest actions.`;
-        
-        const response = await fetch('/api/generate-report', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, reportType: 'Arrears' }),
-        });
+      const prompt = `Generate a detailed arrears report based on the following overdue tenancies:\n${reportSummary}\n\nHighlight key figures, oldest overdue accounts, and suggest actions.`;
 
-        if (!response.ok) {
-            throw new Error('Failed to generate report');
-        }
+      const response = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, reportType: 'Arrears' }),
+      });
 
-        const data = await response.json();
-        setReportData({ title: "Arrears Report", content: data.report });
-        setIsReportDialogOpen(true);
+      if (!response.ok) {
+        throw new Error('Failed to generate report');
+      }
+
+      const data = await response.json();
+      setReportData({ title: "Arrears Report", content: data.report });
+      setIsReportDialogOpen(true);
 
     } catch (err) {
-        console.error("Error generating report:", err);
-        // Display error to user
+      console.error("Error generating report:", err);
+      // Display error to user
     } finally {
-        setIsGeneratingReport(false);
+      setIsGeneratingReport(false);
     }
   };
 
@@ -259,8 +279,8 @@ export default function ArrearsClient() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Dismiss Arrear</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to dismiss the overdue payment for 
-              <span className="font-bold">{arrearToDelete?.tenantName}</span> (Property: 
+              Are you sure you want to dismiss the overdue payment for
+              <span className="font-bold">{arrearToDelete?.tenantName}</span> (Property:
               <span className="font-bold">{arrearToDelete?.propertyName}</span>)?
               This will mark all associated overdue transactions as 'Waived'.
             </AlertDialogDescription>

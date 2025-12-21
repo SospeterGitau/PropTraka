@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 
 // import { getChatResponse } from '@/ai/flows/get-chat-response-flow'; // Replaced by Portfolio Assistant
 import { portfolioAssistantChat } from '@/ai/flows/portfolio-assistant-chat';
-import { useDataContext } from '@/context/data-context';
+// import { useDataContext } from '@/context/data-context';
 import { format } from 'date-fns';
 
 interface ChatMessage {
@@ -35,7 +35,16 @@ interface ChatMessage {
 
 export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
     const { user } = useUser();
-    const { properties, tenancies, tenants } = useDataContext(); // Access Data Context
+
+    // Fetch Context Data Locally since DataContext is gutted
+    const [propertiesSnap] = useCollection(user ? query(collection(firestore, 'properties'), where('ownerId', '==', user.uid)) : null);
+    const [tenantsSnap] = useCollection(user ? query(collection(firestore, 'tenants'), where('ownerId', '==', user.uid)) : null);
+    const [tenanciesSnap] = useCollection(user ? query(collection(firestore, 'tenancies'), where('ownerId', '==', user.uid)) : null);
+
+    const properties = useMemo(() => propertiesSnap?.docs.map(d => ({ id: d.id, ...d.data() })) as any[] || [], [propertiesSnap]);
+    const tenants = useMemo(() => tenantsSnap?.docs.map(d => ({ id: d.id, ...d.data() })) as any[] || [], [tenantsSnap]);
+    const tenancies = useMemo(() => tenanciesSnap?.docs.map(d => ({ id: d.id, ...d.data() })) as any[] || [], [tenanciesSnap]);
+
     const [newMessage, setNewMessage] = useState('');
     const [isThinking, setIsThinking] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);

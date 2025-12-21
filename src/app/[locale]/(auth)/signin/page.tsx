@@ -77,23 +77,23 @@ export default function SignInPage() {
     startTransition(async () => {
       const auth = getAuth();
       try {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
         // Session creation and redirect will be handled by the auth state listener
-        await createSession();
+        await createSession(userCredential.user.uid);
       } catch (signInError: any) {
-         // Ignore NEXT_REDIRECT - it's not an error, just Next.js redirecting
-         if (signInError.message?.includes('NEXT_REDIRECT')) {
-           return; // Let the redirect happen without showing error
-         }
-         
-         if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
+        // Ignore NEXT_REDIRECT - it's not an error, just Next.js redirecting
+        if (signInError.message?.includes('NEXT_REDIRECT')) {
+          return; // Let the redirect happen without showing error
+        }
+
+        if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password' || signInError.code === 'auth/invalid-credential') {
           toast({
             variant: 'destructive',
             title: 'Login Failed',
             description: 'The email or password you entered is incorrect.',
           });
         } else {
-           toast({
+          toast({
             variant: 'destructive',
             title: 'Authentication Error',
             description: signInError.message,
@@ -114,7 +114,7 @@ export default function SignInPage() {
         });
         setIsResetDialogOpen(false);
       } catch (error: any) {
-         toast({
+        toast({
           variant: 'destructive',
           title: 'Error',
           description: error.message,
@@ -128,104 +128,104 @@ export default function SignInPage() {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-        await signInWithPopup(auth, provider);
-        await createSession();
+      const result = await signInWithPopup(auth, provider);
+      await createSession(result.user.uid);
     } catch (error: any) {
-        toast({
-            variant: "destructive",
-            title: "Google Sign-In Failed",
-            description: error.message,
-        });
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: error.message,
+      });
     } finally {
-        setIsGooglePending(false);
+      setIsGooglePending(false);
     }
   }
 
   return (
     <>
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center p-6 space-y-2">
-        <CardTitle className="text-2xl">Welcome to PropTraka</CardTitle>
-        <CardDescription>Sign in to access your rental portfolio dashboard.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="space-y-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center p-6 space-y-2">
+          <CardTitle className="text-2xl">Welcome to PropTraka</CardTitle>
+          <CardDescription>Sign in to access your rental portfolio dashboard.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-4">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                {...register('email')}
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  {...register('email')}
                 />
                 {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
+                  <p className="text-sm text-destructive">{errors.email.message}</p>
                 )}
-            </div>
-            <div className="space-y-2">
+              </div>
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                 <Button
-                  type="button"
-                  variant="link"
-                  className="h-auto p-0 text-xs"
-                  onClick={() => setIsResetDialogOpen(true)}
-                >
-                  Forgot Password?
-                </Button>
+                  <Label htmlFor="password">Password</Label>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-xs"
+                    onClick={() => setIsResetDialogOpen(true)}
+                  >
+                    Forgot Password?
+                  </Button>
                 </div>
                 <Input
-                id="password"
-                type="password"
-                {...register('password')}
+                  id="password"
+                  type="password"
+                  {...register('password')}
                 />
                 {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
                 )}
-            </div>
-            <Button type="submit" className="w-full" disabled={isPending}>
+              </div>
+              <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending ? (
-                <>
+                  <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Please wait
-                </>
+                  </>
                 ) : (
-                'Sign In'
+                  'Sign In'
                 )}
-            </Button>
+              </Button>
             </form>
 
             <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                    </span>
-                </div>
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
             </div>
 
-            <SocialAuthButtons 
-                onGoogleSignIn={handleGoogleSignIn} 
-                isPending={isGooglePending}
+            <SocialAuthButtons
+              onGoogleSignIn={handleGoogleSignIn}
+              isPending={isGooglePending}
             />
 
-             <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link
-                    href="/signup"
-                    className="font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                    Sign up
-                </Link>
+            <p className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link
+                href="/signup"
+                className="font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Sign up
+              </Link>
             </p>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-    <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
         <DialogContent aria-describedby="reset-description">
           <DialogHeader>
             <DialogTitle>Forgot Password</DialogTitle>
@@ -243,7 +243,7 @@ export default function SignInPage() {
                 {...passwordResetForm.register('email')}
               />
               {passwordResetForm.formState.errors.email && (
-                  <p className="text-sm text-destructive mt-2">{passwordResetForm.formState.errors.email.message}</p>
+                <p className="text-sm text-destructive mt-2">{passwordResetForm.formState.errors.email.message}</p>
               )}
             </div>
             <DialogFooter>

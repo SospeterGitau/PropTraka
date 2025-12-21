@@ -90,7 +90,7 @@ export default function SignUpPage() {
           title: "Account Created",
           description: "Welcome! Your new account has been successfully created.",
         });
-        await createSession();
+        await createSession(user.uid);
       } catch (error: any) {
         if (error.message?.includes('NEXT_REDIRECT')) {
           return;
@@ -118,8 +118,8 @@ export default function SignUpPage() {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      await createSession();
+      const result = await signInWithPopup(auth, provider);
+      await createSession(result.user.uid);
     } catch (error: any) {
       toast({
         variant: "destructive",

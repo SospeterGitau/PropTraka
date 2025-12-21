@@ -30,7 +30,7 @@ export function LeaseExpiryChart({ tenancies, className }: LeaseExpiryChartProps
         tenancies.forEach(t => {
             if (t.status === 'Active' && t.endDate) {
                 // Check if end date is within next 12 months
-                const endDate = t.endDate?.toDate ? t.endDate.toDate() : new Date(t.endDate);
+                const endDate = new Date(t.endDate);
                 const monthsDiff = differenceInMonths(endDate, today);
 
                 if (monthsDiff >= 0 && monthsDiff < 12) {
@@ -110,7 +110,7 @@ export function ArrearsAgeingChart({ transactions, currency = 'KES', className }
             // Guard: 'amountPaid' exists on RevenueTransaction usually.
             // Also checking type explicitly if available.
             (t as any).status !== 'Paid' &&
-            ((t.type === 'income') || ((t as any).amountPaid !== undefined))
+            ((t as any).type === 'income' || (t as any).type === 'revenue' || (t as any).amountPaid !== undefined)
         );
 
         const buckets = [
@@ -121,14 +121,14 @@ export function ArrearsAgeingChart({ transactions, currency = 'KES', className }
         ];
 
         overdue.forEach(t => {
-            const dueDate = t.date?.toDate ? t.date.toDate() : new Date(t.date);
+            const dueDate = new Date(t.date);
             // Calculate days overdue
             const diffTime = Math.abs(today.getTime() - dueDate.getTime());
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
             // Only count if actually past due (diffDays > 0 and dueDate < today)
             if (isBefore(dueDate, today)) {
-                const amount = (t.amount || 0) - (t.amountPaid || 0); // Outstanding amount
+                const amount = (t.amount || 0) - ((t as any).amountPaid || 0); // Outstanding amount
                 if (amount <= 0) return;
 
                 if (diffDays <= 30) buckets[0].value += amount;

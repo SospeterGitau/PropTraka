@@ -92,7 +92,7 @@ const ReportsClient = memo(function ReportsClient() {
     const monthsInPeriod = 12; // Approximation for annual views
     const theoreticalGross = properties.reduce((sum, p) => sum + (p.targetRent || p.rentalValue || 0) * monthsInPeriod, 0);
 
-    const actualCollected = filteredData.revenue.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+    const actualCollected = filteredData.revenue.reduce((sum, t) => sum + ((t as unknown as any).amountPaid || 0), 0);
     const expensesTotal = filteredData.expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 
     // Gap is vacancy + credit loss
@@ -121,7 +121,7 @@ const ReportsClient = memo(function ReportsClient() {
       const propRev = filteredData.revenue.filter(t => t.propertyId === p.id);
       const propExp = filteredData.expenses.filter(e => e.propertyId === p.id || e.propertyName === p.name);
 
-      const income = propRev.reduce((sum, t) => sum + (t.amountPaid || 0), 0);
+      const income = propRev.reduce((sum, t) => sum + ((t as unknown as any).amountPaid || 0), 0);
       const cost = propExp.reduce((sum, e) => sum + (e.amount || 0), 0);
       const noi = income - cost;
 

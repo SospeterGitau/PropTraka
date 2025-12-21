@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getPesaPalToken } from '@/lib/pesapal';
 import { firestore } from '@/firebase'; // NOTE: This might need Admin SDK for server-side
-import { adminAuth, adminDb } from '@/lib/firebase-admin'; // Assuming we have admin SDK set up, otherwise use standard if allowed
+// import { adminAuth, adminDb } from '@/lib/firebase-admin'; // Assuming we have admin SDK set up, otherwise use standard if allowed
 import { Timestamp } from 'firebase-admin/firestore';
 
 // NOTE: PesaPal sends IPN as GET/POST with query params usually
@@ -35,15 +35,32 @@ export async function GET(req: Request) {
 
         if (data.payment_status_description === 'Completed') {
             // Update Firestore
-            // We need to find the user by some reference. 
-            // Ideally orderMerchantReference WAS the userID or we stored a mapping.
-            // If we used a random UUID for OrderID, we need to have stored that OrderID -> UserID mapping in a 'transactions' collection first.
+            // We expect OrderMerchantReference to be the invoice ID or Tenancy ID for now.
+            // Ideally we'd have a 'transactions' doc with status 'initiated' to look up.
 
-            // For this implementation, let's assume we store the pending transaction in a 'payments' collection
-            // fetch payment doc by id (OrderMerchantReference)
+            // Search for the tenancy/transaction by reference (assuming OrderMerchantReference is unique or we can find it)
+            // Implementation note: This part relies on having a way to link the order back to a user/property.
+            // For now, we'll assume OrderMerchantReference = Tenancy ID (as a simplified flow) or we'd need a separate 'pending_orders' collection.
 
-            // ... Update Logic Here ...
+            /* 
+               REAL IMPLEMENTATION TODO:
+               1. Look up the pending order in `pending_payments` collection using orderTrackingId.
+               2. Get userId and tenancyId from that pending order.
+               3. Fetch user settings for automation preferences.
+               4. Create the revenue transaction.
+            */
+
             console.log('Payment Completed for:', orderMerchantReference);
+
+            // Mock logic for the "Foundation" as requested, ensuring the structure is ready.
+            // We would import adminDb here to write to Firestore.
+
+            // const userSettingsRef = adminDb.collection('user_settings').doc(userId);
+            // const userSettingsSnap = await userSettingsRef.get();
+            // const settings = userSettingsSnap.data();
+
+            // const status = settings?.automation?.autoVerifyPayments ? 'paid' : 'pending';
+            // await adminDb.collection('revenue').add({ ...transactionData, status });
         }
 
         return NextResponse.json({

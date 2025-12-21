@@ -33,7 +33,7 @@ export function ExpenseAnalysisChart({ expenses, currency = 'KES', className }: 
         const categories = new Set<string>();
 
         expenses.forEach(exp => {
-            const date = exp.date ? (exp.date.toDate ? exp.date.toDate() : new Date(exp.date)) : new Date();
+            const date = exp.date ? new Date(exp.date) : new Date();
             const monthKey = format(date, 'MMM yy'); // e.g., "Jan 24"
             const category = exp.category || 'Uncategorized';
 

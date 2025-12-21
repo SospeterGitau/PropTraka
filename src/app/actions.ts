@@ -5,7 +5,7 @@ import { getSession } from '@/lib/session';
 
 // This server action's only purpose is to create a session cookie.
 // The actual authentication (login/signup) happens on the client.
-export async function createSession(shouldRedirect: boolean = true) {
+export async function createSession(uid: string, shouldRedirect: boolean = true) {
   const session = await getSession();
 
   // The onAuthStateChanged listener in the layout is now the source of truth for the user's state.
@@ -14,6 +14,7 @@ export async function createSession(shouldRedirect: boolean = true) {
   // we navigate to the dashboard, where the auth state listener will take over.
 
   session.isLoggedIn = true;
+  session.uid = uid;
   await session.save();
 
   if (shouldRedirect) {
@@ -31,6 +32,11 @@ export async function logout() {
 const FUNCTIONS_BASE_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'https://us-central1-studio-4661291525-66fea.cloudfunctions.net';
 
 export async function fetchMLPrediction(functionName: string, data: any) {
+  const session = await getSession();
+  if (!session.isLoggedIn) {
+    throw new Error('Unauthorized: You must be logged in to use this feature.');
+  }
+
   try {
     const url = `${FUNCTIONS_BASE_URL}/${functionName}`;
     const response = await fetch(
@@ -39,6 +45,8 @@ export async function fetchMLPrediction(functionName: string, data: any) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Optional: Pass auth token if Functions require it
+          // 'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({ data }),
       }

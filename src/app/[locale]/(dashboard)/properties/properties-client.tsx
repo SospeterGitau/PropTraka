@@ -4,6 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -38,19 +39,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { PlusCircle, Loader2, Home, BarChart2, TrendingUp, AlertCircle, Percent, Search, Edit2, Trash2 } from 'lucide-react';
 import { PropertyIcon } from '@/components/property-icon';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUser } from '@/firebase/auth'; // Corrected import
-import { firestore } from '@/firebase'; // Corrected import
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query, getDocs, query, where, writeBatch } from 'firebase/firestore';
-import { useDataContext } from '@/context/data-context';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
+
 import { formatCurrency } from '@/lib/utils';
 import type { Property } from '@/lib/types';
 import { KpiCard } from '@/components/dashboard/kpi-card';
+import { createProperty, updateProperty, deleteProperty } from '@/app/actions/properties';
 
-export function PropertiesClient() {
-    const { user } = useUser();
-    const { properties: dataContextProperties, loading: dataContextLoading, error: dataContextError } = useDataContext();
+
+export function PropertiesClient({ initialProperties = [] }: { initialProperties?: Property[] }) {
+    const [properties, setProperties] = useState<Property[]>(initialProperties);
+    const loading = false; // Server Side Pre-fetched
+    const error = null;
     const router = useRouter();
 
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -61,31 +60,16 @@ export function PropertiesClient() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredProperties = useMemo(() => {
-        if (!searchTerm) return dataContextProperties;
+        if (!searchTerm) return properties;
         const lowerTerm = searchTerm.toLowerCase();
-        return dataContextProperties.filter(property =>
+        return properties.filter(property =>
             property.name.toLowerCase().includes(lowerTerm) ||
             property.address.city?.toLowerCase().includes(lowerTerm) ||
             property.type.toLowerCase().includes(lowerTerm)
         );
-    }, [dataContextProperties, searchTerm]);
+    }, [properties, searchTerm]);
 
-    const propertiesCollectionRef = useMemo(() => {
-        if (!user) return null; // Ensure user is available
-        return collection(firestore, 'properties');
-    }, [user]);
 
-    const propertiesQuery = useMemo(() => {
-        if (!propertiesCollectionRef || !user) return null;
-        return createUserQuery(firestore, 'properties', user.uid);
-    }, [propertiesCollectionRef, user]);
-
-    const [propertiesSnapshot, loading, error] = useCollection(propertiesQuery);
-
-    // Use properties from DataContext which is already filtered by ownerId and live-synced
-    const properties = dataContextProperties;
-    const propertiesLoading = dataContextLoading;
-    const propertiesError = dataContextError || error;
 
 
     const handleAddProperty = () => {
@@ -99,25 +83,16 @@ export function PropertiesClient() {
     };
 
     const handleSubmitForm = async (formData: Property | Omit<Property, 'id' | 'ownerId'>) => {
-        if (!user) return;
         setIsSubmitting(true);
         try {
             if (editingProperty) {
                 // Update existing property
-                const propertyRef = doc(firestore, 'properties', editingProperty.id!); // Use firestore directly
-                await updateDoc(propertyRef, {
-                    ...formData,
-                    updatedAt: serverTimestamp(),
-                });
+                await updateProperty(editingProperty.id!, formData);
             } else {
                 // Add new property
-                await addDoc(collection(firestore, 'properties'), {
-                    ...formData,
-                    ownerId: user.uid,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                });
+                await createProperty(formData as Property);
             }
+            router.refresh();
             setIsFormOpen(false);
         } catch (e) {
             console.error("Error adding/updating property: ", e);
@@ -133,37 +108,17 @@ export function PropertiesClient() {
     };
 
     const confirmDelete = async () => {
-        if (!propertyToDelete || !user) return;
+        if (!propertyToDelete) return;
         setIsSubmitting(true);
         try {
-            // Delete related documents first (tenancies, revenue, expenses, maintenance requests, app documents)
-            // This is a simplified example; in a real app, you'd use Firebase Functions
-            // to recursively delete subcollections and related data securely on the backend.
+            // Optimistic Delete from UI
+            setProperties(prev => prev.filter(p => p.id !== propertyToDelete.id));
 
-            // Fetch and delete tenancies
-            const tenanciesSnapshot = await getDocs(query(collection(firestore, 'tenancies'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
-            const batch = writeBatch(firestore); // Use firestore directly
-            tenanciesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+            // Server Action for Cascading Delete
+            await deleteProperty(propertyToDelete.id!);
 
-            // Fetch and delete revenue transactions
-            const revenueSnapshot = await getDocs(query(collection(firestore, 'revenue'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
-            revenueSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-
-            // Fetch and delete expenses
-            const expensesSnapshot = await getDocs(query(collection(firestore, 'expenses'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
-            expensesSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-
-            // Fetch and delete maintenance requests
-            const maintenanceSnapshot = await getDocs(query(collection(firestore, 'maintenanceRequests'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
-            maintenanceSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-
-            // Fetch and delete app documents related to the property
-            const appDocsSnapshot = await getDocs(query(collection(firestore, 'appDocuments'), where('associatedEntityId', '==', propertyToDelete.id), where('associatedEntityType', '==', 'property'), where('ownerId', '==', user.uid)));
-            appDocsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-
-            // Delete the property itself
-            batch.delete(doc(firestore, 'properties', propertyToDelete.id!)); // Use firestore directly
-            await batch.commit();
+            router.refresh();
+            // batch commit removed - handled in server action
 
             setPropertyToDelete(null);
             setDeleteConfirmationOpen(false);
@@ -187,7 +142,7 @@ export function PropertiesClient() {
     }, [properties]);
 
 
-    if (propertiesLoading) {
+    if (loading) {
         return (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3].map((i) => (
@@ -200,22 +155,21 @@ export function PropertiesClient() {
         );
     }
 
-    if (propertiesError) {
-        const msg = typeof propertiesError === 'string' ? propertiesError : (propertiesError as any)?.message || String(propertiesError);
+    if (error) {
+        const msg = String(error);
         return <div className="text-destructive">Error loading properties: {msg}</div>;
     }
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">My Properties</h1>
+            <PageHeader title="My Properties">
                 <Button onClick={handleAddProperty}>
                     <PlusCircle className="mr-2 h-5 w-5" /> Add New Property
                 </Button>
-            </div>
+            </PageHeader>
 
-            {properties.length === 0 && !propertiesLoading ? (
-                <Card className="text-center py-8">
+            {properties.length === 0 && !loading ? (
+                <Card className="text-center py-8 border-0 shadow-md">
                     <CardHeader>
                         <CardTitle className="text-2xl font-semibold">No Properties Added Yet</CardTitle>
                         <CardDescription>It looks like you haven't added any properties to your portfolio.</CardDescription>
@@ -252,7 +206,7 @@ export function PropertiesClient() {
                         />
                     </div>
 
-                    <Card>
+                    <Card className="border-0 shadow-md">
                         <CardHeader>
                             <CardTitle>Properties List</CardTitle>
                             <CardDescription>Manage your portfolio properties.</CardDescription>
@@ -336,7 +290,7 @@ export function PropertiesClient() {
                                         </div>
                                     ) : (
                                         filteredProperties.map((property) => (
-                                            <div key={property.id} className="bg-card border rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                                            <div key={property.id} className="bg-card rounded-lg p-4 shadow-md flex flex-col gap-3">
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex gap-3">
                                                         <div className="p-2 bg-muted rounded-md h-fit">

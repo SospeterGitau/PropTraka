@@ -14,10 +14,18 @@ export function cn(...inputs: ClassValue[]) {
  * @param currency The currency code (e.g., 'KES', 'USD').
  * @returns A formatted currency string (e.g., "KES 1,234.56").
  */
-export function formatCurrency(amount: number, locale: string, currency: string): string {
+export function formatCurrency(amount: number, locale: string = 'en-KE', currency: string = 'KES'): string {
+  if (currency === 'KES') {
+    return `KSh ${new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)}`;
+  }
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
+    currencyDisplay: 'narrowSymbol',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);

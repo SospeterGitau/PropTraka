@@ -3,12 +3,15 @@
 import { useMemo } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ReferenceLine, LabelList } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/currency-formatter'; // Assuming this exists or I'll implement a local helper
+// cleaned up unused import
 import { cn } from '@/lib/utils';
 
 // Helper for currency if needed locally
 const formatMoney = (amount: number, currency: string = 'KES') => {
-    return new Intl.NumberFormat('en-KE', { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+    if (currency === 'KES') {
+        return `KSh ${new Intl.NumberFormat('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)}`;
+    }
+    return new Intl.NumberFormat('en-KE', { style: 'currency', currency, currencyDisplay: 'narrowSymbol', maximumFractionDigits: 0 }).format(amount);
 };
 
 interface WaterfallDataPoint {

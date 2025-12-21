@@ -4,6 +4,8 @@
 import React, { useState, useMemo, memo } from 'react';
 import type { Contractor } from '@/lib/types';
 import { useDataContext } from '@/context/data-context';
+import { deleteContractor } from '@/app/actions/contractors';
+import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +25,7 @@ import { useRouter } from 'next/navigation';
 
 const ContractorsClient = memo(function ContractorsClient() {
   const { contractors, loading } = useDataContext();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
@@ -39,10 +42,22 @@ const ContractorsClient = memo(function ContractorsClient() {
     // TODO: Implement edit functionality
   };
 
-  const handleDeleteContractor = (contractor: Contractor) => {
+  const handleDeleteContractor = async (contractor: Contractor) => {
     if (confirm(`Are you sure you want to delete ${contractor.companyName || contractor.contactPersonName || 'this contractor'}?`)) {
-      console.log('Delete contractor:', contractor.id);
-      // TODO: Implement delete functionality with Firebase
+      try {
+        await deleteContractor(contractor.id);
+        toast({
+          title: "Contractor deleted",
+          description: "The contractor has been successfully removed.",
+        });
+      } catch (error) {
+        console.error("Failed to delete contractor:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete contractor. Please try again.",
+        });
+      }
     }
   };
 
@@ -127,7 +142,7 @@ const ContractorsClient = memo(function ContractorsClient() {
                         {contractor.serviceCategories?.[0] || '—'}
                       </Badge>
                     </TableCell>
-                      <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden md:table-cell">
                       {contractor.contactPersonName || '—'}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">

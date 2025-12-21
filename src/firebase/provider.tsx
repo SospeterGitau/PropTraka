@@ -22,7 +22,7 @@ export function FirebaseProvider({
             if (user) {
                 // If a user is signed in (or their token has been refreshed),
                 // call the server action to create or update the session cookie.
-                await createSession(false);
+                await createSession(user.uid, false);
             }
             // Note: We don't need an 'else' block to handle sign-out.
             // The /actions.ts file, which handles the session, will clear the cookie

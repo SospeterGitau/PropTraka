@@ -4,54 +4,48 @@
 
 import { useState, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MoreHorizontal, PlusCircle, Users } from 'lucide-react';
 import { format, startOfToday, isBefore } from 'date-fns';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, Tenancy, RevenueTransaction } from '@/lib/types';
+import { useUser } from '@/firebase/auth';
+import { useDataContext } from '@/app/contexts/data-context';
+import { parseDate, formatCurrency, cn } from '@/lib/utils';
 import { getLocale } from '@/lib/locales';
+import { deleteTenancyRevenue } from '@/app/actions/revenue';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
-import { cn, formatCurrency, parseDate } from '@/lib/utils';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useUser } from '@/firebase/auth'; // Corrected import path for useUser
-import { firestore } from '@/firebase'; // Import firestore directly
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, doc, serverTimestamp, writeBatch, getDocs, query, where, Query } from 'firebase/firestore';
-import { useDataContext } from '@/context/data-context';
-import { createUserQuery } from '@/firebase/firestore/query-builder';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 
+interface RevenueClientProps {
+  initialRevenue: Transaction[];
+  initialTenancies: Tenancy[];
+}
 
+interface TenancyWithMetrics extends Tenancy {
+  transactions: RevenueTransaction[];
+  nextDueDate?: string;
+}
 
-const RevenueClient = memo(function RevenueClient() {
+const RevenueClient = memo(function RevenueClient({ initialRevenue, initialTenancies }: RevenueClientProps) {
   const { user } = useUser();
-  // No longer calling useFirestore(), firestore is imported directly
-  const { settings } = useDataContext();
+  const { settings } = useDataContext(); // Keep only for settings
+  const router = useRouter();
   const currency = settings?.currency || 'KES';
   const locale = settings?.locale || 'en-KE';
 
+  const [revenue, setRevenue] = useState<Transaction[]>(initialRevenue);
+  const [tenanciesData, setTenanciesData] = useState<Tenancy[]>(initialTenancies);
 
-  // Data Fetching
-  // Use the imported `firestore` object directly
-  const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
-  const [revenueSnapshot, isDataLoading, error] = useCollection(revenueQuery);
-  const revenue = useMemo(() => revenueSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as Transaction)) || [], [revenueSnapshot]);
+  useEffect(() => {
+    setRevenue(initialRevenue);
+    setTenanciesData(initialTenancies);
+  }, [initialRevenue, initialTenancies]);
+
 
 
   // State
@@ -59,131 +53,107 @@ const RevenueClient = memo(function RevenueClient() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formattedDates, setFormattedDates] = useState<{ [key: string]: string }>({});
 
-  const tenancies = useMemo(() => {
-    return Object.values(
-      (revenue || []).reduce((acc, tx) => {
-        const tenancyId = tx.tenancyId || `no-id-${tx.id}`;
-        if (!acc[tenancyId]) {
-          acc[tenancyId] = {
-            ...tx,
-            transactions: [],
-          };
-        }
-        acc[tenancyId].transactions.push(tx);
-        return acc;
-      }, {} as Record<string, Transaction & { transactions: Transaction[] }>)
-    ).map(tenancy => {
-      const today = startOfToday();
-      const sortedTransactions = tenancy.transactions.sort((a, b) => {
+  // Join Transactions to Tenancies
+  const tenanciesWithMetrics: TenancyWithMetrics[] = useMemo(() => {
+    return tenanciesData.map(tenancy => {
+      const tenancyTransactions = revenue.filter(tx => {
+        const rTx = tx as unknown as RevenueTransaction;
+        // Cast to any to avoid TS overlap error with Expense type or other inferred literal types
+        return ((rTx as any).type === 'revenue' || (rTx as any).type === 'income') &&
+          rTx.tenancyId === tenancy.id;
+      }) as unknown as RevenueTransaction[];
+
+      const sortedTransactions = tenancyTransactions.sort((a, b) => {
         const aDate = parseDate(a.date)?.getTime() ?? 0;
         const bDate = parseDate(b.date)?.getTime() ?? 0;
         return aDate - bDate;
       });
 
       const unpaidTransactions = sortedTransactions.filter(tx => {
-        const totalServiceCharges = (tx.serviceCharges || []).reduce((sum, sc) => sum + sc.amount, 0);
+        const totalServiceCharges = (tx.serviceCharges || []).reduce((sum: number, sc: any) => sum + sc.amount, 0);
         const due = (tx.rent ?? 0) + totalServiceCharges + (tx.deposit ?? 0);
         const paid = tx.amountPaid ?? 0;
         return paid < due;
       });
 
+      const today = startOfToday();
       const earliestOverdue = unpaidTransactions.find(tx => tx.date && isBefore(parseDate(tx.date) ?? new Date(0), today));
       const nextUpcoming = unpaidTransactions.find(tx => !tx.date || !isBefore(parseDate(tx.date) ?? new Date(0), today));
-
       const nextDueTransaction = earliestOverdue || nextUpcoming;
 
       return {
         ...tenancy,
+        transactions: tenancyTransactions,
         nextDueDate: nextDueTransaction?.date,
       };
     });
-  }, [revenue]);
+  }, [revenue, tenanciesData]);
 
 
 
   useEffect(() => {
-    if (!revenue) return;
     const formatAllDates = async () => {
       const localeData = await getLocale(locale);
       const newFormattedDates: { [key: string]: string } = {};
-      for (const item of revenue) {
-        if (item.tenancyId && item.tenancyStartDate && !newFormattedDates[`${item.tenancyId}-start`]) {
-          const d = parseDate(item.tenancyStartDate);
-          if (d) newFormattedDates[`${item.tenancyId}-start`] = format(d, 'PP', { locale: localeData });
+
+      for (const tenancy of tenanciesWithMetrics) {
+        if (tenancy.startDate && !newFormattedDates[`${tenancy.id}-start`]) {
+          const d = parseDate(tenancy.startDate);
+          if (d) newFormattedDates[`${tenancy.id}-start`] = format(d, 'PP', { locale: localeData });
         }
-        if (item.tenancyId && item.tenancyEndDate && !newFormattedDates[`${item.tenancyId}-end`]) {
-          const d = parseDate(item.tenancyEndDate);
-          if (d) newFormattedDates[`${item.tenancyId}-end`] = format(d, 'PP', { locale: localeData });
+        if (tenancy.endDate && !newFormattedDates[`${tenancy.id}-end`]) {
+          const d = parseDate(tenancy.endDate);
+          if (d) newFormattedDates[`${tenancy.id}-end`] = format(d, 'PP', { locale: localeData });
         }
-      }
-      // This needs to be separate because `tenancies` depends on `revenue`
-      for (const tenancy of tenancies) {
-        if (tenancy.tenancyId && tenancy.nextDueDate && !newFormattedDates[`${tenancy.tenancyId}-nextDue`]) {
+        if (tenancy.nextDueDate && !newFormattedDates[`${tenancy.id}-nextDue`]) {
           const d = parseDate(tenancy.nextDueDate);
-          if (d) newFormattedDates[`${tenancy.tenancyId}-nextDue`] = format(d, 'PP', { locale: localeData });
+          if (d) newFormattedDates[`${tenancy.id}-nextDue`] = format(d, 'PP', { locale: localeData });
         }
       }
       setFormattedDates(newFormattedDates);
     };
     formatAllDates();
-  }, [revenue, tenancies, locale]);
+  }, [tenanciesWithMetrics, locale]);
 
 
-  const addChangeLogEntry = async (log: Omit<any, 'id' | 'date' | 'ownerId'>) => {
-    if (!user) return;
-    await addDoc(collection(firestore, 'changelog'), {
-      ...log,
-      ownerId: user.uid,
-      date: serverTimestamp(),
-    });
-  };
 
-  const handleDeleteTenancy = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
+
+  const handleDeleteTenancy = (tenancy: Tenancy) => {
+    setSelectedTransaction({ tenancyId: tenancy.id, tenant: tenancy.tenantName, propertyName: tenancy.propertyName } as any); // Partial Object for dialog
     setIsDeleteDialogOpen(true);
   };
 
 
   const confirmDelete = async () => {
-    if (selectedTransaction?.tenancyId && user) {
-      const batch = writeBatch(firestore);
-      const q = query(collection(firestore, 'revenue'), where('tenancyId', '==', selectedTransaction.tenancyId), where('ownerId', '==', user.uid));
-      const snapshot = await getDocs(q);
-      snapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
+    if (selectedTransaction && user) {
+      // Cast to access tenancyId safely, assuming we only delete tenancies/revenue here
+      const rTx = selectedTransaction as unknown as RevenueTransaction;
+      if (!rTx.tenancyId) return;
 
+      const tid = rTx.tenancyId;
 
-      addChangeLogEntry({
-        type: 'Tenancy',
-        action: 'Deleted',
-        description: `Tenancy for "${selectedTransaction.tenant}" at "${selectedTransaction.propertyName}" was deleted.`,
-        entityId: selectedTransaction.tenancyId,
-      });
+      // Optimistic Update
+      const previousRevenue = [...revenue];
+      setRevenue(prev => prev.filter(tx => (tx as any).tenancyId !== tid));
       setIsDeleteDialogOpen(false);
+
+      try {
+        await deleteTenancyRevenue(tid);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete", error);
+        // Revert
+        setRevenue(previousRevenue);
+        alert("Failed to delete tenancy revenue.");
+      }
       setSelectedTransaction(null);
     }
   };
 
 
-  if (isDataLoading) {
-    return (
-      <>
-        <PageHeader title="Revenue">
-          <Button disabled>Add Tenancy</Button>
-        </PageHeader>
-        <Card>
-          <CardHeader>
-            <CardTitle><Skeleton className="h-6 w-1/2" /></CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
-      </>
-    );
-  }
+  // No loading state needed as data is pre-fetched server-side
+  // But we can keep skeleton if we want to simulate loading during transition? 
+  // For now, removing check for isDataLoading
 
   return (
     <>
@@ -195,13 +165,13 @@ const RevenueClient = memo(function RevenueClient() {
           </Link>
         </Button>
       </PageHeader>
-      <Card>
+      <Card className="border-0 shadow-md">
         <CardHeader>
           <CardTitle>Your Tenancies</CardTitle>
           <CardDescription>An overview of all tenancy agreements and their financial status.</CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          {tenancies.length === 0 ? (
+          {tenanciesWithMetrics.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
               <Users className="w-16 h-16 text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold">No Tenancies Found</h3>
@@ -230,19 +200,22 @@ const RevenueClient = memo(function RevenueClient() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tenancies.sort((a, b) => {
-                      const aDate = a.date ? new Date(a.date).getTime() : 0;
-                      const bDate = b.date ? new Date(b.date).getTime() : 0;
+                    {tenanciesWithMetrics.sort((a, b) => {
+                      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                       return bDate - aDate;
                     }).map((tenancy) => {
                       const totalDue = tenancy.transactions.reduce((sum, tx) => sum + (tx.rent ?? 0) + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
                       const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                       const totalBalance = totalDue - totalPaid;
 
-                      const today = startOfToday();
-                      const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
-                      let statusBadge;
+
+                      const today = startOfToday();
+                      const isTenancyActive = tenancy.startDate && tenancy.endDate && isBefore(new Date(tenancy.startDate), today) && isBefore(today, new Date(tenancy.endDate));
+
+
+                      let statusBadge: React.ReactNode;
                       const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
 
                       if (hasOverdue) {
@@ -258,15 +231,15 @@ const RevenueClient = memo(function RevenueClient() {
                       }
 
                       return (
-                        <TableRow key={tenancy.tenancyId}>
+                        <TableRow key={tenancy.id}>
                           <TableCell>
-                            <Link href={`/revenue/${tenancy.tenancyId}`} className="font-medium text-primary underline">
-                              {tenancy.tenant}
+                            <Link href={`/revenue/${tenancy.id}`} className="font-medium text-primary underline">
+                              {tenancy.tenantName}
                             </Link>
                             <div className="text-sm text-muted-foreground">{tenancy.propertyName}</div>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}
+                            {formattedDates[`${tenancy.id}-start`]} - {formattedDates[`${tenancy.id}-end`]}
                           </TableCell>
                           <TableCell>
                             {statusBadge}
@@ -287,10 +260,10 @@ const RevenueClient = memo(function RevenueClient() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Tenancy Actions</DropdownMenuLabel>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/revenue/${tenancy.tenancyId}`}>View Details</Link>
+                                  <Link href={`/revenue/${tenancy.id}`}>View Details</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/revenue/edit/${tenancy.tenancyId}`}>Edit Tenancy</Link>
+                                  <Link href={`/revenue/edit/${tenancy.id}`}>Edit Tenancy</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => handleDeleteTenancy(tenancy)}>Delete Tenancy</DropdownMenuItem>
                               </DropdownMenuContent>
@@ -305,19 +278,22 @@ const RevenueClient = memo(function RevenueClient() {
 
               {/* Mobile View */}
               <div className="md:hidden space-y-4">
-                {tenancies.sort((a, b) => {
-                  const aDate = a.date ? new Date(a.date).getTime() : 0;
-                  const bDate = b.date ? new Date(b.date).getTime() : 0;
+                {tenanciesWithMetrics.sort((a, b) => {
+                  const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                  const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                   return bDate - aDate;
                 }).map((tenancy) => {
                   const totalDue = tenancy.transactions.reduce((sum, tx) => sum + (tx.rent ?? 0) + ((tx.serviceCharges || []).reduce((scSum, s) => scSum + s.amount, 0)) + (tx.deposit ?? 0), 0);
                   const totalPaid = tenancy.transactions.reduce((sum, tx) => sum + (tx.amountPaid ?? 0), 0);
                   const totalBalance = totalDue - totalPaid;
 
-                  const today = startOfToday();
-                  const isTenancyActive = tenancy.tenancyStartDate && tenancy.tenancyEndDate && new Date(tenancy.tenancyStartDate) <= today && new Date(tenancy.tenancyEndDate) >= today;
 
-                  let statusBadge;
+
+                  const today = startOfToday();
+                  const isTenancyActive = tenancy.startDate && tenancy.endDate && isBefore(new Date(tenancy.startDate), today) && isBefore(today, new Date(tenancy.endDate));
+
+
+                  let statusBadge: React.ReactNode;
                   const hasOverdue = tenancy.nextDueDate && isBefore(new Date(tenancy.nextDueDate), today);
 
                   if (hasOverdue) {
@@ -333,10 +309,10 @@ const RevenueClient = memo(function RevenueClient() {
                   }
 
                   return (
-                    <div key={tenancy.tenancyId} className="bg-card border rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                    <div key={tenancy.id} className="bg-card rounded-lg p-4 shadow-md flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-base">{tenancy.tenant}</h3>
+                          <h3 className="font-semibold text-base">{tenancy.tenantName}</h3>
                           <p className="text-sm text-muted-foreground">{tenancy.propertyName}</p>
                         </div>
                         {statusBadge}
@@ -353,12 +329,12 @@ const RevenueClient = memo(function RevenueClient() {
                         </div>
                         <div className="col-span-2">
                           <p className="text-muted-foreground text-xs">Tenancy Period</p>
-                          <p className="font-medium">{formattedDates[`${tenancy.tenancyId}-start`]} - {formattedDates[`${tenancy.tenancyId}-end`]}</p>
+                          <p className="font-medium">{formattedDates[`${tenancy.id}-start`]} - {formattedDates[`${tenancy.id}-end`]}</p>
                         </div>
                       </div>
 
                       <Button variant="outline" className="w-full mt-2 h-11" asChild>
-                        <Link href={`/revenue/${tenancy.tenancyId}`}>Manage Tenancy</Link>
+                        <Link href={`/revenue/${tenancy.id}`}>Manage Tenancy</Link>
                       </Button>
                     </div>
                   );
@@ -373,7 +349,7 @@ const RevenueClient = memo(function RevenueClient() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
-        itemName={`tenancy for ${selectedTransaction?.tenant} at ${selectedTransaction?.propertyName}`}
+        itemName={`tenancy for ${(selectedTransaction as any)?.tenant} at ${(selectedTransaction as any)?.propertyName}`}
       />
     </>
   );
