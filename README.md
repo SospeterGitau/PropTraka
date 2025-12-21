@@ -10,6 +10,7 @@ Property management system with Firebase
 - **💰 Smart Billing**: Integrated recurring billing and trial management.
 - **📊 Real-time Dashboard**: Instant financial overview, occupancy tracking, and interactive charts.
 - **🔐 Role-Based Access**: Secure authentication with support for Landlords, Property Managers, and Investors.
+- **✅ Production Ready**: Fully type-safe (100% TypeScript coverage) and optimized with Next.js Server Components.
 
 ## CI & Deploy
 

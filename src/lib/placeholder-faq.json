@@ -75,6 +75,10 @@
             {
                 "title": "How do I manage maintenance tasks?",
                 "content": "<b>Streamline repairs with a visual Kanban board.</b><br/><br/>The <b>Maintenance</b> page helps you track jobs from 'To Do' to 'Done'. Assign tasks to contractors, set priorities, and when a job is finished, convert it into an Expense record with a single click to keep your books balanced."
+            },
+            {
+                "title": "Can I delete old data?",
+                "content": "<b>Yes, you can keep your dashboard clean by removing obsolete records.</b><br/><br/>You can now delete <b>Contractors</b> and <b>Maintenance Requests</b> directly from their respective pages. Look for the action menu (three dots) or the delete/trash icon on any record. You'll be asked to confirm before the item is permanently removed."
             }
         ]
     },

@@ -27,6 +27,12 @@ src/
 │   │   ├── (dashboard)/   # Dashboard layout and pages
 │   │   ├── layout.tsx     # Root locale layout
 │   │   └── page.tsx       # Localized home page
+│   ├── [locale]/          # Localized routes root
+│   │   ├── (auth)/        # Authentication pages (signin, signup)
+│   │   ├── (dashboard)/   # Dashboard layout and pages
+│   │   ├── layout.tsx     # Root locale layout
+│   │   └── page.tsx       # Localized home page
+│   ├── actions/           # Server Actions (Mutations)
 │   ├── api/               # API routes (not localized)
 │   └── globals.css        # Global styles
 │
@@ -57,7 +63,10 @@ src/
 ├── lib/                    # Utility libraries
 │   ├── db-types.ts        # Database canonical types
 │   ├── types.ts           # UI-compatible types
-│   └── utils.ts           # Utility functions
+│   ├── db-types.ts        # Database canonical types
+│   ├── types.ts           # UI-compatible types
+│   ├── utils.ts           # Utility functions
+│   └── data/              # Server-side Data Fetchers
 │
 └── ai/                     # AI/Genkit Integration
     ├── flows/             # Defined Genkit flows (maintenance, health, etc.)
