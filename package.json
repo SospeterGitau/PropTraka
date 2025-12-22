@@ -28,12 +28,18 @@
     "test:e2e": "playwright test",
     "playwright:install": "npx playwright install --with-deps",
     "service-account:write": "node scripts/write-service-account.js",
-    "i18n:update": "GOOGLE_APPLICATION_CREDENTIALS=./.firebase/service-account.json tsx scripts/update-translations.ts"
+    "i18n:update": "GOOGLE_APPLICATION_CREDENTIALS=./.firebase/service-account.json tsx scripts/update-translations.ts",
+    "mobile:init": "cap init",
+    "mobile:android": "./scripts/mobile-android.sh",
+    "mobile:sync": "cap sync"
   },
   "engines": {
     "node": "20.x"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^8.0.0",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@genkit-ai/googleai": "^1.14.1",
     "@genkit-ai/next": "^1.14.1",
