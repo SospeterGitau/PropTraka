@@ -6,7 +6,9 @@ Property management system with Firebase
 - **📱 Mobile-First Design**: Optimized for on-the-go management with Uber-style navigation and touch-friendly controls.
 - **🌐 Multi-language Support**: Full internationalization (i18n) support for 13+ languages including English, French, Spanish, Chinese, and Swahili.
 - **💳 Integrated Payments**: Native support for M-Pesa (Daraja), Airtel Money, and Pesapal for automated rent collection.
+- **🚪 Tenant Portal**: Dedicated portal for tenants to view lease status, pay rent, and report maintenance issues.
 - **🧠 AI Insights**: Powered by Genkit, providing portfolio health checks, diversity scoring, and predictive maintenance alerts.
+- **⚖️ Risk API**: External API endpoint for calculating tenant risk scores based on financial data.
 - **💰 Smart Billing**: Integrated recurring billing and trial management.
 - **📊 Real-time Dashboard**: Instant financial overview, occupancy tracking, and interactive charts.
 - **🔐 Role-Based Access**: Secure authentication with support for Landlords, Property Managers, and Investors.

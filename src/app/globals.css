@@ -13,119 +13,113 @@ body {
 
 @layer base {
   :root {
-    /* Base: Zinc/Slate-like off-white for less harshness than pure white */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Base: Vibrant & Clean "Apple-like" feel */
+    --background: 210 40% 98%;
+    /* Slightly cool off-white */
+    --foreground: 222 47% 11%;
+    /* Deep Navy Blue text */
 
-    /* Card: Pure white for classic elevation */
+    /* Card: Pure white with transparency capability */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary: Vibrant Violet/Indigo (Modern SaaS standard) */
-    /* HSL: 262 83% 58% -> Violet-600ish */
-    /* Let's go for a sophisticated Deep Indigo: 226 100% 50% was old? No let's try 246 80% 60% */
-    --primary: 250 95% 64%;
-    /* Stunning vivid purple-blue */
-    --primary-foreground: 0 0% 98%;
+    /* Primary: Electric Indigo - High energy, Trustworthy */
+    /* 262 83% 58% -> Vivid Violet */
+    --primary: 255 90% 60%;
+    /* More vibrant violet */
+    --primary-foreground: 210 40% 98%;
 
-    /* Secondary: Soft gray for subtle buttons */
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    /* Secondary: Soft Gray-Blue */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
 
-    /* Muted: For backgrounds that need separation */
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    /* Muted: Subtle separation */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Accent: For hover states, list items */
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    /* Accent: Interactive states */
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    /* Border: Very subtle, high-key gray */
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 250 95% 64%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 255 90% 60%;
     /* Matches Primary */
 
-    --radius: 0.75rem;
-    /* 12px - Modern "Squircle"-ish */
+    --radius: 1rem;
+    /* 16px - Friendlier, rounder corners */
 
-    /* Chart Colors - Updated to harmonize with the Violet primary */
-    --chart-1: 250 95% 64%;
-    /* Primary Violet */
-    --chart-2: 173 58% 39%;
-    /* Teal */
-    --chart-3: 197 37% 24%;
-    /* Navy */
-    --chart-4: 43 74% 66%;
-    /* Gold */
-    --chart-5: 27 87% 67%;
-    /* Orange */
+    /* Chart Colors - Vivid & Distinct */
+    --chart-1: 255 90% 60%;
+    /* Violet */
+    --chart-2: 190 90% 50%;
+    /* Cyan */
+    --chart-3: 340 85% 60%;
+    /* Rose */
+    --chart-4: 45 95% 60%;
+    /* Amber */
+    --chart-5: 150 70% 50%;
+    /* Emerald */
 
-    /* Sidebar - keeping it clean */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    /* Sidebar */
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 222 47% 11%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 255 90% 60%;
   }
 
   .dark {
-    /* Dark Mode: Neutral Dark Grey (Antigravity-style) */
-    --background: 0 0% 9%;
-    /* #171717 */
-    --foreground: 0 0% 98%;
+    /* Dark Mode: Deep Midnight */
+    --background: 222 47% 11%;
+    /* Deep Blue-Black #0f172a */
+    --foreground: 210 40% 98%;
 
-    /* Cards: Slightly lighter neutral grey */
-    --card: 0 0% 13%;
-    /* #212121 */
-    --card-foreground: 0 0% 98%;
+    /* Card: Slightly lighter midnight */
+    --card: 217 33% 17%;
+    /* #1e293b */
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 13%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Keep Primary Vivid */
-    --primary: 250 95% 64%;
+    /* Primary: Electric Indigo glows in dark */
+    --primary: 255 90% 65%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 18%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 250 95% 64%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 255 90% 65%;
 
-    --chart-1: 250 95% 64%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-
-    --sidebar-background: 0 0% 9%;
-    --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 250 95% 64%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 18%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 250 95% 64%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 255 90% 65%;
+    --sidebar-primary-foreground: 210 40% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 255 90% 65%;
   }
 }
 
@@ -141,9 +135,18 @@ body {
 
 @layer utilities {
 
-  /* Glassmorphism Utility */
+  /* Glassmorphism Utility - Premium & Frosted */
   .glass {
-    @apply bg-white/60 dark:bg-white/5 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-sm supports-[backdrop-filter]:bg-opacity-60;
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-sm supports-[backdrop-filter]:bg-opacity-70;
+  }
+
+  /* Mesh Gradient Background */
+  .bg-mesh {
+    background-color: hsla(210, 40%, 98%, 1);
+    background-image:
+      radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
   }
 
   /* Modern Card Hover */

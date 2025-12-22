@@ -104,6 +104,14 @@
             {
                 "title": "What is the PropTraka API?",
                 "content": "<b>Enterprise-grade connectivity for developers.</b><br/><br/>Users on the Enterprise plan can use the PropTraka API to programmatically access their data. Whether you're building a custom dashboard or integrating with accounting software, our read-only API endpoints for Properties, Revenue, and Expenses give you the raw data you need."
+            },
+            {
+                "title": "Why are manual Paybill payments used?",
+                "content": "<b>We offer flexibility for all tenant situations.</b><br/><br/>While automated prompt-based payments (STK Push) are convenient, they require a smartphone and active data connection. Providing manual Paybill details ensures tenants can pay via USSD from any phone. <b>Note:</b> We recommend encouraging the automated flow to reduce the risk of tenants entering incorrect account numbers."
+            },
+            {
+                "title": "How do tenants report maintenance issues?",
+                "content": "<b>Tenants can report issues directly from their Portal.</b><br/><br/>Tenants simply log in to their dashboard, navigate to the 'Open Requests' card, and click 'Report Issue'. They can describe the problem, set a priority level, and submit it instantly. You will receive a notification and the request will appear on your Maintenance board for triage."
             }
         ]
     }

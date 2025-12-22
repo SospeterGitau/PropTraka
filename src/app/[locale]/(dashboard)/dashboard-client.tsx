@@ -349,7 +349,7 @@ const KpiCard = ({ title, value, icon: Icon, suffix = '', description, className
   description?: string;
   className?: string;
 }) => (
-  <Card glass className={cn("card-hover", className)}>
+  <Card className={cn("card-hover glass border-0", className)}>
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <Icon className="h-4 w-4 text-muted-foreground" />
@@ -425,42 +425,46 @@ const DashboardClient = ({
 
       <div className="space-y-8">
         {/* KPI Cards Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Portfolio Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <KpiCard
-              title="Total Properties"
-              value={stats.totalProperties}
-              icon={() => <Building2 className="h-4 w-4" />}
-              description="Units across portfolio"
-            />
-            <KpiCard
-              title="Occupancy Rate"
-              value={stats.occupancyRate.toFixed(1)}
-              suffix="%"
-              icon={() => <BarChart3 className="h-4 w-4" />}
-              description="Current active tenancies"
-            />
-            <KpiCard
-              title="Total Expenses"
-              value={formatCurrency(stats.totalExpenses)}
-              icon={() => <DollarSign className="h-4 w-4" />}
-              description="Cumulative from all properties"
-            />
-            <KpiCard
-              title="Portfolio Asset Value"
-              value={formatCurrency((properties || []).reduce((sum, p) => sum + ((p as any)?.currentValue ?? (p as any)?.purchasePrice ?? 0), 0))}
-              icon={() => <TrendingUp className="h-4 w-4" />}
-              description="Current combined market value"
-            />
-            <KpiCard
-              title="Monthly Revenue (Current)"
-              value={formatCurrency(stats.totalRevenue / 12)}
-              icon={() => <DollarSign className="h-4 w-4" />}
-              description="December 2025"
-            />
+        {/* KPI Cards Section */}
+        {/* KPI Cards Section - Only show if we have properties */}
+        {properties && properties.length > 0 && (
+          <div className="relative overflow-hidden rounded-xl bg-mesh p-6 shadow-sm border border-white/20">
+            <h2 className="text-xl font-semibold mb-4 z-10 relative">Portfolio Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 relative z-10">
+              <KpiCard
+                title="Total Properties"
+                value={stats.totalProperties}
+                icon={() => <Building2 className="h-4 w-4" />}
+                description="Units across portfolio"
+              />
+              <KpiCard
+                title="Occupancy Rate"
+                value={stats.occupancyRate.toFixed(1)}
+                suffix="%"
+                icon={() => <BarChart3 className="h-4 w-4" />}
+                description="Current active tenancies"
+              />
+              <KpiCard
+                title="Total Expenses"
+                value={formatCurrency(stats.totalExpenses)}
+                icon={() => <DollarSign className="h-4 w-4" />}
+                description="Cumulative from all properties"
+              />
+              <KpiCard
+                title="Portfolio Asset Value"
+                value={formatCurrency((properties || []).reduce((sum, p) => sum + ((p as any)?.currentValue ?? (p as any)?.purchasePrice ?? 0), 0))}
+                icon={() => <TrendingUp className="h-4 w-4" />}
+                description="Current combined market value"
+              />
+              <KpiCard
+                title="Monthly Revenue (Current)"
+                value={formatCurrency(stats.totalRevenue / 12)}
+                icon={() => <DollarSign className="h-4 w-4" />}
+                description="December 2025"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ML Predictions Section */}
         {properties && properties.length > 0 && (

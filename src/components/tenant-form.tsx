@@ -80,10 +80,17 @@ export function TenantForm({
     startAssessment(async () => {
       try {
         const result = await assessTenantRisk({
-          income: Number(income),
-          rentAmount: Number(rentAmount),
-          employmentStatus,
-          history: notes // Use notes as history context
+          personal: {},
+          financial: {
+            income: Number(income),
+            rentAmount: Number(rentAmount),
+            employmentType: employmentStatus === 'Self-Employed' ? 'Informal' :
+              employmentStatus === 'Unemployed' ? 'Unemployed' : 'Formal',
+            mobileMoneyData: {
+              statementVerified: false
+            }
+          },
+          verificationMethod: 'NONE'
         });
         setRiskAssessment(result);
 

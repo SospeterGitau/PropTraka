@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Clipboard, ClipboardCheck } from 'lucide-react';
+import { Loader2, Sparkles, Clipboard, ClipboardCheck, Download } from 'lucide-react';
 import { generateLeaseClause } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -38,7 +38,13 @@ export default function LeaseToolsPage() {
 
   return (
     <>
-      <PageHeader title="Lease Tools" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Lease Tools" />
+        <Button variant="outline" onClick={() => window.open('/assets/standard-lease-template.pdf', '_blank')}>
+          <Download className="mr-2 h-4 w-4" />
+          Standard Template
+        </Button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
@@ -64,7 +70,7 @@ export default function LeaseToolsPage() {
             </Button>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Generated Clause</CardTitle>

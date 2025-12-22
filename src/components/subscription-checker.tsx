@@ -26,7 +26,7 @@ export const SubscriptionProvider: React.FC<{
   useEffect(() => {
     // In a real app, you'd fetch user's subscription status from your backend
     // For this example, we'll just assign a default plan
-    const defaultPlanId = 'plan_premium'; // Or 'plan_starter', 'plan_enterprise'
+    const defaultPlanId = 'plan_free'; // Default to Free tier
     const plan =
       subscriptionPlans.find((p) => p.id === defaultPlanId) || null;
     setCurrentPlan(plan);

@@ -22,7 +22,8 @@ export default async function middleware(request: NextRequest) {
         '/properties',
         '/tenants',
         '/reports',
-        '/settings'
+        '/settings',
+        '/portal'
     ];
 
     // Check if the current path (ignoring locale for now) is protected.

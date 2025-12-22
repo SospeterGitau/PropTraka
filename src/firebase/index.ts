@@ -14,7 +14,7 @@ const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) 
 
 // Check if we should use emulators
 // Only connect to emulators if explicitly enabled via environment variable
-const useEmulators = typeof window !== 'undefined' && 
+const useEmulators = typeof window !== 'undefined' &&
   window.location.hostname === 'localhost' &&
   process.env.NEXT_PUBLIC_USE_EMULATORS === 'true';
 
@@ -66,11 +66,76 @@ if (useEmulators) {
   console.info('🌐 Firestore → Production');
 }
 
+import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
+
+// ... (existing imports)
+
+// Initialize Firestore
+// ...
+
+// Initialize Storage
+const storage: FirebaseStorage = getStorage(app);
+if (useEmulators) {
+  try {
+    connectStorageEmulator(storage, '127.0.0.1', 9199);
+    // eslint-disable-next-line no-console
+    console.info('✅ Storage → Emulator (127.0.0.1:9199)');
+  } catch (e: any) {
+    if (!e?.message?.includes('already')) {
+      // eslint-disable-next-line no-console
+      console.error('❌ Storage emulator connection FAILED:', e?.message || e);
+    }
+  }
+} else {
+  // eslint-disable-next-line no-console
+  console.info('🌐 Storage → Production');
+}
+
+import { getAnalytics, isSupported } from 'firebase/analytics';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+
+// ... (existing imports)
+
+// Initialize Storage
+// ...
+
 const functions: Functions = getFunctions(app);
 const performance: ReturnType<typeof getPerformance> | null = typeof window !== 'undefined' ? getPerformance(app) : null;
 
+// Initialize Analytics (Client-Side Only)
+let analytics: any = null;
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app);
+      console.info('✅ Firebase Analytics → Initialized');
+    }
+  });
+}
+
+// Initialize App Check (Client-Side Only)
+// Use a placeholder key for dev if env var is missing to prevent crashes, but warn loud.
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+if (typeof window !== 'undefined' && RECAPTCHA_SITE_KEY) {
+  // Only init if key exists to avoid errors in dev without keys
+  try {
+    // Self-signed token or debug token for localhost is handled via debugToken option if needed
+    // For now, standard initialization
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true
+    });
+    console.info('✅ Firebase App Check → Initialized');
+  } catch (e) {
+    console.warn('⚠️ Firebase App Check failed to initialize:', e);
+  }
+} else if (typeof window !== 'undefined') {
+  console.warn('⚠️ Firebase App Check Skipped: NEXT_PUBLIC_RECAPTCHA_SITE_KEY not set');
+}
+
+
 // Export initialized services
-export { auth, firestore, functions, performance };
+export { auth, firestore, storage, functions, performance, analytics };
 
 
 // --- HOOKS AND PROVIDERS ---

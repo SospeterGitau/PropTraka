@@ -117,8 +117,64 @@ export default function HomePage() {
             <Users className="h-12 w-12 text-primary mb-4" />
             <h3 className="text-xl font-semibold mb-2 text-foreground">Tenant Portal</h3>
             <p className="text-muted-foreground">
-              Manage tenant applications, leases, and communication all from your dashboard.
+              Tenants can login to view lease status, pay rent via M-Pesa, and report maintenance issues directly.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Tiers */}
+      <section className="container mx-auto px-4 py-16 bg-slate-50 dark:bg-slate-900/50">
+        <h2 className="text-3xl font-bold text-center text-foreground mb-4">Simple, Transparent Pricing</h2>
+        <p className="text-center text-muted-foreground mb-12">Choose the plan that fits your portfolio size.</p>
+
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {/* Free Tier */}
+          <div className="rounded-xl border bg-card p-8 flex flex-col">
+            <h3 className="text-xl font-bold text-foreground">Free</h3>
+            <div className="text-3xl font-bold mt-4 mb-2">KES 0<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+            <p className="text-sm text-muted-foreground mb-6">Perfect for new landlords testing the waters.</p>
+            <ul className="space-y-3 mb-8 flex-1">
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> 1-3 Units</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Basic Rent Tracking</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Maintenance Logs</li>
+            </ul>
+            <Link href="/signup" className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Get Started
+            </Link>
+          </div>
+
+          {/* Starter Tier */}
+          <div className="rounded-xl border-2 border-primary bg-card p-8 flex flex-col relative shadow-lg">
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">POPULAR</div>
+            <h3 className="text-xl font-bold text-foreground">Starter</h3>
+            <div className="text-3xl font-bold mt-4 mb-2">KES 2,500<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+            <p className="text-sm text-muted-foreground mb-6">For growing portfolios needing automation.</p>
+            <ul className="space-y-3 mb-8 flex-1">
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Up to 10 Units</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Tenant Portal Access</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Basic AI Chat Assistant</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Automated Invoicing</li>
+            </ul>
+            <Link href="/signup" className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+              Start Free Trial
+            </Link>
+          </div>
+
+          {/* Pro Tier */}
+          <div className="rounded-xl border bg-card p-8 flex flex-col">
+            <h3 className="text-xl font-bold text-foreground">Pro</h3>
+            <div className="text-3xl font-bold mt-4 mb-2">KES 8,000<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+            <p className="text-sm text-muted-foreground mb-6">Full power for professional managers.</p>
+            <ul className="space-y-3 mb-8 flex-1">
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Unlimited Units</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Advanced AI Risk Scores</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> API Access</li>
+              <li className="flex items-center gap-2 text-sm"><CheckCircle className="h-4 w-4 text-green-500" /> Priority Support</li>
+            </ul>
+            <Link href="/signup" className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Contact Sales
+            </Link>
           </div>
         </div>
       </section>

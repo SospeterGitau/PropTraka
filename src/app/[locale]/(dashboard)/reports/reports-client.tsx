@@ -7,7 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { startOfYear, endOfYear, subYears, startOfMonth, endOfMonth, subMonths, format, isWithinInterval } from 'date-fns';
-import { Activity, PieChart, ShieldAlert, Trophy, Calendar as CalendarIcon } from 'lucide-react';
+import { Activity, PieChart, ShieldAlert, Trophy, Calendar as CalendarIcon, Download, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { useUser, useFirestore } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
@@ -147,6 +149,30 @@ const ReportsClient = memo(function ReportsClient() {
     });
   }, [properties, filteredData]);
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadReport = async () => {
+    const element = document.getElementById('report-content');
+    if (!element) return;
+
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(element, { scale: 1.5 }); // Lower scale for large pages
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape for reports
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`proptraka-report-${period}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed", err);
+      alert('Failed to generate PDF');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (isRevenueLoading || isExpensesLoading || isPropertiesLoading || isTenanciesLoading) {
     return <div className="p-8 space-y-4">
       <Skeleton className="h-12 w-1/3" />
@@ -175,107 +201,113 @@ const ReportsClient = memo(function ReportsClient() {
               <SelectItem value="last_12_months">Last 12 Months</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={downloadReport} disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+            Export PDF
+          </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="cashflow" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex mb-4">
-          <TabsTrigger value="cashflow">
-            <Activity className="w-4 h-4 mr-2" />
-            Cash Flow
-          </TabsTrigger>
-          <TabsTrigger value="expenses">
-            <PieChart className="w-4 h-4 mr-2" />
-            Expenses
-          </TabsTrigger>
-          <TabsTrigger value="risk">
-            <ShieldAlert className="w-4 h-4 mr-2" />
-            Lease & Risk
-          </TabsTrigger>
-          <TabsTrigger value="assets">
-            <Trophy className="w-4 h-4 mr-2" />
-            Asset Rank
-          </TabsTrigger>
-        </TabsList>
+      <div id="report-content">
+        <Tabs defaultValue="cashflow" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex mb-4">
+            <TabsTrigger value="cashflow">
+              <Activity className="w-4 h-4 mr-2" />
+              Cash Flow
+            </TabsTrigger>
+            <TabsTrigger value="expenses">
+              <PieChart className="w-4 h-4 mr-2" />
+              Expenses
+            </TabsTrigger>
+            <TabsTrigger value="risk">
+              <ShieldAlert className="w-4 h-4 mr-2" />
+              Lease & Risk
+            </TabsTrigger>
+            <TabsTrigger value="assets">
+              <Trophy className="w-4 h-4 mr-2" />
+              Asset Rank
+            </TabsTrigger>
+          </TabsList>
 
-        {/* --- Tab 1: Operational Cash Flow --- */}
-        <TabsContent value="cashflow" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <CashFlowWaterfall
-                grossPotential={waterfallMetrics.grossPotential}
-                vacancyLoss={waterfallMetrics.vacancyLoss}
-                creditLoss={waterfallMetrics.creditLoss}
-                expenses={waterfallMetrics.expenses}
-                currency={currency}
-              />
+          {/* --- Tab 1: Operational Cash Flow --- */}
+          <TabsContent value="cashflow" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <CashFlowWaterfall
+                  grossPotential={waterfallMetrics.grossPotential}
+                  vacancyLoss={waterfallMetrics.vacancyLoss}
+                  creditLoss={waterfallMetrics.creditLoss}
+                  expenses={waterfallMetrics.expenses}
+                  currency={currency}
+                />
+              </div>
+              <div>
+                <AiAnalystCard
+                  contextName="Cash Flow Efficiency"
+                  contextData={JSON.stringify(waterfallMetrics)}
+                  autoRun={true}
+                />
+              </div>
             </div>
-            <div>
-              <AiAnalystCard
-                contextName="Cash Flow Efficiency"
-                contextData={JSON.stringify(waterfallMetrics)}
-                autoRun={true}
-              />
-            </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        {/* --- Tab 2: Expense Analysis --- */}
-        <TabsContent value="expenses" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <ExpenseAnalysisChart
-                expenses={filteredData.expenses}
-                currency={currency}
-              />
+          {/* --- Tab 2: Expense Analysis --- */}
+          <TabsContent value="expenses" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ExpenseAnalysisChart
+                  expenses={filteredData.expenses}
+                  currency={currency}
+                />
+              </div>
+              <div className="space-y-6">
+                <AiAnalystCard
+                  contextName="Expense Anomalies"
+                  contextData={JSON.stringify({
+                    totalExpenses: waterfallMetrics.expenses,
+                    breakdown: filteredData.expenses.slice(0, 20).map(e => ({ cat: e.category, amt: e.amount, date: e.date }))
+                  })}
+                />
+                <Card>
+                  <CardHeader><CardTitle>Top Spenders</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-muted-foreground">
+                      Select a category in the chart to drill down.
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-            <div className="space-y-6">
+          </TabsContent>
+
+          {/* --- Tab 3: Lease & Risk --- */}
+          <TabsContent value="risk" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <LeaseExpiryChart tenancies={tenancies} />
+              <ArrearsAgeingChart transactions={revenue} currency={currency} />
+            </div>
+            <div className="grid grid-cols-1">
               <AiAnalystCard
-                contextName="Expense Anomalies"
+                contextName="Risk Profile"
                 contextData={JSON.stringify({
-                  totalExpenses: waterfallMetrics.expenses,
-                  breakdown: filteredData.expenses.slice(0, 20).map(e => ({ cat: e.category, amt: e.amount, date: e.date }))
+                  expiryProfile: "See chart data", // optimization: dont pass huge lists if not needed
+                  activeTenancies: tenancies.length,
+                  totalArrears: waterfallMetrics.creditLoss // approximate
                 })}
               />
-              <Card>
-                <CardHeader><CardTitle>Top Spenders</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    Select a category in the chart to drill down.
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        {/* --- Tab 3: Lease & Risk --- */}
-        <TabsContent value="risk" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <LeaseExpiryChart tenancies={tenancies} />
-            <ArrearsAgeingChart transactions={revenue} currency={currency} />
-          </div>
-          <div className="grid grid-cols-1">
-            <AiAnalystCard
-              contextName="Risk Profile"
-              contextData={JSON.stringify({
-                expiryProfile: "See chart data", // optimization: dont pass huge lists if not needed
-                activeTenancies: tenancies.length,
-                totalArrears: waterfallMetrics.creditLoss // approximate
-              })}
+          {/* --- Tab 4: Asset Rank --- */}
+          <TabsContent value="assets" className="space-y-6">
+            <PropertyPerformanceTable
+              data={propertyMetrics as any[]}
+              currency={currency}
             />
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        {/* --- Tab 4: Asset Rank --- */}
-        <TabsContent value="assets" className="space-y-6">
-          <PropertyPerformanceTable
-            data={propertyMetrics as any[]}
-            currency={currency}
-          />
-        </TabsContent>
-
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 });

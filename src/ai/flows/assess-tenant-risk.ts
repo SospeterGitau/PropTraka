@@ -5,19 +5,36 @@ import { z } from 'zod';
 
 // Input Schema
 const AssessTenantRiskInputSchema = z.object({
-    income: z.number().describe('Monthly income of the applicant.'),
-    rentAmount: z.number().describe('Proposed monthly rent amount.'),
-    employmentStatus: z.string().describe('Applicants employment status (e.g., Employed, Self-Employed, Unemployed).'),
-    creditScore: z.number().optional().describe('Credit score if available (300-850).'),
-    history: z.string().optional().describe('Brief rental history or additional notes provided by applicant.'),
+    personal: z.object({
+        age: z.number().optional(),
+        householdSize: z.number().optional(),
+    }).optional(),
+    financial: z.object({
+        income: z.number(),
+        rentAmount: z.number(),
+        employmentType: z.enum(['Formal', 'Informal', 'Unemployed']),
+        creditScore: z.number().optional(), // For Formal
+        mobileMoneyData: z.object({
+            avgMonthlyIncoming: z.number().optional(),
+            avgMonthlyBalance: z.number().optional(),
+            statementVerified: z.boolean().default(false), // True if matched with PDF
+        }).optional(),
+    }),
+    rentalHistory: z.object({
+        yearsAtCurrent: z.number().optional(),
+        reasonForMoving: z.string().optional(),
+    }).optional(),
+    verificationMethod: z.enum(['MANUAL_UPLOAD', 'API_VERIFIED', 'NONE']).default('MANUAL_UPLOAD'),
 });
 
 // Output Schema
 const AssessTenantRiskOutputSchema = z.object({
-    riskScore: z.number().describe('A calculated risk score from 0 (High Risk) to 100 (Low Risk).'),
-    riskLevel: z.enum(['Low', 'Medium', 'High']).describe('Categorized risk level based on the score.'),
-    factors: z.array(z.string()).describe('List of key positive or negative factors influencing the score.'),
-    recommendation: z.string().describe('Advice on whether to approve, reject, or request a guarantor.'),
+    riskScore: z.number().describe('0 (High Risk) to 100 (Low Risk).'),
+    riskLevel: z.enum(['Low', 'Medium', 'High']),
+    confidenceScore: z.number().describe('0.0 to 1.0 confidence in this score based on data verification.'),
+    factors: z.array(z.string()).describe('Key factors influencing the score.'),
+    recommendation: z.string(),
+    verificationWarning: z.string().optional().describe('Warning if manual data is unverified.'),
 });
 
 // Prompt Definition
@@ -29,21 +46,36 @@ const tenantRiskPrompt = ai.definePrompt({
     output: {
         schema: AssessTenantRiskOutputSchema,
     },
-    prompt: `You are a Risk Underwriter for a property management firm.
+    prompt: `You are a Senior Risk Underwriter for the African Real Estate Market.
 
-  Assess the risk of the following tenant application:
-  - Monthly Income: {{income}}
-  - Rent Amount: {{rentAmount}}
-  - Employment: {{employmentStatus}}
-  - Credit Score: {{creditScore}}
-  - History/Notes: {{history}}
+  **Applicant Profile:**
+  - Employment: {{financial.employmentType}}
+  - Reported Income: {{financial.income}}
+  - Rent: {{financial.rentAmount}}
+  - Credit Score: {{financial.creditScore}} (Formal only)
+  
+  **Informal Sector / Alternative Data:**
+  - Avg M-Pesa Incoming: {{financial.mobileMoneyData.avgMonthlyIncoming}}
+  - Avg M-Pesa Balance: {{financial.mobileMoneyData.avgMonthlyBalance}}
+  - Statement Verified: {{financial.mobileMoneyData.statementVerified}}
+  
+  **Verification Method:** {{verificationMethod}}
 
-  **Guidelines:**
-  - **Rent-to-Income Ratio**: Ideally rent should be < 30% of income. High ratio = High Risk.
-  - **Credit Score**: >700 is good, <600 is risky.
-  - **Employment**: "Employed" is safer than "Unemployed".
+  **Scoring Rules:**
+  1. **Formal Employees**: Prioritize Rent-to-Income (<30% ideal) and Credit Score.
+  2. **Informal/Traders**: IGNORE Credit Score. Prioritize **Cash Flow Consistency** (M-Pesa Incoming) and **Liquidity** (Avg Balance).
+     - If M-Pesa Incoming > 3x Rent, treat as stable income.
+     - If Avg Balance > 1x Rent, treat as good liquidity buffer.
+  3. **Verification Penalty**:
+     - If verificationMethod is 'MANUAL_UPLOAD' and 'Statement Verified' is false, **CAP Confidence Score at 0.7**.
+     - Add a 'verificationWarning': "Risk Score is based on self-reported figures. Please audit the uploaded PDF statements."
 
-  Provide a Risk Score (0-100), Level, Factors, and Recommendation.
+  **Output:**
+  - Risk Score (0-100)
+  - Risk Level
+  - Confidence Score (Lower if unverified)
+  - Factors (Specific reasons, e.g., "Strong M-Pesa cash flow", "Unverified manual entry")
+  - Recommendation (Approve, Reject, Request Guarantor)
   `,
 });
 
