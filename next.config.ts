@@ -16,6 +16,18 @@ const nextConfig: NextConfig = {
   },
 };
 
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  disable: process.env.NODE_ENV === "development",
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
-export default withNextIntl(nextConfig);
+export default withPWA(withNextIntl(nextConfig));
