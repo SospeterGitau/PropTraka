@@ -1,35 +1,33 @@
-import type {NextConfig} from 'next';
-import path from 'path';
+import createNextIntlPlugin from 'next-intl/plugin';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  outputFileTracingRoot: process.cwd(),
+  /* config options here */
+  turbopack: {},
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: 'firebasestorage.googleapis.com',
         port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https' ,
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
+        pathname: '/v0/b/**',
       },
     ],
   },
-  webpack: (config) => {
-    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
-    return config;
-  },
 };
 
-export default nextConfig;
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  disable: process.env.NODE_ENV === "development",
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
+
+export default withPWA(withNextIntl(nextConfig));

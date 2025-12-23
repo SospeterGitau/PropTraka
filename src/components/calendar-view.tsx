@@ -119,7 +119,7 @@ export function CalendarView({ events }: CalendarViewProps) {
                     <Tooltip key={index} delayDuration={0}>
                       <TooltipTrigger asChild>
                          <Badge
-                          className={cn('w-full text-left block whitespace-nowrap text-xs font-semibold h-auto cursor-default truncate py-1 px-2 border-none rounded', eventColors[event.type])}
+                          className={cn('w-full text-left block whitespace-nowrap text-xs font-semibold h-auto cursor-default truncate py-1 px-2 border-none rounded', eventColors[event.type || ''] ?? '')}
                         >
                           {event.title}
                         </Badge>

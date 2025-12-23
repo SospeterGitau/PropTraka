@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { parseDate } from '@/lib/utils';
 import { MoreHorizontal, FilePlus2, Edit, Trash2, CheckCircle, Circle, Clock, XCircle, X, User } from 'lucide-react';
 import type { MaintenanceRequest } from '@/lib/types';
 import { getLocale } from '@/lib/locales';
@@ -176,7 +177,7 @@ function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreat
                 onDelete={onDeleteRequest}
                 onCreateExpense={onCreateExpense}
                 onStatusChange={onStatusChange}
-                formattedDate={formattedDates[request.id] || ''}
+                formattedDate={request.id ? (formattedDates[request.id] || '') : ''}
             />
           ))
         ) : (
@@ -219,7 +220,10 @@ export function MaintenanceKanbanBoard({
       const localeData = await getLocale(locale);
       const newFormattedDates: Record<string, string> = {};
       for (const item of requests) {
-        newFormattedDates[item.id] = format(new Date((item as any).reportedDate), 'MMM dd', { locale: localeData });
+        if (item.id) {
+          const d = parseDate((item as any).reportedDate);
+          newFormattedDates[item.id] = d ? format(d, 'MMM dd', { locale: localeData }) : '';
+        }
       }
       setFormattedDates(newFormattedDates);
     };

@@ -1,0 +1,25 @@
+{
+    "Navigation": {
+        "dashboard": "Übersicht",
+        "properties": "Eigenschaften",
+        "revenue": "Einnahmen",
+        "maintenance": "Wartung",
+        "logout": "Abmelden"
+    },
+    "Common": {
+        "loading": "Laden...",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+    },
+    "Settings": {
+        "title": "Profil & Einstellungen",
+        "language": "Sprache",
+        "languageDesc": "Wählen Sie Ihre bevorzugte Sprache."
+    },
+    "NewFeature": "{ \"badge\": \"Neu\", \"description\": \"KI übersetzt diesen Text automatisch in alle unterstützten Sprachen.\" }",
+    "badge": "Neu",
+    "description": "KI übersetzt diesen Text automatisch in alle unterstützten Sprachen.",
+    "NewFeature_de_DE_dict_": "Dictionary of translated keys and values"
+}

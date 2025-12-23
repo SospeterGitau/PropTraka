@@ -1,0 +1,23 @@
+// Storage rules for local emulator only. DO NOT DEPLOY THESE RULES TO PRODUCTION.
+// Use restrictive rules in production; these are intentionally permissive for local dev.
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper to check if user owns the file path (users/{uid}/...)
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Protect user-specific files
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Default deny for everything else (implicit, but good to be aware of)
+  }
+}

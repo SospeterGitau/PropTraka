@@ -1,0 +1,92 @@
+name: Emulator tests & verification
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ main ]
+
+jobs:
+  emulator-checks:
+    name: Emulator checks (PRs & main)
+    runs-on: ubuntu-latest
+    env:
+      # The seed script refuses to run against production unless ALLOW_REAL_SEED=true
+      FIRESTORE_EMULATOR_HOST: localhost:8080
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start Firebase emulators in background
+        run: |
+          # Start only Firestore and Auth (UI will be available on port 4000)
+          npx firebase emulators:start --only firestore,auth --project=${{ secrets.FIREBASE_PROJECT_ID || 'ci-local' }} &>/tmp/emulators.log &
+          # Wait for Firestore to start and listen on port 8080 (timeout after ~30s)
+          for i in {1..30}; do ss -ltn | grep -q ':8080' && echo 'Firestore emulator listening' && break || sleep 1; done
+          if ! ss -ltn | grep -q ':8080'; then
+            echo '❌ Firestore emulator did not start in time. Emulators log:'; tail -n 200 /tmp/emulators.log; exit 1;
+          fi
+          echo '✅ Emulators started.'
+
+      - name: Seed emulator
+        run: |
+          # Use seed script that targets the emulator. It will refuse to run against production.
+          FIRESTORE_EMULATOR_HOST=localhost:8080 node scripts/seed-firestore-new.js
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build (verifies compilation)
+        run: npm run build --if-present
+
+      - name: Start Next dev server (background)
+        run: |
+          npm run dev:9002 &>/tmp/next.log &
+          for i in {1..30}; do ss -ltn | grep -q ':9002' && echo 'Next dev listening' && break || sleep 1; done
+          if ! ss -ltn | grep -q ':9002'; then
+            echo '❌ Next dev did not start in time. Logs:'; tail -n 200 /tmp/next.log; exit 1;
+          fi
+          echo '✅ Next dev started.'
+
+      - name: Seed Auth emulator
+        run: |
+          FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 node scripts/seed-auth.js
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright e2e tests
+        run: |
+          npx playwright test --reporter=list
+
+  deploy-preview:
+    name: Example safe deploy (main only)
+    runs-on: ubuntu-latest
+    needs: emulator-checks
+    if: github.ref == 'refs/heads/main' && secrets.FIREBASE_SERVICE_ACCOUNT
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure Firebase service account
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > ./service-account.json
+          echo "Wrote service account file"
+
+      - name: Deploy to preview channel (example)
+        run: |
+          # Example publish to a preview channel; adjust as needed for your workflow.
+          npx firebase deploy --project=${{ secrets.FIREBASE_PROJECT_ID }} --only hosting:pr-${{ github.run_id }}

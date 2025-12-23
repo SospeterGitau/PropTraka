@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "property": {
@@ -6,229 +5,596 @@
       "description": "A real estate property in the user's portfolio.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "addressLine1": { "type": "string" },
-        "city": { "type": "string" },
-        "state": { "type": "string" },
-        "postalCode": { "type": "string" },
-        "propertyType": { "type": "string", "enum": ["Domestic", "Commercial"] },
-        "buildingType": { "type": "string" },
-        "bedrooms": { "type": "number" },
-        "bathrooms": { "type": "number" },
-        "size": { "type": "number" },
-        "sizeUnit": { "type": "string", "enum": ["sqft", "sqm"] },
-        "purchasePrice": { "type": "number" },
-        "mortgage": { "type": "number" },
-        "currentValue": { "type": "number" },
-        "rentalValue": { "type": "number" },
-        "purchaseTaxes": { "type": "number" },
-        "imageUrl": { "type": "string" },
-        "imageHint": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "addressLine1": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "propertyType": {
+          "type": "string",
+          "enum": [
+            "Domestic",
+            "Commercial"
+          ]
+        },
+        "buildingType": {
+          "type": "string"
+        },
+        "bedrooms": {
+          "type": "number"
+        },
+        "bathrooms": {
+          "type": "number"
+        },
+        "size": {
+          "type": "number"
+        },
+        "sizeUnit": {
+          "type": "string",
+          "enum": [
+            "sqft",
+            "sqm"
+          ]
+        },
+        "purchasePrice": {
+          "type": "number"
+        },
+        "mortgage": {
+          "type": "number"
+        },
+        "currentValue": {
+          "type": "number"
+        },
+        "rentalValue": {
+          "type": "number"
+        },
+        "purchaseTaxes": {
+          "type": "number"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "imageHint": {
+          "type": "string"
+        }
       },
-      "required": ["addressLine1", "city", "state", "postalCode", "propertyType", "bedrooms", "bathrooms", "purchasePrice", "mortgage", "currentValue", "rentalValue", "ownerId"]
+      "required": [
+        "addressLine1",
+        "city",
+        "state",
+        "postalCode",
+        "propertyType",
+        "bedrooms",
+        "bathrooms",
+        "purchasePrice",
+        "mortgage",
+        "currentValue",
+        "rentalValue",
+        "ownerId"
+      ]
     },
     "transaction": {
       "title": "Transaction",
       "description": "A financial transaction, either revenue or expense.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "rent": { "type": "number" },
+        "id": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "rent": {
+          "type": "number"
+        },
         "serviceCharges": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
-              "amount": { "type": "number" }
+              "name": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              }
             },
-            "required": ["name", "amount"]
+            "required": [
+              "name",
+              "amount"
+            ]
           }
         },
-        "propertyId": { "type": "string" },
-        "propertyName": { "type": "string" },
-        "type": { "type": "string", "enum": ["revenue", "expense"] },
-        "category": { "type": "string" },
-        "tenant": { "type": "string" },
-        "tenantEmail": { "type": "string" },
-        "tenantPhone": { "type": "string" },
-        "contractorId": { "type": "string" },
-        "contractorName": { "type": "string" },
-        "deposit": { "type": "number" },
-        "depositReturned": { "type": "boolean" },
-        "amountPaid": { "type": "number" },
-        "tenancyId": { "type": "string" },
-        "tenancyStartDate": { "type": "string", "format": "date" },
-        "tenancyEndDate": { "type": "string", "format": "date" },
-        "contractUrl": { "type": "string" },
-        "expenseType": { "type": "string", "enum": ["one-off", "recurring"] },
-        "frequency": { "type": "string" },
-        "notes": { "type": "string" },
-        "receiptUrl": { "type": "string" }
+        "propertyId": {
+          "type": "string"
+        },
+        "propertyName": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "revenue",
+            "expense"
+          ]
+        },
+        "category": {
+          "type": "string"
+        },
+        "tenant": {
+          "type": "string"
+        },
+        "tenantEmail": {
+          "type": "string"
+        },
+        "tenantPhone": {
+          "type": "string"
+        },
+        "contractorId": {
+          "type": "string"
+        },
+        "contractorName": {
+          "type": "string"
+        },
+        "deposit": {
+          "type": "number"
+        },
+        "depositReturned": {
+          "type": "boolean"
+        },
+        "amountPaid": {
+          "type": "number"
+        },
+        "tenancyId": {
+          "type": "string"
+        },
+        "tenancyStartDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "tenancyEndDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "contractUrl": {
+          "type": "string"
+        },
+        "expenseType": {
+          "type": "string",
+          "enum": [
+            "one-off",
+            "recurring"
+          ]
+        },
+        "frequency": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "receiptUrl": {
+          "type": "string"
+        }
       },
-      "required": ["date", "rent", "propertyName", "type", "ownerId"]
+      "required": [
+        "date",
+        "rent",
+        "propertyName",
+        "type",
+        "ownerId"
+      ]
     },
     "maintenanceRequest": {
-        "title": "Maintenance Request",
-        "description": "A request for maintenance on a property.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "ownerId": { "type": "string" },
-            "propertyId": { "type": "string" },
-            "propertyName": { "type": "string" },
-            "description": { "type": "string" },
-            "status": { "type": "string", "enum": ["To Do", "In Progress", "Done", "Cancelled"] },
-            "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Emergency"] },
-            "reportedDate": { "type": "string", "format": "date" },
-            "completedDate": { "type": "string", "format": "date" },
-            "cost": { "type": "number" },
-            "contractorId": { "type": "string" },
-            "contractorName": { "type": "string" }
+      "title": "Maintenance Request",
+      "description": "A request for maintenance on a property.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        "required": ["propertyName", "description", "status", "priority", "reportedDate", "ownerId"]
+        "ownerId": {
+          "type": "string"
+        },
+        "propertyId": {
+          "type": "string"
+        },
+        "propertyName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "To Do",
+            "In Progress",
+            "Done",
+            "Cancelled"
+          ]
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "Low",
+            "Medium",
+            "High",
+            "Emergency"
+          ]
+        },
+        "reportedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "completedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "cost": {
+          "type": "number"
+        },
+        "contractorId": {
+          "type": "string"
+        },
+        "contractorName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "propertyName",
+        "description",
+        "status",
+        "priority",
+        "reportedDate",
+        "ownerId"
+      ]
     },
     "contractor": {
       "title": "Contractor",
       "description": "A contractor or vendor who provides services.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "name": { "type": "string" },
-        "specialty": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "phone": { "type": "string" },
-        "notes": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "specialty": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
       },
-      "required": ["name", "specialty", "ownerId"]
+      "required": [
+        "name",
+        "specialty",
+        "ownerId"
+      ]
     },
     "knowledgeArticle": {
       "title": "Knowledge Article",
       "description": "An article in the AI's knowledge base.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "title": { "type": "string" },
-        "content": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
       },
-      "required": ["title", "content", "ownerId"]
+      "required": [
+        "title",
+        "content",
+        "ownerId"
+      ]
     },
     "changeLogEntry": {
-        "title": "Change Log Entry",
-        "description": "An entry in the activity changelog.",
-        "type": "object",
-        "properties": {
-            "id": { "type": "string" },
-            "ownerId": { "type": "string" },
-            "date": { "type": "string", "format": "date-time" },
-            "type": { "type": "string" },
-            "action": { "type": "string" },
-            "description": { "type": "string" },
-            "entityId": { "type": "string" }
+      "title": "Change Log Entry",
+      "description": "An entry in the activity changelog.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
         },
-        "required": ["date", "type", "action", "description", "entityId", "ownerId"]
+        "ownerId": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "entityId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "date",
+        "type",
+        "action",
+        "description",
+        "entityId",
+        "ownerId"
+      ]
     },
     "subscription": {
       "title": "Subscription",
       "description": "Stores the user's subscription plan details.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "plan": { "type": "string", "enum": ["Free", "Starter", "Growth", "Professional", "Enterprise"] },
-        "status": { "type": "string", "enum": ["active", "trial", "cancelled", "overdue", "past_due"] },
-        "billingCycle": { "type": "string", "enum": ["monthly", "yearly"] },
-        "currentPeriodStart": { "type": "string", "format": "date-time" },
-        "currentPeriodEnd": { "type": "string", "format": "date-time" },
-        "units_managed": { "type": "number" },
-        "payment_customer_id": { "type": "string" },
-        "next_billing_date": { "type": "string", "format": "date-time" },
-        "last_payment_status": { "type": "string" }
+        "id": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string",
+          "enum": [
+            "Free",
+            "Starter",
+            "Pro"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "trial",
+            "cancelled",
+            "overdue",
+            "past_due"
+          ]
+        },
+        "billingCycle": {
+          "type": "string",
+          "enum": [
+            "monthly",
+            "yearly"
+          ]
+        },
+        "currentPeriodStart": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "currentPeriodEnd": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "units_managed": {
+          "type": "number"
+        },
+        "payment_customer_id": {
+          "type": "string"
+        },
+        "next_billing_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_payment_status": {
+          "type": "string"
+        }
       },
-      "required": ["ownerId", "plan", "status", "billingCycle"]
+      "required": [
+        "ownerId",
+        "plan",
+        "status",
+        "billingCycle"
+      ]
     },
     "invoice": {
       "title": "Invoice",
       "description": "Represents a payment request sent to a tenant.",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "ownerId": { "type": "string" },
-        "tenancyId": { "type": "string" },
-        "revenueTransactionId": { "type": "string" },
-        "amount": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "paid", "failed", "cancelled"] },
-        "paymentGateway": { "type": "string", "enum": ["Pesapal", "InstaSend", "M-Pesa"] },
-        "gatewayTransactionId": { "type": "string" },
-        "dateCreated": { "type": "string", "format": "date-time" },
-        "datePaid": { "type": "string", "format": "date-time" }
+        "id": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "tenancyId": {
+          "type": "string"
+        },
+        "revenueTransactionId": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "paid",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "paymentGateway": {
+          "type": "string",
+          "enum": [
+            "Pesapal",
+            "InstaSend",
+            "M-Pesa"
+          ]
+        },
+        "gatewayTransactionId": {
+          "type": "string"
+        },
+        "dateCreated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "datePaid": {
+          "type": "string",
+          "format": "date-time"
+        }
       },
-      "required": ["ownerId", "tenancyId", "revenueTransactionId", "amount", "status"]
+      "required": [
+        "ownerId",
+        "tenancyId",
+        "revenueTransactionId",
+        "amount",
+        "status"
+      ]
     },
-     "userSettings": {
+    "userSettings": {
       "title": "User Settings",
       "description": "Stores user-specific application settings and preferences.",
       "type": "object",
       "properties": {
-        "ownerId": { "type": "string" },
-        "currency": { "type": "string" },
-        "locale": { "type": "string" },
-        "companyName": { "type": "string" },
-        "residencyStatus": { "type": "string", "enum": ["resident", "non-resident"] },
-        "isPnlReportEnabled": { "type": "boolean" },
-        "isMarketResearchEnabled": { "type": "boolean" },
-        "theme": { "type": "string", "enum": ["dark", "light", "system"] }
+        "ownerId": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "companyName": {
+          "type": "string"
+        },
+        "residencyStatus": {
+          "type": "string",
+          "enum": [
+            "resident",
+            "non-resident"
+          ]
+        },
+        "isPnlReportEnabled": {
+          "type": "boolean"
+        },
+        "isMarketResearchEnabled": {
+          "type": "boolean"
+        },
+        "theme": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ]
+        }
       },
-      "required": ["ownerId", "currency", "locale", "residencyStatus"]
+      "required": [
+        "ownerId",
+        "currency",
+        "locale",
+        "residencyStatus"
+      ]
     }
   },
   "auth": {
-    "providers": ["anonymous", "email-password"]
+    "providers": [
+      "anonymous",
+      "email-password"
+    ]
   },
   "firestore": {
     "/properties/{propertyId}": {
-      "schema": { "$ref": "#/entities/property" },
+      "schema": {
+        "$ref": "#/entities/property"
+      },
       "description": "Stores property data."
     },
     "/revenue/{transactionId}": {
-      "schema": { "$ref": "#/entities/transaction" },
+      "schema": {
+        "$ref": "#/entities/transaction"
+      },
       "description": "Stores revenue transactions and tenancy info."
     },
     "/expenses/{transactionId}": {
-        "schema": { "$ref": "#/entities/transaction" },
-        "description": "Stores expense transactions."
+      "schema": {
+        "$ref": "#/entities/transaction"
+      },
+      "description": "Stores expense transactions."
     },
     "/maintenanceRequests/{requestId}": {
-        "schema": { "$ref": "#/entities/maintenanceRequest" },
-        "description": "Stores maintenance requests."
+      "schema": {
+        "$ref": "#/entities/maintenanceRequest"
+      },
+      "description": "Stores maintenance requests."
     },
     "/contractors/{contractorId}": {
-      "schema": { "$ref": "#/entities/contractor" },
+      "schema": {
+        "$ref": "#/entities/contractor"
+      },
       "description": "Stores contractor and vendor information."
     },
     "/knowledgeBase/{articleId}": {
-      "schema": { "$ref": "#/entities/knowledgeArticle" },
+      "schema": {
+        "$ref": "#/entities/knowledgeArticle"
+      },
       "description": "Stores AI knowledge base articles."
     },
     "/changelog/{logId}": {
-        "schema": { "$ref": "#/entities/changeLogEntry" },
-        "description": "Stores activity log entries."
+      "schema": {
+        "$ref": "#/entities/changeLogEntry"
+      },
+      "description": "Stores activity log entries."
     },
     "/subscriptions/{subscriptionId}": {
-        "schema": { "$ref": "#/entities/subscription" },
-        "description": "Stores user subscription details."
+      "schema": {
+        "$ref": "#/entities/subscription"
+      },
+      "description": "Stores user subscription details."
     },
     "/invoices/{invoiceId}": {
-        "schema": { "$ref": "#/entities/invoice" },
-        "description": "Stores tenant payment invoices."
+      "schema": {
+        "$ref": "#/entities/invoice"
+      },
+      "description": "Stores tenant payment invoices."
     },
-     "/userSettings/{userId}": {
-      "schema": { "$ref": "#/entities/userSettings" },
+    "/userSettings/{userId}": {
+      "schema": {
+        "$ref": "#/entities/userSettings"
+      },
       "description": "Stores settings for a specific user."
     }
   }

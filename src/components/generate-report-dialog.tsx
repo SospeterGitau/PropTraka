@@ -39,11 +39,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 import { Label } from './ui/label';
 
 interface GenerateReportDialogProps {
-  revenue: Transaction[];
-  expenses: Transaction[];
+  revenue?: Transaction[];
+  expenses?: Transaction[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  title?: string;
+  content?: string;
 }
 
-export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialogProps) {
+export function GenerateReportDialog({ revenue, expenses, open, onOpenChange, title, content }: GenerateReportDialogProps) {
   const { settings } = useDataContext();
   const currency = settings?.currency || 'KES';
   const companyName = settings?.companyName || '';
@@ -68,12 +72,12 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
       const startDate = format(date.from!, 'yyyy-MM-dd');
       const endDate = format(date.to!, 'yyyy-MM-dd');
 
-      const filteredRevenue = revenue.filter(t => {
+      const filteredRevenue = (revenue || []).filter(t => {
         if (!t.date) return false;
         const tDate = new Date(t.date);
         return tDate >= date.from! && tDate <= date.to!;
       });
-      const filteredExpenses = expenses.filter(e => {
+      const filteredExpenses = (expenses || []).filter(e => {
         if (!e.date) return false;
         const eDate = new Date(e.date);
         return eDate >= date.from! && eDate <= date.to!;
@@ -105,9 +109,17 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (!open) {
+  const isControlled = typeof open !== 'undefined' && typeof onOpenChange === 'function';
+  const dialogOpen = isControlled ? open! : isOpen;
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (isControlled) {
+      onOpenChange!(nextOpen);
+    } else {
+      setIsOpen(nextOpen);
+    }
+
+    if (!nextOpen) {
       setReport(null); // Reset report when closing
       setError(null);
       setPrompt(PNL_REPORT_PROMPT); // Reset prompt
@@ -164,11 +176,13 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <Button onClick={() => setIsOpen(true)}>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+      {!isControlled && (
+        <Button onClick={() => setIsOpen(true)}>
         <FileText className="mr-2 h-4 w-4" />
         P&amp;L Statement
-      </Button>
+        </Button>
+      )}
       <DialogContent className="max-w-3xl" aria-describedby="report-description">
         <DialogHeader>
           <DialogTitle>Generate P&amp;L Report</DialogTitle>
@@ -178,9 +192,9 @@ export function GenerateReportDialog({ revenue, expenses }: GenerateReportDialog
         </DialogHeader>
 
         <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4">
-          {report ? (
+          {content || report ? (
             <div className="prose prose-sm max-w-none whitespace-pre-wrap font-sans text-sm">
-              {report}
+              {content ?? report}
             </div>
           ) : (
             <div className="space-y-6 py-4">

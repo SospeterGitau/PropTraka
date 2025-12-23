@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import { useUser } from '@/firebase';
 import { useDataContext } from '@/context/data-context';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -38,21 +39,56 @@ const PlanPrice = ({ plan, billingCycle }: { plan: SubscriptionPlan, billingCycl
 
 
 export default function SubscriptionBillingTab() {
+    const { user } = useUser();
     const { settings } = useDataContext();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-    
-    const currentPlanName = settings.subscription?.plan || 'Starter';
-  
+
+    const currentPlanName = settings?.subscription?.plan || 'Starter';
+
     const handleChoosePlan = (planName: string) => {
-        if(planName === currentPlanName) return;
+        if (planName === currentPlanName) return;
 
         startTransition(async () => {
-          toast({
-              title: "Confirm Subscription",
-              description: `This is where you would integrate with IntaSend to change the plan to ${planName}.`,
-          });
+            try {
+                // 1. Initiate Payment
+                const PLAN_AMOUNTS: Record<string, number> = {
+                    'Starter': 2000,
+                    'Growth': 4500,
+                    'Professional': 10000
+                };
+
+                const response = await fetch('/api/pesapal/initiate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: PLAN_AMOUNTS[planName] || 100, // Fallback
+                        description: `Upgrade to ${planName} Plan (${billingCycle})`,
+                        user: {
+                            email: user?.email || 'user@example.com',
+                            firstName: settings?.companyName || 'Valued Customer'
+                        },
+                        callbackUrl: `${window.location.origin}/settings?tab=subscription&status=success`
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.redirect_url) {
+                    // Redirect to PesaPal Payment Page
+                    window.location.href = data.redirect_url;
+                } else {
+                    throw new Error(data.error || 'Failed to initiate payment');
+                }
+
+            } catch (error: any) {
+                toast({
+                    variant: "destructive",
+                    title: "Payment Error",
+                    description: error.message,
+                });
+            }
         });
     }
 
@@ -80,7 +116,7 @@ export default function SubscriptionBillingTab() {
     if (ungroupedFeatures.length > 0) {
         featureGroups.push({ name: "Other", features: ungroupedFeatures.map(f => f.id) });
     }
-  
+
     return (
         <div className="space-y-8">
             <div className="text-center">
@@ -94,8 +130,8 @@ export default function SubscriptionBillingTab() {
                     <ToggleGroupItem value="yearly">Yearly (Save 15%)</ToggleGroupItem>
                 </ToggleGroup>
             </div>
-            
-             <div className="w-full overflow-x-auto">
+
+            <div className="w-full overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
@@ -105,10 +141,10 @@ export default function SubscriptionBillingTab() {
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
                                     <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
-                                       <div className="flex flex-col items-center justify-start h-full">
+                                        <div className="flex flex-col items-center justify-start h-full">
                                             <div className="flex flex-col items-center justify-center h-8">
                                                 {isMostPopular ? (
-                                                     <Badge variant="secondary" className="font-semibold">
+                                                    <Badge variant="secondary" className="font-semibold">
                                                         <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                                         Most Popular
                                                     </Badge>

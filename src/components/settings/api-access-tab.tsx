@@ -22,7 +22,7 @@ export default function ApiAccessTab() {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
-    
+
     const apiKeysQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'apiKeys', user.uid) : null, [firestore, user?.uid]);
     const [apiKeysSnapshot, isKeysLoading] = useCollection(apiKeysQuery as Query<ApiKey> | null);
     const apiKeys = useMemo(() => apiKeysSnapshot?.docs.map(doc => ({ ...doc.data(), id: doc.id } as ApiKey)) || [], [apiKeysSnapshot]);
@@ -41,7 +41,7 @@ export default function ApiAccessTab() {
             // For this demo, we'll create a simple, readable one.
             const key = `proptraka_dev_${user.uid.slice(0, 5)}_${Date.now()}`;
             const keyDocRef = doc(firestore, 'apiKeys', key);
-            
+
             await setDoc(keyDocRef, {
                 ownerId: user.uid,
                 createdAt: serverTimestamp(),
@@ -58,7 +58,7 @@ export default function ApiAccessTab() {
             setIsGenerating(false);
         }
     };
-    
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
         toast({ title: "Copied!", description: "API key copied to clipboard." });
@@ -84,7 +84,7 @@ export default function ApiAccessTab() {
                     </Alert>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4">
-                     <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center justify-between w-full">
                         <div>
                             <h3 className="font-medium">Generate New Key</h3>
                             <p className="text-sm text-muted-foreground">Create a new key to use with the API.</p>
@@ -108,7 +108,7 @@ export default function ApiAccessTab() {
                 </CardFooter>
             </Card>
 
-             <Card>
+            <Card>
                 <CardHeader>
                     <CardTitle>Your API Keys</CardTitle>
                 </CardHeader>
@@ -126,8 +126,8 @@ export default function ApiAccessTab() {
                                 apiKeys.map(key => (
                                     <TableRow key={key.id}>
                                         <TableCell className="font-mono">...{key.id.slice(-8)}</TableCell>
-                                        <TableCell>{key.createdAt ? format(key.createdAt.toDate(), 'PP, p') : 'N/A'}</TableCell>
-                                        <TableCell>{key.lastUsed ? format(key.lastUsed.toDate(), 'PP, p') : 'Never'}</TableCell>
+                                        <TableCell>{key.createdAt ? format(new Date(key.createdAt), 'PP, p') : 'N/A'}</TableCell>
+                                        <TableCell>{key.lastUsed ? format(new Date(key.lastUsed), 'PP, p') : 'Never'}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
@@ -140,7 +140,7 @@ export default function ApiAccessTab() {
                         </TableBody>
                     </Table>
                 </CardContent>
-             </Card>
+            </Card>
         </div>
     );
 }

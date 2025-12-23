@@ -1,0 +1,29 @@
+src/app/[locale]/(dashboard)/arrears/arrears-client.tsx(94,70): error TS2339: Property 'toDate' does not exist on type 'string'.
+src/app/[locale]/(dashboard)/arrears/arrears-client.tsx(94,98): error TS2339: Property 'toDate' does not exist on type 'string'.
+src/app/[locale]/(dashboard)/arrears/arrears-client.tsx(95,64): error TS2339: Property 'toDate' does not exist on type 'string'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(134,14): error TS2304: Cannot find name 'selectedDate'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(135,69): error TS2304: Cannot find name 'selectedDate'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(137,9): error TS2304: Cannot find name 'selectedDate'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(172,39): error TS2304: Cannot find name 'selectedDate'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(173,39): error TS2304: Cannot find name 'setSelectedDate'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(181,48): error TS2304: Cannot find name 'selectedDate'.
+src/app/[locale]/(dashboard)/calendar/calendar-client.tsx(181,70): error TS2304: Cannot find name 'selectedDate'.
+src/app/[locale]/(dashboard)/dashboard-client.tsx(12,15): error TS2300: Duplicate identifier 'Property'.
+src/app/[locale]/(dashboard)/dashboard-client.tsx(17,15): error TS2300: Duplicate identifier 'Property'.
+src/app/[locale]/(dashboard)/expenses/add/page.tsx(17,11): error TS2339: Property 'properties' does not exist on type 'DataContextType'.
+src/app/[locale]/(dashboard)/expenses/expenses-client.tsx(54,38): error TS2339: Property 'description' does not exist on type 'Expense'.
+src/app/[locale]/(dashboard)/expenses/expenses-client.tsx(55,18): error TS2339: Property 'contractorName' does not exist on type 'Expense'.
+src/app/[locale]/(dashboard)/expenses/expenses-client.tsx(209,61): error TS2339: Property 'description' does not exist on type 'Expense'.
+src/app/[locale]/(dashboard)/expenses/expenses-client.tsx(216,32): error TS2339: Property 'contractorName' does not exist on type 'Expense'.
+src/components/maintenance-form.tsx(46,19): error TS2339: Property 'line1' does not exist on type 'Address'.
+src/components/maintenance-form.tsx(80,31): error TS2339: Property 'contractorId' does not exist on type 'Partial<MaintenanceRequest>'.
+src/components/maintenance-form.tsx(81,32): error TS2339: Property 'estimatedCost' does not exist on type 'Partial<MaintenanceRequest>'.
+src/components/maintenance-form.tsx(104,7): error TS2353: Object literal may only specify known properties, and 'contractorId' does not exist in type 'Partial<MaintenanceRequest>'.
+src/components/market-research-dialog.tsx(52,11): error TS2339: Property 'buildingType' does not exist on type 'Property'.
+src/components/property-icon.tsx(8,20): error TS2339: Property 'buildingType' does not exist on type 'Property'.
+src/components/reports/expense-analysis.tsx(36,47): error TS2339: Property 'toDate' does not exist on type 'string'.
+src/components/reports/expense-analysis.tsx(36,65): error TS2339: Property 'toDate' does not exist on type 'string'.
+src/components/reports/lease-risk-profile.tsx(131,53): error TS2339: Property 'amountPaid' does not exist on type 'Expense & { type?: "expense" | undefined; }'.
+  Property 'amountPaid' does not exist on type 'never'.
+src/components/settings/api-access-tab.tsx(129,90): error TS2339: Property 'toDate' does not exist on type 'string'.
+src/components/settings/api-access-tab.tsx(130,88): error TS2339: Property 'toDate' does not exist on type 'string'.

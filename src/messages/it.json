@@ -1,0 +1,31 @@
+{
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "properties": "Properties",
+        "revenue": "Revenue",
+        "maintenance": "Maintenance",
+        "logout": "Log Out"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "Settings": {
+        "title": "Profile & Settings",
+        "language": "Language",
+        "languageDesc": "Select your preferred language."
+    },
+    "NewFeature_it": null,
+    "NewFeature_en_badge": "New",
+    "NewFeature_en_description": "AI automatically translates this text to all supported languages.",
+    "NewFeature_it_badge": "Nuovo",
+    "NewFeature_it_description": "L'IA traduce automaticamente questo testo in tutte le lingue supportate.",
+    "NewFeature_badge": "Nuovo",
+    "NewFeature_description": "L'IA traduce automaticamente questo testo in tutte le lingue supportate.",
+    "NewFeature": "it",
+    "description": "L'IA traduce automaticamente questo testo in tutte le lingue supportate.",
+    "badge": "Nuovo"
+}

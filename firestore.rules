@@ -3,23 +3,109 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // This rule matches any document in any collection.
+    // --- HELPER FUNCTIONS ---
+
+    // Check if the user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Check if the user is the owner of the existing document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Check if the user is creating a document owned by themselves
+    function isCreatingOwnedDocument() {
+      return request.resource.data.ownerId == request.auth.uid;
+    }
+    
+    // Check if the incoming data preserves the ownerId (prevents ownership transfer)
+    function isPreservingOwnership() {
+      return request.resource.data.ownerId == resource.data.ownerId;
+    }
+
+    // --- SECURE COLLECTIONS ---
+
+    // 1. Private Data (API Keys, Secrets)
+    // STRICTLY DENY client-side access. Only accessible via Admin SDK (Server Actions).
+    match /private_data/{document=**} {
+      allow read, write: if false;
+    }
+    
+    // 2. User Settings
+    match /userSettings/{userId} {
+      // Users can only read/write their own settings document
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // 3. User Data (Profiles)
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // 4. Main Resource Collections (Properties, Tenants, etc.)
+    // We use a wildcard match for the standard resources to apply the same logic.
+    // Explicitly listing them is safer to avoid accidental exposure of new collections.
+    match /properties/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /tenants/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /tenancies/{docId} {
+      allow read: if isSignedIn() && (resource.data.ownerId == request.auth.uid || resource.data.isSample == true);
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /revenue/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /expenses/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+    
+    match /maintenanceRequests/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /contractors/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+    
+    match /appDocuments/{docId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && isCreatingOwnedDocument();
+      allow update: if isSignedIn() && resource.data.ownerId == request.auth.uid && isPreservingOwnership();
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Fallback: Deny everything else by default
     match /{document=**} {
-
-      // A user can read a document only if they are authenticated and the document's 
-      // ownerId field matches their own user ID. This rule applies to both single
-      // document reads (get) and queries (list).
-      // For this rule to work with queries, your client-side code MUST include
-      // a `where("ownerId", "==", auth.currentUser.uid)` filter.
-      allow read: if request.auth != null && request.auth.uid == resource.data.ownerId;
-
-      // A user can create a document only if they are authenticated and they are
-      // setting the ownerId on the new document to their own user ID.
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-
-      // A user can update or delete a document only if they are authenticated and
-      // the document's ownerId already matches their user ID.
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow read, write: if false; 
     }
   }
 }

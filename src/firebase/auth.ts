@@ -16,20 +16,25 @@ export function useUser(): UseUserReturn {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    console.log('[useUser] Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(
       auth,
       (currentUser) => {
+        console.log('[useUser] Auth state changed:', currentUser ? `User: ${currentUser.uid} (${currentUser.email})` : 'No user');
         setUser(currentUser);
         setLoading(false);
       },
       (err) => {
-        console.error('❌ Auth error:', err);
+        console.error('❌ [useUser] Auth error:', err);
         setError(err);
         setLoading(false);
       }
     );
 
-    return () => unsubscribe();
+    return () => {
+      console.log('[useUser] Cleaning up auth listener');
+      unsubscribe();
+    };
   }, []);
 
   return { user, loading, error };

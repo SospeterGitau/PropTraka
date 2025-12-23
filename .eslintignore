@@ -1,0 +1,7 @@
+android/
+ios/
+.next/
+node_modules/
+build/
+dist/
+coverage/

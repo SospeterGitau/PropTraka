@@ -1,0 +1,25 @@
+{
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "properties": "Properties",
+        "revenue": "Revenue",
+        "maintenance": "Maintenance",
+        "logout": "Log Out"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "Settings": {
+        "title": "Profile & Settings",
+        "language": "Language",
+        "languageDesc": "Select your preferred language."
+    },
+    "NewFeature": "badge",
+    "አዲስ": "description",
+    "አርቴፊሻል ኢንተለጀንስ ይህን ጽሑፍ ወደ ሁሉም የሚደገፉ ቋንቋዎች በራስ-ሰር ይተረጉመዋል።": "} ️```",
+    "description": "AI ይህን ጽሑፍ ወደ ሁሉም የሚደገፉ ቋንቋዎች በራስ ሰር ይተረጉመዋል።"
+}

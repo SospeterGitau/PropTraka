@@ -1,17 +1,14 @@
-
-'use client';
-
 import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Building, 
-  TrendingUp, 
-  Wrench, 
-  Plus, 
-  X, 
-  Home, 
+import { Link, usePathname, useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
+import {
+  LayoutDashboard,
+  Building,
+  TrendingUp,
+  Wrench,
+  Plus,
+  X,
+  Home,
   FileText,
   Menu as MenuIcon,
   Building2,
@@ -33,15 +30,16 @@ interface DashboardNavigationProps {
 }
 
 export function DashboardNavigation({ children }: DashboardNavigationProps) {
+  const t = useTranslations('Navigation');
   const pathname = usePathname();
   const router = useRouter();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/properties', label: 'Properties', icon: Building },
-    { href: '/revenue', label: 'Revenue', icon: TrendingUp },
-    { href: '/maintenance', label: 'Maintenance', icon: Wrench },
+    { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { href: '/properties', label: t('properties'), icon: Building },
+    { href: '/revenue', label: t('revenue'), icon: TrendingUp },
+    { href: '/maintenance', label: t('maintenance'), icon: Wrench },
   ];
 
   const addMenuItems = [
@@ -72,7 +70,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
             <MenuIcon className="h-6 w-6" />
             <span className="sr-only">Menu</span>
           </Link>
-          
+
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-primary" />
             <span className="font-bold text-lg">PropTraka</span>
@@ -81,10 +79,11 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
           <div className="ml-auto">
             <button
               onClick={handleLogout}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 px-3"
+              aria-label="Log out"
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground h-9 px-3 min-h-[44px]" // Ensure min height for touch
             >
               <LogOut className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t('logout')}</span>
             </button>
           </div>
         </div>
@@ -106,14 +105,15 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-label={item.label}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-1 px-3 py-2 text-xs transition-colors',
+                    'flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[48px] px-1 text-[10px] transition-colors', // Enforce 48px height, slightly smaller text for fit
                     isActive
                       ? 'text-primary font-medium'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6" /> {/* Slightly larger icon */}
                   <span>{item.label}</span>
                 </Link>
               );
@@ -155,14 +155,15 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-label={item.label}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-1 px-3 py-2 text-xs transition-colors',
+                    'flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[48px] px-1 text-[10px] transition-colors',
                     isActive
                       ? 'text-primary font-medium'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6" />
                   <span>{item.label}</span>
                 </Link>
               );

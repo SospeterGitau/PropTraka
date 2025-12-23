@@ -1,0 +1,24 @@
+{
+    "Navigation": {
+        "dashboard": "Dashboard",
+        "properties": "Properties",
+        "revenue": "Revenue",
+        "maintenance": "Maintenance",
+        "logout": "Log Out"
+    },
+    "Common": {
+        "loading": "Loading...",
+        "save": "Save",
+        "cancel": "Cancel",
+        "edit": "Edit",
+        "delete": "Delete"
+    },
+    "Settings": {
+        "title": "Profile & Settings",
+        "language": "Language",
+        "languageDesc": "Select your preferred language."
+    },
+    "NewFeature": "{\"badge\":\"नया\",\"description\":\"एआई इस टेक्स्ट का सभी समर्थित भाषाओं में स्वचालित रूप से अनुवाद करता है।\"}",
+    "नया": "description",
+    "एआई इस टेक्स्ट को सभी समर्थित भाषाओं में स्वचालित रूप से अनुवादित करता है।": null
+}

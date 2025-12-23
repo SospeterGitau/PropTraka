@@ -22,26 +22,35 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Property, Address } from '@/lib/db-types'; // Updated import
+import { Property, Address } from '@/lib/types';
+import { createProperty, updateProperty } from '@/app/actions/properties';
 import { useDataContext } from '@/context/data-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
 interface PropertyFormProps {
+  // support both previous `property` prop and newer `initialData` that some callers pass
   property?: Property | null;
-  isOpen: boolean;
-  onClose: () => void;
+  initialData?: Property | null;
+  isOpen?: boolean;
+  isSubmitting?: boolean;
+  onClose?: () => void;
+  onCancel?: () => void;
   onSubmit?: (data: Property | Omit<Property, "ownerId" | "id">) => void;
 }
 
 export function PropertyForm({
-  property: initialProperty,
+  property: propProperty,
+  initialData,
   isOpen,
+  isSubmitting,
   onClose,
+  onCancel,
   onSubmit,
 }: PropertyFormProps) {
-  const { addProperty, updateProperty, settings } = useDataContext();
-  
+  // Accept either `property` or `initialData` for backwards compat
+  const initialProperty = initialData ?? propProperty;
+  const { settings } = useDataContext();
+
   const getCurrencySymbol = (currencyCode: string) => {
     try {
       const parts = new Intl.NumberFormat(undefined, {
@@ -87,7 +96,9 @@ export function PropertyForm({
       setAmenities(initialProperty.amenities?.join(', ') || '');
       setDescription(initialProperty.description || '');
       setPurchasePrice(initialProperty.purchasePrice || 0);
-      setPurchaseDate(initialProperty.purchaseDate ? initialProperty.purchaseDate.toDate().toISOString().split('T')[0] : '');
+      // Handle date string or object safely
+      const pDate = initialProperty.purchaseDate;
+      setPurchaseDate(pDate ? new Date(pDate).toISOString().split('T')[0] : '');
       setCurrentValue(initialProperty.currentValue || 0);
       setMortgageBalance(initialProperty.mortgageBalance || 0);
       setTargetRent(initialProperty.targetRent || 0);
@@ -110,37 +121,49 @@ export function PropertyForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!type || !name || !address.street || !address.city || !address.state || !address.zipCode || !address.country) {
+    try {
+      if (!type || !name || !address.street || !address.city || !address.state || !address.zipCode || !address.country) {
         alert('Please fill in all required fields.');
         return;
-    }
-
-    const propertyData: Omit<Property, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'> = {
-      name,
-      type: type as 'Residential' | 'Commercial' | 'Mixed-Use',
-      address,
-      bedrooms: bedrooms || undefined,
-      bathrooms: bathrooms || undefined,
-      squareFootage: squareFootage || undefined,
-      yearBuilt: yearBuilt || undefined,
-      amenities: amenities.split(',').map(s => s.trim()).filter(s => s) || undefined,
-      description: description || undefined,
-      purchasePrice: purchasePrice || undefined,
-      purchaseDate: purchaseDate ? Timestamp.fromDate(new Date(purchaseDate)) : (undefined as any), // Cast to any to satisfy type if undefined
-      currentValue: currentValue || undefined,
-      mortgageBalance: mortgageBalance || undefined,
-      targetRent,
-    };
-
-    try {
-      if (onSubmit) {
-         if (initialProperty?.id) onSubmit({ ...propertyData, id: initialProperty.id, ownerId: initialProperty.ownerId, createdAt: initialProperty.createdAt, updatedAt: Timestamp.now() });
-         else onSubmit(propertyData);
-      } else {
-        if (initialProperty?.id) await updateProperty(initialProperty.id, { ...propertyData, id: initialProperty.id, ownerId: initialProperty.ownerId, createdAt: initialProperty.createdAt, updatedAt: Timestamp.now() });
-        else await addProperty(propertyData);
       }
-      onClose();
+
+      const propertyData = {
+        name,
+        type: type as 'Residential' | 'Commercial' | 'Mixed-Use',
+        address,
+        bedrooms: bedrooms || undefined,
+        bathrooms: bathrooms || undefined,
+        squareFootage: squareFootage || undefined,
+        yearBuilt: yearBuilt || undefined,
+        amenities: amenities.split(',').map(s => s.trim()).filter(s => s) || undefined,
+        description: description || undefined,
+        purchasePrice: purchasePrice || undefined,
+        currentValue: currentValue || undefined,
+        mortgageBalance: mortgageBalance || undefined,
+        targetRent,
+      };
+
+      // Form handles string dates. Conversion to Timestamp happens in Server Action or DataContext.
+      // But DataContext addProperty expects 'Property' which now has purchaseDate: string.
+      // So passing string is TYPE-SAFE. The backend/context must handle it.
+
+      const payload = {
+        ...propertyData,
+        // Ensure purchaseDate is undefined if empty (though logic above handles it)
+        purchaseDate: purchaseDate ? new Date(purchaseDate).toISOString() : undefined,
+      };
+
+      if (onSubmit) {
+        if (initialProperty?.id) onSubmit({ ...payload, id: initialProperty.id, ownerId: initialProperty.ownerId } as Property);
+        else onSubmit(payload as Property);
+      } else {
+        if (initialProperty?.id) {
+          await updateProperty(initialProperty.id, payload);
+        } else {
+          await createProperty(payload as any);
+        }
+      }
+      (onClose ?? onCancel)?.();
     } catch (error) {
       console.error('Failed to save property:', error);
     }
@@ -154,12 +177,12 @@ export function PropertyForm({
             {initialProperty ? 'Edit Property' : 'Add New Property'}
           </DialogTitle>
           <DialogDescription>
-            {initialProperty 
-              ? 'Update the details of your property below.' 
+            {initialProperty
+              ? 'Update the details of your property below.'
               : 'Fill in the details to add a new property to your portfolio.'}
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
@@ -186,7 +209,7 @@ export function PropertyForm({
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="bedrooms">Bedrooms</Label>
@@ -215,30 +238,30 @@ export function PropertyForm({
               </div>
             </TabsContent>
             <TabsContent value="address" className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="street">Street Address *</Label>
+                <Input id="street" name="street" placeholder="e.g., 123 Main St" value={address.street} onChange={handleAddressChange} required />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="street">Street Address *</Label>
-                  <Input id="street" name="street" placeholder="e.g., 123 Main St" value={address.street} onChange={handleAddressChange} required />
+                  <Label htmlFor="city">City *</Label>
+                  <Input id="city" name="city" value={address.city} onChange={handleAddressChange} required />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City *</Label>
-                    <Input id="city" name="city" value={address.city} onChange={handleAddressChange} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State/Province *</Label>
-                    <Input id="state" name="state" value={address.state} onChange={handleAddressChange} required />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State/Province *</Label>
+                  <Input id="state" name="state" value={address.state} onChange={handleAddressChange} required />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="zipCode">Zip/Postal Code *</Label>
-                    <Input id="zipCode" name="zipCode" value={address.zipCode} onChange={handleAddressChange} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country *</Label>
-                    <Input id="country" name="country" value={address.country} onChange={handleAddressChange} required />
-                  </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="zipCode">Zip/Postal Code *</Label>
+                  <Input id="zipCode" name="zipCode" value={address.zipCode} onChange={handleAddressChange} required />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country *</Label>
+                  <Input id="country" name="country" value={address.country} onChange={handleAddressChange} required />
+                </div>
+              </div>
             </TabsContent>
             <TabsContent value="financials" className="space-y-4 py-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

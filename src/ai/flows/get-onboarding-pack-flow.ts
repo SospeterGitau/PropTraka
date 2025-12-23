@@ -39,12 +39,12 @@ const getUserSettings = ai.defineTool(
     if (!session.isLoggedIn || !session.uid) {
       throw new Error('User is not authenticated.');
     }
-    
+
     const { firestore } = await getFirebase();
     const settingsDoc = await firestore.collection('userSettings').doc(session.uid).get();
-    
+
     if (!settingsDoc.exists) {
-        throw new Error('User settings not found.');
+      throw new Error('User settings not found.');
     }
 
     return settingsDoc.data() as UserSettings;
@@ -54,35 +54,34 @@ const getUserSettings = ai.defineTool(
 
 // Define the prompt that instructs the AI on how to behave.
 const onboardingPackPrompt = ai.definePrompt({
-    name: 'onboardingPackPrompt',
-    input: { schema: OnboardingPackInputSchema },
-    output: { schema: OnboardingPackOutputSchema },
-    tools: [getUserSettings], // Make the tool available to the AI
-    system: `You are an expert onboarding assistant for a property management app called PropTraka.
+  name: 'onboardingPackPrompt',
+  input: { schema: OnboardingPackInputSchema },
+  output: { schema: OnboardingPackOutputSchema },
+  tools: [],
+  system: `You are an expert onboarding assistant for a property management app called PropTraka.
 Your primary role is to guide the user through the tenant onboarding process by providing a clear, actionable checklist.
 
 **Your Workflow:**
-1.  When the user indicates they want to onboard a new tenant for a specific property, you MUST use the \`getUserSettings\` tool to fetch their saved document template URLs.
-2.  Once you have the URLs, you MUST generate a response that includes a step-by-step checklist.
-3.  The checklist MUST use the retrieved URLs to create clickable Markdown links. For example: [Application Form](https://your-link-here).
-4.  If any template URL is missing from the user's settings, you MUST still provide the step but state that the template link is missing and advise them to add it in the Account > Settings page. Do not create a link for a missing URL.
-5.  The response MUST be formatted in clean Markdown.
+1.  When the user indicates they want to onboard a new tenant for a specific property, you MUST generate a response that includes a step-by-step checklist.
+2.  The checklist should cover standard best practices: Sending an Application Form, Landlord Assessment, Signing the Tenancy Agreement, and completing Move-in Checklists.
+3.  The response MUST be formatted in clean Markdown.
 
 **Example User Query:** "I need to onboard a new tenant for K-Flats, Apartment 3B."
 
-**Example AI Response (after using the tool):**
+**Example AI Response:**
 "Great! Here is the onboarding pack for your new tenant at K-Flats, Apartment 3B.
 
-1.  **Application Form:** Send this link to the applicant: [My Application Form]({{templateApplicationFormUrl}})
-2.  **Landlord Assessment:** Use your assessment form to review their application: [My Landlord Assessment Form]({{templateLandlordAssessmentFormUrl}})
-3.  **Tenancy Agreement:** Once approved, create the tenancy agreement using your master template: [My Tenancy Agreement]({{templateTenancyAgreementUrl}})
+1.  **Application Form:** Ensure the tenant has completed your standard application form.
+2.  **Landlord Assessment:** Review their details using your assessment criteria.
+3.  **Tenancy Agreement:** Draft the tenancy agreement and send it for signing.
+4.  **Move-in Checklist:** Schedule the move-in inspection and complete the checklist on the day.
 
-Once the agreement is signed, you can create the tenancy in PropTraka."
+Once signed and agreed, you can create the tenancy in PropTraka."
 `,
 });
 
 // Define the main flow that orchestrates the process.
-export const getOnboardingPackFlow = ai.defineFlow(
+const getOnboardingPackFlow = ai.defineFlow(
   {
     name: 'getOnboardingPackFlow',
     inputSchema: OnboardingPackInputSchema,
