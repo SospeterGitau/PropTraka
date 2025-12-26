@@ -56,8 +56,23 @@ export interface Tenant {
   emergencyContactName?: string;
   emergencyContactNumber?: string;
   notes?: string;
+  // Auth & Invite fields
+  authUserId?: string; // Linked AppUser ID once registered
+  invitationStatus?: 'Pending' | 'Accepted' | 'None';
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// Invitations Collection (NEW)
+export interface Invitation {
+  id?: string;
+  tenantId: string;
+  email: string;
+  token: string;
+  expiresAt: Timestamp;
+  used: boolean;
+  ownerId: string; // Landlord ID
+  createdAt: Timestamp;
 }
 
 // Tenancies Collection (NEW)
@@ -172,26 +187,66 @@ export interface AppUser {
   lastName?: string;
   phoneNumber?: string;
   profileImageUrl?: string;
-  role: 'Landlord' | 'Admin'; // e.g., for future features
+  role: 'Landlord' | 'Admin' | 'Tenant'; // e.g., for future features
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 // UserSettings Collection (Renamed from 'settings' for clarity and to avoid conflict)
+// UserSettings Collection (Renamed from 'settings' for clarity and to avoid conflict)
+export type ResidencyStatus = 'resident' | 'non-resident';
+
 export interface UserSettings {
   id?: string; // Firebase Auth UID (same as AppUser.id)
   ownerId: string; // Redundant if id is UID, but good for consistency
   currency: string; // e.g., 'USD', 'KES'
+  language: string; // e.g., 'en', 'sw'
   dateFormat: string; // e.g., 'MM/DD/YYYY', 'DD/MM/YYYY'
+  locale?: string; // Alias for dateFormat management
+
+  // Profile
+  role?: 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor';
+  portfolioSize?: '1-5' | '6-20' | '21-50' | '50+';
+  areasOfInterest?: string[];
+
+  // Billing
+  billingAddressLine1?: string;
+  billingAddressLine2?: string;
+  billingCity?: string;
+  billingCounty?: string;
+  billingPostalCode?: string;
+  billingCountry?: string;
+  vatPin?: string;
+
   companyName?: string;
+  residencyStatus?: ResidencyStatus;
+
+  isPnlReportEnabled?: boolean;
+  isMarketResearchEnabled?: boolean;
+
   theme: 'light' | 'dark' | 'system';
   emailNotificationsEnabled: boolean;
-  documentTemplates?: { // Object of template URLs
+
+  // Templates - Flattened or Nested? Keeping consistent with usage in profile-settings-tab
+  templateApplicationFormUrl?: string;
+  templateLandlordAssessmentFormUrl?: string;
+  templateTenancyAgreementUrl?: string;
+  templateMoveInChecklistUrl?: string;
+  templateMoveOutChecklistUrl?: string;
+
+  documentTemplates?: { // Object of template URLs - Keeping for backward compat if needed
     leaseAgreement?: string;
     applicationForm?: string;
-    // Add other common document template types
     [key: string]: string | undefined;
   };
+
+  // Subscription
+  subscription?: {
+    plan: string;
+    status: 'active' | 'inactive' | 'past_due';
+    nextBillingDate: string;
+  };
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

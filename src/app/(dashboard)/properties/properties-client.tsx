@@ -30,7 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth'; // Corrected import
 import { firestore } from '@/firebase'; // Corrected import
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Query, getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { useDataContext } from '@/context/data-context';
 import { createUserQuery } from '@/firebase/firestore/query-builder';
 import { formatCurrency } from '@/lib/utils';
@@ -117,7 +117,7 @@ export function PropertiesClient() {
             // Delete related documents first (tenancies, revenue, expenses, maintenance requests, app documents)
             // This is a simplified example; in a real app, you'd use Firebase Functions
             // to recursively delete subcollections and related data securely on the backend.
-            
+
             // Fetch and delete tenancies
             const tenanciesSnapshot = await getDocs(query(collection(firestore, 'tenancies'), where('propertyId', '==', propertyToDelete.id), where('ownerId', '==', user.uid)));
             const batch = writeBatch(firestore); // Use firestore directly
@@ -142,7 +142,7 @@ export function PropertiesClient() {
             // Delete the property itself
             batch.delete(doc(firestore, 'properties', propertyToDelete.id!)); // Use firestore directly
             await batch.commit();
-            
+
             setPropertyToDelete(null);
             setDeleteConfirmationOpen(false);
         } catch (e) {
@@ -205,7 +205,7 @@ export function PropertiesClient() {
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                     <KpiCard
+                    <KpiCard
                         icon={Home}
                         title="Total Properties"
                         value={totalProperties}
@@ -219,7 +219,7 @@ export function PropertiesClient() {
                         description="Estimated current market value"
                         formatAs="currency"
                     />
-                     <KpiCard
+                    <KpiCard
                         icon={Percent}
                         title="Average Occupancy"
                         value={averageOccupancyRate}
@@ -266,8 +266,8 @@ export function PropertiesClient() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the property 
-                            <span className="font-bold">{propertyToDelete?.name}</span> and all its associated data 
+                            This action cannot be undone. This will permanently delete the property
+                            <span className="font-bold">{propertyToDelete?.name}</span> and all its associated data
                             (tenancies, revenue, expenses, maintenance requests, and documents).
                         </AlertDialogDescription>
                     </AlertDialogHeader>

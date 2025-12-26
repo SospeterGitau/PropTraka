@@ -80,8 +80,8 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
       setEstimatedCost(request.estimatedCost || '');
       setNotes(request.notes || '');
     } else {
-        // Defaults for new request
-        if (!dueDate) setDueDate(new Date());
+      // Defaults for new request
+      if (!dueDate) setDueDate(new Date());
     }
   }, [request]);
 
@@ -97,126 +97,127 @@ export function MaintenanceForm({ isOpen, onClose, onSubmit, request, properties
       title,
       description,
       priority,
+      reportedDate: request?.reportedDate || format(new Date(), 'yyyy-MM-dd'),
       dueDate: dueDate ? format(dueDate, 'yyyy-MM-dd') : '',
       status: request?.status || 'pending',
       contractorId: contractorId || undefined,
-      contractorName: selectedContractor?.name,
+      contractorName: selectedContractor?.companyName,
       estimatedCost: estimatedCost ? Number(estimatedCost) : undefined,
       notes,
     };
 
     onSubmit(data);
     if (mode === 'dialog') {
-        onClose();
+      onClose();
     }
   };
 
   const FormContent = (
-      <form onSubmit={handleSubmit} className="space-y-4">
-          <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="details">Request Details</TabsTrigger>
-              <TabsTrigger value="assignment">Assignment & Cost</TabsTrigger>
-            </TabsList>
-            <div className={cn("py-4 px-1", mode === 'dialog' ? "max-h-[60vh] overflow-y-auto" : "")}>
-              <TabsContent value="details" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="propertyId">Property *</Label>
-                  <Select name="propertyId" value={propertyId} onValueChange={setPropertyId} required>
-                    <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
-                    <SelectContent>
-                      {properties.map(property => (
-                        <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g., Replace roof shingles" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required placeholder="Describe the maintenance needed..." />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority *</Label>
-                  <Select name="priority" value={priority} onValueChange={(v) => setPriority(v as any)} required>
-                    <SelectTrigger id="priority"><SelectValue placeholder="Select priority" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </TabsContent>
-              <TabsContent value="assignment" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="dueDate">Due Date *</Label>
-                  <DatePicker date={dueDate} setDate={setDueDate} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Contractor (optional)</Label>
-                  <Popover open={isContractorOpen} onOpenChange={setIsContractorOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={isContractorOpen} className="w-full justify-between">
-                        {contractorId ? contractors.find(c => c.id === contractorId)?.name : "Select a contractor..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                      <Command>
-                        <CommandInput placeholder="Search contractors..." />
-                        <CommandList>
-                          <CommandEmpty>No contractor found.</CommandEmpty>
-                          <CommandGroup>
-                            {contractors.map((c) => (
-                              <CommandItem
-                                key={c.id}
-                                value={c.name}
-                                onSelect={() => { setContractorId(c.id === contractorId ? "" : c.id); setIsContractorOpen(false); }}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />
-                                {c.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="estimatedCost">Estimated Cost (optional)</Label>
-                  <Input
-                    id="estimatedCost"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    prefixText={currencySymbol}
-                    value={estimatedCost}
-                    onChange={(e) => setEstimatedCost(e.target.value ? Number(e.target.value) : '')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes (optional)</Label>
-                  <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes..." />
-                </div>
-              </TabsContent>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Tabs defaultValue="details">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Request Details</TabsTrigger>
+          <TabsTrigger value="assignment">Assignment & Cost</TabsTrigger>
+        </TabsList>
+        <div className={cn("py-4 px-1", mode === 'dialog' ? "max-h-[60vh] overflow-y-auto" : "")}>
+          <TabsContent value="details" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="propertyId">Property *</Label>
+              <Select name="propertyId" value={propertyId} onValueChange={setPropertyId} required>
+                <SelectTrigger id="propertyId"><SelectValue placeholder="Select a property" /></SelectTrigger>
+                <SelectContent>
+                  {properties.map(property => (
+                    <SelectItem key={property.id} value={property.id}>{formatAddress(property)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </Tabs>
-          <div className={cn("pt-4 flex items-center gap-4", mode === 'dialog' ? "justify-end" : "justify-end border-t")}>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Save Request</Button>
-          </div>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g., Replace roof shingles" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required placeholder="Describe the maintenance needed..." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority *</Label>
+              <Select name="priority" value={priority} onValueChange={(v) => setPriority(v as MaintenanceRequest['priority'])} required>
+                <SelectTrigger id="priority"><SelectValue placeholder="Select priority" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </TabsContent>
+          <TabsContent value="assignment" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="dueDate">Due Date *</Label>
+              <DatePicker date={dueDate} setDate={setDueDate} locale={settings?.locale || 'en-GB'} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contractor (optional)</Label>
+              <Popover open={isContractorOpen} onOpenChange={setIsContractorOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" role="combobox" aria-expanded={isContractorOpen} className="w-full justify-between">
+                    {contractorId ? contractors.find(c => c.id === contractorId)?.companyName : "Select a contractor..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search contractors..." />
+                    <CommandList>
+                      <CommandEmpty>No contractor found.</CommandEmpty>
+                      <CommandGroup>
+                        {contractors.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.companyName}
+                            onSelect={() => { setContractorId(c.id === contractorId ? "" : c.id); setIsContractorOpen(false); }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", contractorId === c.id ? "opacity-100" : "opacity-0")} />
+                            {c.companyName}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="estimatedCost">Estimated Cost (optional)</Label>
+              <Input
+                id="estimatedCost"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                prefixText={currencySymbol}
+                value={estimatedCost}
+                onChange={(e) => setEstimatedCost(e.target.value ? Number(e.target.value) : '')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional notes..." />
+            </div>
+          </TabsContent>
+        </div>
+      </Tabs>
+      <div className={cn("pt-4 flex items-center gap-4", mode === 'dialog' ? "justify-end" : "justify-end border-t")}>
+        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button type="submit">Save Request</Button>
+      </div>
+    </form>
   );
 
   if (mode === 'page') {
-      return FormContent;
+    return FormContent;
   }
-  
+
   if (!isOpen) return null;
 
   return (

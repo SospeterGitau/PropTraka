@@ -43,27 +43,15 @@ export function MarketResearchDialog({ properties }: MarketResearchDialogProps) 
       setError(null);
 
       const propertiesToAnalyse = properties.map(
-        ({
-          id,
-          addressLine1,
-          city,
-          postalCode,
-          propertyType,
-          buildingType,
-          bedrooms,
-          bathrooms,
-          size,
-          sizeUnit,
-          rentalValue,
-        }) => ({
-          id,
-          address: `${addressLine1}, ${city}, ${postalCode}`,
-          propertyType,
-          buildingType,
-          bedrooms,
-          bathrooms,
-          size: size ? `${size} ${sizeUnit}` : undefined,
-          currentRent: rentalValue,
+        (property) => ({
+          id: property.id,
+          address: `${property.address.street}, ${property.address.city}, ${property.address.zipCode}`,
+          propertyType: property.type,
+          buildingType: property.type, // Fallback if buildingType missing or map correctly if available
+          bedrooms: property.bedrooms,
+          bathrooms: property.bathrooms,
+          size: property.squareFootage ? `${property.squareFootage} sqft` : undefined,
+          currentRent: property.targetRent,
         })
       );
 

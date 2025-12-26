@@ -1,12 +1,12 @@
 'use server';
 
-import {generateReportSummary} from '@/ai/flows/generate-report-summary';
-import {generatePnlReport as generatePnlReportFlow} from '@/ai/flows/generate-pnl-report';
-import {generateMarketResearch} from '@/ai/flows/generate-market-research';
-import {getChatResponse as getChatResponseFlow} from '@/ai/flows/get-chat-response-flow';
-import {categorizeExpense as categorizeExpenseFlow} from '@/ai/flows/categorize-expense-flow';
-import {generateReminderEmail as generateReminderEmailFlow} from '@/ai/flows/generate-reminder-email-flow';
-import {generateLeaseClause as generateLeaseClauseFlow} from '@/ai/flows/generate-lease-clause-flow';
+import { generateReportSummary } from '@/ai/flows/generate-report-summary';
+import { generatePnlReport as generatePnlReportFlow } from '@/ai/flows/generate-pnl-report';
+import { generateMarketResearch } from '@/ai/flows/generate-market-research';
+import { getChatResponse as getChatResponseFlow } from '@/ai/flows/get-chat-response-flow';
+import { categorizeExpense as categorizeExpenseFlow } from '@/ai/flows/categorize-expense-flow';
+import { generateReminderEmail as generateReminderEmailFlow } from '@/ai/flows/generate-reminder-email-flow';
+import { generateLeaseClause as generateLeaseClauseFlow } from '@/ai/flows/generate-lease-clause-flow';
 import { getOnboardingPack } from '@/ai/flows/get-onboarding-pack-flow';
 import type { GenerateReportSummaryOutput, GeneratePnlReportOutput, GeneratePnlReportInput, GenerateMarketResearchInput, GenerateMarketResearchOutput, KnowledgeArticle, CategorizeExpenseInput, CategorizeExpenseOutput, GenerateReminderEmailInput, GenerateReminderEmailOutput, GenerateLeaseClauseInput, GenerateLeaseClauseOutput, GetChatResponseInput, GetChatResponseOutput } from '@/lib/types';
 import type { Transaction } from '@/lib/types';
@@ -14,15 +14,15 @@ import { getFirebase } from '@/firebase/server-provider';
 
 
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
-  try {
-    let summary = '';
+    try {
+        let summary = '';
 
-    if (data.viewMode === 'year') {
-      const breakdown = data.chartData
-        .map((d: any) => `- ${d.name}: Projected ${d.projected}, Actual ${d.actual}`)
-        .join('\n');
-      
-      summary = `
+        if (data.viewMode === 'year') {
+            const breakdown = data.chartData
+                .map((d: any) => `- ${d.name}: Projected ${d.projected}, Actual ${d.actual}`)
+                .join('\n');
+
+            summary = `
 Analyse the financial report for the year ${data.period}.
 Overall Projected Revenue: ${data.projectedRevenue}
 Overall Actual Revenue: ${data.actualRevenue}
@@ -33,8 +33,8 @@ ${breakdown}
 
 Comment on the overall performance for the year and highlight any months that stand out as particularly good or bad.
 `;
-    } else { // month view
-      summary = `
+        } else { // month view
+            summary = `
 Analyse the financial report for the month of ${data.period}.
 Projected Revenue: ${data.projectedRevenue}
 Actual Revenue: ${data.actualRevenue}
@@ -42,17 +42,17 @@ Arrears (unpaid): ${data.totalArrears}
 
 Provide a concise analysis of this month's performance, focusing on the difference between projected and actual revenue and the significance of any arrears.
 `;
+        }
+
+        const result = await generateReportSummary({ summary });
+        return result;
+
+    } catch (error) {
+        console.error('Error generating report summary:', error);
+        return {
+            summary: 'Failed to generate summary. Please try again later.',
+        };
     }
-
-    const result = await generateReportSummary({ summary });
-    return result;
-
-  } catch (error) {
-    console.error('Error generating report summary:', error);
-    return {
-      summary: 'Failed to generate summary. Please try again later.',
-    };
-  }
 }
 
 
@@ -66,11 +66,11 @@ export async function getPnlReport(input: GeneratePnlReportInput): Promise<Gener
 
         const code =
             /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ? "RATE_LIMITED_OR_QUOTA" :
-            /SAFETY|blocked/i.test(msg) ? "SAFETY_BLOCKED" :
-            /deadline|timeout|504|UNAVAILABLE|503/i.test(msg) ? "MODEL_UNAVAILABLE_OR_TIMEOUT" :
-            /invalid|400|content too long|tokens/i.test(msg) ? "INVALID_REQUEST" :
-            "UNEXPECTED_ERROR";
-        
+                /SAFETY|blocked/i.test(msg) ? "SAFETY_BLOCKED" :
+                    /deadline|timeout|504|UNAVAILABLE|503/i.test(msg) ? "MODEL_UNAVAILABLE_OR_TIMEOUT" :
+                        /invalid|400|content too long|tokens/i.test(msg) ? "INVALID_REQUEST" :
+                            "UNEXPECTED_ERROR";
+
         return {
             report: null,
             error: code,
@@ -89,11 +89,11 @@ export async function getMarketResearch(input: GenerateMarketResearchInput): Pro
 
         const code =
             /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ? "RATE_LIMITED_OR_QUOTA" :
-            /SAFETY|blocked/i.test(msg) ? "SAFETY_BLOCKED" :
-            /deadline|timeout|504|UNAVAILABLE|503/i.test(msg) ? "MODEL_UNAVAILABLE_OR_TIMEOUT" :
-            /invalid|400|content too long|tokens/i.test(msg) ? "INVALID_REQUEST" :
-            "UNEXPECTED_ERROR";
-        
+                /SAFETY|blocked/i.test(msg) ? "SAFETY_BLOCKED" :
+                    /deadline|timeout|504|UNAVAILABLE|503/i.test(msg) ? "MODEL_UNAVAILABLE_OR_TIMEOUT" :
+                        /invalid|400|content too long|tokens/i.test(msg) ? "INVALID_REQUEST" :
+                            "UNEXPECTED_ERROR";
+
         return {
             report: null,
             error: code,
@@ -112,11 +112,11 @@ export async function getChatResponse(input: GetChatResponseInput): Promise<GetC
             const result = await getOnboardingPack({ query: input.question });
             return { answer: result.checklist };
         }
-        
+
         // If no keywords are matched, fall back to the general chat response
-        const result = await getChatResponseFlow(input);
+        const result = await getChatResponseFlow({ ...input, knowledgeBase: '' });
         return { answer: result.answer };
-        
+
     } catch (e: any) {
         console.error('Error in getChatResponse action:', e);
         return { answer: "I'm sorry, I encountered an error and couldn't process your request. Please try again." };
@@ -139,7 +139,7 @@ export async function generateReminderEmail(input: GenerateReminderEmailInput): 
         return result;
     } catch (e: any) {
         console.error('Error generating reminder email:', e);
-        return { 
+        return {
             subject: 'Overdue Rent Reminder',
             body: 'An error occurred while generating this email. Please try again.'
         };
@@ -152,7 +152,7 @@ export async function generateLeaseClause(input: GenerateLeaseClauseInput): Prom
         return result;
     } catch (e: any) {
         console.error('Error generating lease clause:', e);
-        return { 
+        return {
             clause: 'An error occurred while generating this clause. Please check the prompt and try again. The AI may be unable to generate content for the requested topic.',
             explanation: 'Error occurred during generation'
         };
@@ -162,37 +162,37 @@ export async function generateLeaseClause(input: GenerateLeaseClauseInput): Prom
 export async function addTransaction(transaction: Omit<Transaction, 'id'> | Transaction) {
     try {
         const { firestore, auth } = await getFirebase();
-        
+
         // This is a simplified check. In production, you'd want to check if the user is authenticated
         // and has permission to add transactions.
         // For now, since this is called from a server action which can be called by anyone, 
         // we should probably check if there is a way to get the current user context.
         // However, 'firebase-admin' doesn't automatically know the user.
         // Usually, you pass the ID token or user ID to the server action.
-        
+
         // Assuming the transaction object contains the ownerId or we can default it for now
         // If ownerId is missing, we might need to handle it.
-        
+
         // For this specific error fix, we just need to ensure the function exists and works.
         // We will just return success for now as the actual implementation of adding to firestore
         // might require proper user context which is usually handled in client-side calls directly to Firestore
         // or by passing a token.
-        
+
         // If the client was using direct firestore access before, we might want to stick to that pattern
         // but the error message implies that the client code is trying to import `addTransaction` from `@/lib/actions`.
-        
+
         console.log("Add transaction called", transaction);
-        
+
         // Let's try to add it to a 'transactions' collection if we can
         if (transaction.ownerId) {
-             await firestore.collection('transactions').add({
-                 ...transaction,
-                 createdAt: new Date().toISOString() // Use string for date to match types
-             });
+            await firestore.collection('transactions').add({
+                ...transaction,
+                createdAt: new Date().toISOString() // Use string for date to match types
+            });
         } else {
             console.warn("No ownerId provided for transaction");
         }
-        
+
         return { success: true };
     } catch (error) {
         console.error("Error adding transaction", error);

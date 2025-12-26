@@ -1,12 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 
 body {
-  font-family: 'PT Sans', sans-serif;
+  /* Font family managed by next/font */
 }
 
 @layer base {
@@ -39,7 +37,7 @@ body {
     --input: 240 5.9% 90%;
     --ring: 217 91% 60%;
  
-    --radius: 0.4rem;
+    --radius: 0.75rem;
 
     --chart-1: 217 91% 60%; /* Blue for Revenue / Net Income */
     --chart-2: 0 72% 51%; /* Red for Expenses / Loss */

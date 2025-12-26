@@ -42,17 +42,17 @@ export default function SubscriptionBillingTab() {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-    
-    const currentPlanName = settings.subscription?.plan || 'Starter';
-  
+
+    const currentPlanName = settings?.subscription?.plan || 'Starter';
+
     const handleChoosePlan = (planName: string) => {
-        if(planName === currentPlanName) return;
+        if (planName === currentPlanName) return;
 
         startTransition(async () => {
-          toast({
-              title: "Confirm Subscription",
-              description: `This is where you would integrate with IntaSend to change the plan to ${planName}.`,
-          });
+            toast({
+                title: "Confirm Subscription",
+                description: `This is where you would integrate with IntaSend to change the plan to ${planName}.`,
+            });
         });
     }
 
@@ -80,7 +80,7 @@ export default function SubscriptionBillingTab() {
     if (ungroupedFeatures.length > 0) {
         featureGroups.push({ name: "Other", features: ungroupedFeatures.map(f => f.id) });
     }
-  
+
     return (
         <div className="space-y-8">
             <div className="text-center">
@@ -94,8 +94,8 @@ export default function SubscriptionBillingTab() {
                     <ToggleGroupItem value="yearly">Yearly (Save 15%)</ToggleGroupItem>
                 </ToggleGroup>
             </div>
-            
-             <div className="w-full overflow-x-auto">
+
+            <div className="w-full overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent">
@@ -105,10 +105,10 @@ export default function SubscriptionBillingTab() {
                                 const isMostPopular = plan.name === 'Professional';
                                 return (
                                     <TableHead key={plan.id} className={cn("w-[220px] p-4 text-center border-l", isCurrent && "bg-primary/10")}>
-                                       <div className="flex flex-col items-center justify-start h-full">
+                                        <div className="flex flex-col items-center justify-start h-full">
                                             <div className="flex flex-col items-center justify-center h-8">
                                                 {isMostPopular ? (
-                                                     <Badge variant="secondary" className="font-semibold">
+                                                    <Badge variant="secondary" className="font-semibold">
                                                         <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-500" />
                                                         Most Popular
                                                     </Badge>

@@ -41,10 +41,10 @@ type KanbanColumnProps = {
 
 
 const statusConfig = {
-  'To Do': { icon: Circle, color: 'text-gray-500' },
-  'In Progress': { icon: Clock, color: 'text-blue-500' },
-  'Done': { icon: CheckCircle, color: 'text-green-500' },
-  'Cancelled': { icon: XCircle, color: 'text-red-500' },
+  'reported': { icon: Circle, color: 'text-gray-500', label: 'To Do' },
+  'in-progress': { icon: Clock, color: 'text-blue-500', label: 'In Progress' },
+  'completed': { icon: CheckCircle, color: 'text-green-500', label: 'Done' },
+  'on-hold': { icon: XCircle, color: 'text-red-500', label: 'Cancelled' },
 } as const;
 
 
@@ -57,74 +57,74 @@ const priorityColors = {
 
 const DONE_STATUS = 'Done' as const;
 
-function KanbanCard({ 
-    request, 
-    onEdit, 
-    onDelete, 
-    onCreateExpense,
-    onStatusChange, 
-    formattedDate 
-}: { 
-    request: MaintenanceRequest;
-    onEdit: (request: MaintenanceRequest) => void;
-    onDelete: (request: MaintenanceRequest) => void;
-    onCreateExpense: (request: MaintenanceRequest) => void;
-    onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
-    formattedDate: string;
+function KanbanCard({
+  request,
+  onEdit,
+  onDelete,
+  onCreateExpense,
+  onStatusChange,
+  formattedDate
+}: {
+  request: MaintenanceRequest;
+  onEdit: (request: MaintenanceRequest) => void;
+  onDelete: (request: MaintenanceRequest) => void;
+  onCreateExpense: (request: MaintenanceRequest) => void;
+  onStatusChange: (request: MaintenanceRequest, newStatus: MaintenanceRequest['status']) => void;
+  formattedDate: string;
 }) {
   return (
     <Card>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start">
-            <CardTitle className="text-base font-semibold leading-tight pr-2">
-              {request.propertyId ? (
-                <Link href={`/properties/${request.propertyId}`} className="hover:underline">
-                  {request.propertyName}
-                </Link>
-              ) : (
-                request.propertyName
-              )}
-            </CardTitle>
-            <DropdownMenu>
+          <CardTitle className="text-base font-semibold leading-tight pr-2">
+            {request.propertyId ? (
+              <Link href={`/properties/${request.propertyId}`} className="hover:underline">
+                {request.propertyName}
+              </Link>
+            ) : (
+              request.propertyName
+            )}
+          </CardTitle>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button aria-haspopup="true" size="icon" variant="ghost" className="h-6 w-6 shrink-0">
+              <Button aria-haspopup="true" size="icon" variant="ghost" className="h-6 w-6 shrink-0">
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="sr-only">Toggle menu</span>
-                </Button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onSelect={() => onEdit(request)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Request
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Change Status</DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      {Object.keys(statusConfig).map(status => (
-                        <DropdownMenuItem 
-                          key={status} 
-                          onSelect={() => onStatusChange(request, status as MaintenanceRequest['status'])}
-                          disabled={request.status === status}
-                        >
-                          {status}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={(request.status as string) === DONE_STATUS}>
-                    <FilePlus2 className="mr-2 h-4 w-4" />
-                    Create Expense
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => onDelete(request)} className="text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Request
-                </DropdownMenuItem>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onSelect={() => onEdit(request)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Request
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change Status</DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {Object.keys(statusConfig).map(status => (
+                      <DropdownMenuItem
+                        key={status}
+                        onSelect={() => onStatusChange(request, status as MaintenanceRequest['status'])}
+                        disabled={request.status === status}
+                      >
+                        {status}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              <DropdownMenuItem onSelect={() => onCreateExpense(request)} disabled={(request.status as string) === DONE_STATUS}>
+                <FilePlus2 className="mr-2 h-4 w-4" />
+                Create Expense
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onDelete(request)} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Request
+              </DropdownMenuItem>
             </DropdownMenuContent>
-            </DropdownMenu>
+          </DropdownMenu>
         </div>
         <p className="text-sm text-muted-foreground mt-1">{request.description}</p>
       </CardHeader>
@@ -132,7 +132,7 @@ function KanbanCard({
         <Badge className={cn("text-xs border", priorityColors[request.priority as keyof typeof priorityColors] || priorityColors.medium)}>{request.priority}</Badge>
         <div className="flex items-center gap-2 text-muted-foreground">
           {request.contractorName && (
-             <TooltipProvider>
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
                   <User className="h-4 w-4" />
@@ -152,31 +152,32 @@ function KanbanCard({
 
 
 function KanbanColumn({ title, requests, onEditRequest, onDeleteRequest, onCreateExpense, onStatusChange, formattedDates, isFocused, onFocus }: KanbanColumnProps) {
-  const config = statusConfig[(title as unknown) as keyof typeof statusConfig];
+  const config = statusConfig[title];
   const Icon = config?.icon || Circle;
   const color = config?.color || 'text-gray-500';
-  
+  const label = config?.label || title;
+
   return (
     <div className={cn("flex flex-col gap-4 transition-all duration-300", isFocused ? "flex-[4]" : "flex-[1] min-w-[200px]")}>
-      <button 
+      <button
         className="flex items-center gap-2 px-1 rounded-md py-1 -mx-1 hover:bg-muted transition-colors"
         onClick={onFocus}
       >
         <Icon className={cn("w-5 h-5", color)} />
-        <h2 className="font-semibold text-lg">{title}</h2>
+        <h2 className="font-semibold text-lg">{label}</h2>
         <Badge variant="secondary" className="rounded-full">{requests.length}</Badge>
       </button>
       <div className={cn("bg-muted/50 rounded-lg p-2 flex-1 flex flex-col gap-4 h-full min-h-[150px] overflow-x-hidden overflow-y-auto", !isFocused && "opacity-50")}>
         {requests.length > 0 ? (
           requests.map(request => (
-            <KanbanCard 
-                key={request.id} 
-                request={request}
-                onEdit={onEditRequest}
-                onDelete={onDeleteRequest}
-                onCreateExpense={onCreateExpense}
-                onStatusChange={onStatusChange}
-                formattedDate={formattedDates[request.id] || ''}
+            <KanbanCard
+              key={request.id}
+              request={request}
+              onEdit={onEditRequest}
+              onDelete={onDeleteRequest}
+              onCreateExpense={onCreateExpense}
+              onStatusChange={onStatusChange}
+              formattedDate={formattedDates[request.id] || ''}
             />
           ))
         ) : (
@@ -219,17 +220,17 @@ export function MaintenanceKanbanBoard({
       const localeData = await getLocale(locale);
       const newFormattedDates: Record<string, string> = {};
       for (const item of requests) {
-        newFormattedDates[item.id] = format(new Date((item as any).reportedDate), 'MMM dd', { locale: localeData });
+        newFormattedDates[item.id] = format(new Date(item.reportedDate), 'MMM dd', { locale: localeData });
       }
       setFormattedDates(newFormattedDates);
     };
     if (requests.length > 0) {
-        formatAllDates();
+      formatAllDates();
     }
   }, [requests, locale]);
 
 
-  const columns = (['To Do', 'In Progress', 'Done', 'Cancelled'] as const).map(status => status as MaintenanceRequest['status']);
+  const columns: MaintenanceRequest['status'][] = ['reported', 'in-progress', 'completed', 'on-hold'];
 
 
   const requestsByStatus = requests.reduce((acc, request) => {
@@ -245,7 +246,7 @@ export function MaintenanceKanbanBoard({
   const handleFocus = (status: MaintenanceRequest['status']) => {
     setFocusedColumn(status);
   };
-  
+
   const clearFocus = () => {
     setFocusedColumn(null);
   }

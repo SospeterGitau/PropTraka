@@ -12,13 +12,51 @@ export interface SettingsTab {
   component: React.ComponentType;
 }
 
-export type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD';
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'AUD' | 'KES';
+export type ResidencyStatus = 'resident' | 'non-resident';
 
 export interface UserSettings {
   currency: Currency;
   language: string;
   dateFormat: string;
   theme: 'light' | 'dark' | 'system';
+
+  // Profile
+  role?: 'Individual Landlord' | 'Property Manager' | 'Real Estate Agent' | 'Investor';
+  portfolioSize?: '1-5' | '6-20' | '21-50' | '50+';
+  areasOfInterest?: string[];
+
+  // Billing
+  billingAddressLine1?: string;
+  billingAddressLine2?: string;
+  billingCity?: string;
+  billingCounty?: string;
+  billingPostalCode?: string;
+  billingCountry?: string;
+  vatPin?: string;
+
+  // Templates
+  templateApplicationFormUrl?: string;
+  templateLandlordAssessmentFormUrl?: string;
+  templateTenancyAgreementUrl?: string;
+  templateMoveInChecklistUrl?: string;
+  templateMoveOutChecklistUrl?: string;
+
+  // Reporting
+  companyName?: string;
+  residencyStatus?: 'resident' | 'non-resident'; // or ResidencyStatus if exported
+  isPnlReportEnabled?: boolean;
+  isMarketResearchEnabled?: boolean;
+
+  // Locale
+  locale?: string;
+
+  // Subscription
+  subscription?: {
+    plan: string;
+    status: 'active' | 'inactive' | 'past_due';
+    nextBillingDate: string;
+  };
 }
 
 export interface UserData {
@@ -27,6 +65,20 @@ export interface UserData {
   displayName?: string | null;
   photoURL?: string | null;
   subscriptionPlan?: string;
+}
+
+export interface GenerateReportSummaryOutput {
+  summary: string;
+  error?: string;
+}
+
+export interface GetChatResponseInput {
+  question: string;
+  context?: any;
+}
+
+export interface GetChatResponseOutput {
+  answer: string;
 }
 
 // AI Flow Types
@@ -89,7 +141,6 @@ export interface CategorizeExpenseInput {
 
 export interface CategorizeExpenseOutput {
   category: string;
-  confidenceScore: number;
 }
 
 export interface GenerateReminderEmailInput {
@@ -203,23 +254,31 @@ export interface Transaction {
   type: 'income' | 'expense';
   category: string;
   description?: string;
+  ownerId?: string;
 }
 
 export interface MaintenanceRequest {
   id: string;
   propertyId: string;
+  title?: string;
   description: string;
-  status: 'reported' | 'in-progress' | 'completed' | 'on-hold';
+  status: 'reported' | 'in-progress' | 'completed' | 'on-hold' | 'pending';
   reportedDate: string;
+  dueDate?: string;
   completedDate?: string;
   priority: 'low' | 'medium' | 'high';
   cost?: number;
+  estimatedCost?: number;
   contractorId?: string;
+  propertyName?: string;
+  contractorName?: string;
+  notes?: string;
 }
 
 export interface Contractor {
   id: string;
-  name: string;
+  companyName: string; // Changed from name
+  name: string;      // Kept for backward compatibility if needed, or alias companyName
   specialty: string;
   contactNumber: string;
   email?: string;
@@ -245,6 +304,6 @@ export interface ArrearsSummary {
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  price: number;
+  price: number | null;
   features: string[];
 }
