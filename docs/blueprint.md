@@ -11,6 +11,7 @@
 - Expense Tracking: Record expenses related to each property, including date, amount, category, and vendor.
 - Arrears Management: Automatically calculate and display arrears for each tenant and property based on payment history.
 - **Maintenance Kanban**: Visual board to manage maintenance requests (To Do, In Progress, Done).
+- **Tenant Portal**: Dedicated interface for tenants to view lease details, payment history, and report maintenance issues.
 
 ## Style Guidelines:
 
