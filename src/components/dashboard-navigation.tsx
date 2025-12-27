@@ -49,6 +49,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
   const addMenuItems = [
     { href: '/properties?action=add', label: 'New Property', icon: Home },
     { href: '/revenue/add', label: 'New Tenancy', icon: FileText },
+    { href: '/payments/add', label: 'Log Payment', icon: TrendingUp }, // Added for Vital Few
     { href: '/expenses/add', label: 'New Expense', icon: TrendingUp }
   ];
 

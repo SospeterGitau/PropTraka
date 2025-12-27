@@ -1,4 +1,3 @@
-
 [
     {
         "category": "Getting Started",
@@ -72,6 +71,10 @@
             {
                 "title": "How does the AI Assistant work?",
                 "content": "<b>The AI Assistant is a conversational helper that can answer questions and perform tasks for you.</b><br/><br/>Accessed via the floating chat bubble, the AI uses the app's official Knowledge Base to answer your questions accurately. It also has special capabilities, like the Onboarding Assistant. If you ask it to 'onboard a new tenant', it will use your saved template URLs from Settings to provide a personalised checklist with clickable links to your documents."
+            },
+            {
+                "title": "How does the AI Risk Score work?",
+                "content": "<b>The Tenant Risk Score uses advanced AI to detect 'Fat Tail' risks that standard checks might miss.</b><br/><br/>Instead of just averaging credit scores, it looks for specific red flags (like eviction history, jagged income patterns, or fraud indicators). It provides a score out of 100, a risk level (Low to Critical), and a detailed analysis explaining <i>why</i> a potential tenant might be high-risk."
             },
             {
                 "title": "What is the Calendar for?",

@@ -22,6 +22,13 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { PropertyForm } from '@/components/property-form';
 import { PlusCircle, Loader2, Home, BarChart2, TrendingUp, AlertCircle, Percent } from 'lucide-react';
@@ -61,7 +68,22 @@ export function PropertiesClient() {
     const [propertiesSnapshot, loading, error] = useCollection(propertiesQuery);
 
     // Use properties from DataContext which is already filtered by ownerId and live-synced
+    const ITEMS_PER_PAGE = 12;
+    const [currentPage, setCurrentPage] = useState(1);
+
     const properties = dataContextProperties;
+    const totalPages = Math.ceil(properties.length / ITEMS_PER_PAGE);
+
+    // Reset page if data changes significantly or filter changes
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) setCurrentPage(totalPages);
+    }, [totalPages, currentPage]);
+
+    const paginatedProperties = useMemo(() => {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        return properties.slice(start, start + ITEMS_PER_PAGE);
+    }, [properties, currentPage]);
+
     const propertiesLoading = dataContextLoading;
     const propertiesError = dataContextError || error;
 
@@ -227,7 +249,7 @@ export function PropertiesClient() {
                         formatAs="percent"
                     />
 
-                    {properties.map((property) => (
+                    {paginatedProperties.map((property) => (
                         <Card key={property.id} className="relative group">
                             <CardHeader className="flex flex-row items-center justify-between pb-2">
                                 <div className="flex items-center space-x-2">
@@ -258,9 +280,31 @@ export function PropertiesClient() {
                             </CardContent>
                         </Card>
                     ))}
+
+                    {/* Pagination Controls - Inside Grid (col-span-full) */}
+                    {totalPages > 1 && (
+                        <div className="col-span-full flex justify-center space-x-2 mt-8">
+                            <Button
+                                variant="outline"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <span className="flex items-center text-sm text-muted-foreground">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
-
             <AlertDialog open={deleteConfirmationOpen} onOpenChange={setDeleteConfirmationOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -278,27 +322,29 @@ export function PropertiesClient() {
                             Delete Property
                         </AlertDialogAction>
                     </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                </AlertDialogContent >
+            </AlertDialog >
 
-            {isFormOpen && (
-                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                    <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
-                        <DialogHeader>
-                            <DialogTitle>{editingProperty ? 'Edit Property' : 'Add New Property'}</DialogTitle>
-                            <DialogDescription>
-                                {editingProperty ? 'Update the details of your property.' : 'Fill in the details to add a new property to your portfolio.'}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <PropertyForm
-                            initialData={editingProperty}
-                            onSubmit={handleSubmitForm}
-                            onCancel={() => setIsFormOpen(false)}
-                            isSubmitting={isSubmitting}
-                        />
-                    </DialogContent>
-                </Dialog>
-            )}
-        </div>
+            {
+                isFormOpen && (
+                    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                        <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
+                            <DialogHeader>
+                                <DialogTitle>{editingProperty ? 'Edit Property' : 'Add New Property'}</DialogTitle>
+                                <DialogDescription>
+                                    {editingProperty ? 'Update the details of your property.' : 'Fill in the details to add a new property to your portfolio.'}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <PropertyForm
+                                initialData={editingProperty}
+                                onSubmit={handleSubmitForm}
+                                onCancel={() => setIsFormOpen(false)}
+                                isSubmitting={isSubmitting}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                )
+            }
+        </div >
     );
 }

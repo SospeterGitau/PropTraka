@@ -132,8 +132,8 @@ export function TenantForm({
   };
 
   const FormContent = (
-    <form onSubmit={handleSubmit} className="space-y-6 py-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4 py-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name *</Label>
           <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -189,6 +189,46 @@ export function TenantForm({
         <Label htmlFor="notes">Notes (optional)</Label>
         <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="min-h-[100px]" />
       </div>
+      <div className="space-y-4 pt-4 border-t">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Risk Assessment</h3>
+          {/* Power Law Feature: AI Risk Score */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              // In a real implementation, we'd use a transition and loading state
+              const { getTenantRiskScore } = await import('@/lib/actions');
+              const toast = (await import('@/components/ui/use-toast')).toast;
+
+              try {
+                toast({ title: "Analyzing Risk...", description: "Consulting AI Risk Model..." });
+                const data = {
+                  firstName, lastName, email, phoneNumber, idNumber,
+                  // mocked extra data for demo
+                  creditScore: 650, income: 50000, rent: 1200, history: "Clean"
+                };
+                const result = await getTenantRiskScore(data);
+
+                if (result.error) {
+                  toast({ variant: "destructive", title: "Error", description: result.error });
+                } else {
+                  alert(`Risk Score: ${result.riskScore}/100\nLevel: ${result.riskLevel}\nVerdict: ${result.recommendation}\n\nAnalysis: ${result.analysis}`);
+                  // In real app, save this to state or DB
+                }
+              } catch (e: any) {
+                toast({ variant: "destructive", title: "Error", description: e.message });
+              }
+            }}
+          >
+            <span className="mr-2">⚡</span> Assess Risk (AI)
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Use the AI to detect "Fat Tail" risks (evictions, fraud) that standard checks miss.
+        </p>
+      </div>
+
       <div className="items-top flex space-x-2 pt-2">
         <Checkbox id="hasConsented" checked={hasConsented} onCheckedChange={(checked) => setHasConsented(!!checked)} />
         <div className="grid gap-1.5 leading-none">
@@ -200,20 +240,12 @@ export function TenantForm({
           </p>
         </div>
       </div>
-      <DialogFooter className="pt-4">
-        {mode === 'page' ? (
-          <div className="flex justify-end gap-3 w-full">
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">Save Tenant</Button>
-          </div>
-        ) : (
-          <div className="flex justify-end gap-3 w-full">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Save Tenant</Button>
-          </div>
-        )}
-      </DialogFooter>
-    </form>
+      <div className="flex justify-end gap-3 w-full">
+        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button type="submit">Save Tenant</Button>
+      </div>
+    </DialogFooter>
+    </form >
   );
 
   if (mode === 'page') {

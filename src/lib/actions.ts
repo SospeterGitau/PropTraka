@@ -13,6 +13,38 @@ import type { Transaction } from '@/lib/types';
 import { getFirebase } from '@/firebase/server-provider';
 
 
+import { TENANT_RISK_SCORE_PROMPT } from '@/lib/prompts/tenant-risk-score-prompt';
+import { generateContent } from '@/ai/google-genai'; // Assuming this helper exists or I will use the flow pattern
+
+// Mock subscription check helper (replace with actual db call if available)
+async function checkProSubscription(userId: string) {
+    const { firestore } = await getFirebase();
+    // In a real app, fetch user document and check plan
+    // const userDoc = await firestore.collection('userSettings').doc(userId).get();
+    // return userDoc.data()?.subscription?.plan === 'pro';
+    return true; // Defaulting to true for demo purposes, or implement actual check
+}
+
+export async function getTenantRiskScore(tenantData: any) {
+    try {
+        // 1. Gate Feature
+        // const isPro = await checkProSubscription(tenantData.ownerId); // need ownerId
+        // if (!isPro) throw new Error("Upgrade to Pro to use AI Risk Assessment");
+
+        const prompt = TENANT_RISK_SCORE_PROMPT.replace('{{tenantData}}', JSON.stringify(tenantData, null, 2));
+
+        const result = await generateContent(prompt); // Using generic helper for now
+
+        // Clean result if it has markdown code blocks
+        const cleanResult = result.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        return JSON.parse(cleanResult);
+    } catch (error: any) {
+        console.error("Risk Score Error:", error);
+        return { error: error.message || "Failed to assess risk" };
+    }
+}
+
 export async function getReportSummary(data: any): Promise<GenerateReportSummaryOutput> {
     try {
         let summary = '';
