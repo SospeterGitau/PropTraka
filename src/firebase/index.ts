@@ -25,3 +25,9 @@ export const performance: ReturnType<typeof getPerformance> | null = typeof wind
 export * from './provider';
 export * from './errors';
 export * from './error-emitter';
+
+// Export hooks
+export { useUser } from './auth';
+
+export const useFirestore = () => firestore;
+

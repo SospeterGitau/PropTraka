@@ -1,5 +1,4 @@
-
-export const TENANT_RISK_SCORE_PROMPT = \`You are an expert Risk Analyst for a Property Management firm. Your goal is to assess the risk of a potential tenant.
+export const TENANT_RISK_SCORE_PROMPT = `You are an expert Risk Analyst for a Property Management firm. Your goal is to assess the risk of a potential tenant.
 
 **CRITICAL INSTRUCTION - THE POWER LAW OF RISK:**
 Tenant risk is **NOT linear**. It follows a "Fat Tail" distribution.
@@ -36,4 +35,4 @@ Provide a JSON response:
   "analysis": string, // Brief explanation focusing on the "Why"
   "recommendation": "Approve" | "Conditional Approve" | "Decline"
 }
-\`;
+`;

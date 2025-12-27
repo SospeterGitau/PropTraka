@@ -123,5 +123,22 @@
                 "content": "<b>The Activity Feed provides a complete audit trail of all actions taken in your account.</b><br/><br/>Accessible from the 'More' page, this feed shows a timestamped, chronological list of events like new properties, updated tenancies, logged expenses, and status changes on maintenance requests, making it easy to review all recent activity."
             }
         ]
+    },
+    {
+        "category": "Tenant Portal",
+        "questions": [
+            {
+                "title": "What is the Tenant Portal?",
+                "content": "<b>The Tenant Portal is a dedicated space for your tenants to manage their tenancy.</b><br/><br/>It allows tenants to log in securely, view their lease details, check their payment history, download documents, and report maintenance issues directly. This reduces the need for back-and-forth emails and phone calls."
+            },
+            {
+                "title": "How do tenants access the portal?",
+                "content": "<b>Tenants receive an invitation email with a unique link to activate their account.</b><br/><br/>Once you invite a tenant from the 'Tenants' page, they can set a password and log in at the portal URL (e.g., <code>/portal/login</code>). You can see the status of their invitation (Pending/Accepted) in your tenant list."
+            },
+            {
+                "title": "Can tenants pay rent through the portal?",
+                "content": "<b>Yes, if you have enabled payment details.</b><br/><br/>The portal displays your payment instructions (e.g., Paybill/Account Number). While direct payment gateway integration is coming soon, tenants can currently view how much they owe and follow your instructions to pay via mobile money or bank transfer."
+            }
+        ]
     }
 ]

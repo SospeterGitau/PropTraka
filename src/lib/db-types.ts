@@ -59,6 +59,24 @@ export interface Tenant {
   // Auth & Invite fields
   authUserId?: string; // Linked AppUser ID once registered
   invitationStatus?: 'Pending' | 'Accepted' | 'None';
+
+  // Identity 2.0 Fields
+  verificationStatus?: 'Unverified' | 'Pending' | 'Verified' | 'Rejected';
+  trustScore?: number; // 0-100 indicating confidence level
+  identityDocuments?: {
+    type: 'ID_FRONT' | 'ID_BACK' | 'PASSPORT' | 'SELFIE';
+    url: string;
+    status: 'Pending' | 'Verified' | 'Rejected';
+    uploadedAt: Timestamp;
+  }[];
+  worldIdHash?: string; // Store nullifier hash if World ID verified
+  vouchingRequests?: {
+    voucherEmail: string;
+    status: 'Pending' | 'Accepted' | 'Rejected';
+    relationship: 'Employer' | 'Previous Landlord' | 'Other';
+    requestedAt: Timestamp;
+  }[];
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -8,7 +8,13 @@ import { ContractorForm } from '@/components/contractor-form';
 import type { Contractor } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const DynamicContractorForm = dynamic(() => import('@/components/contractor-form').then(mod => mod.ContractorForm), {
+  loading: () => <div className="p-8 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></div>,
+  ssr: false
+});
 
 export default function AddContractorPage() {
   const router = useRouter();
@@ -47,12 +53,12 @@ export default function AddContractorPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-           <ContractorForm
-              isOpen={true}
-              onClose={handleBack}
-              onSubmit={handleAddContractor}
-              mode="page"
-            />
+          <DynamicContractorForm
+            isOpen={true}
+            onClose={handleBack}
+            onSubmit={handleAddContractor}
+            mode="page"
+          />
         </CardContent>
       </Card>
     </div>

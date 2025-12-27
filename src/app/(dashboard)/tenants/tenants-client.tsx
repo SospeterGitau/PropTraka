@@ -8,11 +8,16 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Search, Mail, User, Phone } from 'lucide-react';
+import { PlusCircle, Search, Mail, User, Phone, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useDataContext } from '@/context/data-context';
 import { InviteTenantDialog } from '@/components/invite-tenant-dialog';
-import { TenantForm } from '@/components/tenant-form';
+import dynamic from 'next/dynamic';
+
+const TenantForm = dynamic(() => import('@/components/tenant-form').then(mod => mod.TenantForm), {
+    loading: () => <div className="p-8 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></div>,
+    ssr: false
+});
 import {
     Dialog,
     DialogContent,

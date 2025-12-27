@@ -20,7 +20,14 @@ PropTraka is a modern, AI-powered property management application designed for l
 
 ### 📱 User-Centric Design
 *   **Vital Few Navigation:** high-frequency actions (Log Payment, Add Property) are always one click away.
+*   **Vital Few Navigation:** high-frequency actions (Log Payment, Add Property) are always one click away.
 *   **Mobile First:** Fully responsive design for management on the go.
+*   **Tenant Portal:** Dedicated space for tenants to view lease details, pay rent, and report issues. <span class="badge badge-new">New</span>
+
+## 🚀 Performance Optimizations
+*   **Code Splitting:** Heavy components (Charts, Maps, complex Forms) are lazy-loaded to reduce initial bundle size.
+*   **Tree Shaking:** Optimized package imports for `recharts`, `lucide-react`, and `date-fns`.
+*   **Core Web Vitals:** Optimized for LCP and CLS to ensure a snappy user experience.
 
 ## Tech Stack
 *   **Framework:** Next.js 16 (App Router)

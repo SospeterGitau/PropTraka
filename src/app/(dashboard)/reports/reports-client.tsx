@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, memo, useMemo } from 'react';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subMonths, addMonths, subYears, addYears, isSameMonth, isSameYear, eachMonthOfInterval, startOfYear, endOfYear, differenceInCalendarMonths, startOfMonth, endOfMonth, isAfter } from 'date-fns';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -17,8 +16,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, CircleAlert } from 'lucide-react';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import dynamic from 'next/dynamic';
+
+const ReportsRevenueChart = dynamic(() => import('@/components/dashboard/reports-revenue-chart').then(mod => mod.ReportsRevenueChart), {
+  loading: () => <Skeleton className="h-[350px] w-full" />,
+  ssr: false
+});
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurrencyIcon } from '@/components/currency-icon';
@@ -55,7 +59,7 @@ function RevenueAnalysisTab() {
 
   const revenueQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'revenue', user.uid) : null, [firestore, user?.uid]);
   const propertiesQuery = useMemo(() => user?.uid ? createUserQuery(firestore, 'properties', user.uid) : null, [firestore, user?.uid]);
-  
+
   const [revenueSnapshot, isRevenueLoading] = useCollection<Transaction>(revenueQuery as Query<Transaction> | null);
   const [propertiesSnapshot, isPropertiesLoading] = useCollection<Property>(propertiesQuery as Query<Property> | null);
 
@@ -69,9 +73,9 @@ function RevenueAnalysisTab() {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   };
   const formatCurrencyForAxis = (amount: number) => {
-      if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-      if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
-      return amount.toString();
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+    return amount.toString();
   };
 
   useEffect(() => {
@@ -85,11 +89,11 @@ function RevenueAnalysisTab() {
   };
 
   const handleNext = () => {
-     if (currentDate) {
+    if (currentDate) {
       setCurrentDate(viewMode === 'month' ? addMonths(currentDate, 1) : addYears(currentDate, 1));
     }
   };
-  
+
   const handleViewChange = (value: string) => {
     if (value === 'month' || value === 'year') {
       setViewMode(value as ViewMode);
@@ -130,7 +134,7 @@ function RevenueAnalysisTab() {
   );
 
   const vacantProperties = properties.filter(p => !activeTenancyPropertyIds.has(p.id));
-  
+
   let vacancyLoss = 0;
   let potentialRentFromVacant = 0;
   const monthsInPeriod = differenceInCalendarMonths(periodEnd, periodStart) + 1;
@@ -147,22 +151,22 @@ function RevenueAnalysisTab() {
     const transactionDate = new Date(t.date || new Date());
     return transactionDate >= periodStart && transactionDate <= periodEnd;
   });
-  
+
   const creditLoss = filteredTransactions.reduce((acc, t) => acc + ((t.rent || 0) - (t.amountPaid ?? 0)), 0);
   const totalLoss = creditLoss + vacancyLoss;
 
   const grossPotentialFromTenancies = filteredTransactions.reduce((acc, t) => acc + (t.rent || 0), 0);
   const grossPotentialIncome = grossPotentialFromTenancies + potentialRentFromVacant;
-  
+
   const netRentalIncome = filteredTransactions.reduce((acc, t) => acc + (t.amountPaid ?? 0), 0);
-  
+
   let chartData;
   let dateDisplayFormat;
 
   if (viewMode === 'year') {
     dateDisplayFormat = `${financialYearStart.getFullYear()}/${financialYearEnd.getFullYear()}`;
     const months = eachMonthOfInterval({ start: financialYearStart, end: financialYearEnd });
-    
+
     chartData = months.map(month => {
       const monthlyTransactions = revenue.filter(t => isSameMonth(new Date(t.date || new Date()), month));
       const activeTenancyIdsThisMonth = new Set(monthlyTransactions.map(t => t.propertyId));
@@ -179,11 +183,11 @@ function RevenueAnalysisTab() {
     });
   } else { // month view
     dateDisplayFormat = format(currentDate, 'MMMM yyyy');
-     chartData = [
+    chartData = [
       { name: format(currentDate, 'MMMM'), grossPotential: grossPotentialIncome, netIncome: netRentalIncome },
     ];
   }
-  
+
   const isFuture = isAfter(periodStart, new Date());
   const isCurrentPeriod = viewMode === 'month' ? isSameMonth(currentDate, new Date()) : isSameYear(currentDate, new Date());
 
@@ -198,7 +202,7 @@ function RevenueAnalysisTab() {
             <CardDescription>Analyse revenue performance including vacancy and credit losses.</CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-             <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
+            <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
               <ToggleGroupItem value="month" aria-label="Toggle month" className="flex-1">Month</ToggleGroupItem>
               <ToggleGroupItem value="year" aria-label="Toggle year" className="flex-1">Year</ToggleGroupItem>
             </ToggleGroup>
@@ -235,38 +239,9 @@ function RevenueAnalysisTab() {
             description={`Effective Gross Income collected`}
           />
         </div>
-         <ChartContainer config={{}} className="h-[350px] w-full">
-          <ResponsiveContainer>
-            <BarChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" tickLine={false} axisLine={false} />
-              <YAxis
-                tickFormatter={(value) => formatCurrencyForAxis(Number(value))}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                content={<ChartTooltipContent
-                  formatter={(value, name) => (
-                    <div className="flex flex-col">
-                      <span className="text-muted-foreground capitalize">{name === 'grossPotential' ? 'Gross Potential' : 'Net Income'}</span>
-                      <span>{formatCurrency(Number(value))}</span>
-                    </div>
-                  )}
-                />}
-                cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }}
-              />
-              <Legend />
-              <Bar dataKey="grossPotential" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} name="Gross Potential" />
-              <Bar dataKey="netIncome" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Net Income" />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        <ReportsRevenueChart data={chartData} currency={currency} locale={locale} />
       </CardContent>
-    </Card>
+    </Card >
   )
 }
 
@@ -306,9 +281,9 @@ function PnlStatementTab() {
     return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   };
   const formatCurrencyForAxis = (amount: number) => {
-      if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-      if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
-      return amount.toString();
+    if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+    return amount.toString();
   };
 
   useEffect(() => {
@@ -332,10 +307,10 @@ function PnlStatementTab() {
       setViewMode(value as ViewMode);
     }
   };
-  
+
   if (!currentDate || isRevenueLoading || isExpensesLoading || isPropertiesLoading || !localeData) {
     return (
-       <div className="space-y-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-3/4" />
@@ -350,10 +325,10 @@ function PnlStatementTab() {
             </div>
           </CardContent>
         </Card>
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-48 w-full" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-48 w-full" /></CardContent></Card>
-         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-48 w-full" /></CardContent></Card>
+          <Card><CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader><CardContent><Skeleton className="h-48 w-full" /></CardContent></Card>
+        </div>
       </div>
     );
   }
@@ -377,29 +352,29 @@ function PnlStatementTab() {
     }
     return eDate >= financialYearStart && eDate <= financialYearEnd;
   });
-  
-  const dateDisplayFormat = viewMode === 'month' 
-    ? format(currentDate, 'MMMM yyyy', { locale: localeData }) 
+
+  const dateDisplayFormat = viewMode === 'month'
+    ? format(currentDate, 'MMMM yyyy', { locale: localeData })
     : `${financialYearStart.getFullYear()}/${financialYearEnd.getFullYear()}`;
-    
+
   const totalRevenue = filteredRevenue.reduce((sum, item) => sum + (item.amountPaid ?? 0), 0);
   const totalExpenses = filteredExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
   const netOperatingIncome = totalRevenue - totalExpenses;
-  
+
   const propertyMap = new Map(properties.map(p => [p.id, p]));
   const grossResidentialRevenue = residencyStatus === 'Resident'
     ? filteredRevenue
-        .filter(t => {
-          const prop = propertyMap.get(t.propertyId!);
-          return prop?.propertyType === 'domestic';
-        })
-        .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0)
+      .filter(t => {
+        const prop = propertyMap.get(t.propertyId!);
+        return prop?.propertyType === 'domestic';
+      })
+      .reduce((sum, t) => sum + (t.amountPaid ?? 0), 0)
     : 0;
-    
+
   const estimatedTax = grossResidentialRevenue * 0.075;
   const netProfitAfterTax = totalRevenue - totalExpenses - estimatedTax;
   const isProfit = netProfitAfterTax >= 0;
-  
+
   const expenseCategories = filteredExpenses.reduce((acc, expense) => {
     const category = expense.category || 'Uncategorised';
     if (!acc[category]) {
@@ -418,68 +393,68 @@ function PnlStatementTab() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle>Financial Summary</CardTitle>
-                <CardDescription>
-                  Summary for {dateDisplayFormat}
-                </CardDescription>
-              </div>
-               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
-                    <ToggleGroupItem value="month" aria-label="Toggle month" className="flex-1">Month</ToggleGroupItem>
-                    <ToggleGroupItem value="year" aria-label="Toggle year" className="flex-1">Year</ToggleGroupItem>
-                  </ToggleGroup>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button variant="outline" size="icon" onClick={handlePrev}>
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="font-semibold text-center w-32 shrink-0">{dateDisplayFormat}</span>
-                    <Button variant="outline" size="icon" onClick={handleNext} disabled={isFuture || isCurrentPeriod}>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-               </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle>Financial Summary</CardTitle>
+              <CardDescription>
+                Summary for {dateDisplayFormat}
+              </CardDescription>
             </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <ToggleGroup type="single" value={viewMode} onValueChange={handleViewChange} defaultValue="year" className="w-full sm:w-auto">
+                <ToggleGroupItem value="month" aria-label="Toggle month" className="flex-1">Month</ToggleGroupItem>
+                <ToggleGroupItem value="year" aria-label="Toggle year" className="flex-1">Year</ToggleGroupItem>
+              </ToggleGroup>
+              <div className="flex items-center justify-center gap-2">
+                <Button variant="outline" size="icon" onClick={handlePrev}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-semibold text-center w-32 shrink-0">{dateDisplayFormat}</span>
+                <Button variant="outline" size="icon" onClick={handleNext} disabled={isFuture || isCurrentPeriod}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <KpiCard
+            <KpiCard
               icon={TrendingUp}
               title="Total Revenue"
               value={totalRevenue}
               description="Sum of all income received"
-              />
-              <KpiCard
+            />
+            <KpiCard
               icon={TrendingDown}
               title="Total Expenses"
               value={totalExpenses}
               description="Sum of all costs incurred"
-              />
-              <KpiCard
+            />
+            <KpiCard
               icon={(props) => <CurrencyIcon {...props} />}
               title="Net Operating Income"
               value={netOperatingIncome}
               description="Profit before tax"
-              />
+            />
           </div>
         </CardContent>
       </Card>
-      
-       <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
-            <CardHeader className="flex flex-col items-center pb-2">
-                <CardTitle className="text-sm font-medium">
-                {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
-                </CardTitle>
-                <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="text-center p-6">
-                <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
-                {formatCurrency(netProfitAfterTax)}
-                </div>
-                <p className="text-xs text-muted-foreground">After 7.5% estimated tax on gross residential revenue</p>
-            </CardContent>
-        </Card>
+
+      <Card className={cn("w-full", isProfit ? "bg-green-100/50 dark:bg-green-900/20" : "bg-red-100/50 dark:bg-red-900/20")}>
+        <CardHeader className="flex flex-col items-center pb-2">
+          <CardTitle className="text-sm font-medium">
+            {isProfit ? 'Net Profit' : 'Net Loss'} (After Tax)
+          </CardTitle>
+          <CurrencyIcon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="text-center p-6">
+          <div className={cn("text-2xl font-bold", isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-500')}>
+            {formatCurrency(netProfitAfterTax)}
+          </div>
+          <p className="text-xs text-muted-foreground">After 7.5% estimated tax on gross residential revenue</p>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -497,18 +472,18 @@ function PnlStatementTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                 {filteredRevenue.length > 0 ? filteredRevenue.map(item => (
+                {filteredRevenue.length > 0 ? filteredRevenue.map(item => (
                   <TableRow key={item.id}>
                     <TableCell>{format(new Date(item.date || new Date()), 'PP', { locale: localeData })}</TableCell>
                     <TableCell>{item.tenant}</TableCell>
                     <TableCell>{item.propertyName}</TableCell>
                     <TableCell className="text-right">{formatCurrency(item.amountPaid ?? 0)}</TableCell>
                   </TableRow>
-                 )) : (
+                )) : (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground">No revenue in this period.</TableCell>
                   </TableRow>
-                 )}
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -526,16 +501,16 @@ function PnlStatementTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                  {Object.keys(expenseCategories).length > 0 ? Object.entries(expenseCategories).map(([category, amount]) => (
-                      <TableRow key={category}>
-                          <TableCell className="font-medium">{category}</TableCell>
-                          <TableCell className="text-right">{formatCurrency(amount)}</TableCell>
-                      </TableRow>
-                  )) : (
-                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground">No expenses in this period.</TableCell>
-                    </TableRow>
-                  )}
+                {Object.keys(expenseCategories).length > 0 ? Object.entries(expenseCategories).map(([category, amount]) => (
+                  <TableRow key={category}>
+                    <TableCell className="font-medium">{category}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(amount)}</TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center text-muted-foreground">No expenses in this period.</TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -595,7 +570,7 @@ const ReportsClient = memo(function ReportsClient() {
         {isMarketResearchEnabled && properties && <MarketResearchDialog properties={properties} />}
         {isPnlReportEnabled && revenue && expenses && <GenerateReportDialog revenue={revenue} expenses={expenses} />}
       </PageHeader>
-       <Tabs defaultValue="revenue-analysis">
+      <Tabs defaultValue="revenue-analysis">
         <TabsList>
           <TabsTrigger value="revenue-analysis">Revenue Analysis</TabsTrigger>
           <TabsTrigger value="pnl-statement">P&L Statement</TabsTrigger>

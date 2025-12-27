@@ -12,10 +12,18 @@ import { ArrowRight, TrendingUp, TrendingDown, AlertCircle, Building, Users, Cal
 import { Button } from '@/components/ui/button';
 import type { Property, RevenueTransaction, Expense, Tenancy } from '@/lib/db-types';
 import { KpiCard } from '@/components/dashboard/kpi-card';
-import { AreaChart } from '@/components/dashboard/area-chart';
-import { HorizontalBarChart } from '@/components/dashboard/horizontal-bar-chart';
 import { CurrencyIcon } from '@/components/currency-icon';
 import { startOfToday, isBefore } from 'date-fns';
+import dynamic from 'next/dynamic';
+
+const AreaChart = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChart), {
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+  ssr: false
+});
+const HorizontalBarChart = dynamic(() => import('@/components/dashboard/horizontal-bar-chart').then(mod => mod.HorizontalBarChart), {
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+  ssr: false
+});
 
 // ML Predictions Component
 function MLPredictionsPanel() {
@@ -39,7 +47,7 @@ function MLPredictionsPanel() {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await fetch(
         `https://us-central1-studio-4661291525-66fea.cloudfunctions.net/${functionName}`,
         {
@@ -131,7 +139,7 @@ function MLPredictionsPanel() {
     setLoading(true);
     setShowComparison(true);
     const results = [];
-    
+
     // Compare top 3 properties or all if less than 3
     const propertiesToCompare = properties.slice(0, 3);
 
@@ -150,7 +158,7 @@ function MLPredictionsPanel() {
         });
       }
     }
-    
+
     setComparisonResults(results);
     setLoading(false);
   };
@@ -173,7 +181,7 @@ function MLPredictionsPanel() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>ML Predictions & Analysis</CardTitle>
-          <Button 
+          <Button
             variant={showComparison ? "default" : "outline"}
             onClick={handleCompareProperties}
             disabled={loading}
@@ -235,7 +243,7 @@ function MLPredictionsPanel() {
           </CardHeader>
           <CardContent>
             {comparisonResults.length > 0 ? (
-               <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
@@ -265,7 +273,7 @@ function MLPredictionsPanel() {
               </div>
             ) : (
               <div className="text-center py-8">
-                 {loading ? <p>Comparing properties...</p> : <p>No comparison data available.</p>}
+                {loading ? <p>Comparing properties...</p> : <p>No comparison data available.</p>}
               </div>
             )}
           </CardContent>
@@ -456,7 +464,7 @@ const DashboardPage = memo(function DashboardPage() {
 
   const chartData = useMemo(() => {
     const monthsData: Record<string, { month: string; revenue: number; expenses: number }> = {};
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
@@ -489,18 +497,18 @@ const DashboardPage = memo(function DashboardPage() {
 
   const profitPerProperty = useMemo(() => {
     return properties.map(prop => {
-        const propRevenue = revenue
-            .filter(r => r.propertyId === prop.id && r.status === 'Paid')
-            .reduce((sum, r) => sum + r.amount, 0);
-        
-        const propExpenses = expenses
-            .filter(e => e.propertyId === prop.id)
-            .reduce((sum, e) => sum + e.amount, 0);
-        
-        return {
-            name: `${prop.name}`,
-            profit: propRevenue - propExpenses,
-        };
+      const propRevenue = revenue
+        .filter(r => r.propertyId === prop.id && r.status === 'Paid')
+        .reduce((sum, r) => sum + r.amount, 0);
+
+      const propExpenses = expenses
+        .filter(e => e.propertyId === prop.id)
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      return {
+        name: `${prop.name}`,
+        profit: propRevenue - propExpenses,
+      };
     }).sort((a, b) => b.profit - a.profit).slice(0, 5); // Top 5
   }, [properties, revenue, expenses]);
 
@@ -547,7 +555,7 @@ const DashboardPage = memo(function DashboardPage() {
               description={`${metrics.activeTenanciesCount} active tenanc(ies)`}
               formatAs="percent"
             />
-            
+
             <KpiCard
               icon={TrendingDown}
               title="Total Expenses"
@@ -563,7 +571,7 @@ const DashboardPage = memo(function DashboardPage() {
               description="Total outstanding arrears"
               variant="destructive"
             />
-            
+
             <KpiCard
               icon={Building}
               title="Portfolio Asset Value"
@@ -607,7 +615,7 @@ const DashboardPage = memo(function DashboardPage() {
                 <AreaChart data={chartData} />
               </CardContent>
             </Card>
-            
+
             {properties.length > 0 && (
               <Card>
                 <CardHeader>
@@ -619,10 +627,10 @@ const DashboardPage = memo(function DashboardPage() {
               </Card>
             )}
           </div>
-          
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
             <Card className="md:col-span-2 lg:col-span-3">
-               <CardHeader>
+              <CardHeader>
                 <CardTitle>Quick Links</CardTitle>
                 <CardDescription>Navigate to key sections</CardDescription>
               </CardHeader>

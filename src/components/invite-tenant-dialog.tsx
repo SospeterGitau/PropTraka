@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { createInvitation } from '@/app/actions/invitations';
 import { Mail, Loader2, CheckCircle } from 'lucide-react';
 import { Tenant } from '@/lib/db-types';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface InviteTenantDialogProps {
     tenant: Tenant;
