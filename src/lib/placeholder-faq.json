@@ -50,6 +50,10 @@
             {
                 "title": "How can I see who is behind on rent?",
                 "content": "<b>Use the 'Arrears' page from the 'More' page to see all overdue payments.</b><br/><br/>This page automatically lists all tenants with outstanding balances on past-due invoices. It shows you who owes money, how much they owe, and how many days the payment is overdue. From here, you can use the action buttons to send a pre-filled email reminder or initiate a payment request."
+            },
+            {
+                "title": "How do I edit or delete records?",
+                "content": "<b>You have full control over your data.</b><br/><br/>For <b>Contractors</b>, <b>Expenses</b>, and <b>Maintenance Requests</b>, you can easily update or remove entries. Look for the 'Edit' (pencil) or 'Delete' (trash can) icons within the respective list or detail views. Please note that deletion is permanent."
             }
         ]
     },
@@ -138,6 +142,19 @@
             {
                 "title": "Can tenants pay rent through the portal?",
                 "content": "<b>Yes, if you have enabled payment details.</b><br/><br/>The portal displays your payment instructions (e.g., Paybill/Account Number). While direct payment gateway integration is coming soon, tenants can currently view how much they owe and follow your instructions to pay via mobile money or bank transfer."
+            }
+        ]
+    },
+    {
+        "category": "Customer Support",
+        "questions": [
+            {
+                "title": "How do I get help if I can't find an answer here?",
+                "content": "<b>Use the new Contact Support form.</b><br/><br/>If our FAQs and AI Assistant can't help, navigate to the <b>Contact Support</b> page. You can submit a structured ticket for a specific issue (e.g., 'Bug Report', 'Feature Request') and assign a priority level. Our team reviews these tickets directly."
+            },
+            {
+                "title": "How can I suggest a new feature?",
+                "content": "<b>We love feedback! Use the Contact form or the 'Was this helpful?' buttons.</b><br/><br/>You can submit a formal Feature Request via the Contact Support page. Additionally, finding an FAQ helpful or unhelpful gives us immediate signal on what we need to improve. Your feedback on AI Chat responses also directly trains our system."
             }
         ]
     }

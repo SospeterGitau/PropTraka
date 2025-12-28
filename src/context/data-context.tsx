@@ -35,6 +35,7 @@ interface DataContextType {
   addProperty: (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<void>;
   updateProperty: (id: string, property: Partial<Property>) => Promise<void>;
   updateSettings: (settings: Partial<UserSettings>) => Promise<void>;
+  addMaintenanceRequest: (request: Omit<MaintenanceRequest, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -228,6 +229,24 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addMaintenanceRequest = async (requestData: Omit<MaintenanceRequest, 'id' | 'createdAt' | 'updatedAt' | 'ownerId'>) => {
+    if (!user) return;
+    try {
+      await import('firebase/firestore').then(({ addDoc, collection, serverTimestamp }) =>
+        addDoc(collection(firestore, 'maintenanceRequests'), {
+          ...requestData,
+          ownerId: user.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        })
+      );
+    } catch (err: any) {
+      console.error("Error adding maintenance request:", err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -247,6 +266,7 @@ export function DataContextProvider({ children }: { children: ReactNode }) {
         addProperty,
         updateProperty,
         updateSettings,
+        addMaintenanceRequest,
       }}
     >
       {children}

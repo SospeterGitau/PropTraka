@@ -1,12 +1,16 @@
 
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Menu, Lightbulb, ShieldCheck, HelpCircle, LayoutDashboard, Home, Wallet, Wrench, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Link from 'next/link';
+import { useUser } from '@/firebase/auth';
+import { firestore } from '@/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 // Define help categories relevant to PropTraka
 const helpCategories = [
@@ -14,25 +18,25 @@ const helpCategories = [
     title: 'Getting Started',
     description: 'Learn how to set up your account and add your first property.',
     icon: Home,
-    link: '/help-center/faq#getting-started' 
+    link: '/help-center/faq#getting-started'
   },
   {
     title: 'Managing Properties',
     description: 'Guidelines on adding, editing, and managing your properties.',
     icon: LayoutDashboard,
-    link: '/help-center/faq#core-features' 
+    link: '/help-center/faq#core-features'
   },
   {
     title: 'Financials & Payments',
     description: 'Understand rent tracking, expenses, and payment requests.',
     icon: Wallet,
-    link: '/help-center/faq#core-features' 
+    link: '/help-center/faq#core-features'
   },
   {
     title: 'Maintenance & Contractors',
     description: 'Information on managing maintenance requests and contractors.',
     icon: Wrench,
-    link: '/help-center/faq#advanced-tools-ai' 
+    link: '/help-center/faq#advanced-tools-ai'
   },
   {
     title: 'Security & Privacy',
@@ -44,7 +48,7 @@ const helpCategories = [
     title: 'Reports & Analytics',
     description: 'Generate and understand property performance reports.',
     icon: FileText,
-    link: '/help-center/faq#advanced-tools-ai' 
+    link: '/help-center/faq#advanced-tools-ai'
   },
   {
     title: 'FAQs',
@@ -56,12 +60,36 @@ const helpCategories = [
     title: 'Tips & Best Practices',
     description: 'Expand your knowledge and optimize your property management.',
     icon: Lightbulb,
-    link: '/help-center/tips' 
+    link: '/help-center/tips'
   },
 ];
 
 export default function HelpCenterLandingPage() {
   const router = useRouter();
+  const { user } = useUser();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    // Log search query to Firestore for R&D
+    try {
+      await addDoc(collection(firestore, 'help_search_queries'), {
+        query: searchQuery,
+        userId: user?.uid || 'anonymous',
+        timestamp: serverTimestamp(),
+        path: '/help-center'
+      });
+    } catch (error) {
+      console.error("Error logging search query:", error);
+    }
+
+    // For now, just redirect to FAQ with search param (implementation detail for future search results page)
+    // Or just alert for this MVP step if no search page exists yet.
+    // Since we don't have a search results page, we'll route to FAQ.
+    router.push(`/help-center/faq?q=${encodeURIComponent(searchQuery)}`);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -77,12 +105,18 @@ export default function HelpCenterLandingPage() {
       <div className="relative bg-gradient-to-r from-primary/10 to-transparent rounded-lg p-10 mb-12 overflow-hidden">
         <div className="max-w-3xl z-10 relative">
           <p className="text-xl text-muted-foreground mb-6">Find solutions fast.</p>
-          <div className="flex w-full max-w-md items-center space-x-2">
-            <Input type="text" placeholder="Search articles..." className="flex-1" />
+          <form onSubmit={handleSearch} className="flex w-full max-w-md items-center space-x-2">
+            <Input
+              type="text"
+              placeholder="Search articles..."
+              className="flex-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
             <Button type="submit" size="icon">
               <Search className="h-4 w-4" />
             </Button>
-          </div>
+          </form>
           <div className="mt-4 flex gap-2 text-sm text-muted-foreground">
             Popular:
             <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground">properties</Button>

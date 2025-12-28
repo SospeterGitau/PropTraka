@@ -1,16 +1,39 @@
-
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, HelpCircle, ArrowLeft } from 'lucide-react';
+import { ChevronDown, HelpCircle, ArrowLeft, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import faqData from '@/lib/placeholder-faq.json';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase/auth';
+import { firestore } from '@/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 export default function FAQPage() {
   const router = useRouter();
+  const { user } = useUser();
+  const [votedItems, setVotedItems] = useState<Record<string, 'up' | 'down'>>({});
+
+  const handleFeedback = async (questionTitle: string, vote: 'up' | 'down') => {
+    if (votedItems[questionTitle]) return; // Helper to prevent double voting locally
+
+    setVotedItems(prev => ({ ...prev, [questionTitle]: vote }));
+
+    try {
+      await addDoc(collection(firestore, 'help_feedback'), {
+        title: questionTitle,
+        vote: vote,
+        userId: user?.uid || 'anonymous',
+        timestamp: serverTimestamp(),
+        path: '/help-center/faq'
+      });
+    } catch (error) {
+      console.error("Error logging feedback:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-4">
@@ -43,6 +66,31 @@ export default function FAQPage() {
                       className="text-base text-muted-foreground space-y-2"
                       dangerouslySetInnerHTML={{ __html: q.content }}
                     />
+
+                    {/* Feedback Widget */}
+                    <div className="mt-6 pt-4 border-t flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Was this helpful?</span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant={votedItems[q.title] === 'up' ? "default" : "ghost"}
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleFeedback(q.title, 'up')}
+                          disabled={!!votedItems[q.title]}
+                        >
+                          <ThumbsUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant={votedItems[q.title] === 'down' ? "destructive" : "ghost"}
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleFeedback(q.title, 'down')}
+                          disabled={!!votedItems[q.title]}
+                        >
+                          <ThumbsDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </CollapsibleContent>
                 </Collapsible>
               ))}

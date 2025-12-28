@@ -1,0 +1,315 @@
+src/ai/flows/generate-reminder-email-flow.ts(28,36): error TS2345: Argument of type 'GenerateReminderEmailInput' is not assignable to parameter of type '{ companyName: string; tenantName: string; propertyAddress: string; amountOwed: string; daysOverdue: number; arrearsBreakdown: string; }'.
+  Type 'GenerateReminderEmailInput' is missing the following properties from type '{ companyName: string; tenantName: string; propertyAddress: string; amountOwed: string; daysOverdue: number; arrearsBreakdown: string; }': companyName, amountOwed, daysOverdue, arrearsBreakdown
+src/ai/flows/generate-report-summary.ts(14,15): error TS2724: '"@/lib/types"' has no exported member named 'GenerateReportSummaryInput'. Did you mean 'GenerateReportSummaryOutput'?
+src/app/(dashboard)/activity/page.tsx(57,34): error TS2552: Cannot find name 'Skeleton'. Did you mean 'Selection'?
+src/app/(dashboard)/activity/page.tsx(59,26): error TS2552: Cannot find name 'Skeleton'. Did you mean 'Selection'?
+src/app/(dashboard)/activity/page.tsx(60,26): error TS2552: Cannot find name 'Skeleton'. Did you mean 'Selection'?
+src/app/(dashboard)/activity/page.tsx(61,26): error TS2552: Cannot find name 'Skeleton'. Did you mean 'Selection'?
+src/app/(dashboard)/activity/page.tsx(69,88): error TS2339: Property 'message' does not exist on type 'string | FirestoreError'.
+  Property 'message' does not exist on type 'string'.
+src/app/(dashboard)/arrears/arrears-client.tsx(138,5): error TS2304: Cannot find name 'setIsSubmitting'.
+src/app/(dashboard)/arrears/arrears-client.tsx(158,7): error TS2304: Cannot find name 'setIsSubmitting'.
+src/app/(dashboard)/arrears/arrears-client.tsx(168,26): error TS2552: Cannot find name 'Skeleton'. Did you mean 'Selection'?
+src/app/(dashboard)/arrears/arrears-client.tsx(169,27): error TS2552: Cannot find name 'Skeleton'. Did you mean 'Selection'?
+src/app/(dashboard)/arrears/arrears-client.tsx(177,76): error TS2339: Property 'message' does not exist on type 'string'.
+src/app/(dashboard)/arrears/arrears-client.tsx(198,16): error TS2304: Cannot find name 'Link'.
+src/app/(dashboard)/arrears/arrears-client.tsx(198,93): error TS2304: Cannot find name 'Link'.
+src/app/(dashboard)/arrears/arrears-client.tsx(204,27): error TS2322: Type '{ totalArrears: number; numberOfTenantsInArrears: number; longestArrearsDays: number; }' is not assignable to type 'IntrinsicAttributes & ArrearsSummaryProps'.
+  Property 'totalArrears' does not exist on type 'IntrinsicAttributes & ArrearsSummaryProps'.
+src/app/(dashboard)/arrears/arrears-client.tsx(239,117): error TS2304: Cannot find name 'isSubmitting'.
+src/app/(dashboard)/arrears/arrears-client.tsx(265,42): error TS2304: Cannot find name 'isSubmitting'.
+src/app/(dashboard)/arrears/arrears-client.tsx(266,67): error TS2304: Cannot find name 'isSubmitting'.
+src/app/(dashboard)/arrears/arrears-client.tsx(267,16): error TS2304: Cannot find name 'isSubmitting'.
+src/app/(dashboard)/arrears/arrears-client.tsx(276,11): error TS2322: Type '{ open: boolean; onOpenChange: Dispatch<SetStateAction<boolean>>; title: string; content: string; }' is not assignable to type 'IntrinsicAttributes & GenerateReportDialogProps'.
+  Property 'open' does not exist on type 'IntrinsicAttributes & GenerateReportDialogProps'.
+src/app/(dashboard)/calendar/page.tsx(13,10): error TS2305: Module '"@/lib/types"' has no exported member 'Event'.
+src/app/(dashboard)/calendar/page.tsx(86,62): error TS2304: Cannot find name 'formatCurrency'.
+src/app/(dashboard)/calendar/page.tsx(100,62): error TS2304: Cannot find name 'formatCurrency'.
+src/app/(dashboard)/calendar/page.tsx(135,86): error TS2339: Property 'message' does not exist on type 'string'.
+src/app/(dashboard)/calendar/page.tsx(173,60): error TS2304: Cannot find name 'cn'.
+src/app/(dashboard)/contractors/add/page.tsx(21,11): error TS2339: Property 'addContractor' does not exist on type 'DataContextType'.
+src/app/(dashboard)/contractors/add/page.tsx(59,13): error TS2322: Type '(data: Omit<Contractor, "id"> | Contractor) => Promise<void>' is not assignable to type '(data: Contractor | Omit<Contractor, "ownerId" | "id" | "createdAt" | "updatedAt">) => void'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'Contractor | Omit<Contractor, "ownerId" | "id" | "createdAt" | "updatedAt">' is not assignable to type 'Contractor | Omit<Contractor, "id">'.
+      Type 'Contractor' is not assignable to type 'Contractor | Omit<Contractor, "id">'.
+        Type 'Contractor' is missing the following properties from type 'Contractor': name, specialty, contactNumber
+src/app/(dashboard)/contractors/contractors-client.tsx(31,18): error TS2339: Property 'name' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(32,18): error TS2339: Property 'type' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(33,18): error TS2339: Property 'businessName' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(120,64): error TS2339: Property 'name' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(122,37): error TS2339: Property 'type' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(127,37): error TS2339: Property 'type' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(131,35): error TS2339: Property 'businessName' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(141,37): error TS2339: Property 'phone' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(142,54): error TS2339: Property 'phone' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(144,41): error TS2339: Property 'phone' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(150,35): error TS2339: Property 'rating' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(153,69): error TS2339: Property 'rating' does not exist on type 'Contractor'.
+src/app/(dashboard)/contractors/contractors-client.tsx(164,63): error TS2345: Argument of type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Contractor' is not assignable to parameter of type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Contractor'.
+  Type 'Contractor' is missing the following properties from type 'Contractor': name, specialty, contactNumber
+src/app/(dashboard)/contractors/contractors-client.tsx(172,65): error TS2345: Argument of type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Contractor' is not assignable to parameter of type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Contractor'.
+  Type 'Contractor' is missing the following properties from type 'Contractor': name, specialty, contactNumber
+src/app/(dashboard)/dashboard/page.tsx(445,40): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'Timestamp' is not assignable to parameter of type 'string | number | Date'.
+      Type 'Timestamp' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 36 more.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'Timestamp' is not assignable to parameter of type 'string | number'.
+src/app/(dashboard)/dashboard/page.tsx(480,38): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'Timestamp' is not assignable to parameter of type 'string | number | Date'.
+      Type 'Timestamp' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 36 more.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'Timestamp' is not assignable to parameter of type 'string | number'.
+src/app/(dashboard)/dashboard/page.tsx(488,38): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'Timestamp' is not assignable to parameter of type 'string | number | Date'.
+      Type 'Timestamp' is missing the following properties from type 'Date': toDateString, toTimeString, toLocaleDateString, toLocaleTimeString, and 36 more.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'Timestamp' is not assignable to parameter of type 'string | number'.
+src/app/(dashboard)/dashboard/page.tsx(615,28): error TS2322: Type '{ month: string; revenue: number; expenses: number; }[]' is not assignable to type '{ date: string; revenue: number; expenses: number; }[]'.
+  Property 'date' is missing in type '{ month: string; revenue: number; expenses: number; }' but required in type '{ date: string; revenue: number; expenses: number; }'.
+src/app/(dashboard)/expenses/add/page.tsx(63,15): error TS2322: Type '(data: Omit<Transaction, "id"> | Transaction) => Promise<void>' is not assignable to type '(data: Expense | Omit<Expense, "updatedAt" | "ownerId" | "createdAt">) => void'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'Expense | Omit<Expense, "updatedAt" | "ownerId" | "createdAt">' is not assignable to type 'Transaction | Omit<Transaction, "id">'.
+      Type 'Expense' is not assignable to type 'Transaction | Omit<Transaction, "id">'.
+        Property 'type' is missing in type 'Expense' but required in type 'Transaction'.
+src/app/(dashboard)/expenses/expenses-client.tsx(5,15): error TS2305: Module '"@/lib/types"' has no exported member 'Expense'.
+src/app/(dashboard)/help-center/faq/page.tsx(4,8): error TS2300: Duplicate identifier 'React'.
+src/app/(dashboard)/help-center/faq/page.tsx(5,10): error TS2300: Duplicate identifier 'Collapsible'.
+src/app/(dashboard)/help-center/faq/page.tsx(5,23): error TS2300: Duplicate identifier 'CollapsibleContent'.
+src/app/(dashboard)/help-center/faq/page.tsx(5,43): error TS2300: Duplicate identifier 'CollapsibleTrigger'.
+src/app/(dashboard)/help-center/faq/page.tsx(6,10): error TS2300: Duplicate identifier 'ChevronDown'.
+src/app/(dashboard)/help-center/faq/page.tsx(6,23): error TS2300: Duplicate identifier 'HelpCircle'.
+src/app/(dashboard)/help-center/faq/page.tsx(6,35): error TS2300: Duplicate identifier 'ArrowLeft'.
+src/app/(dashboard)/help-center/faq/page.tsx(7,10): error TS2300: Duplicate identifier 'cn'.
+src/app/(dashboard)/help-center/faq/page.tsx(8,8): error TS2300: Duplicate identifier 'faqData'.
+src/app/(dashboard)/help-center/faq/page.tsx(9,10): error TS2300: Duplicate identifier 'Button'.
+src/app/(dashboard)/help-center/faq/page.tsx(10,10): error TS2300: Duplicate identifier 'useRouter'.
+src/app/(dashboard)/help-center/faq/page.tsx(12,8): error TS2300: Duplicate identifier 'React'.
+src/app/(dashboard)/help-center/faq/page.tsx(13,10): error TS2300: Duplicate identifier 'Collapsible'.
+src/app/(dashboard)/help-center/faq/page.tsx(13,23): error TS2300: Duplicate identifier 'CollapsibleContent'.
+src/app/(dashboard)/help-center/faq/page.tsx(13,43): error TS2300: Duplicate identifier 'CollapsibleTrigger'.
+src/app/(dashboard)/help-center/faq/page.tsx(14,10): error TS2300: Duplicate identifier 'ChevronDown'.
+src/app/(dashboard)/help-center/faq/page.tsx(14,23): error TS2300: Duplicate identifier 'HelpCircle'.
+src/app/(dashboard)/help-center/faq/page.tsx(14,35): error TS2300: Duplicate identifier 'ArrowLeft'.
+src/app/(dashboard)/help-center/faq/page.tsx(15,10): error TS2300: Duplicate identifier 'cn'.
+src/app/(dashboard)/help-center/faq/page.tsx(16,8): error TS2300: Duplicate identifier 'faqData'.
+src/app/(dashboard)/help-center/faq/page.tsx(17,10): error TS2300: Duplicate identifier 'Button'.
+src/app/(dashboard)/help-center/faq/page.tsx(18,10): error TS2300: Duplicate identifier 'useRouter'.
+src/app/(dashboard)/layout.tsx(23,31): error TS2322: Type 'User | null | undefined' is not assignable to type 'User | null'.
+  Type 'undefined' is not assignable to type 'User | null'.
+src/app/(dashboard)/maintenance/add/page.tsx(15,36): error TS2339: Property 'addMaintenanceRequest' does not exist on type 'DataContextType'.
+src/app/(dashboard)/maintenance/add/page.tsx(72,15): error TS2322: Type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Property[]' is not assignable to type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Property[]'.
+  Type 'Property' is missing the following properties from type 'Property': propertyType, buildingType, status
+src/app/(dashboard)/maintenance/add/page.tsx(73,15): error TS2322: Type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Contractor[]' is not assignable to type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Contractor[]'.
+  Type 'Contractor' is missing the following properties from type 'Contractor': name, specialty, contactNumber
+src/app/(dashboard)/maintenance/maintenance-client.tsx(31,22): error TS2339: Property 'addressLine1' does not exist on type 'Property'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(31,48): error TS2339: Property 'city' does not exist on type 'Property'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(31,66): error TS2339: Property 'county' does not exist on type 'Property'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(31,84): error TS2339: Property 'postalCode' does not exist on type 'Property'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(31,110): error TS2339: Property 'postalCode' does not exist on type 'Property'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(47,37): error TS2339: Property 'title' does not exist on type 'MaintenanceRequest'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(49,17): error TS2339: Property 'propertyName' does not exist on type 'MaintenanceRequest'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(60,48): error TS2367: This comparison appears to be unintentional because the types '"New" | "Assigned" | "In Progress" | "Completed" | "Canceled"' and '"pending"' have no overlap.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(61,49): error TS2367: This comparison appears to be unintentional because the types '"New" | "Assigned" | "In Progress" | "Completed" | "Canceled"' and '"assigned"' have no overlap.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(62,51): error TS2367: This comparison appears to be unintentional because the types '"New" | "Assigned" | "In Progress" | "Completed" | "Canceled"' and '"in_progress"' have no overlap.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(63,50): error TS2367: This comparison appears to be unintentional because the types '"New" | "Assigned" | "In Progress" | "Completed" | "Canceled"' and '"completed"' have no overlap.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(250,61): error TS2339: Property 'title' does not exist on type 'MaintenanceRequest'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(252,34): error TS2339: Property 'propertyName' does not exist on type 'MaintenanceRequest'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(256,32): error TS2339: Property 'propertyName' does not exist on type 'MaintenanceRequest'.
+src/app/(dashboard)/maintenance/maintenance-client.tsx(288,64): error TS2345: Argument of type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").MaintenanceRequest' is not assignable to parameter of type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").MaintenanceRequest'.
+  Property 'reportedDate' is missing in type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").MaintenanceRequest' but required in type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").MaintenanceRequest'.
+src/app/(dashboard)/page.tsx(88,42): error TS2339: Property 'currentValue' does not exist on type 'Property'.
+src/app/(dashboard)/page.tsx(92,78): error TS2339: Property 'city' does not exist on type 'Property'.
+src/app/(dashboard)/page.tsx(103,42): error TS2339: Property 'rentalValue' does not exist on type 'Property'.
+src/app/(dashboard)/page.tsx(103,73): error TS2339: Property 'rentalValue' does not exist on type 'Property'.
+src/app/(dashboard)/page.tsx(213,53): error TS2339: Property 'city' does not exist on type 'Property'.
+src/app/(dashboard)/page.tsx(434,37): error TS2322: Type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Property[]' is not assignable to type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Property[]'.
+  Type 'Property' is missing the following properties from type 'Property': propertyType, buildingType, status
+src/app/(dashboard)/properties/[propertyId]/page.tsx(33,22): error TS2339: Property 'addressLine1' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(33,48): error TS2339: Property 'city' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(33,66): error TS2339: Property 'county' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(33,84): error TS2339: Property 'postalCode' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(33,110): error TS2339: Property 'postalCode' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(105,21): error TS2339: Property 'ownerId' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(138,9): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(139,9): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(140,18): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(141,18): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(190,52): error TS2339: Property 'imageHint' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(230,80): error TS2339: Property 'currentValue' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(238,80): error TS2551: Property 'purchaseTaxes' does not exist on type 'Property'. Did you mean 'purchaseDate'?
+src/app/(dashboard)/properties/[propertyId]/page.tsx(242,80): error TS2339: Property 'mortgage' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(247,57): error TS2339: Property 'currentValue' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(247,88): error TS2339: Property 'mortgage' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(258,80): error TS2339: Property 'rentalValue' does not exist on type 'Property'.
+src/app/(dashboard)/properties/[propertyId]/page.tsx(268,9): error TS2322: Type '(data: Property | Omit<Property, "ownerId" | "id">) => Promise<void>' is not assignable to type '(data: Property | Omit<Property, "ownerId" | "id">) => void'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Property | Omit<import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/db-types").Property, "ownerId" | "id">' is not assignable to type 'import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Property | Omit<import("/home/sospeter/Documents/PropTraka/PropTraka/src/lib/types").Property, "ownerId" | "id">'.
+      Type 'Property' is not assignable to type 'Property | Omit<Property, "ownerId" | "id">'.
+        Type 'Property' is missing the following properties from type 'Property': propertyType, buildingType, status
+src/app/(dashboard)/properties/[propertyId]/page.tsx(269,9): error TS2739: Type 'Property' is missing the following properties from type 'Property': ownerId, type, createdAt, updatedAt
+src/app/(dashboard)/properties/properties-client.tsx(65,32): error TS2558: Expected 0 type arguments, but got 1.
+src/app/(dashboard)/properties/properties-client.tsx(185,56): error TS2339: Property 'status' does not exist on type 'Property'.
+src/app/(dashboard)/properties/properties-client.tsx(204,93): error TS2339: Property 'message' does not exist on type 'string | FirestoreError'.
+  Property 'message' does not exist on type 'string'.
+src/app/(dashboard)/properties/properties-client.tsx(271,84): error TS2339: Property 'status' does not exist on type 'Property'.
+src/app/(dashboard)/properties/properties-client.tsx(340,33): error TS2322: Type '(formData: Property) => Promise<void>' is not assignable to type '(data: Property | Omit<Property, "ownerId" | "id">) => void'.
+  Types of parameters 'formData' and 'data' are incompatible.
+    Type 'Property | Omit<Property, "ownerId" | "id">' is not assignable to type 'Property'.
+      Property 'ownerId' is missing in type 'Omit<Property, "ownerId" | "id">' but required in type 'Property'.
+src/app/(dashboard)/reports/reports-client.tsx(32,38): error TS2305: Module '"@/lib/types"' has no exported member 'Expense'.
+src/app/(dashboard)/reports/reports-client.tsx(129,39): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(130,37): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(143,69): error TS2339: Property 'rentalValue' does not exist on type 'Property'.
+src/app/(dashboard)/reports/reports-client.tsx(146,68): error TS2339: Property 'rentalValue' does not exist on type 'Property'.
+src/app/(dashboard)/reports/reports-client.tsx(155,72): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(155,88): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(158,88): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(161,76): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(174,88): error TS2339: Property 'rentalValue' does not exist on type 'Property'.
+src/app/(dashboard)/reports/reports-client.tsx(176,78): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(177,73): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(341,28): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(360,74): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(365,35): error TS2367: This comparison appears to be unintentional because the types '"" | ResidencyStatus' and '"Resident"' have no overlap.
+src/app/(dashboard)/reports/reports-client.tsx(369,16): error TS2367: This comparison appears to be unintentional because the types 'PropertyType | undefined' and '"domestic"' have no overlap.
+src/app/(dashboard)/reports/reports-client.tsx(371,36): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(478,38): error TS2339: Property 'tenant' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(479,38): error TS2339: Property 'propertyName' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(480,76): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/reports/reports-client.tsx(507,71): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'number'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(8,28): error TS2305: Module '"@/lib/types"' has no exported member 'ServiceCharge'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(47,47): error TS2339: Property 'serviceCharges' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(47,71): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(47,76): error TS7006: Parameter 'sc' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(48,37): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(48,85): error TS2339: Property 'deposit' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(49,32): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(70,72): error TS2339: Property 'tenant' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(70,96): error TS2339: Property 'propertyName' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(75,127): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(112,27): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(113,37): error TS2339: Property 'serviceCharges' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(127,32): error TS2353: Object literal may only specify known properties, and 'rent' does not exist in type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(132,105): error TS2339: Property 'deposit' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(164,125): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/(dashboard)/revenue/[tenancyId]/page.tsx(178,48): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(Component: FunctionComponent<object>, propsAreEqual?: ((prevProps: object, nextProps: object) => boolean) | undefined): NamedExoticComponent<object>', gave the following error.
+    Argument of type '() => void' is not assignable to parameter of type 'FunctionComponent<object>'.
+      Type 'void' is not assignable to type 'ReactNode'.
+  Overload 2 of 2, '(Component: ComponentType<any>, propsAreEqual?: ((prevProps: Readonly<any>, nextProps: Readonly<any>) => boolean) | undefined): MemoExoticComponent<ComponentType<any>>', gave the following error.
+    Argument of type '() => void' is not assignable to parameter of type 'ComponentType<any>'.
+      Type '() => void' is not assignable to type 'FunctionComponent<any>'.
+        Type 'void' is not assignable to type 'ReactNode'.
+src/app/(dashboard)/revenue/add/page.tsx(183,28): error TS2448: Block-scoped variable 'finalServiceCharges' used before its declaration.
+src/app/(dashboard)/revenue/add/page.tsx(183,28): error TS2454: Variable 'finalServiceCharges' is used before being assigned.
+src/app/(dashboard)/revenue/add/page.tsx(216,17): error TS2322: Type '"N/A"' is not assignable to type '"Other" | "M-Pesa" | "Bank Transfer" | "Cash" | "Credit Card"'.
+src/app/(dashboard)/revenue/add/page.tsx(235,21): error TS2322: Type '"N/A"' is not assignable to type '"Other" | "M-Pesa" | "Bank Transfer" | "Cash" | "Credit Card"'.
+src/app/(dashboard)/revenue/add/page.tsx(350,59): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/(dashboard)/revenue/add/page.tsx(439,17): error TS2339: Property 'isAuthLoading' does not exist on type 'UseUserReturn'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(8,38): error TS2305: Module '"@/lib/types"' has no exported member 'ServiceCharge'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(32,22): error TS2339: Property 'addressLine1' does not exist on type 'Property'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(32,48): error TS2339: Property 'city' does not exist on type 'Property'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(32,66): error TS2339: Property 'county' does not exist on type 'Property'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(32,84): error TS2339: Property 'postalCode' does not exist on type 'Property'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(32,110): error TS2339: Property 'postalCode' does not exist on type 'Property'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(83,30): error TS2339: Property 'deposit' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(89,24): error TS2339: Property 'serviceCharges' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(89,50): error TS7006: Parameter 'sc' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(91,46): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(91,94): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(93,32): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(93,78): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(95,23): error TS2339: Property 'rentDueDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(96,97): error TS2339: Property 'rentDueDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(100,36): error TS2339: Property 'contractUrl' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(101,43): error TS2339: Property 'applicationFormUrl' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(102,43): error TS2339: Property 'moveInChecklistUrl' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(103,44): error TS2339: Property 'moveOutChecklistUrl' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(285,37): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(291,13): error TS2322: Type '"revenue"' is not assignable to type '"income" | "expense" | undefined'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(303,23): error TS2339: Property 'notes' does not exist on type 'Partial<Transaction> & { id?: string | undefined; }'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(343,57): error TS2339: Property 'tenant' does not exist on type 'Partial<Transaction> & { id?: string | undefined; }'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(343,93): error TS2339: Property 'propertyName' does not exist on type 'Partial<Transaction> & { id?: string | undefined; }'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(374,91): error TS2339: Property 'tenant' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(379,110): error TS2339: Property 'tenantEmail' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(383,108): error TS2339: Property 'tenantPhone' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(412,141): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(483,84): error TS2339: Property 'notes' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/edit/[tenancyId]/page.tsx(534,58): error TS2339: Property 'tenant' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(84,43): error TS2339: Property 'serviceCharges' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(84,73): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/revenue-client.tsx(84,78): error TS7006: Parameter 'sc' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/revenue-client.tsx(84,85): error TS2304: Cannot find name 'scSum'.
+src/app/(dashboard)/revenue/revenue-client.tsx(85,27): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(85,66): error TS2339: Property 'deposit' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(86,27): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(110,35): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(111,79): error TS2339: Property 'tenancyStartDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(113,35): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(114,77): error TS2339: Property 'tenancyEndDate' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(158,58): error TS2339: Property 'tenant' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(158,93): error TS2339: Property 'propertyName' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(220,97): error TS2339: Property 'rent' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(220,115): error TS2339: Property 'serviceCharges' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(220,145): error TS7006: Parameter 'scSum' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/revenue-client.tsx(220,152): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/app/(dashboard)/revenue/revenue-client.tsx(220,186): error TS2339: Property 'deposit' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(221,98): error TS2339: Property 'amountPaid' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(225,61): error TS2339: Property 'tenancyStartDate' does not exist on type '{ nextDueDate: string | undefined; id: string; propertyId: string; tenancyId?: string | undefined; date: string; amount: number; type: "income" | "expense"; category: string; description?: string | undefined; ownerId?: string | undefined; transactions: Transaction[]; }'.
+src/app/(dashboard)/revenue/revenue-client.tsx(225,89): error TS2339: Property 'tenancyEndDate' does not exist on type '{ nextDueDate: string | undefined; id: string; propertyId: string; tenancyId?: string | undefined; date: string; amount: number; type: "income" | "expense"; category: string; description?: string | undefined; ownerId?: string | undefined; transactions: Transaction[]; }'.
+src/app/(dashboard)/revenue/revenue-client.tsx(225,124): error TS2339: Property 'tenancyStartDate' does not exist on type '{ nextDueDate: string | undefined; id: string; propertyId: string; tenancyId?: string | undefined; date: string; amount: number; type: "income" | "expense"; category: string; description?: string | undefined; ownerId?: string | undefined; transactions: Transaction[]; }'.
+src/app/(dashboard)/revenue/revenue-client.tsx(225,171): error TS2339: Property 'tenancyEndDate' does not exist on type '{ nextDueDate: string | undefined; id: string; propertyId: string; tenancyId?: string | undefined; date: string; amount: number; type: "income" | "expense"; category: string; description?: string | undefined; ownerId?: string | undefined; transactions: Transaction[]; }'.
+src/app/(dashboard)/revenue/revenue-client.tsx(248,50): error TS2339: Property 'tenant' does not exist on type '{ nextDueDate: string | undefined; id: string; propertyId: string; tenancyId?: string | undefined; date: string; amount: number; type: "income" | "expense"; category: string; description?: string | undefined; ownerId?: string | undefined; transactions: Transaction[]; }'.
+src/app/(dashboard)/revenue/revenue-client.tsx(250,93): error TS2339: Property 'propertyName' does not exist on type '{ nextDueDate: string | undefined; id: string; propertyId: string; tenancyId?: string | undefined; date: string; amount: number; type: "income" | "expense"; category: string; description?: string | undefined; ownerId?: string | undefined; transactions: Transaction[]; }'.
+src/app/(dashboard)/revenue/revenue-client.tsx(306,55): error TS2339: Property 'tenant' does not exist on type 'Transaction'.
+src/app/(dashboard)/revenue/revenue-client.tsx(306,89): error TS2339: Property 'propertyName' does not exist on type 'Transaction'.
+src/components/calendar-view.tsx(19,15): error TS2305: Module '"@/lib/types"' has no exported member 'CalendarEvent'.
+src/components/calendar-view.tsx(118,35): error TS7006: Parameter 'event' implicitly has an 'any' type.
+src/components/calendar-view.tsx(118,42): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/calendar-view.tsx(135,78): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+src/components/chat-bubble.tsx(24,19): error TS2322: Type '{ isOpen: boolean; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes & { open: boolean; onOpenChange: (open: boolean) => void; }'.
+  Property 'isOpen' does not exist on type 'IntrinsicAttributes & { open: boolean; onOpenChange: (open: boolean) => void; }'. Did you mean 'open'?
+src/components/chat-dialog.tsx(64,30): error TS2554: Expected 2 arguments, but got 1.
+src/components/contractor-form.tsx(42,11): error TS2339: Property 'addContractor' does not exist on type 'DataContextType'.
+src/components/contractor-form.tsx(42,26): error TS2339: Property 'updateContractor' does not exist on type 'DataContextType'.
+src/components/expense-form.tsx(61,46): error TS2345: Argument of type '{ description: string; }' is not assignable to parameter of type 'CategorizeExpenseInput'.
+  Property 'amount' is missing in type '{ description: string; }' but required in type 'CategorizeExpenseInput'.
+src/components/expense-form.tsx(239,74): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/components/expense-form.tsx(261,64): error TS2322: Type 'Dispatch<SetStateAction<"Insurance" | "Management Fees" | "Repairs" | "Utilities" | "Other" | "Taxes" | "Cleaning">>' is not assignable to type '(search: string) => void'.
+  Types of parameters 'value' and 'search' are incompatible.
+    Type 'string' is not assignable to type 'SetStateAction<"Insurance" | "Management Fees" | "Repairs" | "Utilities" | "Other" | "Taxes" | "Cleaning">'.
+src/components/expense-form.tsx(328,103): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string>'.
+src/components/expense-form.tsx(360,10): error TS2304: Cannot find name 'PageHeader'.
+src/components/expense-form.tsx(362,14): error TS2304: Cannot find name 'Link'.
+src/components/expense-form.tsx(365,15): error TS2304: Cannot find name 'Link'.
+src/components/expense-form.tsx(367,11): error TS2304: Cannot find name 'PageHeader'.
+src/components/expense-form.tsx(369,109): error TS2304: Cannot find name 'handleCategorySelected'.
+src/components/expense-form.tsx(388,107): error TS2304: Cannot find name 'handleCategorySelected'.
+src/components/knowledge-article-form.tsx(54,11): error TS2322: Type '{ title: string; content: string; category: string; id?: string | undefined; }' is not assignable to type 'KnowledgeArticle | Omit<KnowledgeArticle, "ownerId" | "id">'.
+  Type '{ title: string; content: string; category: string; id?: string | undefined; }' is missing the following properties from type 'KnowledgeArticle': createdAt, updatedAt
+src/components/maintenance-kanban-board.tsx(155,18): error TS7053: Element implicitly has an 'any' type because expression of type '"pending" | "reported" | "in-progress" | "completed" | "on-hold"' can't be used to index type '{ readonly reported: { readonly icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; readonly color: "text-gray-500"; readonly label: "To Do"; }; readonly 'in-progress': { ...; }; readonly completed: { ...; }; readonly 'on-hold': { ...; }; }'.
+  Property 'pending' does not exist on type '{ readonly reported: { readonly icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; readonly color: "text-gray-500"; readonly label: "To Do"; }; readonly 'in-progress': { ...; }; readonly completed: { ...; }; readonly 'on-hold': { ...; }; }'.
+src/components/market-research-dialog.tsx(48,40): error TS2339: Property 'street' does not exist on type 'Address'.
+src/components/market-research-dialog.tsx(49,34): error TS2339: Property 'type' does not exist on type 'Property'.
+src/components/market-research-dialog.tsx(50,34): error TS2339: Property 'type' does not exist on type 'Property'.
+src/components/market-research-dialog.tsx(53,26): error TS2339: Property 'squareFootage' does not exist on type 'Property'.
+src/components/market-research-dialog.tsx(53,54): error TS2339: Property 'squareFootage' does not exist on type 'Property'.
+src/components/payment-request-dialog.tsx(5,15): error TS2305: Module '"@/lib/types"' has no exported member 'ArrearEntryCalculated'.
+src/components/property-form.tsx(128,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/components/property-form.tsx(138,24): error TS2345: Argument of type 'Omit<Property, "updatedAt" | "ownerId" | "id" | "createdAt">' is not assignable to parameter of type 'Property | Omit<Property, "ownerId" | "id">'.
+  Type 'Omit<Property, "updatedAt" | "ownerId" | "id" | "createdAt">' is missing the following properties from type 'Omit<Property, "ownerId" | "id">': updatedAt, createdAt
+src/components/settings/api-access-tab.tsx(9,15): error TS2305: Module '"@/lib/types"' has no exported member 'ApiKey'.
+src/components/settings/profile-settings-tab.tsx(203,21): error TS2345: Argument of type '{ id?: string; ownerId?: string | undefined; currency?: string | undefined; language?: string | undefined; dateFormat?: string | undefined; locale?: string; role?: "Individual Landlord" | "Property Manager" | "Real Estate Agent" | "Investor"; ... 23 more ...; updatedAt?: Timestamp | undefined; }' is not assignable to parameter of type 'SetStateAction<UserSettings | null>'.
+  Type '{ id?: string; ownerId?: string | undefined; currency?: string | undefined; language?: string | undefined; dateFormat?: string | undefined; locale?: string; role?: "Individual Landlord" | "Property Manager" | "Real Estate Agent" | "Investor"; ... 23 more ...; updatedAt?: Timestamp | undefined; }' is not assignable to type 'UserSettings'.
+    Types of property 'ownerId' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.

@@ -38,11 +38,11 @@ export async function sendInvitationEmail(to: string, inviteLink: string, landlo
       `,
         });
 
-        console.log('Message sent: %s', info.messageId);
-    } catch (error) {
-        console.error('Error sending email:', error);
-        // Fallback log even if send fails, to avoid blocking flow during dev
-        console.log(`[EMAIL FAILURE BACKUP] Link for ${to}: ${inviteLink}`);
-        throw new Error('Failed to send invitation email.');
-    }
+    });
+} catch (error) {
+    console.error('Error sending email:', error);
+    // Fallback log even if send fails, to avoid blocking flow during dev
+    console.log(`[EMAIL FAILURE BACKUP] Link for ${to}: ${inviteLink}`);
+    throw new Error('Failed to send invitation email.');
+}
 }

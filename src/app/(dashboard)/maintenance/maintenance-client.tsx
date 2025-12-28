@@ -26,13 +26,42 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Plus, Search, MoreHorizontal, Edit2, Trash2, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { firestore } from '@/firebase';
+import { deleteDoc, doc } from 'firebase/firestore';
 
-function formatAddress(property: Property) {
-  return `${property.addressLine1}, ${property.city}, ${property.county}${property.postalCode ? ` ${property.postalCode}` : ''}`;
+function formatAddress(property: any) {
+  if (!property?.address) return 'No Address';
+  const addr = property.address;
+  return `${addr.street || addr.line1 || ''}, ${addr.city}, ${addr.state} ${addr.zipCode}`;
 }
 
 const MaintenanceClient = memo(function MaintenanceClient() {
-  const { maintenanceRequests, properties, loading } = useDataContext();
+  const { maintenanceRequests: rawRequests, properties, contractors, loading } = useDataContext();
+
+  // Map DB types to UI types
+  const maintenanceRequests: MaintenanceRequest[] = useMemo(() => {
+    return rawRequests.map(req => {
+      const property = properties.find(p => p.id === req.propertyId);
+      const contractor = contractors.find(c => c.id === req.assignedToContractorId);
+
+      return {
+        id: req.id || '',
+        propertyId: req.propertyId,
+        title: req.description ? req.description.substring(0, 30) + (req.description.length > 30 ? '...' : '') : 'Maintenance Request',
+        description: req.description,
+        // Map status distinct values if needed, or cast if they match closely enough
+        status: (req.status.toLowerCase().replace(' ', '-') as any) || 'pending',
+        reportedDate: req.createdAt ? new Date(req.createdAt.seconds * 1000).toISOString() : new Date().toISOString(),
+        priority: (req.priority.toLowerCase() as any) || 'medium',
+        cost: req.cost,
+        contractorId: req.assignedToContractorId,
+        propertyName: property?.name || 'Unknown Property',
+        contractorName: contractor?.companyName || 'Unknown Contractor',
+        notes: req.notes
+      };
+    });
+  }, [rawRequests, properties, contractors]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
@@ -44,13 +73,13 @@ const MaintenanceClient = memo(function MaintenanceClient() {
 
   const filteredRequests = useMemo(() => {
     return maintenanceRequests.filter(request => {
-      const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = (request.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.propertyName?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = !filterStatus || request.status === filterStatus;
       const matchesPriority = !filterPriority || request.priority === filterPriority;
-      
+
       return matchesSearch && matchesStatus && matchesPriority;
     });
   }, [maintenanceRequests, searchTerm, filterStatus, filterPriority]);
@@ -59,7 +88,7 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     return {
       pending: maintenanceRequests.filter(r => r.status === 'pending').length,
       assigned: maintenanceRequests.filter(r => r.status === 'assigned').length,
-      inProgress: maintenanceRequests.filter(r => r.status === 'in_progress').length,
+      inProgress: maintenanceRequests.filter(r => r.status === 'in-progress').length,
       completed: maintenanceRequests.filter(r => r.status === 'completed').length,
     };
   }, [maintenanceRequests]);
@@ -93,10 +122,14 @@ const MaintenanceClient = memo(function MaintenanceClient() {
     }
   };
 
-  const handleDeleteRequest = (request: MaintenanceRequest) => {
+  const handleDeleteRequest = async (request: MaintenanceRequest) => {
     if (confirm(`Are you sure you want to delete this maintenance request: "${request.title}"?`)) {
-      console.log('Delete request:', request.id);
-      // TODO: Implement delete functionality with Firebase
+      try {
+        await deleteDoc(doc(firestore, 'maintenanceRequests', request.id));
+      } catch (error) {
+        console.error("Error deleting request:", error);
+        alert("Failed to delete request.");
+      }
     }
   };
 

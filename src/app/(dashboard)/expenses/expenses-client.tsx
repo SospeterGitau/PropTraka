@@ -25,12 +25,29 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Plus, Search, MoreHorizontal, Edit2, Trash2, Calendar, Tag } from 'lucide-react';
+import { firestore } from '@/firebase';
+import { deleteDoc, doc } from 'firebase/firestore';
 import { formatCurrency } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 const ExpensesClient = memo(function ExpensesClient() {
-  const { expenses: expensesData, settings, loading } = useDataContext();
-  const expenses = expensesData as Expense[];
+  const { expenses: rawExpenses, properties, loading } = useDataContext();
+
+  // Map DB types to UI types
+  const expenses: Expense[] = useMemo(() => {
+    return rawExpenses.map(e => ({
+      id: e.id || '',
+      ownerId: e.ownerId,
+      propertyId: e.propertyId,
+      amount: e.amount,
+      date: e.date ? new Date(e.date.seconds * 1000).toISOString() : new Date().toISOString(),
+      category: e.category,
+      description: e.notes || e.vendorName || e.category, // Fallback for description
+      isRecurring: e.isRecurring,
+      notes: e.notes,
+      receiptUrl: e.receiptUrl
+    }));
+  }, [rawExpenses]);
   const locale = settings?.locale || 'en-KE';
   const currency = settings?.currency || 'KES';
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,9 +59,9 @@ const ExpensesClient = memo(function ExpensesClient() {
       const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.contractorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         expense.propertyName?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesCategory = !filterCategory || expense.category === filterCategory;
-      
+
       return matchesSearch && matchesCategory;
     });
   }, [expenses, searchTerm, filterCategory]);
@@ -58,10 +75,14 @@ const ExpensesClient = memo(function ExpensesClient() {
     return filteredExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
   }, [filteredExpenses]);
 
-  const handleDeleteExpense = (expense: Expense) => {
+  const handleDeleteExpense = async (expense: Expense) => {
     if (confirm(`Are you sure you want to delete this expense (${formatCurrency(expense.amount, locale, currency)})?`)) {
-      console.log('Delete expense:', expense.id);
-      // TODO: Implement delete functionality with Firebase
+      try {
+        await deleteDoc(doc(firestore, 'expenses', expense.id));
+      } catch (error) {
+        console.error("Error deleting expense:", error);
+        alert("Failed to delete expense.");
+      }
     }
   };
 

@@ -13,20 +13,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Bot, User, Send, Loader2, Sparkles } from 'lucide-react';
+import { Bot, User, Send, Loader2, Sparkles, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useUser } from '@/firebase/auth'; // CORRECTED IMPORT PATH for useUser
 import { firestore, errorEmitter } from '@/firebase'; // firestore and errorEmitter are still from @/firebase
 import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { getChatResponse } from '@/ai/flows/get-chat-response-flow';
+import faqData from '@/lib/placeholder-faq.json';
 
 interface ChatMessage {
     id: string;
     text: string;
     sender: 'user' | 'bot';
     timestamp: Timestamp;
+    feedback?: 'positive' | 'negative';
+    feedbackReason?: string;
 }
 
 export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -57,12 +60,10 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     useEffect(() => {
         if (error) {
             console.error("Chat Error:", error);
-            if (error.code === 'permission-denied') {
-                errorEmitter.emit(new FirestorePermissionError(
-                    "You don't have permission to access chat messages.",
-                    "Missing 'read' permission on 'chatMessages' collection."
-                ));
-            }
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: 'chatMessages',
+                operation: 'list'
+            }));
         }
     }, [error]);
 
@@ -92,7 +93,10 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                 ownerId: user.uid,
             });
 
-            const botResponseText = await getChatResponse(userMessage);
+            const botResponseText = await getChatResponse({
+                question: userMessage,
+                knowledgeBase: JSON.stringify(faqData) // Using placeholder details for knowledge base
+            });
 
             await addDoc(collection(firestore, 'chatMessages'), {
                 text: botResponseText,
@@ -104,6 +108,25 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             console.error("Failed to send message:", err);
         } finally {
             setIsThinking(false);
+        }
+    };
+
+    const handleFeedback = async (messageId: string, feedback: 'positive' | 'negative') => {
+        let reason = '';
+        if (feedback === 'negative') {
+            const input = window.prompt("What was missing or incorrect? (Optional)");
+            if (input) reason = input;
+        }
+
+        try {
+            const msgRef = doc(firestore, 'chatMessages', messageId);
+            await updateDoc(msgRef, {
+                feedback,
+                feedbackReason: reason,
+                feedbackTimestamp: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error logging feedback:", error);
         }
     };
 
@@ -136,15 +159,39 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                                         <Bot className="w-6 h-6 text-primary" />
                                     </div>
                                 )}
-                                <div
-                                    className={cn(
-                                        'p-3 rounded-lg max-w-[80%]',
-                                        msg.sender === 'user'
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-muted'
+                                <div className="flex flex-col gap-1 max-w-[80%]">
+                                    <div
+                                        className={cn(
+                                            'p-3 rounded-lg',
+                                            msg.sender === 'user'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-muted'
+                                        )}
+                                    >
+                                        <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                                    </div>
+
+                                    {/* Feedback Controls for Bot Messages */}
+                                    {msg.sender === 'bot' && (
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className={cn("h-6 w-6 p-0", msg.feedback === 'positive' && "text-green-600")}
+                                                onClick={() => handleFeedback(msg.id, 'positive')}
+                                            >
+                                                <ThumbsUp className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className={cn("h-6 w-6 p-0", msg.feedback === 'negative' && "text-red-500")}
+                                                onClick={() => handleFeedback(msg.id, 'negative')}
+                                            >
+                                                <ThumbsDown className="h-3 w-3" />
+                                            </Button>
+                                        </div>
                                     )}
-                                >
-                                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                                 </div>
                                 {msg.sender === 'user' && (
                                     <div className="bg-muted p-2 rounded-full">
@@ -155,12 +202,12 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                         ))}
                         {isThinking && (
                             <div className="flex items-start gap-3 justify-start">
-                                 <div className="bg-primary/10 p-2 rounded-full">
+                                <div className="bg-primary/10 p-2 rounded-full">
                                     <Bot className="w-6 h-6 text-primary" />
                                 </div>
                                 <div className="p-3 rounded-lg bg-muted flex items-center gap-2">
-                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                     <span className="text-sm text-muted-foreground">Thinking...</span>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span className="text-sm text-muted-foreground">Thinking...</span>
                                 </div>
                             </div>
                         )}

@@ -257,12 +257,30 @@ export interface Transaction {
   ownerId?: string;
 }
 
+export interface Expense {
+  id: string;
+  ownerId: string;
+  propertyId?: string;
+  contractorId?: string;
+  amount: number;
+  date: string; // Changed from Timestamp to string for UI
+  category: string;
+  frequency?: string;
+  expenseType?: 'recurring' | 'one-off';
+  contractorName?: string;
+  propertyName?: string;
+  description: string;
+  receiptUrl?: string; // Reference to a document URL
+  isRecurring: boolean;
+  notes?: string;
+}
+
 export interface MaintenanceRequest {
   id: string;
   propertyId: string;
   title?: string;
   description: string;
-  status: 'reported' | 'in-progress' | 'completed' | 'on-hold' | 'pending';
+  status: 'reported' | 'new' | 'assigned' | 'in-progress' | 'completed' | 'on-hold' | 'pending' | 'canceled';
   reportedDate: string;
   dueDate?: string;
   completedDate?: string;
@@ -277,12 +295,14 @@ export interface MaintenanceRequest {
 
 export interface Contractor {
   id: string;
-  companyName: string; // Changed from name
-  name: string;      // Kept for backward compatibility if needed, or alias companyName
-  specialty: string;
-  contactNumber: string;
+  name: string; // Contact person name
+  type: string; // Primary service category
+  businessName?: string;
   email?: string;
+  phone?: string;
   rating?: number;
+  contactNumber?: string; // Legacy support
+  specialty?: string; // Legacy support
 }
 
 export interface ActivityLog {

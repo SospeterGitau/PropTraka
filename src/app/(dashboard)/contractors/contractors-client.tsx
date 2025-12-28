@@ -19,10 +19,26 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Search, Mail, Phone, Edit2, Trash2, Star } from 'lucide-react';
+import { firestore } from '@/firebase';
+import { deleteDoc, doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 const ContractorsClient = memo(function ContractorsClient() {
-  const { contractors, loading } = useDataContext();
+  const { contractors: rawContractors, loading } = useDataContext();
+
+  // Map DB types to UI types
+  const contractors: Contractor[] = useMemo(() => {
+    return rawContractors.map(c => ({
+      id: c.id || '',
+      name: c.contactPersonName || c.companyName || 'Unknown',
+      type: c.serviceCategories?.[0] || 'General',
+      businessName: c.companyName,
+      email: c.email,
+      phone: c.phoneNumber,
+      rating: 0 // Default, as DB doesn't have rating yet
+    }));
+  }, [rawContractors]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
@@ -30,19 +46,22 @@ const ContractorsClient = memo(function ContractorsClient() {
     return contractors.filter(contractor =>
       contractor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contractor.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contractor.businessName?.toLowerCase().includes(searchTerm.toLowerCase())
+      (contractor.businessName && contractor.businessName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [contractors, searchTerm]);
 
   const handleEditContractor = (contractor: Contractor) => {
-    console.log('Edit contractor:', contractor.id);
-    // TODO: Implement edit functionality
+    router.push(`/contractors/edit/${contractor.id}`);
   };
 
-  const handleDeleteContractor = (contractor: Contractor) => {
+  const handleDeleteContractor = async (contractor: Contractor) => {
     if (confirm(`Are you sure you want to delete ${contractor.name}?`)) {
-      console.log('Delete contractor:', contractor.id);
-      // TODO: Implement delete functionality with Firebase
+      try {
+        await deleteDoc(doc(firestore, 'contractors', contractor.id));
+      } catch (error) {
+        console.error("Error deleting contractor:", error);
+        alert("Failed to delete contractor.");
+      }
     }
   };
 

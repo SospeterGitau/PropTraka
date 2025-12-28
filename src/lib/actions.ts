@@ -213,8 +213,6 @@ export async function addTransaction(transaction: Omit<Transaction, 'id'> | Tran
         // If the client was using direct firestore access before, we might want to stick to that pattern
         // but the error message implies that the client code is trying to import `addTransaction` from `@/lib/actions`.
 
-        console.log("Add transaction called", transaction);
-
         // Let's try to add it to a 'transactions' collection if we can
         if (transaction.ownerId) {
             await firestore.collection('transactions').add({
