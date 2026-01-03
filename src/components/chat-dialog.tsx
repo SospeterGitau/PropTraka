@@ -18,7 +18,7 @@ import { useUser } from '@/firebase/auth'; // CORRECTED IMPORT PATH for useUser
 import { firestore, errorEmitter } from '@/firebase'; // firestore and errorEmitter are still from @/firebase
 import { FirestorePermissionError } from '@/firebase';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, Timestamp, query, orderBy, limit, updateDoc, doc, where } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { getChatResponse } from '@/ai/flows/get-chat-response-flow';
 import faqData from '@/lib/placeholder-faq.json';
@@ -39,13 +39,14 @@ export function ChatDialog({ open, onOpenChange }: { open: boolean; onOpenChange
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     const messagesQuery = useMemo(() => {
-        if (!user) return null;
+        if (!user || !open) return null;
         return query(
             collection(firestore, 'chatMessages'),
+            where('ownerId', '==', user.uid),
             orderBy('timestamp', 'asc'),
             limit(100)
         );
-    }, [user]);
+    }, [user, open]);
 
     const [messagesSnapshot, loading, error] = useCollection(messagesQuery);
 

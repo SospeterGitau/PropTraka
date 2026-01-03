@@ -1,0 +1,50 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper: Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper: Check if user owns the path
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper: Validate image content
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Helper: Validate file size (MB)
+    function isSmall(maxMB) {
+      return request.resource.size < maxMB * 1024 * 1024;
+    }
+
+    // 1. User Profile Images (Public Read, Owner Write)
+    // Path: /users/{userId}/profile/*
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isImage() && isSmall(5);
+    }
+
+    // 2. Property Images (Public Read, Owner Write)
+    // Path: /users/{userId}/properties/*
+    match /users/{userId}/properties/{allPaths=**} {
+      allow read: if true; // Public listings
+      allow write: if isOwner(userId) && isImage() && isSmall(10);
+    }
+
+    // 3. Private Documents (Leases, IDs, Receipts)
+    // Path: /users/{userId}/documents/*
+    match /users/{userId}/documents/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Default: Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

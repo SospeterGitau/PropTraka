@@ -1,6 +1,6 @@
 # Admin Keys & Credentials
 
-**Latest Update**: Added PesaPal, Email, Session, and Firebase Admin keys.
+**Latest Update**: Added Intasend, Email, Session, and Firebase Admin keys.
 
 This document lists the external API keys, credentials, and environment variables required for development and production.
 
@@ -18,17 +18,22 @@ Code is currently using *placeholders* (`app_staging_...`). You must replace the
 ## 2. Firebase Storage
 Required for uploading ID photos and Selfies.
 
-*   **Platform:** Firebase Console -> Storage
-*   **Requirement:** Ensure Storage is enabled and rules allow authenticated users (landlords) to upload files to `tenants/{tenantId}/documents/`.
+**Status:** ✅ **Active / Secure**
+*   **Authentication Required:** Yes.
+*   **Rules Structure:**
+    *   `/users/{userId}/profile/*` (Public Read, Owner Write) - Max 5MB images.
+    *   `/users/{userId}/properties/*` (Public Read, Owner Write) - Max 10MB images.
+    *   `/users/{userId}/documents/*` (Private Read/Write) - Secure storage for sensitive files.
 
-## 3. PesaPal Integration (Planned)
-Required for processing rent payments and tenant transactions.
 
-*   **Platform:** [PesaPal Developer API](https://developer.pesapal.com/)
-*   **Credentials Needed:**
-    *   `PESAPAL_CONSUMER_KEY`: Your unique consumer key.
-    *   `PESAPAL_CONSUMER_SECRET`: Your unique secret key.
-    *   `PESAPAL_IPN_ID`: Instant Payment Notification ID for receiving payment callbacks.
+## 3. Intasend Integration (Planned)
+
+*   **Platform:** [Intasend](https://intasend.com/)
+*   **Keys Required:**
+    *   `INTASEND_PUBLIC_KEY`: Your publishable key for frontend/verifications.
+    *   `INTASEND_SECRET_KEY`: Your secret key for backend API calls.
+    *   `INTASEND_TEST_MODE`: Set to `true` for sandbox, `false` for live.
+
 
 ## 4. MPESA Integration (Planned)
 For "Digital Footprint" verification via transactions.
@@ -49,10 +54,15 @@ Used for sending invitations and notifications.
 *   `GMAIL_APP_PASSWORD`: An App Password generated from your Google Account settings (NOT your login password).
 
 ### 🔥 Firebase Admin
-*   `FIREBASE_SERVICE_ACCOUNT_KEY`: The JSON content of your Firebase Service Account key (minified). Required for server-side operations using `firebase-admin`.
+### 🔥 Firebase Admin
+*   **Method A (Local):** Place `serviceAccountKey.json` in the project root. (Already ignored in `.gitignore`).
+*   **Method B (Production):** Set `FIREBASE_SERVICE_ACCOUNT_KEY` environment variable with the minified JSON content.
+
 
 ### 🌐 App Configuration
-*   `NEXT_PUBLIC_BASE_URL`: The public URL of your application (e.g., `http://localhost:3000` or your production domain). Used for generating invitation links.
+*   `NEXT_PUBLIC_BASE_URL`: The public URL of your application (e.g., `http://localhost:3000` or your production domain).
+    *   **Mobile Testing:** Set this to your local IP (e.g., `http://192.168.100.13:9002`) to ensure redirects work on your phone.
+
 
 ## 6. Development Tools & Commands
 

@@ -42,7 +42,7 @@ export function PaymentRequestDialog({
   const currencySymbol = getCurrencySymbol(settings?.currency || 'USD');
 
   const [amount, setAmount] = useState<number | ''>('');
-  const [method, setMethod] = useState('Pesapal');
+  const [method, setMethod] = useState('Intasend');
 
   useEffect(() => {
     if (arrear) {
@@ -88,7 +88,7 @@ export function PaymentRequestDialog({
                 <SelectValue placeholder="Select a payment method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Pesapal">Pesapal</SelectItem>
+                <SelectItem value="Intasend">Intasend</SelectItem>
                 <SelectItem value="InstaSend">InstaSend</SelectItem>
                 <SelectItem value="M-Pesa">M-Pesa STK Push</SelectItem>
               </SelectContent>
@@ -102,7 +102,7 @@ export function PaymentRequestDialog({
             </AlertDescription>
           </Alert>
         </div>
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={!amount}>

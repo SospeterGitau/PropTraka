@@ -38,16 +38,16 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
       const propRevenue = revenue
         .filter(r => r.propertyId === prop.id)
         .reduce((sum, r) => sum + (r.amountPaid || 0), 0);
-      
+
       const propExpenses = expenses
         .filter(e => e.propertyId === prop.id)
         .reduce((sum, e) => sum + (e.amount || 0), 0);
 
       const netProfit = propRevenue - propExpenses;
       const roi = prop.currentValue > 0 ? (netProfit / prop.currentValue) * 100 : 0;
-      
-      const displayName = prop.streetAddress 
-        ? `${prop.streetAddress}${prop.city ? ', ' + prop.city : ''}` 
+
+      const displayName = prop.streetAddress
+        ? `${prop.streetAddress}${prop.city ? ', ' + prop.city : ''}`
         : (prop.name || 'Unnamed Property');
 
       let status = 'strong';
@@ -70,7 +70,7 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
 
   // Filter by view mode
   const displayedProperties = useMemo(() => {
-    switch(viewMode) {
+    switch (viewMode) {
       case 'top-performers':
         return propertyMetrics.slice(0, 5); // Show top 5
       case 'needs-attention':
@@ -82,7 +82,7 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
   }, [propertyMetrics, viewMode]);
 
   const getStatusConfig = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'strong':
         return {
           icon: <CheckCircle2 className="h-5 w-5" />,
@@ -120,7 +120,7 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
       <div className="px-1 py-2">
         <h3 className="text-lg font-semibold text-foreground">Property Performance Overview</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          {totalCount} propert{totalCount !== 1 ? 'ies' : 'y'} • 
+          {totalCount} propert{totalCount !== 1 ? 'ies' : 'y'} •
           <span className="ml-2 font-medium text-green-600">{strongCount} Strong</span> •
           <span className="ml-2 font-medium text-orange-600">{needsAttentionCount} Needs Review</span>
         </p>
@@ -137,7 +137,7 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
           <TrendingUp className="h-4 w-4 mr-1" />
           Top Performers ({Math.min(5, propertyMetrics.filter(p => p.status === 'strong').length)})
         </Button>
-        
+
         <Button
           variant={viewMode === 'needs-attention' ? 'default' : 'outline'}
           size="sm"
@@ -161,7 +161,7 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
       </div>
 
       {/* Summary Stats Cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
           <CardContent className="pt-4">
             <div className="flex items-end justify-between">
@@ -213,8 +213,8 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
             const isExpanded = expandedId === metric.id;
 
             return (
-              <Card 
-                key={metric.id} 
+              <Card
+                key={metric.id}
                 className="overflow-hidden hover:shadow-md transition-all duration-200"
               >
                 {/* Compact Header - Always Visible */}
@@ -227,17 +227,17 @@ export function PropertyROIScorecard({ properties, revenue, expenses }: Property
                     <div className="flex items-center gap-3">
                       <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/12 flex-shrink-0">
                         <span className="text-xs font-semibold text-primary">
-                          {viewMode === 'all' 
+                          {viewMode === 'all'
                             ? propertyMetrics.findIndex(p => p.id === metric.id) + 1
                             : index + 1}
                         </span>
                       </div>
-                      
-                      <div className="min-w-0">
-                        <h4 className="font-semibold text-sm line-clamp-1">
+
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-sm truncate pr-2">
                           {metric.name}
                         </h4>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
                           {formatCurrency(metric.assetValue, locale, currency)}
                         </p>
                       </div>

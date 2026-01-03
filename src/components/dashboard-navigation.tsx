@@ -99,8 +99,8 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       </main>
 
       {/* Mobile navigation bar with FAB - Uber Style */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 h-16 border-t border-border/40 bg-background/80 backdrop-blur-xl">
-        <div className="flex h-full items-center justify-center">
+      <nav className="fixed inset-x-0 bottom-0 z-50 h-auto border-t border-border/40 bg-background/80 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
+        <div className="flex h-16 items-center justify-center">
           <div className="flex h-full w-full max-w-md items-center justify-around">
             {navItems.slice(0, 2).map((item) => {
               const isActive = (pathname === '/' && item.href === '/dashboard') || (item.href !== '/' && pathname.startsWith(item.href));

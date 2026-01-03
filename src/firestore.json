@@ -163,7 +163,7 @@
         "revenueTransactionId": { "type": "string" },
         "amount": { "type": "number" },
         "status": { "type": "string", "enum": ["pending", "paid", "failed", "cancelled"] },
-        "paymentGateway": { "type": "string", "enum": ["Pesapal", "InstaSend", "M-Pesa"] },
+        "paymentGateway": { "type": "string", "enum": ["Intasend", "M-Pesa"] },
         "gatewayTransactionId": { "type": "string" },
         "dateCreated": { "type": "string", "format": "date-time" },
         "datePaid": { "type": "string", "format": "date-time" }

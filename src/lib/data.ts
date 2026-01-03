@@ -67,7 +67,7 @@ export interface Transaction {
   propertyName: string;
   type: 'revenue' | 'expense';
   category?: string; // e.g., 'Repairs', 'Insurance' (used in expenses)
-  
+
   // Tenancy-related fields (primarily for revenue)
   tenant?: string;
   tenantEmail?: string;
@@ -87,7 +87,7 @@ export interface Transaction {
   frequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
   notes?: string;
   receiptUrl?: string;
-  
+
   // Fields for internal component state or data aggregation
   transactions?: Transaction[]; // Used to group transactions within a tenancy
   nextDueDate?: string; // Calculated field for UI display
@@ -171,7 +171,7 @@ export interface Invoice {
   revenueTransactionId: string;
   amount: number;
   status: 'pending' | 'paid' | 'failed' | 'cancelled';
-  paymentGateway: 'Pesapal' | 'InstaSend' | 'M-Pesa';
+  paymentGateway: 'Intasend' | 'M-Pesa';
   gatewayTransactionId?: string;
   dateCreated: string;
   datePaid?: string;

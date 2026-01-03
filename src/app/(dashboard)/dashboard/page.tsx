@@ -1,41 +1,36 @@
-
 'use client';
 
 import React, { useMemo, memo, useState, useEffect } from 'react';
 import { useDataContext } from '@/context/data-context';
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/currency-formatter';
 import Link from 'next/link';
-import { ArrowRight, TrendingUp, TrendingDown, AlertCircle, Building, Users, Calendar, Percent, DollarSign, BarChart3, BarChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Building, Percent, Calendar, BarChart3, DollarSign, RefreshCw, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Property, RevenueTransaction, Expense, Tenancy } from '@/lib/db-types';
+import type { Property } from '@/lib/db-types';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { CurrencyIcon } from '@/components/currency-icon';
-import { startOfToday, isBefore } from 'date-fns';
-import dynamic from 'next/dynamic';
-
-const AreaChart = dynamic(() => import('@/components/dashboard/area-chart').then(mod => mod.AreaChart), {
-  loading: () => <Skeleton className="h-[300px] w-full" />,
-  ssr: false
-});
-const HorizontalBarChart = dynamic(() => import('@/components/dashboard/horizontal-bar-chart').then(mod => mod.HorizontalBarChart), {
-  loading: () => <Skeleton className="h-[300px] w-full" />,
-  ssr: false
-});
+import { useUser } from '@/firebase';
+import { PropertyROIScorecard } from '@/components/dashboard/property-roi-scorecard';
+import { ArrearsSummary } from '@/components/dashboard/arrears-summary';
 
 // ML Predictions Component
 function MLPredictionsPanel() {
-  const { properties } = useDataContext();
+  const { properties, settings } = useDataContext();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [activeTab, setActiveTab] = useState<'price' | 'demand' | 'roi'>('price');
+
   const [priceResult, setPriceResult] = useState<any>(null);
   const [demandResult, setDemandResult] = useState<any>(null);
   const [roiResult, setRoiResult] = useState<any>(null);
-  const [comparisonResults, setComparisonResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showComparison, setShowComparison] = useState(false);
+
+  // User Settings safely retrieved
+  const currency = settings?.currency || 'KES';
+  const locale = settings?.dateFormat || 'en-KE';
 
   useEffect(() => {
     if (properties.length > 0 && !selectedProperty) {
@@ -48,6 +43,8 @@ function MLPredictionsPanel() {
       setLoading(true);
       setError('');
 
+      // Replace this URL with your actual project ID or dynamic config if needed
+      // Current project: studio-4661291525-66fea
       const response = await fetch(
         `https://us-central1-studio-4661291525-66fea.cloudfunctions.net/${functionName}`,
         {
@@ -76,342 +73,246 @@ function MLPredictionsPanel() {
 
   const handlePredictPrice = async () => {
     if (!selectedProperty) return;
-    setShowComparison(false);
-
     const payload = {
       location: selectedProperty.address?.city || 'Nairobi',
       bedrooms: selectedProperty.bedrooms || 2,
       current_price: selectedProperty.currentValue || 1000000,
       annual_appreciation_rate: 0.05,
     };
-
     const result = await callCloudFunction('predictPrice', payload);
-    if (result) {
-      setPriceResult(result);
-    }
+    if (result) setPriceResult(result);
   };
 
   const handleAnalyzeDemand = async () => {
     if (!selectedProperty) return;
-    setShowComparison(false);
-
     const payload = {
       location: selectedProperty.address?.city || 'Nairobi',
       property_type: selectedProperty.type || 'Residential',
       current_rental_rate: selectedProperty.targetRent || 15000,
-      market_data: {
-        average_occupancy: 0.85,
-        median_rental_price: 12000,
-      },
+      market_data: { average_occupancy: 0.85, median_rental_price: 12000 },
     };
-
     const result = await callCloudFunction('analyzeDemand', payload);
-    if (result) {
-      setDemandResult(result);
-    }
+    if (result) setDemandResult(result);
   };
 
   const handleCalculateROI = async () => {
     if (!selectedProperty) return;
-    setShowComparison(false);
-
     const payload = {
       initial_investment: selectedProperty.currentValue || 1000000,
       annual_rental_income: (selectedProperty.targetRent || 15000) * 12,
-      annual_expenses: 2000, // Placeholder, ideally from expenses data
+      annual_expenses: 2000, // Placeholder
       mortgage_principal_remaining: selectedProperty.mortgageBalance || 0,
       property_appreciation_rate: 0.05,
       years: 5,
     };
-
     const result = await callCloudFunction('calculateROI', payload);
-    if (result) {
-      setRoiResult(result);
-    }
+    if (result) setRoiResult(result);
   };
 
-  const handleCompareProperties = async () => {
-    if (properties.length < 2) {
-      setError('Need at least 2 properties to compare');
-      return;
-    }
-
-    setLoading(true);
-    setShowComparison(true);
-    const results = [];
-
-    // Compare top 3 properties or all if less than 3
-    const propertiesToCompare = properties.slice(0, 3);
-
-    for (const prop of propertiesToCompare) {
-      const roiData = await callCloudFunction('calculateROI', {
-        initial_investment: prop.currentValue || 1000000,
-        annual_rental_income: (prop.targetRent || 15000) * 12,
-        annual_expenses: 2000, // Placeholder
-        property_appreciation_rate: 0.05,
-        years: 5,
-      });
-      if (roiData) {
-        results.push({
-          property_name: `${prop.name}`,
-          ...roiData
-        });
-      }
-    }
-
-    setComparisonResults(results);
-    setLoading(false);
+  const handleRefresh = () => {
+    if (activeTab === 'price') handlePredictPrice();
+    else if (activeTab === 'demand') handleAnalyzeDemand();
+    else if (activeTab === 'roi') handleCalculateROI();
   };
 
   if (properties.length === 0) {
     return (
       <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>ML Predictions & Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">No properties found. Please add properties to your portfolio first.</p>
-        </CardContent>
+        <CardHeader><CardTitle>AI Predictions</CardTitle></CardHeader>
+        <CardContent><p className="text-muted-foreground">Add properties to use AI features.</p></CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>ML Predictions & Analysis</CardTitle>
-          <Button
-            variant={showComparison ? "default" : "outline"}
-            onClick={handleCompareProperties}
-            disabled={loading}
+    <Card className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-white/20 dark:border-slate-800/50 shadow-xl overflow-hidden">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            AI Property Insights
+            {loading && <RefreshCw className="h-4 w-4 animate-spin text-primary" />}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">Real-time market analysis & forecasts</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <select
+            value={selectedProperty?.id || ''}
+            onChange={(e) => {
+              const prop = properties.find(p => p.id === e.target.value);
+              setSelectedProperty(prop || null);
+              setPriceResult(null);
+              setDemandResult(null);
+              setRoiResult(null);
+            }}
+            className="px-3 py-2 border rounded-md bg-background text-sm w-full md:w-64"
           >
-            <BarChart className="mr-2 h-4 w-4" />
-            Compare Properties
+            {properties.map(prop => (
+              <option key={prop.id} value={prop.id}>{prop.name}</option>
+            ))}
+          </select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading || !selectedProperty}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh Analysis
           </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {!showComparison && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Select Property</label>
-                  <select
-                    value={selectedProperty?.id || ''}
-                    onChange={(e) => {
-                      const prop = properties.find(p => p.id === e.target.value);
-                      setSelectedProperty(prop || null);
-                      // Reset results when property changes
-                      setPriceResult(null);
-                      setDemandResult(null);
-                      setRoiResult(null);
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background text-foreground"
-                  >
-                    {properties.map(prop => (
-                      <option key={prop.id} value={prop.id}>
-                        {prop.name} - {prop.address.city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        </div>
+      </CardHeader>
 
-                {selectedProperty && (
-                  <div className="bg-muted p-4 rounded-md space-y-2">
-                    <p><strong>City:</strong> {selectedProperty.address.city}</p>
-                    <p><strong>Type:</strong> {selectedProperty.type}</p>
-                    <p><strong>Target Rent:</strong> {formatCurrency(selectedProperty.targetRent || 0, 'en-KE', 'KES')}</p>
-                    <p><strong>Value:</strong> {formatCurrency(selectedProperty.currentValue || 0, 'en-KE', 'KES')}</p>
-                  </div>
-                )}
-              </>
-            )}
-
-            {error && (
-              <div className="bg-destructive/10 border border-destructive/20 text-destructive p-3 rounded-md">
-                {error}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {showComparison ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Comparison</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {comparisonResults.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Property</th>
-                      <th className="px-4 py-3 text-left font-semibold">Investment</th>
-                      <th className="px-4 py-3 text-left font-semibold">Total ROI</th>
-                      <th className="px-4 py-3 text-left font-semibold">Annual ROI</th>
-                      <th className="px-4 py-3 text-left font-semibold">Break-even</th>
-                      <th className="px-4 py-3 text-left font-semibold">Risk</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {comparisonResults.map((result: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-muted/20">
-                        <td className="px-4 py-3 font-medium">{result.property_name}</td>
-                        <td className="px-4 py-3">{formatCurrency(result.initial_investment || 0, 'en-KE', 'KES')}</td>
-                        <td className="px-4 py-3 font-bold text-green-600">{result.roi_percentage}</td>
-                        <td className="px-4 py-3 text-blue-600">{result.annual_roi}%</td>
-                        <td className="px-4 py-3">{result.break_even_months} months</td>
-                        <td className={`px-4 py-3 font-semibold ${result.risk_level === 'LOW' ? 'text-green-600' : result.risk_level === 'MEDIUM' ? 'text-yellow-600' : 'text-red-600'}`}>
-                          {result.risk_level}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                {loading ? <p>Comparing properties...</p> : <p>No comparison data available.</p>}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Price Forecast
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                onClick={handlePredictPrice}
-                disabled={loading || !selectedProperty}
-                className="w-full"
+      <CardContent className="space-y-6">
+        {/* Tabs Navigation */}
+        <div className="flex border-b overflow-x-auto">
+          {[
+            { id: 'price', label: 'Price Forecast', icon: TrendingUp },
+            { id: 'demand', label: 'Demand Analysis', icon: BarChart3 },
+            { id: 'roi', label: 'ROI Calculator', icon: DollarSign },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${isActive
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
               >
-                {loading ? 'Analyzing...' : 'Predict Price'}
-              </Button>
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-              {priceResult && (
-                <div className="space-y-2 text-sm">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
-                    <p className="text-muted-foreground">Predicted Price (5 Years)</p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {formatCurrency(priceResult.predicted_price, 'en-KE', 'KES')}
+        {/* Tab Content */}
+        <div className="min-h-[200px]">
+          {error && (
+            <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-4 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+
+          {activeTab === 'price' && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+              {!priceResult ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">Predict value appreciation over the next 5 years.</p>
+                  <Button onClick={handlePredictPrice} disabled={loading}>Run Prediction</Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
+                    <p className="text-sm text-muted-foreground">Predicted 5-Year Value</p>
+                    <p className="text-3xl font-bold text-primary">
+                      {formatCurrency(priceResult.predicted_price, currency, locale)}
+                    </p>
+                    <p className="text-sm text-green-600 mt-1 flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      +{priceResult.appreciation_percentage?.toFixed(1)}% Appreciation
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-muted p-2 rounded">
-                      <p className="text-xs text-muted-foreground">Current</p>
-                      <p className="font-semibold">{formatCurrency(selectedProperty?.currentValue || 0, 'en-KE', 'KES')}</p>
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Current Value</span>
+                      <span className="font-semibold">{formatCurrency(selectedProperty?.currentValue || 0, currency, locale)}</span>
                     </div>
-                    <div className="bg-muted p-2 rounded">
-                      <p className="text-xs text-muted-foreground">Appreciation</p>
-                      <p className="font-semibold text-green-600">+{priceResult.appreciation_percentage?.toFixed(1)}%</p>
+                    <div className="flex justify-between text-sm">
+                      <span>Confidence</span>
+                      <span className="font-semibold">85%</span>
                     </div>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5" />
-                Demand Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                onClick={handleAnalyzeDemand}
-                disabled={loading || !selectedProperty}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                {loading ? 'Analyzing...' : 'Analyze Demand'}
-              </Button>
-
-              {demandResult && (
-                <div className="space-y-2 text-sm">
-                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
-                    <p className="text-muted-foreground">Demand Score</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+          {activeTab === 'demand' && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+              {!demandResult ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">Analyze market demand and rental rates.</p>
+                  <Button onClick={handleAnalyzeDemand} disabled={loading}>Analyze Market</Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-sm text-muted-foreground">Market Demand Score</p>
+                    <p className="text-3xl font-bold text-green-600">
                       {demandResult.demand_score?.toFixed(1)}/10
                     </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span>Recommended Rental</span>
-                      <span className="font-semibold">{formatCurrency(demandResult.recommended_rental_rate, 'en-KE', 'KES')}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span>Market Status</span>
-                      <span className="font-semibold capitalize">{demandResult.market_status}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                ROI Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                onClick={handleCalculateROI}
-                disabled={loading || !selectedProperty}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                {loading ? 'Calculating...' : 'Calculate ROI'}
-              </Button>
-
-              {roiResult && (
-                <div className="space-y-2 text-sm">
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-md">
-                    <p className="text-muted-foreground">5-Year ROI</p>
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {roiResult.total_roi_percentage?.toFixed(1)}%
+                    <p className="text-sm text-muted-foreground mt-1 capitalize">
+                      {demandResult.market_status} Market
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span>Total Return</span>
-                      <span className="font-semibold text-green-600">+{formatCurrency(roiResult.total_return, 'en-KE', 'KES')}</span>
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Rec. Rent</span>
+                      <span className="font-semibold">{formatCurrency(demandResult.recommended_rental_rate, currency, locale)}</span>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span>Annual Yield</span>
-                      <span className="font-semibold">{roiResult.annual_yield_percentage?.toFixed(1)}%</span>
+                    <div className="flex justify-between text-sm">
+                      <span>Occupancy Avg</span>
+                      <span className="font-semibold">{(demandResult.market_data?.average_occupancy * 100)?.toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          )}
+
+          {activeTab === 'roi' && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+              {!roiResult ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">Calculate Return on Investment metrics.</p>
+                  <Button onClick={handleCalculateROI} disabled={loading}>Calculate ROI</Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <p className="text-sm text-muted-foreground">Total 5-Year ROI</p>
+                    <p className="text-3xl font-bold text-purple-600">
+                      {roiResult.total_roi_percentage?.toFixed(1)}%
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Annual Yield: {roiResult.annual_yield_percentage?.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="p-4 bg-muted rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Total Profit</span>
+                      <span className="font-semibold text-green-600">{formatCurrency(roiResult.total_return, currency, locale)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Break-even</span>
+                      <span className="font-semibold">Month {roiResult.break_even_months}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
 const DashboardPage = memo(function DashboardPage() {
   const { properties, revenue, expenses, tenancies, settings, loading } = useDataContext();
+  const { user } = useUser();
   const locale = settings?.dateFormat || 'en-KE';
   const currency = settings?.currency || 'KES';
-  const companyName = settings?.companyName || 'My Company';
 
   const metrics = useMemo(() => {
     if (loading) return null;
 
-    // Financial KPIs
     const totalRevenue = revenue
       .filter(tx => tx.status === 'Paid')
       .reduce((sum, tx) => sum + tx.amount, 0);
@@ -423,20 +324,16 @@ const DashboardPage = memo(function DashboardPage() {
       .filter(tx => tx.status === 'Overdue')
       .reduce((sum, tx) => sum + tx.amount, 0);
 
-    // Property KPIs
     const totalPropertyValue = properties.reduce((sum, p) => sum + (p.currentValue || 0), 0);
     const totalMortgageBalance = properties.reduce((sum, p) => sum + (p.mortgageBalance || 0), 0);
     const portfolioNetWorth = totalPropertyValue - totalMortgageBalance;
 
-    // Occupancy & Rent KPIs
     const occupiedProperties = new Set(tenancies.filter(t => t.status === 'Active').map(t => t.propertyId));
     const occupancyRate = properties.length > 0 ? (occupiedProperties.size / properties.length) * 100 : 0;
 
     const activeTenancies = tenancies.filter(t => t.status === 'Active');
-    const totalRentOfActiveTenancies = activeTenancies.reduce((sum, t) => sum + t.rentAmount, 0);
-    const avgRentPerTenancy = activeTenancies.length > 0 ? totalRentOfActiveTenancies / activeTenancies.length : 0;
 
-    // Current Month Revenue
+    // Calculate current month revenue
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
@@ -455,77 +352,21 @@ const DashboardPage = memo(function DashboardPage() {
       totalPropertyValue,
       portfolioNetWorth,
       occupancyRate,
-      avgRentPerTenancy,
       totalProperties: properties.length,
       activeTenanciesCount: activeTenancies.length,
       thisMonthRevenue,
     };
   }, [revenue, expenses, properties, tenancies, loading]);
 
-  const chartData = useMemo(() => {
-    const monthsData: Record<string, { month: string; revenue: number; expenses: number }> = {};
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      monthsData[monthKey] = {
-        month: date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
-        revenue: 0,
-        expenses: 0,
-      };
-    }
-
-    revenue.filter(r => r.status === 'Paid').forEach(r => {
-      const date = r.date ? new Date(r.date) : new Date();
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      if (monthsData[monthKey]) {
-        monthsData[monthKey].revenue += r.amount;
-      }
-    });
-
-    expenses.forEach(e => {
-      const date = e.date ? new Date(e.date) : new Date();
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      if (monthsData[monthKey]) {
-        monthsData[monthKey].expenses += e.amount;
-      }
-    });
-
-    return Object.values(monthsData);
-  }, [revenue, expenses]);
-
-  const profitPerProperty = useMemo(() => {
-    return properties.map(prop => {
-      const propRevenue = revenue
-        .filter(r => r.propertyId === prop.id && r.status === 'Paid')
-        .reduce((sum, r) => sum + r.amount, 0);
-
-      const propExpenses = expenses
-        .filter(e => e.propertyId === prop.id)
-        .reduce((sum, e) => sum + e.amount, 0);
-
-      return {
-        name: `${prop.name}`,
-        profit: propRevenue - propExpenses,
-      };
-    }).sort((a, b) => b.profit - a.profit).slice(0, 5); // Top 5
-  }, [properties, revenue, expenses]);
-
-
   if (loading) {
     return (
       <>
-        <PageHeader title={`Welcome back, ${companyName}!`} />
+        <PageHeader title={`Welcome back, ${user?.displayName || settings?.companyName || 'User'}!`} />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-full" />
-              </CardContent>
+              <CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader>
+              <CardContent><Skeleton className="h-8 w-full" /></CardContent>
             </Card>
           ))}
         </div>
@@ -535,7 +376,7 @@ const DashboardPage = memo(function DashboardPage() {
 
   return (
     <>
-      <PageHeader title={`Welcome back, ${companyName}!`} />
+      <PageHeader title={`Welcome back, ${user?.displayName || settings?.companyName || 'User'}!`} />
 
       {metrics && (
         <>
@@ -544,10 +385,9 @@ const DashboardPage = memo(function DashboardPage() {
               icon={Building}
               title="Total Properties"
               value={metrics.totalProperties}
-              description={`${metrics.totalProperties} unit(s) across portfolio`}
+              description="Units in your portfolio"
               formatAs="integer"
             />
-
             <KpiCard
               icon={Percent}
               title="Occupancy Rate"
@@ -555,7 +395,6 @@ const DashboardPage = memo(function DashboardPage() {
               description={`${metrics.activeTenanciesCount} active tenanc(ies)`}
               formatAs="percent"
             />
-
             <KpiCard
               icon={TrendingDown}
               title="Total Expenses"
@@ -563,7 +402,6 @@ const DashboardPage = memo(function DashboardPage() {
               description="Cumulative from all properties"
               variant="destructive"
             />
-
             <KpiCard
               icon={AlertCircle}
               title="Overdue Payments"
@@ -571,21 +409,18 @@ const DashboardPage = memo(function DashboardPage() {
               description="Total outstanding arrears"
               variant="destructive"
             />
-
             <KpiCard
               icon={Building}
               title="Portfolio Asset Value"
               value={metrics.totalPropertyValue}
               description="Current combined market value"
             />
-
             <KpiCard
               icon={CurrencyIcon}
               title="Equity After Mortgages"
               value={metrics.portfolioNetWorth}
               description="Net ownership value"
             />
-
             <KpiCard
               icon={TrendingUp}
               title="Net Profit"
@@ -593,7 +428,6 @@ const DashboardPage = memo(function DashboardPage() {
               description="Revenue - Expenses"
               variant={metrics.profit >= 0 ? 'positive' : 'destructive'}
             />
-
             <KpiCard
               icon={Calendar}
               title="Monthly Revenue (Current)"
@@ -602,45 +436,34 @@ const DashboardPage = memo(function DashboardPage() {
             />
           </div>
 
-          <div className="mb-8">
+          <div className="grid gap-8 md:grid-cols-2 mb-8">
+            <Card className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-white/20 dark:border-slate-800/50 shadow-xl">
+              <CardContent className="pt-6">
+                <PropertyROIScorecard
+                  properties={properties.map(p => ({
+                    id: p.id,
+                    name: p.addressLine1 || `Property ${p.id.slice(0, 4)}`,
+                    streetAddress: p.addressLine1,
+                    city: p.address.city,
+                    currentValue: p.currentValue || p.purchasePrice || 0,
+                    revenue: 0,
+                    expenses: 0
+                  }))}
+                  revenue={revenue}
+                  expenses={expenses}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-white/20 dark:border-slate-800/50 shadow-xl">
+              <CardContent className="pt-6">
+                <ArrearsSummary revenue={revenue} properties={properties} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mb-0">
             <MLPredictionsPanel />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Income vs Expenses (Last 6 Months)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AreaChart data={chartData} />
-              </CardContent>
-            </Card>
-
-            {properties.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profit Per Property (All Time - Top 5)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <HorizontalBarChart data={profitPerProperty} />
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-            <Card className="md:col-span-2 lg:col-span-3">
-              <CardHeader>
-                <CardTitle>Quick Links</CardTitle>
-                <CardDescription>Navigate to key sections</CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-4">
-                <Button variant="outline" asChild><Link href="/revenue">View Revenue</Link></Button>
-                <Button variant="outline" asChild><Link href="/expenses">View Expenses</Link></Button>
-                <Button variant="outline" asChild><Link href="/properties">View Properties</Link></Button>
-                <Button variant="outline" asChild><Link href="/maintenance">View Maintenance</Link></Button>
-              </CardContent>
-            </Card>
           </div>
         </>
       )}

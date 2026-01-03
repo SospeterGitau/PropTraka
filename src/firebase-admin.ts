@@ -1,43 +1,55 @@
 import "server-only";
-import { initializeApp, getApps, getApp } from "firebase-admin/app";
+import { initializeApp, getApps, getApp, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import * as path from 'path';
+import * as fs from 'fs';
 
-const serviceAccount = JSON.parse(
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY || "{}"
-);
+const getFirebaseApp = () => {
+    if (getApps().length) {
+        return getApp();
+    }
 
-// Prevent re-initialization
-const app =
-    getApps().length === 0
-        ? initializeApp({
-            credential: {
-                getAccessToken: async () => {
-                    return {
-                        access_token: "mock-token",
-                        expires_in: 3600
-                    }
-                }
-            },
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'proptraka-app',
-        })
-        : getApp();
+    try {
+        let credential;
 
-// If we have a service account key, use it. Otherwise, for dev without creds, we might need a workaround or just let it fail/warn if not needed locally.
-// Actually, better to try/catch or strict check.
-// For this environment, we assume GOOGLE_APPLICATION_CREDENTIALS or SERVICE_ACCOUNT is set for real usage.
-// If purely client-side emulators, admin might not be needed? But we are doing server actions.
-// Let's stick to standard init.
+        // 1. Try Local File (Method A)
+        // We use process.cwd() to find the file in the root
+        try {
+            const serviceAccountPath = path.join(process.cwd(), 'serviceAccountKey.json');
+            // We use fs.existsSync to check without throwing
+            if (fs.existsSync(serviceAccountPath)) {
+                console.log('🔥 Initializing Firebase Admin with local serviceAccountKey.json');
+                credential = cert(serviceAccountPath);
+            }
+        } catch (e) {
+            // Ignore file errors, fallback to env
+        }
 
-if (getApps().length === 0) {
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-        initializeApp({
-            credential: require('firebase-admin').credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY))
+        // 2. Try Environment Variable (Method B)
+        if (!credential && process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+            console.log('🔥 Initializing Firebase Admin with FIREBASE_SERVICE_ACCOUNT_KEY env var');
+            credential = cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY));
+        }
+
+        if (!credential) {
+            console.warn('⚠️ No Firebase Admin credentials found. Server-side features may fail.');
+            // Fallback to applicationDefault() if running in GCP context
+            return initializeApp();
+        }
+
+        return initializeApp({
+            credential,
+            projectId: "studio-4661291525-66fea", // Hardcoded ID from .firebaserc
+            storageBucket: "studio-4661291525-66fea.firebasestorage.app"
         });
-    } else {
-        initializeApp(); // Uses GOOGLE_APPLICATION_CREDENTIALS
+
+    } catch (error) {
+        console.error('Firebase Admin initialization error', error);
+        return getApp(); // Try to return default app if init fails (likely already initialized)
     }
 }
 
+export const app = getFirebaseApp();
 export const auth = getAuth(app);
 export const db = getFirestore(app);

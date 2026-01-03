@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import Link from 'next/link';
-import { Building2, TrendingUp, Users, CheckCircle } from 'lucide-react';
+import { Building2, TrendingUp, Users, CheckCircle, AlertTriangle, RefreshCcw } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -22,13 +23,52 @@ export default function HomePage() {
       }
     });
 
-    return () => unsubscribe();
-  }, [router]);
+    // Timeout fallback in case auth hangs
+    const timeoutTimer = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        setError('Connection timed out. Please check your network or try again.');
+      }
+    }, 10000); // 10 seconds timeout
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeoutTimer);
+    };
+  }, [router, loading]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen bg-background flex-col gap-4">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-muted-foreground animate-pulse">Loading PropTraka...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4 max-w-md text-center p-6 border rounded-lg bg-card shadow-sm">
+          <AlertTriangle className="h-12 w-12 text-destructive" />
+          <h3 className="text-xl font-semibold">Unable to Load</h3>
+          <p className="text-muted-foreground">{error}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Retry
+            </button>
+            <Link
+              href="/signin"
+              className="flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-secondary"
+            >
+              Sign In Manually
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
